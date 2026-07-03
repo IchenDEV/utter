@@ -250,6 +250,7 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         let promptTokens = chinesePromptTokens(for: language)
         return DecodingOptions(
             language: language,
+            temperatureFallbackCount: 1,
             usePrefillPrompt: language != nil,
             skipSpecialTokens: true,
             withoutTimestamps: true,

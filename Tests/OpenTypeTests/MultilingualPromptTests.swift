@@ -30,6 +30,8 @@ final class MultilingualPromptTests: XCTestCase {
 
             XCTAssertTrue(user.contains("日本語の音声認識原文"))
             XCTAssertTrue(system.contains("日本語の音声入力後処理"))
+            XCTAssertTrue(system.contains("ASR 品質ルール"))
+            XCTAssertTrue(system.contains("OpenType、hotkey、menu bar、API、JSON、i18n、URL"))
             XCTAssertTrue(system.contains("スタイル：専門的に整理"))
             XCTAssertTrue(system.contains("final_text"))
             XCTAssertTrue(system.contains("専門整理の補足例"))
@@ -48,6 +50,8 @@ final class MultilingualPromptTests: XCTestCase {
 
             XCTAssertTrue(user.contains("한국어 음성 인식 원문"))
             XCTAssertTrue(system.contains("한국어 음성 입력 후처리기"))
+            XCTAssertTrue(system.contains("ASR 품질 규칙"))
+            XCTAssertTrue(system.contains("OpenType, hotkey, menu bar, API, JSON, i18n, URL"))
             XCTAssertTrue(system.contains("스타일: 전문적으로 정리"))
             XCTAssertTrue(system.contains("final_text"))
             XCTAssertTrue(system.contains("전문 정리 보충 예시"))

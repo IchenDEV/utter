@@ -2,17 +2,24 @@ import Foundation
 
 enum TranscriptionSanitizer {
     static func prepare(_ text: String, audioActivity: AudioCaptureActivity? = nil) -> String? {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !isNonSpeechArtifact(trimmed) else { return nil }
+        let normalized = normalizeTranscript(text)
+        guard !isNonSpeechArtifact(normalized) else { return nil }
 
-        let collapsed = collapseRepeatedTranscript(trimmed)
+        let collapsed = collapseRepeatedTranscript(normalized)
         guard !isNonSpeechArtifact(collapsed) else { return nil }
 
-        return collapsed
+        guard let dehallucinated = removeWeakAudioHallucination(
+            from: collapsed,
+            audioActivity: audioActivity
+        ) else {
+            return nil
+        }
+
+        return dehallucinated
     }
 
     static func previewText(_ text: String, inputLanguage: InputLanguage = .auto) -> String {
-        let collapsed = collapseRepeatedTranscript(text)
+        let collapsed = collapseRepeatedTranscript(normalizeTranscript(text))
         guard !isNonSpeechArtifact(collapsed) else { return "" }
 
         let normalized = FormattingHeuristics.normalizeInput(collapsed)
@@ -22,6 +29,7 @@ enum TranscriptionSanitizer {
     static func isNonSpeechArtifact(_ text: String) -> Bool {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return true }
+        if explicitNoSpeechArtifacts.contains(trimmed.lowercased()) { return true }
 
         let meaningfulScalars = trimmed.unicodeScalars.filter { scalar in
             !CharacterSet.whitespacesAndNewlines.contains(scalar)
@@ -31,7 +39,7 @@ enum TranscriptionSanitizer {
         if meaningfulScalars.isEmpty { return true }
 
         let cleaned = normalizedPhrase(trimmed)
-        return cleaned.isEmpty
+        return cleaned.isEmpty || noSpeechArtifacts.contains(cleaned)
     }
 
     static func collapseRepeatedTranscript(_ text: String) -> String {
@@ -62,6 +70,37 @@ enum TranscriptionSanitizer {
 
         let wordCount = text.split(whereSeparator: \.isWhitespace).count
         return wordCount >= 2 || containsCJK(text)
+    }
+
+    private static func normalizeTranscript(_ text: String) -> String {
+        FormattingHeuristics.normalizeInput(text)
+            .replacingOccurrences(of: "\u{00A0}", with: " ")
+            .replacingOccurrences(of: "\u{200B}", with: "")
+            .replacingOccurrences(
+                of: #"<\|(?:nospeech|no_speech|notimestamps|startoftranscript|endoftext)\|>"#,
+                with: "",
+                options: [.regularExpression, .caseInsensitive]
+            )
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func removeWeakAudioHallucination(
+        from text: String,
+        audioActivity: AudioCaptureActivity?
+    ) -> String? {
+        guard audioActivity?.hasWeakSpeechEvidence == true else { return text }
+        var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        for pattern in trailingHallucinationPatterns {
+            let candidate = cleaned.replacingOccurrences(
+                of: pattern,
+                with: "",
+                options: [.regularExpression, .caseInsensitive]
+            ).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !candidate.isEmpty {
+                cleaned = candidate
+            }
+        }
+        return isNonSpeechArtifact(cleaned) ? nil : cleaned
     }
 
     private static func normalizedPhrase(_ text: String) -> String {
@@ -102,4 +141,26 @@ enum TranscriptionSanitizer {
         (0x4E00...0x9FFF).contains(Int(scalar.value))
             || (0x3400...0x4DBF).contains(Int(scalar.value))
     }
+
+    private static let noSpeechArtifacts: Set<String> = [
+        "blankaudio",
+        "nospeech",
+    ]
+
+    private static let explicitNoSpeechArtifacts: Set<String> = [
+        "(无)", "（无）", "[无]", "【无】",
+        "(無)", "（無）", "[無]", "【無】",
+        "(silence)", "[silence]", "<silence>",
+        "(silent)", "[silent]", "<silent>",
+        "(blank audio)", "[blank audio]", "<blank audio>",
+        "(no speech)", "[no speech]", "<no speech>",
+        "[blank_audio]", "<blank_audio>",
+    ]
+
+    private static let trailingHallucinationPatterns = [
+        #"\s*(?:thank you for watching|thanks for watching)[.!?。！？]*\s*$"#,
+        #"\s*(?:感谢观看|謝謝觀看|谢谢观看|谢谢收看|感謝收看)[。.!！!？?]*\s*$"#,
+        #"\s*字幕由\s*[^。.!！!？?\n]{0,40}(?:提供|制作|製作)[。.!！!？?]*\s*$"#,
+        #"\s*subtitles?\s+(?:by|provided by)\s+[^\n]{0,60}[.!?。！？]*\s*$"#,
+    ]
 }
