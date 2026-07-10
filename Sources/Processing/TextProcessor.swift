@@ -239,16 +239,25 @@ final class TextProcessor {
         }
     }
 
+    /// Dictionary replacements are applied once on the input side
+    /// (`prepareForFormatting` / `basicClean`); reapplying them here could
+    /// double-expand terms whose replacement contains the original.
     func cleanGeneratedOutput(_ text: String, inputLanguage: InputLanguage, fallback: String = "") -> String {
         var result = stripThinkingTags(text)
-        result = dictionary.applyReplacements(to: result)
         result = FormattedOutputCleaner.clean(result)
         if result.isEmpty { return FormattedOutputCleaner.clean(fallback) }
         return result
     }
 
+    /// Command prompts advertise a final_text JSON contract, so honoring that
+    /// envelope here is contract parsing, not guessing. The command output is
+    /// entirely model-generated — no dictated content can be swallowed.
     func cleanCommandGeneratedOutput(_ text: String, inputLanguage: InputLanguage) -> String {
-        cleanGeneratedOutput(text, inputLanguage: inputLanguage)
+        let stripped = stripThinkingTags(text)
+        if let finalText = LLMFinalTextOutput.text(from: stripped) {
+            return FormattedOutputCleaner.clean(finalText)
+        }
+        return cleanGeneratedOutput(text, inputLanguage: inputLanguage)
     }
 
     func systemPromptWithPersonalContext(_ systemPrompt: String, inputLanguage: InputLanguage) -> String {
@@ -267,8 +276,12 @@ final class TextProcessor {
         return ([systemPrompt] + extraSections).joined(separator: "\n\n")
     }
 
+    /// Collapses runs of spaces but keeps line breaks: direct mode promises
+    /// verbatim output, and ASR engines only emit newlines deliberately.
     private func normalizeWhitespace(_ text: String) -> String {
         FormattingHeuristics.normalizeInput(text)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "[^\\S\\n]*\\n[^\\S\\n]*", with: "\n", options: .regularExpression)
+            .replacingOccurrences(of: "[^\\S\\n]+", with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "\\n{3,}", with: "\n\n", options: .regularExpression)
     }
 }

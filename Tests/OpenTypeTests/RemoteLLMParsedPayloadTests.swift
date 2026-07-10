@@ -9,7 +9,7 @@ final class RemoteLLMParsedPayloadTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIContentObjectCommandPayload() throws {
@@ -115,7 +115,7 @@ final class RemoteLLMParsedPayloadTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIParsedCommandObject() throws {
@@ -138,7 +138,7 @@ final class RemoteLLMParsedPayloadTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "今天下午同步发布计划。")
+        XCTAssertEqual(rawText, "今天下午同步发布计划。")
     }
 
     func testPrefersOpenAIResponsesOutputParsedOverOutputText() throws {
@@ -148,7 +148,7 @@ final class RemoteLLMParsedPayloadTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIResponsesOutputObjectPayload() throws {
@@ -158,7 +158,7 @@ final class RemoteLLMParsedPayloadTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "今天下午同步发布计划。")
+        XCTAssertEqual(rawText, "今天下午同步发布计划。")
     }
 
     func testParsesOpenAIResponsesMessageParsedPayload() throws {
@@ -179,7 +179,7 @@ final class RemoteLLMParsedPayloadTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testPrefersResponsesParsedPayloadOverMessageContent() throws {
@@ -189,7 +189,7 @@ final class RemoteLLMParsedPayloadTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIResponsesMessageParsedCommandPayload() throws {
@@ -226,7 +226,7 @@ final class RemoteLLMParsedPayloadTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testPrefersOpenAIResponsesFunctionCallPayloadOverMessageOutput() throws {
@@ -282,7 +282,7 @@ final class RemoteLLMParsedPayloadTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "今天下午同步发布计划。")
+        XCTAssertEqual(rawText, "今天下午同步发布计划。")
     }
 
     private func data(_ json: String) -> Data {

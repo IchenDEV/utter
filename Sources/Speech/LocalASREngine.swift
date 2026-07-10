@@ -118,12 +118,28 @@ struct LocalASRConfiguration: Equatable {
 
 final class LocalASREngine: SpeechEngine, @unchecked Sendable {
     private let configuration: LocalASRConfiguration
+    private let server: LocalASRServer
 
     init(configuration: LocalASRConfiguration) {
         self.configuration = configuration
+        self.server = LocalASRServer(configuration: configuration)
     }
 
     var isReady: Bool { configuration.isReady }
+
+    /// Starts the resident runner (loading the model once) so the first
+    /// utterance doesn't pay the multi-second cold start.
+    func prepare() async {
+        guard configuration.hasRequiredFiles,
+              let runnerURL = Self.runnerScriptURL(),
+              let pythonPath = try? await LocalASRRuntime.ensurePythonPath(
+                  for: configuration.provider,
+                  preferredPath: configuration.pythonPath
+              ) else {
+            return
+        }
+        await server.warmUp(runnerURL: runnerURL, pythonPath: pythonPath)
+    }
 
     func transcribe(audioURL: URL?, language: String?) async throws -> String {
         guard configuration.hasRequiredFiles else { throw LocalASRError.notConfigured }
@@ -135,13 +151,12 @@ final class LocalASREngine: SpeechEngine, @unchecked Sendable {
         guard let runnerURL = Self.runnerScriptURL() else { throw LocalASRError.runnerMissing }
 
         let started = CFAbsoluteTimeGetCurrent()
-        let output = try await runPythonRunner(
-            runnerURL: runnerURL,
+        let text = try await server.transcribe(
             audioURL: audioURL,
             language: language,
+            runnerURL: runnerURL,
             pythonPath: pythonPath
         )
-        let text = try Self.parseRunnerOutput(output)
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         Log.info("[\(configuration.logName)] transcribed \(text.count) chars locally in \(String(format: "%.1f", elapsed))s")
         return text
@@ -153,84 +168,6 @@ final class LocalASREngine: SpeechEngine, @unchecked Sendable {
             withExtension: "py",
             subdirectory: "Scripts"
         )
-    }
-
-    private func runPythonRunner(
-        runnerURL: URL,
-        audioURL: URL,
-        language: String?,
-        pythonPath: String
-    ) async throws -> String {
-        try await withCheckedThrowingContinuation { continuation in
-            let process = Process()
-            let stdout = Pipe()
-            let stderr = Pipe()
-
-            process.executableURL = URL(fileURLWithPath: pythonPath)
-            process.arguments = runnerArguments(runnerURL: runnerURL, audioURL: audioURL, language: language)
-
-            process.standardOutput = stdout
-            process.standardError = stderr
-            process.terminationHandler = { process in
-                let out = stdout.fileHandleForReading.readDataToEndOfFile()
-                let err = stderr.fileHandleForReading.readDataToEndOfFile()
-                let output = String(data: out, encoding: .utf8) ?? ""
-                let errorOutput = String(data: err, encoding: .utf8) ?? ""
-
-                guard process.terminationStatus == 0 else {
-                    continuation.resume(throwing: LocalASRError.processFailed(errorOutput.nonEmpty ?? output))
-                    return
-                }
-                continuation.resume(returning: output)
-            }
-
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(throwing: error)
-            }
-        }
-    }
-
-    private func runnerArguments(runnerURL: URL, audioURL: URL, language: String?) -> [String] {
-        var args = [
-            runnerURL.path,
-            "--provider", configuration.provider.rawValue,
-            "--audio", audioURL.path,
-            "--model", configuration.modelPath
-        ]
-        if let language {
-            args += ["--language", language]
-        }
-        if !configuration.tokenizerPath.isEmpty {
-            args += ["--tokenizer", configuration.tokenizerPath]
-        }
-        if !configuration.repoPath.isEmpty {
-            args += ["--repo", configuration.repoPath]
-        }
-        return args
-    }
-
-    static func parseRunnerOutput(_ output: String) throws -> String {
-        let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { throw LocalASRError.invalidResponse }
-
-        if let text = LocalASRTranscriptOutput.text(from: trimmed) {
-            return normalizeTranscriptText(text)
-        }
-
-        return normalizeTranscriptText(trimmed)
-    }
-
-    private static func normalizeTranscriptText(_ text: String) -> String {
-        let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let compact = normalized.replacingOccurrences(
-            of: "\\s+",
-            with: "",
-            options: .regularExpression
-        )
-        let noSpeechPlaceholders: Set<String> = ["（无）", "(无)", "【无】", "[无]"]
-        return noSpeechPlaceholders.contains(compact) ? "" : normalized
     }
 }
 
@@ -251,12 +188,5 @@ enum LocalASRError: LocalizedError {
         case .processFailed(let message): return String(format: L("error.local_asr_process_failed"), message)
         case .invalidResponse: return L("error.local_asr_invalid_response")
         }
-    }
-}
-
-private extension String {
-    var nonEmpty: String? {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
     }
 }

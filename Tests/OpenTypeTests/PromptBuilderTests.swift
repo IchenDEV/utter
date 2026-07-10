@@ -41,26 +41,26 @@ final class PromptBuilderTests: XCTestCase {
         XCTAssertEqual(PromptBuilder.buildUserPrompt(
             text: "嗯 今天开会",
             inputLanguage: .chinese
-        ), "以下是语音识别原文。请先在内部理解用户的口述意图，判断错别字、同音词、误识别词、漏字、多字、口述标点、数字单位、时间范围和专有名词，再直接输出整理后的最终文本：\n<<<\n嗯 今天开会\n>>>")
+        ), "以下是语音识别原文。请先在内部理解用户的口述意图，判断错别字、同音词、误识别词、漏字、多字、口述标点、数字单位、时间范围和专有名词，再直接输出整理后的最终文本：\n\(PromptTextBlock.block("嗯 今天开会"))")
         XCTAssertEqual(PromptBuilder.buildUserPrompt(
             text: "um hello",
             inputLanguage: .english
-        ), "Raw ASR transcript. Internally infer the user's spoken intent, including punctuation commands, numbers, units, date/time ranges, typos, homophones, ASR substitutions, missing or extra words, and proper nouns, then output only the final rewritten text:\n<<<\num hello\n>>>")
+        ), "Raw ASR transcript. Internally infer the user's spoken intent, including punctuation commands, numbers, units, date/time ranges, typos, homophones, ASR substitutions, missing or extra words, and proper nouns, then output only the final rewritten text:\n\(PromptTextBlock.block("um hello"))")
         XCTAssertEqual(PromptBuilder.buildUserPrompt(
             text: "こんにちは",
             inputLanguage: .japanese
-        ), "日本語の音声認識原文です。口述意図、誤認識、同音語、抜けた語、余分な語、口述された句読点、数字、単位、日時、範囲、固有名詞を内部で判断し、最終テキストだけを出力してください：\n<<<\nこんにちは\n>>>")
+        ), "日本語の音声認識原文です。口述意図、誤認識、同音語、抜けた語、余分な語、口述された句読点、数字、単位、日時、範囲、固有名詞を内部で判断し、最終テキストだけを出力してください：\n\(PromptTextBlock.block("こんにちは"))")
     }
 
     func testBuildCommandUserPromptUsesLanguageSpecificWrappers() {
         XCTAssertEqual(PromptBuilder.buildCommandUserPrompt(
             text: "帮我回复他 可以",
             inputLanguage: .chinese
-        ), "以下是用户的语音指令转写。请先在内部理解真实指令意图，处理同音词、误识别、漏字、多字、自我纠正和口述格式，再只输出可直接插入或发送的结果：\n<<<\n帮我回复他 可以\n>>>")
+        ), "以下是用户的语音指令转写。请先在内部理解真实指令意图，处理同音词、误识别、漏字、多字、自我纠正和口述格式，再只输出可直接插入或发送的结果：\n\(PromptTextBlock.block("帮我回复他 可以"))")
         XCTAssertEqual(PromptBuilder.buildCommandUserPrompt(
             text: "reply yes that works",
             inputLanguage: .english
-        ), "Voice command transcript. Internally infer the intended command, accounting for homophones, ASR substitutions, missing or extra words, self-corrections, and spoken formatting, then output only the text to insert or send:\n<<<\nreply yes that works\n>>>")
+        ), "Voice command transcript. Internally infer the intended command, accounting for homophones, ASR substitutions, missing or extra words, self-corrections, and spoken formatting, then output only the text to insert or send:\n\(PromptTextBlock.block("reply yes that works"))")
     }
 
     func testSystemPromptIncludesChineseStyleScreenAndMemoryContext() {
@@ -107,9 +107,9 @@ final class PromptBuilderTests: XCTestCase {
             XCTAssertTrue(prompt.contains("- 应用: 备忘录"))
             XCTAssertTrue(prompt.contains("- 窗口: 发布计划"))
             XCTAssertTrue(prompt.contains("光标上下文，仅用于判断"))
-            XCTAssertTrue(prompt.contains("- 光标前文本:\n<<<\n我们刚才讨论到 OpenType 的\n>>>"))
-            XCTAssertTrue(prompt.contains("- 当前选中文本:\n<<<\n快捷键\n>>>"))
-            XCTAssertTrue(prompt.contains("- 光标后文本:\n<<<\n体验需要更自然。\n>>>"))
+            XCTAssertTrue(prompt.contains("- 光标前文本:\n\(PromptTextBlock.block("我们刚才讨论到 OpenType 的"))"))
+            XCTAssertTrue(prompt.contains("- 当前选中文本:\n\(PromptTextBlock.block("快捷键"))"))
+            XCTAssertTrue(prompt.contains("- 光标后文本:\n\(PromptTextBlock.block("体验需要更自然。"))"))
             XCTAssertTrue(prompt.contains("不要把这些元信息或未口述的上下文写入输出"))
             XCTAssertTrue(prompt.contains("原文：嗯那个我们周四，不对，周五下午开会"))
         }
@@ -263,9 +263,9 @@ final class PromptBuilderTests: XCTestCase {
         XCTAssertTrue(english.contains("- App: Mail"))
         XCTAssertTrue(english.contains("- Window: Release reply"))
         XCTAssertTrue(english.contains("cursor context for tone"))
-        XCTAssertTrue(english.contains("- Text before cursor/selection:\n<<<\nHi team,\n>>>"))
-        XCTAssertTrue(english.contains("- Selected text:\n<<<\nship today\n>>>"))
-        XCTAssertTrue(english.contains("- Text after cursor/selection:\n<<<\nThanks.\n>>>"))
+        XCTAssertTrue(english.contains("- Text before cursor/selection:\n\(PromptTextBlock.block("Hi team,"))"))
+        XCTAssertTrue(english.contains("- Selected text:\n\(PromptTextBlock.block("ship today"))"))
+        XCTAssertTrue(english.contains("- Text after cursor/selection:\n\(PromptTextBlock.block("Thanks."))"))
         XCTAssertTrue(english.contains("undictated surrounding text"))
         XCTAssertTrue(english.contains("output labels, preambles, notes, quote wrappers, or code fences"))
         XCTAssertTrue(english.contains("You only generate text; you cannot actually click, send, delete, open apps, press shortcuts, change system settings, or perform external side effects"))

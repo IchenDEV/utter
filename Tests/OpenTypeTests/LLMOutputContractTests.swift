@@ -22,7 +22,7 @@ final class LLMOutputContractTests: XCTestCase {
         }
     }
 
-    func testVoiceCommandOutputExtractsWrappedFinalText() {
+    func testVoiceCommandOutputDoesNotMineEmbeddedFinalText() {
         let processor = TextProcessor()
         let output = """
         I will use the requested format:
@@ -31,7 +31,7 @@ final class LLMOutputContractTests: XCTestCase {
 
         XCTAssertEqual(
             processor.cleanCommandGeneratedOutput(output, inputLanguage: .english),
-            "Sounds good, I will send the release notes today."
+            output
         )
     }
 
@@ -44,6 +44,16 @@ final class LLMOutputContractTests: XCTestCase {
         XCTAssertEqual(
             processor.cleanSelectionEditOutput(output, inputLanguage: .english),
             "Please send the release notes today."
+        )
+    }
+
+    func testSelectionEditKeepsEmbeddedFinalTextExample() {
+        let processor = TextProcessor()
+        let output = #"Document this example: {"final_text":"hello"}."#
+
+        XCTAssertEqual(
+            processor.cleanSelectionEditOutput(output, inputLanguage: .english),
+            output
         )
     }
 }

@@ -80,6 +80,11 @@ final class VoicePipeline {
             return
         }
 
+        // Warm the engine while the user is still speaking (no-op if already warm).
+        if let engine = currentEngine {
+            Task { await engine.prepare() }
+        }
+
         clearInFlightWork()
 
         appState.reset()

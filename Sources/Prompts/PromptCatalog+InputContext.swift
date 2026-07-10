@@ -82,7 +82,7 @@ private func inputTargetDetails(_ context: InputContext, inputLanguage: InputLan
     let metadata: [String] = metadataLabels
         .compactMap { label, value -> String? in
             guard let value else { return nil }
-            return "- \(label): \(PromptTextBlock.safe(value))"
+            return "- \(label): \(value)"
         }
     let focusedText: [String] = focusedTextLabels
         .compactMap { label, value -> String? in

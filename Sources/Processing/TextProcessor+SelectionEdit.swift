@@ -35,8 +35,10 @@ extension TextProcessor {
         }
     }
 
+    /// Selection-edit prompts advertise the same final_text JSON contract as
+    /// command prompts, so the envelope is honored here too.
     func cleanSelectionEditOutput(_ text: String, inputLanguage: InputLanguage) -> String {
-        cleanGeneratedOutput(text, inputLanguage: inputLanguage)
+        cleanCommandGeneratedOutput(text, inputLanguage: inputLanguage)
     }
 }
 

@@ -1,29 +1,33 @@
 import XCTest
 @testable import OpenType
 
+/// `LLMFinalTextOutput.wholeJSONText` powers the remote-API boundary: it only
+/// resolves payloads that are entirely one structured value. Mixed text is
+/// never mined — that is asserted via `FormattedOutputCleaner`.
 final class LLMFinalTextOutputTests: XCTestCase {
-    func testExtractsLabeledOutputTextArrayAfterPreamble() {
+    func testKeepsLabeledOutputTextArrayAfterPreamble() {
+        // Text with an embedded JSON tail is a text reply, not a structured
+        // payload; it must survive verbatim.
         let llmOutput = """
         Final response:
         [{"type":"output_text","text":"Ship the release notes."},{"type":"output_text","text":"Then confirm QA."}]
         """
 
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            """
-            Ship the release notes.
-            Then confirm QA.
-            """
-        )
+        XCTAssertNil(LLMFinalTextOutput.wholeJSONText(from: llmOutput))
+        XCTAssertEqual(FormattedOutputCleaner.clean(llmOutput), llmOutput)
     }
 
     func testKeepsOrdinaryEmbeddedArrayWithoutExplicitFinalText() {
         let llmOutput = #"The payload is [{"text":"Ship the release notes today.","mode":"voice"}]."#
 
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            llmOutput
-        )
+        XCTAssertNil(LLMFinalTextOutput.wholeJSONText(from: llmOutput))
+        XCTAssertEqual(FormattedOutputCleaner.clean(llmOutput), llmOutput)
+    }
+
+    func testDoesNotMineEmbeddedExplicitFinalText() {
+        let llmOutput = #"Document this example: {"final_text":"hello"}."#
+
+        XCTAssertNil(LLMFinalTextOutput.text(from: llmOutput))
     }
 
     func testExtractsTopLevelTextBlockArray() {
@@ -32,7 +36,7 @@ final class LLMFinalTextOutputTests: XCTestCase {
         """
 
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
+            LLMFinalTextOutput.wholeJSONText(from: llmOutput),
             """
             Ship the release notes.
             Then confirm QA.
@@ -41,24 +45,19 @@ final class LLMFinalTextOutputTests: XCTestCase {
     }
 
     func testExtractsTypedFinalTextContentPayload() {
-        let llmOutput = """
-        Final response:
-        {"type":"final_text","content":"Ship the release notes today."}
-        """
-
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
+            LLMFinalTextOutput.wholeJSONText(from: #"{"type":"final_text","content":"Ship the release notes today."}"#),
             "Ship the release notes today."
         )
     }
 
     func testExtractsCamelAndKebabTypedFinalTextPayloads() {
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(#"{"type":"finalText","content":"Ship the release notes today."}"#),
+            LLMFinalTextOutput.wholeJSONText(from: #"{"type":"finalText","content":"Ship the release notes today."}"#),
             "Ship the release notes today."
         )
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(#"{"type":"formatted-text","value":"今天下午同步发布计划。"}"#),
+            LLMFinalTextOutput.wholeJSONText(from: #"{"type":"formatted-text","value":"今天下午同步发布计划。"}"#),
             "今天下午同步发布计划。"
         )
     }
@@ -69,7 +68,7 @@ final class LLMFinalTextOutputTests: XCTestCase {
         """
 
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
+            LLMFinalTextOutput.wholeJSONText(from: llmOutput),
             "Ship the release notes today."
         )
     }
@@ -80,7 +79,7 @@ final class LLMFinalTextOutputTests: XCTestCase {
         """
 
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
+            LLMFinalTextOutput.wholeJSONText(from: llmOutput),
             """
             Ship the release notes.
             Then confirm QA.
@@ -94,18 +93,17 @@ final class LLMFinalTextOutputTests: XCTestCase {
         """#
 
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
+            LLMFinalTextOutput.wholeJSONText(from: llmOutput),
             "Ship the release notes today."
         )
     }
 
-    func testKeepsPlainOpenAIDeltaWithoutExplicitFinalText() {
+    func testReturnsNilForPlainTextDeltaEnvelope() {
+        // A plain-text delta carries no structured final value, so there is
+        // nothing to resolve — envelope parsing happens before this layer.
         let llmOutput = #"{"choices":[{"delta":{"content":"Ship the release notes today."}}]}"#
 
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            llmOutput
-        )
+        XCTAssertNil(LLMFinalTextOutput.wholeJSONText(from: llmOutput))
     }
 
     func testExtractsResponsesTextBlocksFromWholeResponse() {
@@ -114,7 +112,7 @@ final class LLMFinalTextOutputTests: XCTestCase {
         """
 
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
+            LLMFinalTextOutput.wholeJSONText(from: llmOutput),
             "今天下午同步发布计划。"
         )
     }
@@ -125,7 +123,7 @@ final class LLMFinalTextOutputTests: XCTestCase {
         """
 
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
+            LLMFinalTextOutput.wholeJSONText(from: llmOutput),
             """
             Ship the release notes.
             Then confirm QA.
@@ -133,30 +131,21 @@ final class LLMFinalTextOutputTests: XCTestCase {
         )
     }
 
-    func testKeepsOrdinaryTopLevelArrayWithoutResponseMetadata() {
-        let llmOutput = #"[{"text":"Ship the release notes today.","mode":"voice"}]"#
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            llmOutput
+    func testReturnsNilForOrdinaryTopLevelArrayWithoutResponseMetadata() {
+        XCTAssertNil(
+            LLMFinalTextOutput.wholeJSONText(from: #"[{"text":"Ship the release notes today.","mode":"voice"}]"#)
         )
     }
 
-    func testKeepsOrdinaryOutputStringJSON() {
-        let llmOutput = #"{"output":"Ship the release notes today.","mode":"voice"}"#
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            llmOutput
+    func testReturnsNilForOrdinaryOutputStringJSON() {
+        XCTAssertNil(
+            LLMFinalTextOutput.wholeJSONText(from: #"{"output":"Ship the release notes today.","mode":"voice"}"#)
         )
     }
 
-    func testKeepsOrdinaryContentArrayJSON() {
-        let llmOutput = #"{"content":[{"text":"Ship the release notes today.","mode":"voice"}],"mode":"voice"}"#
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            llmOutput
+    func testReturnsNilForOrdinaryContentArrayJSON() {
+        XCTAssertNil(
+            LLMFinalTextOutput.wholeJSONText(from: #"{"content":[{"text":"Ship the release notes today.","mode":"voice"}],"mode":"voice"}"#)
         )
     }
 }

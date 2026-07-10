@@ -82,7 +82,10 @@ private extension PromptBuilder {
             ]
         }
 
-        var parts = [PromptCatalog.baseSystemPrompt(inputLanguage: inputLanguage)]
+        var parts = [
+            PromptCatalog.baseSystemPrompt(inputLanguage: inputLanguage),
+            PromptCatalog.asrQualityRules(inputLanguage: inputLanguage),
+        ]
         if style.usesCustomPrompt {
             if let customStyle = PromptStylePrompts.customStyleSection(
                 stylePrompt: stylePrompt,

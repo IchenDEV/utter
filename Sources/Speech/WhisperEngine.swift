@@ -202,8 +202,7 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
                 audioURL: audioURL,
                 livePreviewText: outcome.livePreviewText,
                 metrics: outcome.metrics,
-                unitLabel: "samples",
-                preferLivePreview: true
+                unitLabel: "samples"
             ) { [weak self] in
                 guard let self else { return "" }
                 return try await self.transcribe(audioURL: audioURL, language: language)
@@ -250,6 +249,7 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         let promptTokens = chinesePromptTokens(for: language)
         return DecodingOptions(
             language: language,
+            temperatureFallbackCount: 1,
             usePrefillPrompt: language != nil,
             skipSpecialTokens: true,
             withoutTimestamps: true,

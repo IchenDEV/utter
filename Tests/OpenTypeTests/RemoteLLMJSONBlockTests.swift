@@ -24,7 +24,7 @@ final class RemoteLLMJSONBlockTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIJSONContentBlockAsCommand() throws {
@@ -74,7 +74,7 @@ final class RemoteLLMJSONBlockTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.anthropic(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "今天下午同步发布计划。")
+        XCTAssertEqual(rawText, "今天下午同步发布计划。")
     }
 
     func testParsesTypedFinalTextContentBlocks() throws {
@@ -153,13 +153,15 @@ final class RemoteLLMJSONBlockTests: XCTestCase {
         )
     }
 
-    func testCleanerExtractsFinalTextFromWholeJSONContentBlock() {
-        let output = """
+    func testResolvesFinalTextFromWholeJSONContentEnvelope() throws {
+        // A whole-message JSON envelope is resolved at the API boundary, not by
+        // the text cleaner.
+        let response = """
         {"content":[{"type":"json","json":{"final_text":"Ship the release notes today."}}]}
         """
 
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(output),
+            try RemoteLLMResponseText.anthropic(from: data(response)),
             "Ship the release notes today."
         )
     }

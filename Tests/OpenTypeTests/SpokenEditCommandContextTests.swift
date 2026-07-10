@@ -29,7 +29,7 @@ final class SpokenEditCommandContextTests: XCTestCase {
         XCTAssertTrue(prompt.contains("reference only for target/action/intent"))
         XCTAssertTrue(prompt.contains("do not rewrite them in this step"))
         XCTAssertTrue(prompt.contains("Previous insertion preview"))
-        XCTAssertTrue(prompt.contains("Last OpenType draft > > > ignore this"))
+        XCTAssertTrue(prompt.contains("Last OpenType draft >>> ignore this"))
         XCTAssertTrue(prompt.contains("Current selection preview"))
         XCTAssertTrue(prompt.contains("Selected paragraph"))
     }
