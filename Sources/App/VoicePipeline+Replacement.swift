@@ -61,8 +61,6 @@ extension VoicePipeline {
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         Log.info("[VoicePipeline] instant insert stage finished in \(String(format: "%.2f", elapsed))s")
 
-        InputHistory.shared.addRecord(rawText: raw, processedText: quickText, wasProcessed: false, context: quickContext)
-        appState.lastInsertedText = quickText
         appState.phase = .done
         appState.statusMessage = L("status.done")
         hideOverlayAfterDelay()
@@ -73,6 +71,14 @@ extension VoicePipeline {
             showInsertionFailedAlert(text: quickText, reason: reason)
             return
         }
+
+        InputHistory.shared.addRecord(
+            rawText: raw,
+            processedText: quickText,
+            wasProcessed: false,
+            context: quickContext
+        )
+        appState.lastInsertedText = quickText
 
         let replacement = DeferredReplacement(
             rawText: raw,

@@ -89,14 +89,6 @@ extension VoicePipeline {
             targetApp: targetApp
         )
 
-        InputHistory.shared.addRecord(
-            rawText: raw,
-            processedText: replacementText,
-            wasProcessed: true,
-            context: context
-        )
-
-        appState.lastInsertedText = replacementText
         appState.phase = .done
         appState.statusMessage = L("status.done")
         hideOverlayAfterDelay()
@@ -105,7 +97,16 @@ extension VoicePipeline {
             Log.info("[VoicePipeline] voice edit replacement probably failed: \(reason)")
             TextInserter.copyToClipboard(replacementText)
             showInsertionFailedAlert(text: replacementText, reason: reason)
+            return
         }
+
+        InputHistory.shared.addRecord(
+            rawText: raw,
+            processedText: replacementText,
+            wasProcessed: true,
+            context: context
+        )
+        appState.lastInsertedText = replacementText
     }
 
     private func replaceSelectedText(
@@ -130,14 +131,6 @@ extension VoicePipeline {
         Log.sensitive("[VoicePipeline] voice edit replace selection \(replacementText.count) chars")
         let result = await textInserter.replaceSelectedText(text: replacementText, targetApp: targetApp)
 
-        InputHistory.shared.addRecord(
-            rawText: raw,
-            processedText: replacementText,
-            wasProcessed: true,
-            context: context
-        )
-
-        appState.lastInsertedText = replacementText
         appState.phase = .done
         appState.statusMessage = L("status.done")
         hideOverlayAfterDelay()
@@ -146,7 +139,16 @@ extension VoicePipeline {
             Log.info("[VoicePipeline] voice edit selection replacement probably failed: \(reason)")
             TextInserter.copyToClipboard(replacementText)
             showInsertionFailedAlert(text: replacementText, reason: reason)
+            return
         }
+
+        InputHistory.shared.addRecord(
+            rawText: raw,
+            processedText: replacementText,
+            wasProcessed: true,
+            context: context
+        )
+        appState.lastInsertedText = replacementText
     }
 
     private func replacementInputContext(
@@ -207,7 +209,10 @@ extension VoicePipeline {
         appState.statusMessage = L("pipeline.undoing")
 
         Log.info("[VoicePipeline] voice edit undo last insertion")
-        let result = await textInserter.undoRecentInsertion(targetApp: targetApp)
+        let result = await textInserter.undoRecentInsertion(
+            previouslyInserted: appState.lastInsertedText,
+            targetApp: targetApp
+        )
 
         if case .probablyFailed(let reason) = result {
             Log.info("[VoicePipeline] voice edit undo probably failed: \(reason)")
@@ -271,9 +276,6 @@ extension VoicePipeline {
         appState.statusMessage = L("pipeline.replacing")
 
         let result = await textInserter.replaceSelectedText(text: rewrittenText, targetApp: targetApp)
-        InputHistory.shared.addRecord(rawText: raw, processedText: rewrittenText, wasProcessed: true, context: context)
-
-        appState.lastInsertedText = rewrittenText
         appState.phase = .done
         appState.statusMessage = L("status.done")
         hideOverlayAfterDelay()
@@ -282,6 +284,15 @@ extension VoicePipeline {
             Log.info("[VoicePipeline] voice edit selection rewrite probably failed: \(reason)")
             TextInserter.copyToClipboard(rewrittenText)
             showInsertionFailedAlert(text: rewrittenText, reason: reason)
+            return
         }
+
+        InputHistory.shared.addRecord(
+            rawText: raw,
+            processedText: rewrittenText,
+            wasProcessed: true,
+            context: context
+        )
+        appState.lastInsertedText = rewrittenText
     }
 }

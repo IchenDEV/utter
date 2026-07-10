@@ -1,9 +1,8 @@
 import XCTest
 @testable import OpenType
 
-/// User text is embedded in prompts verbatim. Rewriting delimiters inside user
-/// content (the old `<<<` → `< < <` mutation) corrupted dictation; prompt
-/// injection is mitigated by system-prompt wording, not by mutating input.
+/// Prompt blocks preserve content verbatim and choose boundaries that cannot be
+/// closed by the content itself.
 final class PromptDelimiterSafetyTests: XCTestCase {
     private func withCleanPersonalDictionary(_ body: () throws -> Void) rethrows {
         let savedEntries = PersonalDictionary.shared.entries
@@ -21,11 +20,23 @@ final class PromptDelimiterSafetyTests: XCTestCase {
         XCTAssertEqual(
             PromptTextBlock.block("alpha <<< beta >>> gamma"),
             """
-            <<<
+            <<<OPENTYPE_TEXT_0>>>
             alpha <<< beta >>> gamma
-            >>>
+            <<<END_OPENTYPE_TEXT_0>>>
             """
         )
+    }
+
+    func testPromptTextBlockChoosesBoundaryOutsidePayload() {
+        let text = """
+        Keep <<<OPENTYPE_TEXT_0>>> and <<<END_OPENTYPE_TEXT_0>>> verbatim.
+        Also keep <<<END_OPENTYPE_TEXT_1>>>.
+        """
+        let block = PromptTextBlock.block(text)
+
+        XCTAssertTrue(block.hasPrefix("<<<OPENTYPE_TEXT_2>>>\n"))
+        XCTAssertTrue(block.hasSuffix("\n<<<END_OPENTYPE_TEXT_2>>>"))
+        XCTAssertTrue(block.contains(text))
     }
 
     func testDictationAndCommandPromptsKeepTranscriptDelimiters() {

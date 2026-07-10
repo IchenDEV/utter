@@ -219,15 +219,6 @@ extension VoicePipeline {
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         Log.info("[VoicePipeline] insert stage finished in \(String(format: "%.2f", elapsed))s")
 
-        let wasProcessed = settings.outputMode == .processed || settings.outputMode == .command
-        InputHistory.shared.addRecord(
-            rawText: raw,
-            processedText: finalText,
-            wasProcessed: wasProcessed,
-            context: output.context
-        )
-
-        appState.lastInsertedText = finalText
         appState.phase = .done
         appState.statusMessage = L("status.done")
         hideOverlayAfterDelay()
@@ -236,7 +227,17 @@ extension VoicePipeline {
             Log.info("[VoicePipeline] insertion probably failed: \(reason)")
             TextInserter.copyToClipboard(finalText)
             showInsertionFailedAlert(text: finalText, reason: reason)
+            return
         }
+
+        let wasProcessed = settings.outputMode == .processed || settings.outputMode == .command
+        InputHistory.shared.addRecord(
+            rawText: raw,
+            processedText: finalText,
+            wasProcessed: wasProcessed,
+            context: output.context
+        )
+        appState.lastInsertedText = finalText
     }
 }
 

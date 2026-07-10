@@ -9,7 +9,9 @@ enum InsertResult {
 }
 
 @MainActor
-struct TextInserter {
+final class TextInserter {
+    var recentInsertionAnchor: RecentInsertionAnchor?
+
     func insert(text: String, targetApp: NSRunningApplication? = nil) async -> InsertResult {
         guard AXIsProcessTrusted() else {
             Log.error("[TextInserter] no AX trust")
@@ -25,68 +27,14 @@ struct TextInserter {
         let result = await insertViaClipboard(text: text)
 
         if !activated || !result {
+            forgetRecentInsertion()
             let reason = activated
                 ? "Paste command may not have reached the target"
                 : "Could not activate target application"
             Log.info("[TextInserter] probably failed: \(reason)")
             return .probablyFailed(reason: reason)
         }
-        return .success
-    }
-
-    func replaceRecentInsertion(
-        text: String,
-        previouslyInserted: String? = nil,
-        targetApp: NSRunningApplication? = nil
-    ) async -> InsertResult {
-        if let failure = await prepareTargetOperation(targetApp: targetApp, logContext: "replacement") {
-            return failure
-        }
-
-        if let previouslyInserted {
-            let beforeCaret = focusedTextBeforeCaret(maxUTF16Length: previouslyInserted.utf16.count + 8)
-            let safe = RecentInsertionGuard.isReplacementSafe(
-                textBeforeCaret: beforeCaret,
-                inserted: previouslyInserted
-            )
-            if safe == false {
-                let reason = L("pipeline.replacement_reason_text_changed")
-                Log.info("[TextInserter] replacement skipped: caret text changed since insertion")
-                return .probablyFailed(reason: reason)
-            }
-        }
-
-        let undoOK = await simulateCommandShortcut(keyCode: CGKeyCode(kVK_ANSI_Z), scriptKey: "z")
-        guard undoOK else {
-            let reason = "Could not undo the previous insertion"
-            Log.info("[TextInserter] replacement probably failed: \(reason)")
-            return .probablyFailed(reason: reason)
-        }
-
-        try? await Task.sleep(nanoseconds: 160_000_000)
-
-        let pasted = await insertViaClipboard(text: text)
-        guard pasted else {
-            let reason = "Could not paste replacement text"
-            Log.info("[TextInserter] replacement probably failed: \(reason)")
-            return .probablyFailed(reason: reason)
-        }
-
-        return .success
-    }
-
-    func undoRecentInsertion(targetApp: NSRunningApplication? = nil) async -> InsertResult {
-        if let failure = await prepareTargetOperation(targetApp: targetApp, logContext: "undo") {
-            return failure
-        }
-
-        let undoOK = await simulateCommandShortcut(keyCode: CGKeyCode(kVK_ANSI_Z), scriptKey: "z")
-        guard undoOK else {
-            let reason = "Could not undo the previous insertion"
-            Log.info("[TextInserter] undo probably failed: \(reason)")
-            return .probablyFailed(reason: reason)
-        }
-
+        rememberRecentInsertion(text: text)
         return .success
     }
 
@@ -105,6 +53,7 @@ struct TextInserter {
             return .probablyFailed(reason: reason)
         }
 
+        rememberRecentInsertion(text: text)
         return .success
     }
 
@@ -123,6 +72,7 @@ struct TextInserter {
             return .probablyFailed(reason: reason)
         }
 
+        forgetRecentInsertion()
         return .success
     }
 
@@ -167,7 +117,7 @@ struct TextInserter {
         return selectedValue as? String
     }
 
-    private func focusedElementInFrontmostApplication() -> AXUIElement? {
+    func focusedElementInFrontmostApplication() -> AXUIElement? {
         guard let front = NSWorkspace.shared.frontmostApplication else { return nil }
         let appElement = AXUIElementCreateApplication(front.processIdentifier)
 
@@ -180,46 +130,6 @@ struct TextInserter {
         guard focusedResult == .success, let focusedElement = focusedValue else { return nil }
         guard CFGetTypeID(focusedElement) == AXUIElementGetTypeID() else { return nil }
         return (focusedElement as! AXUIElement)
-    }
-
-    /// Reads the focused element's text up to the caret (end of selection).
-    /// Returns nil when the app does not expose value/selection via AX.
-    private func focusedTextBeforeCaret(maxUTF16Length: Int) -> String? {
-        guard let focusedElement = focusedElementInFrontmostApplication() else { return nil }
-
-        var rangeValue: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(
-            focusedElement,
-            kAXSelectedTextRangeAttribute as CFString,
-            &rangeValue
-        ) == .success,
-            let rangeValue,
-            CFGetTypeID(rangeValue) == AXValueGetTypeID() else {
-            return nil
-        }
-        var selectedRange = CFRange()
-        guard AXValueGetValue(rangeValue as! AXValue, .cfRange, &selectedRange) else { return nil }
-
-        var textValue: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(
-            focusedElement,
-            kAXValueAttribute as CFString,
-            &textValue
-        ) == .success,
-            let fullText = textValue as? String else {
-            return nil
-        }
-
-        let caret = min(max(0, selectedRange.location + selectedRange.length), fullText.utf16.count)
-        let start = max(0, caret - maxUTF16Length)
-        let utf16 = fullText.utf16
-        guard let startIndex = utf16.index(utf16.startIndex, offsetBy: start, limitedBy: utf16.endIndex),
-              let caretIndex = utf16.index(utf16.startIndex, offsetBy: caret, limitedBy: utf16.endIndex),
-              let lower = String.Index(startIndex, within: fullText),
-              let upper = String.Index(caretIndex, within: fullText) else {
-            return nil
-        }
-        return String(fullText[lower..<upper])
     }
 
     private func prepareSelectedTextOperation(
@@ -239,7 +149,7 @@ struct TextInserter {
         return nil
     }
 
-    private func prepareTargetOperation(
+    func prepareTargetOperation(
         targetApp: NSRunningApplication?,
         logContext: String
     ) async -> InsertResult? {
@@ -265,7 +175,7 @@ struct TextInserter {
     // MARK: - Clipboard + Cmd+V
 
     /// Returns true if at least one paste method was executed without errors.
-    private func insertViaClipboard(text: String) async -> Bool {
+    func insertViaClipboard(text: String) async -> Bool {
         let pasteboard = NSPasteboard.general
         let prevChange = pasteboard.changeCount
         let previousContents = pasteboard.string(forType: .string)

@@ -56,9 +56,6 @@ extension VoicePipeline {
             previouslyInserted: appState.lastInsertedText,
             targetApp: targetApp
         )
-        InputHistory.shared.addRecord(rawText: raw, processedText: rewrittenText, wasProcessed: true, context: context)
-
-        appState.lastInsertedText = rewrittenText
         appState.phase = .done
         appState.statusMessage = L("status.done")
         hideOverlayAfterDelay()
@@ -67,6 +64,15 @@ extension VoicePipeline {
             Log.info("[VoicePipeline] voice edit last insertion rewrite probably failed: \(reason)")
             TextInserter.copyToClipboard(rewrittenText)
             showInsertionFailedAlert(text: rewrittenText, reason: reason)
+            return
         }
+
+        InputHistory.shared.addRecord(
+            rawText: raw,
+            processedText: rewrittenText,
+            wasProcessed: true,
+            context: context
+        )
+        appState.lastInsertedText = rewrittenText
     }
 }

@@ -2,11 +2,7 @@ import Foundation
 
 enum LLMFinalTextOutput {
     static func text(from rawText: String) -> String? {
-        let candidate = stripWrappingCodeFence(from: rawText)
-        if let text = wholeJSONText(from: rawText) {
-            return text
-        }
-        return embeddedExplicitFinalText(in: candidate)
+        wholeJSONText(from: rawText)
     }
 
     /// Restricted entry point for the remote-API boundary: only extracts when
@@ -61,18 +57,6 @@ private extension LLMFinalTextOutput {
             return nil
         }
         return finalText(in: object, allowsAmbiguousKeys: allowsAmbiguousKeys)
-    }
-
-    static func embeddedExplicitFinalText(in text: String) -> String? {
-        var bestText: String?
-        for data in LLMStructuredOutput.jsonValueDataCandidates(from: text) {
-            guard let object = try? JSONSerialization.jsonObject(with: data),
-                  let text = explicitFinalText(in: object) else {
-                continue
-            }
-            bestText = text
-        }
-        return bestText
     }
 
     static func wholeJSONValueData(from text: String) -> Data? {

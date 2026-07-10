@@ -121,7 +121,11 @@ final class StreamingPreviewAccumulator {
 
         if previewText.hasSuffix(latestWindow) {
             let sharedPrefix = Self.commonPrefixCount(latestWindow, windowText)
-            let requiredPrefix = max(Self.minimumMeaningfulOverlap, min(latestWindow.count, windowText.count) / 2)
+            let shortestWindow = min(latestWindow.count, windowText.count)
+            let requiredPrefix = max(
+                Self.minimumMeaningfulOverlap,
+                (shortestWindow * 3 + 3) / 4
+            )
             if sharedPrefix >= requiredPrefix {
                 previewText.removeLast(latestWindow.count)
                 previewText += windowText
@@ -226,7 +230,7 @@ final class StreamingPreviewAccumulator {
     }
 
     private static func removeTentativeTrailingPunctuation(from current: String, before remainder: String) -> String {
-        guard let nextMeaningful = remainder.first(where: { !$0.isWhitespace }),
+        guard let nextMeaningful = remainder.first(where: \.isOverlapSignificant),
               nextMeaningful.isOverlapSignificant else {
             return current
         }

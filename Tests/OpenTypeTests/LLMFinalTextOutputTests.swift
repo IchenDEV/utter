@@ -24,6 +24,12 @@ final class LLMFinalTextOutputTests: XCTestCase {
         XCTAssertEqual(FormattedOutputCleaner.clean(llmOutput), llmOutput)
     }
 
+    func testDoesNotMineEmbeddedExplicitFinalText() {
+        let llmOutput = #"Document this example: {"final_text":"hello"}."#
+
+        XCTAssertNil(LLMFinalTextOutput.text(from: llmOutput))
+    }
+
     func testExtractsTopLevelTextBlockArray() {
         let llmOutput = """
         [{"type":"text","text":"Ship the release notes."},{"type":"text","text":"Then confirm QA."}]
