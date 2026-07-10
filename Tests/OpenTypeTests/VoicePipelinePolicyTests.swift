@@ -167,16 +167,32 @@ final class VoicePipelinePolicyTests: XCTestCase {
         XCTAssertEqual(TranscriptionSanitizer.prepare("Write a function that adds two numbers"), "Write a function that adds two numbers")
     }
 
-    func testTranscriptionSanitizerCollapsesSameRecordingDuplicate() {
+    func testTranscriptionSanitizerKeepsRepetitionWithoutWeakAudioEvidence() {
         XCTAssertEqual(
             TranscriptionSanitizer.prepare("帮我整理一下这段话 帮我整理一下这段话"),
-            "帮我整理一下这段话"
+            "帮我整理一下这段话 帮我整理一下这段话"
         )
         XCTAssertEqual(
             TranscriptionSanitizer.prepare("Write a short release note. Write a short release note."),
-            "Write a short release note."
+            "Write a short release note. Write a short release note."
         )
         XCTAssertEqual(TranscriptionSanitizer.prepare("yes yes"), "yes yes")
+    }
+
+    func testTranscriptionSanitizerCollapsesDuplicateOnlyForWeakAudio() {
+        let weakActivity = audioActivity(rms: 0.002)
+
+        XCTAssertEqual(
+            TranscriptionSanitizer.prepare("帮我整理一下这段话 帮我整理一下这段话", audioActivity: weakActivity),
+            "帮我整理一下这段话"
+        )
+        XCTAssertEqual(
+            TranscriptionSanitizer.prepare(
+                "Write a short release note. Write a short release note.",
+                audioActivity: weakActivity
+            ),
+            "Write a short release note."
+        )
     }
 
     func testTranscriptionPreviewKeepsSemanticCleanupForLLM() {

@@ -2,16 +2,46 @@ import XCTest
 @testable import OpenType
 
 final class TranscriptionSanitizerTests: XCTestCase {
-    func testCollapsesRepeatedTranscriptMoreThanTwice() {
+    func testCollapsesRepeatedTranscriptOnlyWhenAudioSuggestsHallucination() {
+        var weakAudio = AudioCaptureActivity()
+        weakAudio.record(rms: 0.002, frameCount: 16_000)
+
         XCTAssertEqual(
             TranscriptionSanitizer.prepare(
-                "Write a short release note. Write a short release note. Write a short release note."
+                "Write a short release note. Write a short release note. Write a short release note.",
+                audioActivity: weakAudio
             ),
             "Write a short release note."
         )
         XCTAssertEqual(
-            TranscriptionSanitizer.prepare("帮我整理一下这段话 帮我整理一下这段话 帮我整理一下这段话"),
+            TranscriptionSanitizer.prepare(
+                "帮我整理一下这段话 帮我整理一下这段话 帮我整理一下这段话",
+                audioActivity: weakAudio
+            ),
             "帮我整理一下这段话"
+        )
+    }
+
+    func testKeepsDeliberateRepetitionWhenAudioIsStrong() {
+        var strongAudio = AudioCaptureActivity()
+        strongAudio.record(rms: 0.02, frameCount: 16_000)
+
+        XCTAssertEqual(
+            TranscriptionSanitizer.prepare("这个方案可以这个方案可以", audioActivity: strongAudio),
+            "这个方案可以这个方案可以"
+        )
+        XCTAssertEqual(
+            TranscriptionSanitizer.prepare("非常重要非常重要非常重要", audioActivity: strongAudio),
+            "非常重要非常重要非常重要"
+        )
+    }
+
+    func testKeepsRepetitionWhenAudioSignalIsUnavailable() {
+        // Without audio evidence we cannot distinguish hallucination from
+        // deliberate emphasis, so err on the side of keeping the user's words.
+        XCTAssertEqual(
+            TranscriptionSanitizer.prepare("帮我整理一下这段话 帮我整理一下这段话 帮我整理一下这段话"),
+            "帮我整理一下这段话 帮我整理一下这段话 帮我整理一下这段话"
         )
     }
 

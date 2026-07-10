@@ -83,7 +83,11 @@ extension VoicePipeline {
         appState.statusMessage = L("pipeline.replacing")
 
         Log.sensitive("[VoicePipeline] voice edit replace \(replacementText.count) chars")
-        let result = await textInserter.replaceRecentInsertion(text: replacementText, targetApp: targetApp)
+        let result = await textInserter.replaceRecentInsertion(
+            text: replacementText,
+            previouslyInserted: appState.lastInsertedText,
+            targetApp: targetApp
+        )
 
         InputHistory.shared.addRecord(
             rawText: raw,

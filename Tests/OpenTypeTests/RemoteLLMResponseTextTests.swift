@@ -110,8 +110,7 @@ final class RemoteLLMResponseTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIStreamingDeltaToolCallArguments() throws {
@@ -207,8 +206,7 @@ final class RemoteLLMResponseTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIResponsesFunctionCallArguments() throws {
@@ -227,8 +225,7 @@ final class RemoteLLMResponseTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(rawText, #"{"final_text":"今天下午同步发布计划。"}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "今天下午同步发布计划。")
+        XCTAssertEqual(rawText, "今天下午同步发布计划。")
     }
 
     func testParsesDecodedToolCallArgumentObject() throws {
@@ -255,7 +252,7 @@ final class RemoteLLMResponseTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesDecodedToolCallCommandObject() throws {
@@ -315,7 +312,7 @@ final class RemoteLLMResponseTextTests: XCTestCase {
         let finalResponse = #"{"content":[{"type":"tool_use","name":"emit_final","input":{"final_text":"Ship the release notes today."}}]}"#
         let finalRaw = try RemoteLLMResponseText.anthropic(from: data(finalResponse))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(finalRaw), "Ship the release notes today.")
+        XCTAssertEqual(finalRaw, "Ship the release notes today.")
 
         let commandResponse = #"{"content":[{"type":"tool_use","name":"emit_command","input":{"action":"replace_last","intent":null,"replacement":"ship tomorrow","confidence":0.91}}]}"#
         let commandRaw = try RemoteLLMResponseText.anthropic(from: data(commandResponse))

@@ -114,7 +114,9 @@ final class StreamingSpeechSupportTests: XCTestCase {
         XCTAssertEqual(transcribeCalls, 1)
     }
 
-    func testTranscriptResolverCanPreferLivePreviewForStreamingSpeed() async throws {
+    func testTranscriptResolverAlwaysRetranscribesEvenWhenPreviewCoversAudio() async throws {
+        // The heuristic preview can lock in mis-heard characters at window
+        // boundaries, so a covering preview must not shortcut re-transcription.
         let metrics = StreamingSessionMetrics(
             receivedBufferCount: 4,
             capturedUnitCount: 64_000,
@@ -130,41 +132,13 @@ final class StreamingSpeechSupportTests: XCTestCase {
             audioURL: URL(fileURLWithPath: "/tmp/opentype-test.wav"),
             livePreviewText: " preview text ",
             metrics: metrics,
-            unitLabel: "samples",
-            preferLivePreview: true
+            unitLabel: "samples"
         ) {
             transcribeCalls += 1
             return "final text"
         }
 
-        XCTAssertEqual(text, "preview text")
-        XCTAssertEqual(transcribeCalls, 0)
-    }
-
-    func testTranscriptResolverFallsBackWhenLivePreviewMissesLatestAudio() async throws {
-        let metrics = StreamingSessionMetrics(
-            receivedBufferCount: 6,
-            capturedUnitCount: 96_000,
-            partialUpdateCount: 2,
-            startedAt: Date(),
-            lastPartialAt: Date(),
-            lastPartialUnitCount: 64_000
-        )
-
-        var transcribeCalls = 0
-        let text = try await StreamingTranscriptResolver.resolveFinalTranscript(
-            engineName: "WhisperEngine",
-            audioURL: URL(fileURLWithPath: "/tmp/opentype-test.wav"),
-            livePreviewText: "stale preview",
-            metrics: metrics,
-            unitLabel: "samples",
-            preferLivePreview: true
-        ) {
-            transcribeCalls += 1
-            return "final recorded text"
-        }
-
-        XCTAssertEqual(text, "final recorded text")
+        XCTAssertEqual(text, "final text")
         XCTAssertEqual(transcribeCalls, 1)
     }
 
@@ -193,7 +167,7 @@ final class StreamingSpeechSupportTests: XCTestCase {
         XCTAssertEqual(transcribeCalls, 0)
     }
 
-    func testTranscriptResolverKeepsRecordedAudioAsFinalTruthEvenWhenEmpty() async throws {
+    func testTranscriptResolverFallsBackToPreviewWhenRetranscriptionIsEmpty() async throws {
         let metrics = StreamingSessionMetrics(
             receivedBufferCount: 3,
             capturedUnitCount: 24_000,
@@ -212,6 +186,6 @@ final class StreamingSpeechSupportTests: XCTestCase {
             ""
         }
 
-        XCTAssertEqual(text, "")
+        XCTAssertEqual(text, "live preview text")
     }
 }

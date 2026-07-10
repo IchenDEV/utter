@@ -22,7 +22,7 @@ def mimo_tag(code):
     }.get(code)
 
 
-def transcribe_qwen(args):
+def make_qwen_transcriber(args):
     try:
         from qwen3_asr_mlx import Qwen3ASR
     except ImportError as exc:
@@ -32,19 +32,21 @@ def transcribe_qwen(args):
         ) from exc
 
     model = Qwen3ASR.from_pretrained(args.model)
-    kwargs = {}
-    language = qwen_language(args.language)
-    if language:
-        kwargs["language"] = language
-    result = model.transcribe(args.audio, **kwargs)
-    return {
-        "text": result.text,
-        "language": getattr(result, "language", None),
-        "duration": getattr(result, "duration", None),
-    }
+
+    def transcribe(audio, language):
+        kwargs = {}
+        resolved = qwen_language(language)
+        if resolved:
+            kwargs["language"] = resolved
+        result = model.transcribe(audio, **kwargs)
+        return {"text": result.text}
+
+    return transcribe
 
 
-def transcribe_mimo(args):
+def make_mimo_transcriber(args):
+    if not args.tokenizer:
+        raise ValueError("MiMo-V2.5-ASR requires --tokenizer")
     if args.repo:
         sys.path.insert(0, args.repo)
     try:
@@ -59,36 +61,67 @@ def transcribe_mimo(args):
             ) from fallback_exc
 
     model = MimoAudio(model_path=args.model, mimo_audio_tokenizer_path=args.tokenizer)
-    tag = mimo_tag(args.language)
-    if tag:
-        text = model.asr_sft(args.audio, audio_tag=tag)
-    else:
-        text = model.asr_sft(args.audio)
-    return {"text": text}
+
+    def transcribe(audio, language):
+        tag = mimo_tag(language)
+        if tag:
+            return {"text": model.asr_sft(audio, audio_tag=tag)}
+        return {"text": model.asr_sft(audio)}
+
+    return transcribe
+
+
+def make_transcriber(args):
+    if args.provider == "qwen3":
+        return make_qwen_transcriber(args)
+    return make_mimo_transcriber(args)
+
+
+def run_once(args):
+    audio_path = pathlib.Path(args.audio)
+    if not audio_path.exists():
+        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+    transcribe = make_transcriber(args)
+    print(json.dumps(transcribe(args.audio, args.language), ensure_ascii=False))
+
+
+def serve(args):
+    """Load the model once, then answer one JSON request per stdin line with
+    one JSON response per stdout line. Exits when stdin closes."""
+    transcribe = make_transcriber(args)
+    print(json.dumps({"ready": True}), flush=True)
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            request = json.loads(line)
+            audio = request["audio"]
+            if not pathlib.Path(audio).exists():
+                raise FileNotFoundError(f"Audio file not found: {audio}")
+            response = transcribe(audio, request.get("language"))
+        except Exception as exc:  # keep serving after a bad request
+            response = {"error": str(exc)}
+        print(json.dumps(response, ensure_ascii=False), flush=True)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--provider", choices=["qwen3", "mimo"], required=True)
-    parser.add_argument("--audio", required=True)
     parser.add_argument("--model", required=True)
+    parser.add_argument("--audio")
     parser.add_argument("--language")
     parser.add_argument("--tokenizer")
     parser.add_argument("--repo")
+    parser.add_argument("--serve", action="store_true")
     args = parser.parse_args()
 
-    audio_path = pathlib.Path(args.audio)
-    if not audio_path.exists():
-        raise FileNotFoundError(f"Audio file not found: {audio_path}")
-
-    if args.provider == "qwen3":
-        result = transcribe_qwen(args)
-    else:
-        if not args.tokenizer:
-            raise ValueError("MiMo-V2.5-ASR requires --tokenizer")
-        result = transcribe_mimo(args)
-
-    print(json.dumps(result, ensure_ascii=False))
+    if args.serve:
+        serve(args)
+        return
+    if not args.audio:
+        raise ValueError("--audio is required unless --serve is set")
+    run_once(args)
 
 
 if __name__ == "__main__":

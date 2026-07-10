@@ -5,7 +5,16 @@ enum TranscriptionSanitizer {
         let normalized = normalizeTranscript(text)
         guard !isNonSpeechArtifact(normalized) else { return nil }
 
-        let collapsed = collapseRepeatedTranscript(normalized)
+        // Whole-transcript repetition is a hallucination pattern that shows up
+        // when the model has little real speech to work with. Deliberate spoken
+        // repetition ("这个方案可以这个方案可以") is normal emphasis, so only
+        // collapse when the audio itself suggests hallucination.
+        let collapsed: String
+        if audioActivity?.hasWeakSpeechEvidence == true {
+            collapsed = collapseRepeatedTranscript(normalized)
+        } else {
+            collapsed = normalized
+        }
         guard !isNonSpeechArtifact(collapsed) else { return nil }
 
         guard let dehallucinated = removeWeakAudioHallucination(
@@ -19,10 +28,7 @@ enum TranscriptionSanitizer {
     }
 
     static func previewText(_ text: String, inputLanguage: InputLanguage = .auto) -> String {
-        let collapsed = collapseRepeatedTranscript(normalizeTranscript(text))
-        guard !isNonSpeechArtifact(collapsed) else { return "" }
-
-        let normalized = FormattingHeuristics.normalizeInput(collapsed)
+        let normalized = FormattingHeuristics.normalizeInput(normalizeTranscript(text))
         return isNonSpeechArtifact(normalized) ? "" : normalized
     }
 

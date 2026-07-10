@@ -27,18 +27,18 @@ final class FormattedOutputCleanerTests: XCTestCase {
         )
     }
 
-    func testRemovesUnmarkedExplanationSectionAfterFinalText() {
+    func testKeepsUnmarkedExplanationLookingSection() {
+        // Dictated content legitimately contains "说明：" lines. Without a
+        // final-text label there is no safe way to tell model scaffolding from
+        // user content, so nothing is dropped.
         let llmOutput = """
         接下来，将 i18n 文案迁移到 @ec/i18n。
 
         说明：
-        这里是解释，不应该进入最终输出。
+        新增了两个字段，注意向后兼容。
         """
 
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            "接下来，将 i18n 文案迁移到 @ec/i18n。"
-        )
+        XCTAssertEqual(FormattedOutputCleaner.clean(llmOutput), llmOutput)
     }
 
     func testKeepsContentStartingWithExplanationHeading() {
@@ -144,145 +144,66 @@ final class FormattedOutputCleanerTests: XCTestCase {
         )
     }
 
-    func testExtractsStructuredFinalTextJSON() {
-        let llmOutput = """
-        {"final_text":"Ship the release notes today.","explanation":"Removed filler words."}
-        """
+    func testKeepsDictatedJSONVerbatim() {
+        // The cleaner never mines JSON out of the text: dictated JSON examples
+        // must survive untouched. Structured API payloads are unwrapped at the
+        // RemoteLLMResponseText boundary instead.
+        let dictatedObjects = [
+            #"{"final_text":"Ship the release notes today.","explanation":"Removed filler words."}"#,
+            #"{"text": "hello", "confidence": 0.9}"#,
+            #"{"name":"OpenType","mode":"voice"}"#,
+            #"{"text":"Ship the release notes today.","mode":"voice"}"#,
+            #"The payload is {"text":"Ship the release notes today.","mode":"voice"}."#,
+            #"请把 {"final_text": "你好"} 这个例子记录一下"#,
+        ]
 
+        for text in dictatedObjects {
+            XCTAssertEqual(FormattedOutputCleaner.clean(text), text)
+        }
+    }
+
+    func testStripsInlineNarrationPrefixes() {
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            "Ship the release notes today."
+            FormattedOutputCleaner.clean("好的，以下是整理后的文本：我们周五下午开会。"),
+            "我们周五下午开会。"
+        )
+        XCTAssertEqual(
+            FormattedOutputCleaner.clean("整理后的文本是：我们周五下午开会。"),
+            "我们周五下午开会。"
+        )
+        XCTAssertEqual(
+            FormattedOutputCleaner.clean("下面这段话整理后是：我们周五下午开会。"),
+            "我们周五下午开会。"
+        )
+        XCTAssertEqual(
+            FormattedOutputCleaner.clean("Sure, here is the rewritten text: Ship the release notes."),
+            "Ship the release notes."
         )
     }
 
-    func testExtractsStructuredFinalTextFromFencedJSON() {
-        let llmOutput = """
-        ```json
-        {"result":{"text":"今天下午同步发布计划。"},"reason":"final answer"}
-        ```
-        """
-
+    func testKeepsBareLabelsThatCouldBeDictation() {
+        // "输出结果：" and similar short labels are plausible dictated openings;
+        // only meta-narration about rewriting is stripped inline.
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            "今天下午同步发布计划。"
+            FormattedOutputCleaner.clean("输出结果：全部测试通过。"),
+            "输出结果：全部测试通过。"
         )
     }
 
-    func testExtractsExplicitFinalTextJSONAfterPreamble() {
-        let llmOutput = """
-        Sure, here is the cleaned result:
-        {"final_text":"Ship the release notes today.","reason":"Removed filler words."}
-        """
-
+    func testStripsEchoedTripleAngleWrapper() {
         XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            "Ship the release notes today."
+            FormattedOutputCleaner.clean("<<<\n我们周五下午开会。\n>>>"),
+            "我们周五下午开会。"
+        )
+        XCTAssertEqual(
+            FormattedOutputCleaner.clean("<<<我们周五下午开会。>>>"),
+            "我们周五下午开会。"
         )
     }
 
-    func testExtractsTypedOutputTextJSONAfterPreamble() {
-        let llmOutput = """
-        Final response:
-        {"type":"output_text","text":"Ship the release notes today."}
-        """
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            "Ship the release notes today."
-        )
-    }
-
-    func testExtractsNestedOutputTextWrapper() {
-        let llmOutput = """
-        {"payload":{"output_text":"今天下午同步发布计划。"}}
-        """
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            "今天下午同步发布计划。"
-        )
-    }
-
-    func testExtractsResponsesOutputTextArray() {
-        let llmOutput = """
-        {"id":"resp_1","output":[{"type":"message","content":[{"type":"output_text","text":"Ship the release notes today."}]}]}
-        """
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            "Ship the release notes today."
-        )
-    }
-
-    func testExtractsMultipleResponsesOutputTextBlocks() {
-        let llmOutput = """
-        {"output":[{"type":"message","content":[{"type":"output_text","text":"Ship the release notes."},{"type":"output_text","text":"Then confirm QA."}]}]}
-        """
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            """
-            Ship the release notes.
-            Then confirm QA.
-            """
-        )
-    }
-
-    func testExtractsTopLevelOutputTextArray() {
-        let llmOutput = """
-        [{"type":"output_text","text":"Ship the release notes."},{"type":"output_text","text":"Then confirm QA."}]
-        """
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            """
-            Ship the release notes.
-            Then confirm QA.
-            """
-        )
-    }
-
-    func testExtractsFencedTopLevelOutputTextArray() {
-        let llmOutput = """
-        ```json
-        [{"type":"output_text","text":"今天发发布说明。"},{"type":"output_text","text":"然后确认 QA。"}]
-        ```
-        """
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            """
-            今天发发布说明。
-            然后确认 QA。
-            """
-        )
-    }
-
-    func testKeepsOrdinaryEmbeddedJSONWithoutExplicitFinalText() {
-        let llmOutput = #"The payload is {"text":"Ship the release notes today.","mode":"voice"}."#
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            llmOutput
-        )
-    }
-
-    func testKeepsOrdinaryJSONWithoutFinalTextField() {
-        let llmOutput = #"{"name":"OpenType","mode":"voice"}"#
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            llmOutput
-        )
-    }
-
-    func testKeepsOrdinaryJSONWithAmbiguousTextField() {
-        let llmOutput = #"{"text":"Ship the release notes today.","mode":"voice"}"#
-
-        XCTAssertEqual(
-            FormattedOutputCleaner.clean(llmOutput),
-            llmOutput
-        )
+    func testKeepsDictatedTripleAngleMentions() {
+        let text = "heredoc 的写法是 <<<EOF 然后结束"
+        XCTAssertEqual(FormattedOutputCleaner.clean(text), text)
     }
 
     func testKeepsContentStartingWithJapaneseOrKoreanExplanationHeading() {

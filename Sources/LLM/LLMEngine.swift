@@ -65,10 +65,14 @@ actor LLMEngine {
 
         let t0 = CFAbsoluteTimeGetCurrent()
 
-        let effectivePrompt = Self.applyNoThink(prompt: prompt, modelID: currentModelID)
         let params = GenerateParameters(maxTokens: maxTokens, temperature: Float(temperature))
-        let session = ChatSession(container, instructions: systemPrompt, generateParameters: params)
-        let result = try await session.respond(to: effectivePrompt)
+        let session = ChatSession(
+            container,
+            instructions: systemPrompt,
+            generateParameters: params,
+            additionalContext: Self.chatTemplateContext(modelID: currentModelID)
+        )
+        let result = try await session.respond(to: prompt)
 
         let elapsed = CFAbsoluteTimeGetCurrent() - t0
         Log.info("[LLMEngine] generated \(result.count) chars in \(String(format: "%.1f", elapsed))s")
@@ -89,10 +93,7 @@ actor LLMEngine {
 
         guard let container else { throw LLMError.modelNotLoaded }
 
-        let testPrompt = Self.applyNoThink(
-            prompt: "将以下口述内容整理为书面文字：嗯那个就是我觉得我们首先应该把这个方案重新梳理一下然后呢第二个就是要确认一下时间节点第三呢就是把预算也算一下",
-            modelID: modelID
-        )
+        let testPrompt = "将以下口述内容整理为书面文字：嗯那个就是我觉得我们首先应该把这个方案重新梳理一下然后呢第二个就是要确认一下时间节点第三呢就是把预算也算一下"
         let systemPrompt = "你是语音转文字后处理引擎。直接输出整理后的文本，不要任何解释。"
         let params = GenerateParameters(maxTokens: 256, temperature: 0.3)
         let genT0 = CFAbsoluteTimeGetCurrent()
@@ -101,7 +102,12 @@ actor LLMEngine {
             ["role": "system", "content": systemPrompt],
             ["role": "user", "content": testPrompt],
         ]
-        let lmInput = try await container.prepare(input: .init(messages: messages))
+        let lmInput = try await container.prepare(
+            input: .init(
+                messages: messages,
+                additionalContext: Self.chatTemplateContext(modelID: modelID)
+            )
+        )
         let stream = try await container.generate(input: lmInput, parameters: params)
 
         var tokenCount = 0
@@ -131,9 +137,12 @@ actor LLMEngine {
         currentModelID = nil
     }
 
-    private static func applyNoThink(prompt: String, modelID: String?) -> String {
-        guard let id = modelID?.lowercased(), id.contains("qwen3") else { return prompt }
-        return "/no_think\n\(prompt)"
+    /// Qwen3-family chat templates read `enable_thinking` from the template
+    /// context — the official switch for suppressing `<think>` blocks. The old
+    /// `/no_think` soft prefix is ignored by Qwen3.5 and only added prompt noise.
+    static func chatTemplateContext(modelID: String?) -> [String: any Sendable]? {
+        guard let id = modelID?.lowercased(), id.contains("qwen3") else { return nil }
+        return ["enable_thinking": false]
     }
 
     static func modelConfiguration(for id: String) -> ModelConfiguration {

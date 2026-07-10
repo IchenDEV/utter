@@ -3,13 +3,20 @@ import Foundation
 enum LLMFinalTextOutput {
     static func text(from rawText: String) -> String? {
         let candidate = stripWrappingCodeFence(from: rawText)
-        if let text = finalText(
-            from: wholeJSONValueData(from: candidate),
-            allowsAmbiguousKeys: false
-        ) {
+        if let text = wholeJSONText(from: rawText) {
             return text
         }
         return embeddedExplicitFinalText(in: candidate)
+    }
+
+    /// Restricted entry point for the remote-API boundary: only extracts when
+    /// the entire payload (optionally fenced) is one structured final-text
+    /// value. Text that merely embeds JSON is left untouched.
+    static func wholeJSONText(from rawText: String) -> String? {
+        finalText(
+            from: wholeJSONValueData(from: stripWrappingCodeFence(from: rawText)),
+            allowsAmbiguousKeys: false
+        )
     }
 }
 

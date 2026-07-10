@@ -108,6 +108,7 @@ extension VoicePipeline {
 
         let result = await textInserter.replaceRecentInsertion(
             text: formattedText,
+            previouslyInserted: replacement.insertedText,
             targetApp: targetApp
         )
 

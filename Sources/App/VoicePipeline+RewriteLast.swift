@@ -51,7 +51,11 @@ extension VoicePipeline {
         appState.phase = .inserting
         appState.statusMessage = L("pipeline.replacing")
 
-        let result = await textInserter.replaceRecentInsertion(text: rewrittenText, targetApp: targetApp)
+        let result = await textInserter.replaceRecentInsertion(
+            text: rewrittenText,
+            previouslyInserted: appState.lastInsertedText,
+            targetApp: targetApp
+        )
         InputHistory.shared.addRecord(rawText: raw, processedText: rewrittenText, wasProcessed: true, context: context)
 
         appState.lastInsertedText = rewrittenText

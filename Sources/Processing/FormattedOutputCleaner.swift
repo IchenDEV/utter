@@ -1,5 +1,12 @@
 import Foundation
 
+/// Strips model scaffolding from formatting-LLM output.
+///
+/// Whitelist philosophy: only remove wrappers the model demonstrably produces
+/// (labels like "整理后文本：", conversational lead-ins, code fences, echoed
+/// `<<< >>>` input delimiters). Never mine JSON out of the text and never drop
+/// unmarked "explanation-looking" lines — dictated content that merely looks
+/// like scaffolding must survive.
 enum FormattedOutputCleaner {
     static func clean(_ text: String) -> String {
         let cleaned = removeScaffolding(from: text)
@@ -31,21 +38,22 @@ enum FormattedOutputCleaner {
 
 private extension FormattedOutputCleaner {
     static func removeScaffolding(from text: String) -> String {
-        let result = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let structuredText = LLMFinalTextOutput.text(from: result) {
-            return structuredText
-        }
+        var result = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        result = stripWrappingCodeFence(from: result)
+        result = stripWrappingTripleAngle(from: result)
 
         if let markedSection = finalTextSection(in: result) {
-            let section = stripWrappingCodeFence(from: markedSection)
-            return LLMFinalTextOutput.text(from: section) ?? section
+            return stripWrappingCodeFence(from: markedSection)
         }
 
-        let section = removeLeadingLabel(from: explanationStrippedSection(result))
-        let unwrapped = stripWrappingCodeFence(from: section)
-        return LLMFinalTextOutput.text(from: unwrapped) ?? unwrapped
+        result = removeLeadingLabel(from: result)
+        result = removeInlineNarrationPrefix(from: result)
+        return stripWrappingCodeFence(from: result)
     }
 
+    /// Handles the "labeled final text followed by an explanation section"
+    /// shape. The explanation is only dropped when a final-text label marks
+    /// the real content — unmarked text is never truncated.
     static func finalTextSection(in text: String) -> String? {
         let lines = text.components(separatedBy: .newlines)
         for (index, line) in lines.enumerated() {
@@ -58,10 +66,6 @@ private extension FormattedOutputCleaner {
             return trimSection(explanationStrippedLines(section))
         }
         return nil
-    }
-
-    static func explanationStrippedSection(_ text: String) -> String {
-        trimSection(explanationStrippedLines(text.components(separatedBy: .newlines)))
     }
 
     static func explanationStrippedLines(_ lines: [String]) -> [String] {
@@ -135,6 +139,64 @@ private extension FormattedOutputCleaner {
         return scaffoldingPatterns.contains { pattern in
             heading.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
         }
+    }
+
+    /// Small models sometimes echo a narration prefix on the same line as the
+    /// content ("好的，以下是整理后的文本：我们周五下午开会。"). Only prefixes
+    /// that read as meta-narration about rewriting are stripped — bare labels
+    /// like "输出结果：" can legitimately start dictated content and stay.
+    static func removeInlineNarrationPrefix(from text: String) -> String {
+        let result = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        var lines = result.components(separatedBy: .newlines)
+        guard let firstIndex = lines.firstIndex(where: { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+            return result
+        }
+
+        let line = lines[firstIndex].trimmingCharacters(in: .whitespacesAndNewlines)
+        for pattern in inlineNarrationPrefixPatterns {
+            guard let match = line.range(of: pattern, options: [.regularExpression, .caseInsensitive]),
+                  match.lowerBound == line.startIndex else {
+                continue
+            }
+            let remainder = String(line[match.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !remainder.isEmpty else { return result }
+            lines[firstIndex] = remainder
+            return trimSection(lines)
+        }
+        return result
+    }
+
+    static let inlineNarrationPrefixPatterns = [
+        // 好的，以下是整理后的文本：… / 下面是润色后的内容：…
+        "^(?:好的[，,。.]?\\s*)?(?:以下是|下面是)(?:整理后|润色后|最终|改写后|处理后)(?:的)?(?:文本|结果|内容)?[：:]",
+        // 整理后的文本是：… / 润色后的结果为：…
+        "^(?:整理后|润色后|改写后|处理后)(?:的)?(?:文本|结果|内容)?(?:是|为)[：:]",
+        // 下面这段话整理后是：… / 这段话整理后是什么？…（echoed question forms）
+        "^(?:下面)?这段话(?:整理|润色|改写)后(?:的文本)?(?:是|为)[：:]",
+        // Sure, here is the rewritten text: …
+        "^(?:sure[,.]?\\s*)?here(?: is|'s) the (?:final|rewritten|polished|cleaned|edited) (?:text|version|output|result)[:：]",
+    ]
+
+    /// Strips a `<<< … >>>` wrapper — models occasionally mimic the input
+    /// delimiters from the user prompt around their own output.
+    static func stripWrappingTripleAngle(from text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lines = trimmed.components(separatedBy: .newlines)
+        if lines.count >= 2,
+           lines[0].trimmingCharacters(in: .whitespaces) == "<<<",
+           lines[lines.count - 1].trimmingCharacters(in: .whitespaces) == ">>>" {
+            return trimSection(Array(lines.dropFirst().dropLast()))
+        }
+
+        if trimmed.hasPrefix("<<<"), trimmed.hasSuffix(">>>"), trimmed.count > 6 {
+            let inner = String(trimmed.dropFirst(3).dropLast(3)).trimmingCharacters(in: .whitespacesAndNewlines)
+            // Only unwrap when the inner text has no further delimiters, so
+            // dictated content that mentions <<< >>> markers stays intact.
+            if !inner.contains("<<<"), !inner.contains(">>>"), !inner.isEmpty {
+                return inner
+            }
+        }
+        return trimmed
     }
 
     static func finalTextHeadingRemainder(in line: String) -> String? {

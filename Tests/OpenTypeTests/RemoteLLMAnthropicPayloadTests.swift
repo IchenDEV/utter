@@ -60,7 +60,7 @@ final class RemoteLLMAnthropicPayloadTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.anthropic(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testPrefersAnthropicToolUseCommandPayloadOverTextBlocks() throws {

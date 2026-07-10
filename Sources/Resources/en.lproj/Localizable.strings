@@ -56,6 +56,7 @@
 "pipeline.replacement_copied_missing_target" = "Could not find the original app. The formatted text was copied instead.";
 "pipeline.replacement_copied_app_changed" = "You switched apps. The formatted text was copied instead.";
 "pipeline.replacement_copied_failed" = "Could not safely replace the text. The formatted text was copied instead.";
+"pipeline.replacement_reason_text_changed" = "The text was edited after insertion, so replacing it is no longer safe";
 "pipeline.no_previous_insert_to_replace" = "No previous OpenType insertion to replace";
 "pipeline.no_selected_text_to_replace" = "No selected text found";
 "pipeline.preparing_model" = "Preparing speech model…";

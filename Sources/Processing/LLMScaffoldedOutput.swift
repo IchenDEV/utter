@@ -1,5 +1,9 @@
 import Foundation
 
+/// Extracts the final answer from output that uses explicit thinking scaffolds:
+/// real tags (`<think>`, `<analysis>`, `<final>`) or standalone heading lines
+/// ("Analysis:" / "Final:" on their own lines). Inline headings such as a
+/// dictated "分析：市场规模很大。" never activate extraction.
 enum LLMScaffoldedOutput {
     static func finalText(from text: String) -> String? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -52,7 +56,7 @@ private extension LLMScaffoldedOutput {
             if isIgnorableLine(line) { continue }
 
             if !sawThinkingScaffold {
-                if isThinkingHeading(line) {
+                if isStandaloneThinkingHeading(line) {
                     sawThinkingScaffold = true
                     continue
                 }
@@ -73,8 +77,12 @@ private extension LLMScaffoldedOutput {
         return nil
     }
 
-    static func isThinkingHeading(_ line: String) -> Bool {
-        headingRemainder(in: line, markers: thinkingMarkers) != nil
+    /// ASR transcripts have no line structure, and a formatting model that
+    /// echoes dictated notes keeps the heading and its content on one line
+    /// ("分析：市场规模很大。"). A thinking heading alone on its own line is
+    /// therefore a reliable scaffold signal, while an inline one is content.
+    static func isStandaloneThinkingHeading(_ line: String) -> Bool {
+        headingRemainder(in: line, markers: thinkingMarkers) == ""
     }
 
     static func finalHeadingRemainder(in line: String) -> String? {

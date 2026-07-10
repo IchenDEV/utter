@@ -120,13 +120,15 @@ extension VoicePipeline {
                 markSpeechModelDownloadRequired(showInStatus: requestPermission)
                 return
             }
-            qwenSpeechEngine = LocalASREngine(configuration: LocalASRConfiguration(
+            let engine = LocalASREngine(configuration: LocalASRConfiguration(
                 provider: .qwen3,
                 pythonPath: settings.localASRPythonPath,
                 modelPath: catalog.asrModelPath(for: settings.qwenASRModel),
                 tokenizerPath: "",
                 repoPath: ""
             ))
+            qwenSpeechEngine = engine
+            Task { await engine.prepare() }
         case .mimo:
             let settings = appState.settings
             let catalog = ModelCatalog.shared
@@ -135,13 +137,15 @@ extension VoicePipeline {
                 markSpeechModelDownloadRequired(showInStatus: requestPermission)
                 return
             }
-            mimoSpeechEngine = LocalASREngine(configuration: LocalASRConfiguration(
+            let engine = LocalASREngine(configuration: LocalASRConfiguration(
                 provider: .mimo,
                 pythonPath: settings.localASRPythonPath,
                 modelPath: catalog.asrModelPath(for: settings.mimoASRModel),
                 tokenizerPath: catalog.mimoTokenizerPath(),
                 repoPath: catalog.mimoRepositoryPath()
             ))
+            mimoSpeechEngine = engine
+            Task { await engine.prepare() }
         }
     }
 

@@ -4,13 +4,13 @@ enum RemoteLLMResponseText {
     static func openAI(from data: Data) throws -> String {
         if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
             if let text = openAIText(in: json) {
-                return text
+                return resolveStructuredOutput(text)
             }
             throw RemoteLLMError.invalidResponse
         }
 
         if let text = RemoteLLMEventStreamText.openAI(from: data) {
-            return text
+            return resolveStructuredOutput(text)
         }
 
         throw RemoteLLMError.invalidResponse
@@ -35,13 +35,13 @@ enum RemoteLLMResponseText {
     static func anthropic(from data: Data) throws -> String {
         if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
             if let text = anthropicText(in: json) {
-                return text
+                return resolveStructuredOutput(text)
             }
             throw RemoteLLMError.invalidResponse
         }
 
         if let text = RemoteLLMEventStreamText.anthropic(from: data) {
-            return text
+            return resolveStructuredOutput(text)
         }
 
         throw RemoteLLMError.invalidResponse
@@ -50,6 +50,17 @@ enum RemoteLLMResponseText {
     static func anthropicText(in json: [String: Any]) -> String? {
         guard let content = json.value(forCaseInsensitiveKey: "content") else { return nil }
         return toolCallText(from: content) ?? contentText(from: content)
+    }
+
+    /// Providers configured for structured output return the whole message as
+    /// one JSON value. Resolve that here at the API boundary; text that merely
+    /// mentions or embeds JSON stays untouched, and command payloads keep their
+    /// JSON shape for the spoken-edit resolver.
+    static func resolveStructuredOutput(_ text: String) -> String {
+        guard SpokenEditCommandLLMResolver.command(from: text) == nil else {
+            return text
+        }
+        return LLMFinalTextOutput.wholeJSONText(from: text) ?? text
     }
 }
 
@@ -179,31 +190,45 @@ private extension RemoteLLMResponseText {
 
     static func toolPayloadText(in object: [String: Any]) -> String? {
         for key in toolPayloadKeys {
-            if let text = structuredPayloadText(from: object.value(forCaseInsensitiveKey: key)),
-               isActionableOutputPayload(text) {
-                return text
+            guard let value = object.value(forCaseInsensitiveKey: key),
+                  let actionable = actionablePayloadText(from: value) else {
+                continue
             }
+            return actionable
         }
         return nil
     }
 
     static func structuredContentBlockText(_ object: [String: Any]) -> String? {
         for key in structuredBlockPayloadKeys {
-            if let text = structuredPayloadText(from: object.value(forCaseInsensitiveKey: key)),
-               isActionableOutputPayload(text) {
-                return text
+            guard let value = object.value(forCaseInsensitiveKey: key),
+                  let actionable = actionablePayloadText(from: value) else {
+                continue
             }
+            return actionable
         }
-        if let text = jsonString(from: object),
-           isActionableOutputPayload(text) {
+        return actionableJSONText(from: object)
+    }
+
+    static func actionablePayloadText(from value: Any) -> String? {
+        if let text = value as? String {
+            return actionableText(from: text)
+        }
+        return actionableJSONText(from: value)
+    }
+
+    /// Structured payload extraction happens here at the API boundary — the
+    /// downstream text cleaner no longer mines JSON. Final-text payloads are
+    /// resolved to their text; command payloads keep their JSON shape so the
+    /// spoken-edit resolver can parse them later.
+    static func actionableText(from text: String) -> String? {
+        if let finalText = LLMFinalTextOutput.text(from: text) {
+            return finalText
+        }
+        if SpokenEditCommandLLMResolver.command(from: text) != nil {
             return text
         }
         return nil
-    }
-
-    static func isActionableOutputPayload(_ text: String) -> Bool {
-        LLMFinalTextOutput.text(from: text) != nil
-            || SpokenEditCommandLLMResolver.command(from: text) != nil
     }
 
     static func structuredPayloadText(from value: Any?) -> String? {
@@ -214,11 +239,8 @@ private extension RemoteLLMResponseText {
     }
 
     static func actionableJSONText(from value: Any?) -> String? {
-        guard let text = jsonString(from: value),
-              isActionableOutputPayload(text) else {
-            return nil
-        }
-        return text
+        guard let text = jsonString(from: value) else { return nil }
+        return actionableText(from: text)
     }
 
     static func jsonString(from value: Any?) -> String? {

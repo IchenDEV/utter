@@ -56,6 +56,7 @@
 "pipeline.replacement_copied_missing_target" = "找不到原来的目标应用，已改为复制整理版。";
 "pipeline.replacement_copied_app_changed" = "你已经切换到别的应用，已改为复制整理版。";
 "pipeline.replacement_copied_failed" = "无法安全替换，已改为复制整理版。";
+"pipeline.replacement_reason_text_changed" = "插入后文字已被继续编辑，替换不再安全";
 "pipeline.no_previous_insert_to_replace" = "没有可替换的上一段 OpenType 输入";
 "pipeline.no_selected_text_to_replace" = "未找到选中文本";
 "pipeline.preparing_model" = "准备下载语音模型…";

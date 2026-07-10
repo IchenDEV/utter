@@ -53,13 +53,16 @@ struct StreamingPartialUpdateScheduler: Equatable {
 }
 
 enum StreamingTranscriptResolver {
+    /// The live preview is a heuristic merge of sliding-window partials and can
+    /// lock in mis-heard characters at window boundaries. It is only ever used
+    /// for HUD display and as a last-resort fallback — the final transcript is
+    /// always re-transcribed from the recorded audio file when one exists.
     static func resolveFinalTranscript(
         engineName: String,
         audioURL: URL?,
         livePreviewText: String,
         metrics: StreamingSessionMetrics,
         unitLabel: String,
-        preferLivePreview: Bool = false,
         transcribeFromFile: @escaping () async throws -> String
     ) async throws -> String {
         let elapsed = Date().timeIntervalSince(metrics.startedAt)
@@ -81,11 +84,6 @@ enum StreamingTranscriptResolver {
         }
 
         let trimmedPreview = livePreviewText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if preferLivePreview, !trimmedPreview.isEmpty, metrics.livePreviewCoversCapturedAudio {
-            Log.info("[\(engineName)] using streaming preview as final transcript")
-            return trimmedPreview
-        }
-
         guard audioURL != nil else {
             Log.info("[\(engineName)] no recorded audio file available, using live preview fallback")
             return trimmedPreview
@@ -93,7 +91,8 @@ enum StreamingTranscriptResolver {
 
         let finalText = try await transcribeFromFile()
         if finalText.isEmpty, !trimmedPreview.isEmpty {
-            Log.info("[\(engineName)] recorded-audio transcription was empty even though live preview had content")
+            Log.info("[\(engineName)] recorded-audio transcription was empty, falling back to live preview")
+            return trimmedPreview
         }
         return finalText
     }

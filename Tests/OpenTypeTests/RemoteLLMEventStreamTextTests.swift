@@ -15,8 +15,7 @@ final class RemoteLLMEventStreamTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIEventStreamToolArgumentDeltas() throws {
@@ -91,8 +90,7 @@ final class RemoteLLMEventStreamTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIEventStreamContentBlockDeltas() throws {
@@ -106,8 +104,7 @@ final class RemoteLLMEventStreamTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testRejectsEmptyOpenAIEventStream() {
@@ -130,8 +127,7 @@ final class RemoteLLMEventStreamTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIResponsesFunctionArgumentDeltas() throws {
@@ -171,7 +167,7 @@ final class RemoteLLMEventStreamTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesOpenAIResponsesCompletedResponseOutput() throws {
@@ -205,8 +201,7 @@ final class RemoteLLMEventStreamTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: data(response))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesAnthropicEventStreamTextDeltas() throws {
@@ -229,8 +224,7 @@ final class RemoteLLMEventStreamTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.anthropic(from: data(response))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesAnthropicEventStreamToolInputDeltas() throws {
@@ -278,8 +272,7 @@ final class RemoteLLMEventStreamTextTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.anthropic(from: data(response))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     private func data(_ text: String) -> Data {

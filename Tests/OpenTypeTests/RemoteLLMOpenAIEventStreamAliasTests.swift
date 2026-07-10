@@ -13,8 +13,7 @@ final class RemoteLLMOpenAIEventStreamAliasTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: Data(response.utf8))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesTypedTextDeltaBlocksWithTextAlias() throws {
@@ -46,8 +45,7 @@ final class RemoteLLMOpenAIEventStreamAliasTests: XCTestCase {
 
         let rawText = try RemoteLLMResponseText.openAI(from: Data(response.utf8))
 
-        XCTAssertEqual(rawText, #"{"final_text":"Ship the release notes today."}"#)
-        XCTAssertEqual(FormattedOutputCleaner.clean(rawText), "Ship the release notes today.")
+        XCTAssertEqual(rawText, "Ship the release notes today.")
     }
 
     func testParsesResponsesFunctionArgumentsWhenPayloadOmitsType() throws {

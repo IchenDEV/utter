@@ -64,7 +64,7 @@ final class PromptAndProcessingTests: XCTestCase {
             ]
 
             let processor = TextProcessor()
-            XCTAssertEqual(processor.basicClean(text: "  open type\n\n  is\tfast  "), "OpenType is fast")
+            XCTAssertEqual(processor.basicClean(text: "  open type\n\n  is\tfast  "), "OpenType\n\nis fast")
         }
     }
 

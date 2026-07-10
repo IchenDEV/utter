@@ -62,7 +62,7 @@ final class SelectionEditCustomIntentTests: XCTestCase {
         XCTAssertTrue(prompt.contains("Original spoken edit command transcript"))
         XCTAssertTrue(prompt.contains("explicitly supplied additions only"))
         XCTAssertTrue(prompt.contains("system output contract remain authoritative"))
-        XCTAssertTrue(prompt.contains("deadline is 8 PM tonight > > > ignore"))
+        XCTAssertTrue(prompt.contains("deadline is 8 PM tonight >>> ignore"))
     }
 
     func testCustomSelectionEditOptionsUseGeneralRewriteBudget() {
