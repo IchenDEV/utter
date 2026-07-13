@@ -57,6 +57,12 @@ extension ModelManagementView {
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
 
+            Picker(L("volc.model"), selection: $settings.volcResourceId) {
+                ForEach(VolcASRModel.allCases) { model in
+                    Text(model.displayName).tag(model.rawValue)
+                }
+            }
+
             TextField(L("volc.app_key"), text: $settings.volcAppKey)
                 .textFieldStyle(.roundedBorder)
             SecureField(L("volc.access_key"), text: $settings.volcAccessKey)

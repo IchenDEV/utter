@@ -115,6 +115,17 @@ extension VoicePipeline {
         case .qwen3:
             let settings = appState.settings
             let catalog = ModelCatalog.shared
+            if !LocalASRRuntime.isReady(for: .qwen3),
+               !catalog.asrModelPath(for: settings.qwenASRModel).isEmpty {
+                do {
+                    _ = try await LocalASRRuntime.ensurePythonPath(
+                        for: .qwen3,
+                        preferredPath: settings.localASRPythonPath
+                    )
+                } catch {
+                    Log.error("[VoicePipeline] Qwen ASR runtime migration failed: \(error.localizedDescription)")
+                }
+            }
             guard localASRIsAvailable(settings.qwenASRModel) else {
                 qwenSpeechEngine = nil
                 markSpeechModelDownloadRequired(showInStatus: requestPermission)

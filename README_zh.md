@@ -15,7 +15,7 @@
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1%2FM2%2FM3%2FM4-black?style=flat-square&logo=apple&logoColor=white)](https://www.apple.com/mac/m1/)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-[![WhisperKit](https://img.shields.io/badge/驱动-WhisperKit-blue?style=flat-square)](https://github.com/argmaxinc/WhisperKit)
+[![WhisperKit](https://img.shields.io/badge/驱动-WhisperKit-blue?style=flat-square)](https://github.com/argmaxinc/argmax-oss-swift)
 [![MLX](https://img.shields.io/badge/驱动-MLX--LM-orange?style=flat-square)](https://github.com/ml-explore/mlx-swift-lm)
 
 [官网](https://opentype.idevlab.dev) · [English](README.md)
@@ -161,7 +161,7 @@ scripts/
 
 ## 技术栈
 
-- [WhisperKit](https://github.com/argmaxinc/WhisperKit) — 离线 Whisper 语音识别
+- [WhisperKit](https://github.com/argmaxinc/argmax-oss-swift) — 离线 Whisper 语音识别
 - [mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm) — Apple Silicon 本地 LLM 推理（Qwen2.5 / Qwen3）
 - **SwiftUI + AppKit** — macOS 原生 UI
 - **ScreenCaptureKit + Vision** — 屏幕 OCR

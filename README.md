@@ -15,7 +15,7 @@
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1%2FM2%2FM3%2FM4-black?style=flat-square&logo=apple&logoColor=white)](https://www.apple.com/mac/m1/)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-[![WhisperKit](https://img.shields.io/badge/Powered%20by-WhisperKit-blue?style=flat-square)](https://github.com/argmaxinc/WhisperKit)
+[![WhisperKit](https://img.shields.io/badge/Powered%20by-WhisperKit-blue?style=flat-square)](https://github.com/argmaxinc/argmax-oss-swift)
 [![MLX](https://img.shields.io/badge/Powered%20by-MLX--LM-orange?style=flat-square)](https://github.com/ml-explore/mlx-swift-lm)
 
 [Website](https://opentype.idevlab.dev) · [中文文档](README_zh.md)
@@ -161,7 +161,7 @@ scripts/
 
 ## Tech Stack
 
-- [WhisperKit](https://github.com/argmaxinc/WhisperKit) — offline Whisper speech recognition
+- [WhisperKit](https://github.com/argmaxinc/argmax-oss-swift) — offline Whisper speech recognition
 - [mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm) — local LLM inference on Apple Silicon (Qwen2.5 / Qwen3)
 - **SwiftUI + AppKit** — native macOS UI
 - **ScreenCaptureKit + Vision** — screen OCR

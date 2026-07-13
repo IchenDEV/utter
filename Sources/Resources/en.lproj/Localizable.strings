@@ -339,6 +339,9 @@
 
 /* ── Volc ASR ── */
 "volc.config_hint" = "Enter your Volcengine Doubao ASR credentials. Get them from the Volcengine console.";
+"volc.model" = "Recognition model";
+"volc.model.seed_asr_2" = "SeedASR 2.0 (Recommended)";
+"volc.model.big_asr_1" = "BigASR 1.0 (Legacy)";
 "volc.app_key" = "App Key (App ID)";
 "volc.access_key" = "Access Token";
 "volc.resource_id" = "Resource ID";
