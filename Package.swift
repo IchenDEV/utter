@@ -12,7 +12,7 @@ let package = Package(
         .executable(name: "OpenTypeCLI", targets: ["OpenTypeCLI"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/argmaxinc/WhisperKit.git", from: "1.0.0"),
+        .package(url: "https://github.com/argmaxinc/argmax-oss-swift.git", from: "1.0.0"),
         .package(url: "https://github.com/huggingface/swift-transformers", from: "1.3.3"),
         .package(url: "https://github.com/ml-explore/mlx-swift-lm", branch: "main"),
     ],
@@ -20,7 +20,7 @@ let package = Package(
         .executableTarget(
             name: "OpenType",
             dependencies: [
-                .product(name: "WhisperKit", package: "WhisperKit"),
+                .product(name: "WhisperKit", package: "argmax-oss-swift"),
                 .product(name: "Hub", package: "swift-transformers"),
                 .product(name: "Tokenizers", package: "swift-transformers"),
                 .product(name: "MLXLLM", package: "mlx-swift-lm"),

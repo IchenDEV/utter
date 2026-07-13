@@ -2,7 +2,7 @@ import Foundation
 @preconcurrency import Speech
 import AVFoundation
 
-final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
+final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
     private var recognizer: SFSpeechRecognizer
     private(set) var isReady = false
     private var recognitionTask: SFSpeechRecognitionTask?

@@ -2,6 +2,7 @@ import Foundation
 
 enum LocalASRRuntime {
     private static let qwenPackage = "qwen3-asr-mlx"
+    static let qwenPackageVersion = "0.1.1"
     private static let qwenImport = "qwen3_asr_mlx"
     private static let markerName = ".opentype-runtime-ready"
     private static let nativeMarkerName = ".opentype-native-runtime-ready"
@@ -11,8 +12,8 @@ enum LocalASRRuntime {
         case .qwen3:
             let python = qwenPythonURL()
             return FileManager.default.isExecutableFile(atPath: python.path) &&
-                FileManager.default.fileExists(atPath: qwenMarkerURL().path) &&
-                FileManager.default.fileExists(atPath: qwenNativeMarkerURL().path)
+                qwenMarkerIsCurrent(at: qwenMarkerURL()) &&
+                qwenMarkerIsCurrent(at: qwenNativeMarkerURL())
         case .mimo:
             return LocalASRConfiguration.resolvePythonPath() != nil
         }
@@ -38,14 +39,17 @@ enum LocalASRRuntime {
         let runtimePython = qwenPythonURL().path
         if isReady(for: .qwen3) { return runtimePython }
 
-        if FileManager.default.isExecutableFile(atPath: runtimePython) &&
-            FileManager.default.fileExists(atPath: qwenMarkerURL().path) {
+        if FileManager.default.isExecutableFile(atPath: runtimePython) {
+            if !qwenMarkerIsCurrent(at: qwenMarkerURL()) {
+                try await installQwenPackage(using: runtimePython)
+            }
             try await prepareNativeExtensions(in: runtimeDir)
             try await runProcess(
                 executable: runtimePython,
                 arguments: ["-c", "import \(qwenImport)"]
             )
-            try Data(qwenPackage.utf8).write(to: qwenNativeMarkerURL())
+            try writeCurrentQwenMarker(to: qwenMarkerURL())
+            try writeCurrentQwenMarker(to: qwenNativeMarkerURL())
             return runtimePython
         }
 
@@ -64,18 +68,38 @@ enum LocalASRRuntime {
             executable: runtimePython,
             arguments: ["-m", "pip", "install", "--quiet", "--upgrade", "pip", "setuptools", "wheel"]
         )
-        try await runProcess(
-            executable: runtimePython,
-            arguments: ["-m", "pip", "install", "--quiet", qwenPackage]
-        )
+        try await installQwenPackage(using: runtimePython)
         try await prepareNativeExtensions(in: runtimeDir)
         try await runProcess(
             executable: runtimePython,
             arguments: ["-c", "import \(qwenImport)"]
         )
-        try Data(qwenPackage.utf8).write(to: qwenMarkerURL())
-        try Data(qwenPackage.utf8).write(to: qwenNativeMarkerURL())
+        try writeCurrentQwenMarker(to: qwenMarkerURL())
+        try writeCurrentQwenMarker(to: qwenNativeMarkerURL())
         return runtimePython
+    }
+
+    static var qwenRequirement: String {
+        "\(qwenPackage)==\(qwenPackageVersion)"
+    }
+
+    static func qwenMarkerIsCurrent(_ contents: String?) -> Bool {
+        contents?.trimmingCharacters(in: .whitespacesAndNewlines) == qwenRequirement
+    }
+
+    private static func qwenMarkerIsCurrent(at url: URL) -> Bool {
+        qwenMarkerIsCurrent(try? String(contentsOf: url, encoding: .utf8))
+    }
+
+    private static func writeCurrentQwenMarker(to url: URL) throws {
+        try Data(qwenRequirement.utf8).write(to: url, options: .atomic)
+    }
+
+    private static func installQwenPackage(using python: String) async throws {
+        try await runProcess(
+            executable: python,
+            arguments: ["-m", "pip", "install", "--quiet", "--upgrade", qwenRequirement]
+        )
     }
 
     private static func qwenPythonURL() -> URL {

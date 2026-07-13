@@ -357,7 +357,7 @@ final class AppSettings: ObservableObject {
         appIconAppearance = AppIconAppearance(rawValue: ud.string(forKey: Key.appIconAppearance.rawValue) ?? "") ?? .system
         volcAppKey = ud.string(forKey: Key.volcAppKey.rawValue) ?? ""
         volcAccessKey = ud.string(forKey: Key.volcAccessKey.rawValue) ?? ""
-        volcResourceId = ud.string(forKey: Key.volcResourceId.rawValue) ?? "volc.bigasr.sauc.duration"
+        volcResourceId = ud.string(forKey: Key.volcResourceId.rawValue) ?? VolcASRModel.recommended.rawValue
         localASRPythonPath = ud.string(forKey: Key.localASRPythonPath.rawValue) ?? LocalASRConfiguration.defaultPythonPath
         qwenASRModel = ud.string(forKey: Key.qwenASRModel.rawValue)
             ?? ud.string(forKey: Key.qwenASRModelPath.rawValue)

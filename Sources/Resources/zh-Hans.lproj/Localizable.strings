@@ -339,6 +339,9 @@
 
 /* ── 豆包语音识别 ── */
 "volc.config_hint" = "填写火山引擎豆包语音识别凭据，可从火山引擎控制台获取。";
+"volc.model" = "识别模型";
+"volc.model.seed_asr_2" = "SeedASR 2.0（推荐）";
+"volc.model.big_asr_1" = "BigASR 1.0（旧版）";
 "volc.app_key" = "App Key（应用 ID）";
 "volc.access_key" = "Access Token";
 "volc.resource_id" = "Resource ID（资源 ID）";
