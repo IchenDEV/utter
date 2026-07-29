@@ -8,6 +8,7 @@ extension VoicePipeline {
         audioActivity: AudioCaptureActivity,
         language: String?,
         settings: AppSettings,
+        inputMode: VoiceInputMode,
         targetApp: NSRunningApplication?
     ) async {
         defer { audioCapture.cleanupLastRecording() }
@@ -30,26 +31,43 @@ extension VoicePipeline {
                 return
             }
 
-            if await handleSpokenEditCommandIfNeeded(raw: preparedRaw, settings: settings, targetApp: targetApp) {
-                return
+            if !inputMode.isTranslation {
+                if await handleSpokenEditCommandIfNeeded(
+                    raw: preparedRaw,
+                    settings: settings,
+                    targetApp: targetApp
+                ) {
+                    return
+                }
+
+                if DeferredReplacementPolicy.shouldUseDeferredReplacement(
+                    outputMode: settings.outputMode,
+                    enableInstantInsert: settings.enableInstantInsert
+                ) {
+                    await handleDeferredSmartFormat(raw: preparedRaw, settings: settings, targetApp: targetApp)
+                    return
+                }
             }
 
-            if DeferredReplacementPolicy.shouldUseDeferredReplacement(
-                outputMode: settings.outputMode,
-                enableInstantInsert: settings.enableInstantInsert
-            ) {
-                await handleDeferredSmartFormat(raw: preparedRaw, settings: settings, targetApp: targetApp)
-                return
-            }
-
-            let output = await outputText(for: preparedRaw, settings: settings, targetApp: targetApp)
+            let output = await outputText(
+                for: preparedRaw,
+                settings: settings,
+                inputMode: inputMode,
+                targetApp: targetApp
+            )
 
             guard !Task.isCancelled else {
                 resetToIdle()
                 return
             }
 
-            await insertFinalText(output, raw: preparedRaw, settings: settings, targetApp: targetApp)
+            await insertFinalText(
+                output,
+                raw: preparedRaw,
+                settings: settings,
+                inputMode: inputMode,
+                targetApp: targetApp
+            )
         } catch VoicePipelineStop.noSpeech {
             return
         } catch {
@@ -94,8 +112,18 @@ extension VoicePipeline {
     private func outputText(
         for raw: String,
         settings: AppSettings,
+        inputMode: VoiceInputMode,
         targetApp: NSRunningApplication?
     ) async -> VoicePipelineOutput {
+        if case .translation(let targetLanguage) = inputMode {
+            return await processTranslation(
+                raw,
+                targetLanguage: targetLanguage,
+                settings: settings,
+                targetApp: targetApp
+            )
+        }
+
         switch settings.outputMode {
         case .processed:
             return await processSmartFormat(raw, settings: settings, targetApp: targetApp)
@@ -190,7 +218,7 @@ extension VoicePipeline {
         return VoicePipelineOutput(text: text, context: inputContext)
     }
 
-    private func recordFormattingDuration(_ started: CFAbsoluteTime, label: String) {
+    func recordFormattingDuration(_ started: CFAbsoluteTime, label: String) {
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         appState.lastFormattingDurationSeconds = elapsed
         Log.info("[VoicePipeline] \(label) completed in \(String(format: "%.2f", elapsed))s")
@@ -200,6 +228,7 @@ extension VoicePipeline {
         _ output: VoicePipelineOutput,
         raw: String,
         settings: AppSettings,
+        inputMode: VoiceInputMode,
         targetApp: NSRunningApplication?
     ) async {
         let finalText = output.text
@@ -230,7 +259,9 @@ extension VoicePipeline {
             return
         }
 
-        let wasProcessed = settings.outputMode == .processed || settings.outputMode == .command
+        let wasProcessed = inputMode.isTranslation
+            || settings.outputMode == .processed
+            || settings.outputMode == .command
         InputHistory.shared.addRecord(
             rawText: raw,
             processedText: finalText,
@@ -241,7 +272,7 @@ extension VoicePipeline {
     }
 }
 
-private struct VoicePipelineOutput {
+struct VoicePipelineOutput {
     let text: String
     let context: InputContext
 }

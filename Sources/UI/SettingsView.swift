@@ -1,5 +1,20 @@
 import SwiftUI
 
+enum SettingsWindowLayout {
+    static let width: CGFloat = 760
+    static let height: CGFloat = 540
+}
+
+enum SettingsWindowTitle {
+    static var current: String {
+        text(for: AppSettings.shared.uiLanguage)
+    }
+
+    static func text(for language: UILanguage) -> String {
+        Loc.string("settings.window_title", language: language)
+    }
+}
+
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var settings: AppSettings
@@ -67,6 +82,35 @@ struct SettingsView: View {
                 }
                 .help(L("settings.instant_insert_help"))
                 .disabled(settings.outputMode != .processed)
+            }
+
+            Section(L("settings.translation")) {
+                Picker(L("settings.translation_target"), selection: $settings.translationTargetLanguage) {
+                    ForEach(TranslationLanguage.allCases) { language in
+                        Text(language.label).tag(language)
+                    }
+                }
+
+                HStack {
+                    Text(L("settings.translation_shortcut"))
+                    Spacer()
+                    shortcutKeycap(settings.hotkeyType.rawValue)
+                    Text("+")
+                        .foregroundStyle(.secondary)
+                    Picker("", selection: $settings.translationHotkeyModifier) {
+                        ForEach(HotkeyType.allCases, id: \.self) { key in
+                            Text(key.rawValue)
+                                .tag(key)
+                                .disabled(key == settings.hotkeyType)
+                        }
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                }
+
+                Text(L("settings.translation_shortcut_help"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section(L("settings.beta")) {
@@ -177,5 +221,13 @@ struct SettingsView: View {
                 Text(mic.name).tag(mic.id as String?)
             }
         }
+    }
+
+    private func shortcutKeycap(_ text: String) -> some View {
+        Text(text)
+            .font(.system(.body, design: .rounded, weight: .medium))
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
+            .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
     }
 }

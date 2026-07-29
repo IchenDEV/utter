@@ -40,7 +40,7 @@ enum RemoteLLMEventStreamText {
         if let text = functionArgumentsText(functionArguments) {
             return text
         }
-        return nonEmpty(contentParts.joined())
+        return RemoteLLMPayload.nonEmpty(contentParts.joined())
     }
 
     static func anthropic(from data: Data) -> String? {
@@ -116,7 +116,9 @@ private extension RemoteLLMEventStreamText {
         }
         for (fallbackIndex, value) in calls.enumerated() {
             guard let call = value as? [String: Any] else { continue }
-            let index = intValue(call.value(forCaseInsensitiveKey: "index")) ?? fallbackIndex
+            let index = RemoteLLMPayload.int(
+                from: call.value(forCaseInsensitiveKey: "index")
+            ) ?? fallbackIndex
             if let arguments = argumentsText(in: call) {
                 toolArguments[index, default: ""] += arguments
             }
@@ -166,14 +168,17 @@ private extension RemoteLLMEventStreamText {
             textParts[index, default: ""] += text
         }
         if let input = firstValue(in: block, keys: ["input", "input_json", "inputJson"]),
-           let text = jsonString(from: input) {
+           let text = RemoteLLMPayload.jsonString(from: input) {
             guard text != "{}" else { return }
             toolInputs[index, default: ""] += text
         }
     }
 
     static func anthropicIndex(in object: [String: Any]) -> Int {
-        intValue(firstValue(in: object, keys: ["index", "content_block_index", "contentBlockIndex", "content_index", "contentIndex"])) ?? 0
+        RemoteLLMPayload.int(from: firstValue(
+            in: object,
+            keys: ["index", "content_block_index", "contentBlockIndex", "content_index", "contentIndex"]
+        )) ?? 0
     }
 
     static func firstValue(in object: [String: Any], keys: [String]) -> Any? {
@@ -199,7 +204,7 @@ private extension RemoteLLMEventStreamText {
             if let text = value as? String, !text.isEmpty {
                 return text
             }
-            if let text = jsonString(from: value) {
+            if let text = RemoteLLMPayload.jsonString(from: value) {
                 return text
             }
         }
@@ -237,7 +242,9 @@ private extension RemoteLLMEventStreamText {
     }
 
     static func anthropicText(_ textParts: [Int: String]) -> String? {
-        let parts = textParts.keys.sorted().compactMap { nonEmpty(textParts[$0] ?? "") }
+        let parts = textParts.keys.sorted().compactMap {
+            RemoteLLMPayload.nonEmpty(textParts[$0] ?? "")
+        }
         guard !parts.isEmpty else { return nil }
         return parts.joined(separator: "\n")
     }
@@ -254,33 +261,4 @@ private extension RemoteLLMEventStreamText {
         return RemoteLLMResponseText.openAIText(in: payload)
     }
 
-    static func intValue(_ value: Any?) -> Int? {
-        if let int = value as? Int { return int }
-        if let number = value as? NSNumber { return number.intValue }
-        if let text = value as? String { return Int(text.trimmingCharacters(in: .whitespacesAndNewlines)) }
-        return nil
-    }
-
-    static func jsonString(from value: Any) -> String? {
-        guard JSONSerialization.isValidJSONObject(value),
-              let data = try? JSONSerialization.data(withJSONObject: value),
-              let text = String(data: data, encoding: .utf8) else {
-            return nil
-        }
-        return text
-    }
-
-    static func nonEmpty(_ text: String) -> String? {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-}
-
-private extension Dictionary where Key == String {
-    func value(forCaseInsensitiveKey key: String) -> Value? {
-        if let value = self[key] {
-            return value
-        }
-        return first { $0.key.localizedCaseInsensitiveCompare(key) == .orderedSame }?.value
-    }
 }

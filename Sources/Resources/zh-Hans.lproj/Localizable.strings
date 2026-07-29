@@ -39,8 +39,10 @@
 "pipeline.model_load_failed" = "模型加载失败";
 "pipeline.model_load_failed_network" = "模型加载失败，请检查网络";
 "pipeline.recording" = "录音中…";
+"pipeline.recording_translation" = "正在录音并准备翻译…";
 "pipeline.transcribing" = "识别中…";
 "pipeline.formatting" = "整理中…";
+"pipeline.translating" = "翻译中…";
 "pipeline.inserting" = "输入中…";
 "pipeline.replacing" = "替换中…";
 "pipeline.undoing" = "撤销中…";
@@ -75,6 +77,7 @@
 
 /* ── Menu Bar ── */
 "menubar.listening" = "正在聆听…";
+"menubar.listening_translation" = "正在聆听并翻译…";
 "menubar.hold" = "长按";
 "menubar.toggle" = "切换";
 "menubar.replace_formatted" = "替换";
@@ -91,6 +94,10 @@
 "settings.tap_interval" = "双击间隔";
 "settings.output" = "输出";
 "settings.output_mode" = "输出模式";
+"settings.translation" = "翻译";
+"settings.translation_target" = "目标语言";
+"settings.translation_shortcut" = "翻译快捷键";
+"settings.translation_shortcut_help" = "听写快捷键与此修饰键一起使用。翻译会沿用长按、双击或单击切换的触发方式。";
 "settings.instant_insert" = "快速插入，后台整理";
 "settings.instant_insert_help" = "仅在智能整理模式生效。先插入规整后的原文草稿，LLM 整理完成后可一键替换。";
 "settings.beta" = "Beta 功能";
@@ -115,6 +122,14 @@
 "icon.waveform" = "波形";
 "icon.bubble" = "对话气泡";
 "settings.recognition_language" = "识别语言";
+"translation.language.english" = "英语";
+"translation.language.chinese_simplified" = "简体中文";
+"translation.language.chinese_traditional" = "繁体中文";
+"translation.language.japanese" = "日语";
+"translation.language.korean" = "韩语";
+"translation.language.spanish" = "西班牙语";
+"translation.language.french" = "法语";
+"translation.language.german" = "德语";
 "settings.sound_cues" = "播放提示音";
 "settings.microphone" = "麦克风";
 "settings.system_default" = "系统默认";

@@ -30,6 +30,7 @@ final class AppState: ObservableObject {
     @Published var lastInsertedText: String = ""
     @Published var lastFormattingDurationSeconds: Double = 0
     @Published var pendingReplacement: DeferredReplacement?
+    @Published var activeInputMode: VoiceInputMode = .dictation
 
     let settings = AppSettings.shared
 
@@ -51,6 +52,7 @@ final class AppState: ObservableObject {
         statusMessage = L("status.ready")
         resetDownloadProgress()
         pendingReplacement = nil
+        activeInputMode = .dictation
     }
 
     func clearPendingReplacement() {

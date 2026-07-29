@@ -265,7 +265,7 @@ private extension LLMNumericConfidence {
     }
 }
 
-private extension Dictionary where Key == String {
+extension Dictionary where Key == String {
     func value(forCaseInsensitiveKey key: String) -> Value? {
         if let value = self[key] {
             return value

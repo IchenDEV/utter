@@ -59,7 +59,7 @@ final class VoicePipeline {
 
     // MARK: - Recording
 
-    func start() async {
+    func start(mode: VoiceInputMode = .dictation) async {
         if appState.isBusy {
             Log.info("[VoicePipeline] start: busy (\(appState.phase)), ignoring")
             showBusyHint()
@@ -88,10 +88,17 @@ final class VoicePipeline {
         clearInFlightWork()
 
         appState.reset()
+        appState.activeInputMode = mode
         appState.phase = .recording
-        appState.statusMessage = L("pipeline.recording")
+        appState.statusMessage = mode.isTranslation
+            ? L("pipeline.recording_translation")
+            : L("pipeline.recording")
 
-        startScreenContextCaptureIfNeeded()
+        if mode.isTranslation {
+            cancelScreenContextCapture()
+        } else {
+            startScreenContextCaptureIfNeeded()
+        }
 
         soundPlayer.playStart()
         overlay.show(appState: appState)
@@ -148,6 +155,7 @@ final class VoicePipeline {
         let audioURL = audioCapture.lastRecordingURL
         let audioActivity = audioCapture.lastActivity
         let settings = appState.settings
+        let inputMode = appState.activeInputMode
 
         processingTask = Task { @MainActor [weak self] in
             guard let self else { return }
@@ -156,6 +164,7 @@ final class VoicePipeline {
                 audioActivity: audioActivity,
                 language: language,
                 settings: settings,
+                inputMode: inputMode,
                 targetApp: targetApp
             )
         }
@@ -169,5 +178,22 @@ final class VoicePipeline {
         cancelScreenContextCapture()
         hideOverlayTask?.cancel()
         hideOverlayTask = nil
+    }
+}
+
+enum StartupModelPreloadPolicy {
+    static func shouldPreloadSpeechModel(
+        enabled: Bool,
+        speechEngine: SpeechEngineType
+    ) -> Bool {
+        enabled && speechEngine == .whisper
+    }
+
+    static func shouldPreloadFormattingModel(
+        enabled: Bool,
+        useRemoteLLM: Bool,
+        modelID: String
+    ) -> Bool {
+        enabled && !useRemoteLLM && !modelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

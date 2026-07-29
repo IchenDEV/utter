@@ -48,7 +48,7 @@ final class TextProcessor {
 
     func prepareForFormatting(text: String, inputLanguage: InputLanguage) -> String {
         var result = dictionary.applyReplacements(to: text)
-        result = FormattingHeuristics.normalizeInput(result)
+        result = TranscriptionSanitizer.normalizeInput(result)
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
@@ -279,7 +279,7 @@ final class TextProcessor {
     /// Collapses runs of spaces but keeps line breaks: direct mode promises
     /// verbatim output, and ASR engines only emit newlines deliberately.
     private func normalizeWhitespace(_ text: String) -> String {
-        FormattingHeuristics.normalizeInput(text)
+        TranscriptionSanitizer.normalizeInput(text)
             .replacingOccurrences(of: "[^\\S\\n]*\\n[^\\S\\n]*", with: "\n", options: .regularExpression)
             .replacingOccurrences(of: "[^\\S\\n]+", with: " ", options: .regularExpression)
             .replacingOccurrences(of: "\\n{3,}", with: "\n\n", options: .regularExpression)
