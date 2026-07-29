@@ -67,7 +67,11 @@ extension VoicePipeline {
                 guard let self, self.appState.isDownloading else { return }
                 self.appState.updateDownloadProgress(info)
                 self.appState.statusMessage = L("pipeline.downloading") + " \(info.percentText)"
-                catalog.updateLLMDownloadProgress(model, info: info)
+                if let index = catalog.llmModels.firstIndex(where: { $0.id == model }) {
+                    catalog.llmModels[index].status = .downloading
+                    catalog.llmModels[index].downloadProgress = info.fraction
+                    catalog.llmModels[index].downloadDetail = info.detailText
+                }
             }
         }
         let ready = await textProcessor.isLLMReady

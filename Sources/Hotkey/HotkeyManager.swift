@@ -4,24 +4,31 @@ import AppKit
 
 final class HotkeyManager {
     private let settings: AppSettings
-    private let onStart: () -> Void
-    private let onStop: () -> Void
+    private let activationController: HotkeyActivationController
     fileprivate var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var globalMonitor: Any?
-    private var hasPrompted = false
 
-    private var lastPressTime: Date = .distantPast
-    private var tapCount = 0
-    private var wasPressed = false
-    private var isHolding = false
+    private var activeGestureAction: HotkeyAction?
+    private var previousPrimaryPressed = false
+    private var previousTranslationModifierPressed = false
+    private var suppressUntilPrimaryRelease = false
+    private var pendingPrimaryStart: Task<Void, Never>?
     private var retryCount = 0
     private let maxRetries = 20
+    private let translationChordGraceNanoseconds: UInt64 = 100_000_000
 
-    init(settings: AppSettings, onStart: @escaping () -> Void, onStop: @escaping () -> Void) {
+    init(
+        settings: AppSettings,
+        onStart: @escaping (HotkeyAction) -> Void,
+        onStop: @escaping (HotkeyAction) -> Void
+    ) {
         self.settings = settings
-        self.onStart = onStart
-        self.onStop = onStop
+        activationController = HotkeyActivationController(
+            settings: settings,
+            onStart: onStart,
+            onStop: onStop
+        )
     }
 
     func start() {
@@ -103,104 +110,143 @@ final class HotkeyManager {
         eventTap = nil
         runLoopSource = nil
         globalMonitor = nil
+        pendingPrimaryStart?.cancel()
+        pendingPrimaryStart = nil
     }
 
     fileprivate func handleFlagsChanged(_ event: CGEvent) {
         let flags = event.flags
-        let pressed = isTargetKeyPressed(flags: flags)
+        let primaryPressed = isKeyPressed(settings.hotkeyType, flags: flags)
+        let translationModifierPressed = isKeyPressed(settings.translationHotkeyModifier, flags: flags)
         DispatchQueue.main.async { [weak self] in
-            self?.processKeyState(isPressed: pressed)
+            self?.processPhysicalKeyState(
+                primaryPressed: primaryPressed,
+                translationModifierPressed: translationModifierPressed
+            )
         }
     }
 
     private func handleNSEventFlags(_ event: NSEvent) {
         guard eventTap == nil else { return }
         let flags = event.modifierFlags
-        let pressed: Bool
-        switch settings.hotkeyType {
-        case .ctrl:   pressed = flags.contains(.control)
-        case .shift:  pressed = flags.contains(.shift)
-        case .option: pressed = flags.contains(.option)
-        case .fn:     pressed = flags.contains(.function)
-        }
+        let primaryPressed = isKeyPressed(settings.hotkeyType, flags: flags)
+        let translationModifierPressed = isKeyPressed(settings.translationHotkeyModifier, flags: flags)
         if Thread.isMainThread {
-            processKeyState(isPressed: pressed)
+            processPhysicalKeyState(
+                primaryPressed: primaryPressed,
+                translationModifierPressed: translationModifierPressed
+            )
         } else {
             DispatchQueue.main.async { [weak self] in
-                self?.processKeyState(isPressed: pressed)
+                self?.processPhysicalKeyState(
+                    primaryPressed: primaryPressed,
+                    translationModifierPressed: translationModifierPressed
+                )
             }
         }
     }
 
-    private func processKeyState(isPressed: Bool) {
-        switch settings.activationMode {
-        case .longPress:
-            handleLongPress(isPressed: isPressed)
-        case .doubleTap:
-            handleDoubleTap(isPressed: isPressed)
-        case .toggle:
-            handleToggle(isPressed: isPressed)
+    func processPhysicalKeyState(
+        primaryPressed: Bool,
+        translationModifierPressed: Bool
+    ) {
+        if primaryPressed, !previousPrimaryPressed {
+            handlePrimaryPressed(translationModifierPressed: translationModifierPressed)
+        } else if primaryPressed, previousPrimaryPressed {
+            handleModifierChangeWhilePrimaryPressed(
+                translationModifierPressed: translationModifierPressed
+            )
+        } else if !primaryPressed, previousPrimaryPressed {
+            handlePrimaryReleased()
         }
-        wasPressed = isPressed
+
+        previousPrimaryPressed = primaryPressed
+        previousTranslationModifierPressed = translationModifierPressed
     }
 
-    // MARK: - Long Press
-
-    private func handleLongPress(isPressed: Bool) {
-        if isPressed && !wasPressed && !isHolding {
-            isHolding = true
-            onStart()
-        } else if !isPressed && wasPressed && isHolding {
-            isHolding = false
-            onStop()
+    private func handlePrimaryPressed(translationModifierPressed: Bool) {
+        suppressUntilPrimaryRelease = false
+        if translationModifierPressed {
+            beginGesture(.translation)
+            return
         }
+
+        schedulePrimaryGesture()
     }
 
-    // MARK: - Double Tap
+    private func handleModifierChangeWhilePrimaryPressed(
+        translationModifierPressed: Bool
+    ) {
+        guard !suppressUntilPrimaryRelease else { return }
 
-    private func handleDoubleTap(isPressed: Bool) {
-        if isPressed && !wasPressed {
-            let now = Date()
-            if now.timeIntervalSince(lastPressTime) < settings.tapInterval {
-                tapCount += 1
-            } else {
-                tapCount = 1
-            }
-            lastPressTime = now
-
-            if tapCount >= 2 {
-                tapCount = 0
-                if isHolding {
-                    isHolding = false
-                    onStop()
-                } else {
-                    isHolding = true
-                    onStart()
-                }
-            }
+        if activeGestureAction == nil, translationModifierPressed {
+            pendingPrimaryStart?.cancel()
+            pendingPrimaryStart = nil
+            beginGesture(.translation)
+        } else if activeGestureAction == .translation,
+                  previousTranslationModifierPressed,
+                  !translationModifierPressed {
+            endGesture(.translation)
+            activeGestureAction = nil
+            suppressUntilPrimaryRelease = true
         }
     }
 
-    // MARK: - Toggle (single tap)
-
-    private func handleToggle(isPressed: Bool) {
-        if isPressed && !wasPressed {
-            if isHolding {
-                isHolding = false
-                onStop()
-            } else {
-                isHolding = true
-                onStart()
+    private func handlePrimaryReleased() {
+        if pendingPrimaryStart != nil {
+            pendingPrimaryStart?.cancel()
+            pendingPrimaryStart = nil
+            if settings.activationMode != .longPress {
+                beginGesture(.dictation)
             }
         }
+
+        if let action = activeGestureAction {
+            endGesture(action)
+        }
+        activeGestureAction = nil
+        suppressUntilPrimaryRelease = false
     }
 
-    private func isTargetKeyPressed(flags: CGEventFlags) -> Bool {
-        switch settings.hotkeyType {
-        case .ctrl:   return flags.contains(.maskControl)
-        case .shift:  return flags.contains(.maskShift)
+    private func schedulePrimaryGesture() {
+        pendingPrimaryStart?.cancel()
+        pendingPrimaryStart = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: self?.translationChordGraceNanoseconds ?? 0)
+            guard let self, !Task.isCancelled else { return }
+            self.pendingPrimaryStart = nil
+            guard self.previousPrimaryPressed,
+                  self.activeGestureAction == nil,
+                  !self.suppressUntilPrimaryRelease else {
+                return
+            }
+            self.beginGesture(.dictation)
+        }
+    }
+
+    private func beginGesture(_ action: HotkeyAction) {
+        activeGestureAction = action
+        activationController.beginGesture(action)
+    }
+
+    private func endGesture(_ action: HotkeyAction) {
+        activationController.endGesture(action)
+    }
+
+    private func isKeyPressed(_ key: HotkeyType, flags: CGEventFlags) -> Bool {
+        switch key {
+        case .ctrl: return flags.contains(.maskControl)
+        case .shift: return flags.contains(.maskShift)
         case .option: return flags.contains(.maskAlternate)
-        case .fn:     return flags.contains(.maskSecondaryFn)
+        case .fn: return flags.contains(.maskSecondaryFn)
+        }
+    }
+
+    private func isKeyPressed(_ key: HotkeyType, flags: NSEvent.ModifierFlags) -> Bool {
+        switch key {
+        case .ctrl: return flags.contains(.control)
+        case .shift: return flags.contains(.shift)
+        case .option: return flags.contains(.option)
+        case .fn: return flags.contains(.function)
         }
     }
 

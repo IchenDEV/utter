@@ -236,7 +236,20 @@ enum InputLanguage: String, Codable, CaseIterable {
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    @Published var hotkeyType: HotkeyType
+    @Published var hotkeyType: HotkeyType {
+        didSet {
+            if translationHotkeyModifier == hotkeyType {
+                translationHotkeyModifier = Self.defaultTranslationModifier(excluding: hotkeyType)
+            }
+        }
+    }
+    @Published var translationHotkeyModifier: HotkeyType {
+        didSet {
+            if translationHotkeyModifier == hotkeyType {
+                translationHotkeyModifier = Self.defaultTranslationModifier(excluding: hotkeyType)
+            }
+        }
+    }
     @Published var activationMode: ActivationMode
     @Published var tapInterval: Double
     @Published var speechEngine: SpeechEngineType
@@ -249,6 +262,7 @@ final class AppSettings: ObservableObject {
     @Published var playSounds: Bool
     @Published var enableStreamingRecognitionBeta: Bool
     @Published var inputLanguage: InputLanguage
+    @Published var translationTargetLanguage: TranslationLanguage
     @Published var useScreenContext: Bool
     @Published var screenContextMode: ScreenContextMode
     @Published var enableInstantInsert: Bool
@@ -288,10 +302,11 @@ final class AppSettings: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     private enum Key: String {
-        case hotkeyType, activationMode, tapInterval, speechEngine, whisperModel, llmModel
+        case hotkeyType, translationHotkeyModifier, activationMode, tapInterval, speechEngine, whisperModel, llmModel
         case microphoneID, outputMode, languageStyle, customStylePrompt, playSounds
         case enableStreamingRecognitionBeta
-        case inputLanguage, useScreenContext, screenContextMode, enableInstantInsert, hasCompletedOnboarding, uiLanguage, historyRetention
+        case inputLanguage, translationTargetLanguage
+        case useScreenContext, screenContextMode, enableInstantInsert, hasCompletedOnboarding, uiLanguage, historyRetention
         case enableMemory, memoryWindowMinutes
         case useCustomSystemPrompt, customSystemPrompt
         case useRemoteLLM, remoteProvider, remoteAPIKey, remoteBaseURL, remoteModel
@@ -310,7 +325,14 @@ final class AppSettings: ObservableObject {
         let ud = defaults
         let loadedUILanguage = UILanguage(rawValue: ud.string(forKey: Key.uiLanguage.rawValue) ?? "") ?? .chinese
         Loc.use(loadedUILanguage)
-        hotkeyType = HotkeyType(rawValue: ud.string(forKey: Key.hotkeyType.rawValue) ?? "") ?? .fn
+        let loadedHotkeyType = HotkeyType(rawValue: ud.string(forKey: Key.hotkeyType.rawValue) ?? "") ?? .fn
+        hotkeyType = loadedHotkeyType
+        let loadedTranslationModifier = HotkeyType(
+            rawValue: ud.string(forKey: Key.translationHotkeyModifier.rawValue) ?? ""
+        ) ?? .shift
+        translationHotkeyModifier = loadedTranslationModifier == loadedHotkeyType
+            ? Self.defaultTranslationModifier(excluding: loadedHotkeyType)
+            : loadedTranslationModifier
         let savedMode = ud.string(forKey: Key.activationMode.rawValue) ?? ""
         activationMode = ActivationMode(rawValue: savedMode)
             ?? (savedMode.contains("长按") ? .longPress : savedMode.contains("双击") ? .doubleTap : savedMode.contains("单击") ? .toggle : nil)
@@ -338,6 +360,9 @@ final class AppSettings: ObservableObject {
         playSounds = ud.object(forKey: Key.playSounds.rawValue) as? Bool ?? true
         enableStreamingRecognitionBeta = ud.object(forKey: Key.enableStreamingRecognitionBeta.rawValue) as? Bool ?? true
         inputLanguage = InputLanguage(rawValue: ud.string(forKey: Key.inputLanguage.rawValue) ?? "") ?? .chinese
+        translationTargetLanguage = TranslationLanguage(
+            rawValue: ud.string(forKey: Key.translationTargetLanguage.rawValue) ?? ""
+        ) ?? .english
         useScreenContext = ud.object(forKey: Key.useScreenContext.rawValue) as? Bool ?? false
         screenContextMode = ScreenContextMode(rawValue: ud.string(forKey: Key.screenContextMode.rawValue) ?? "") ?? .ocr
         enableInstantInsert = ud.object(forKey: Key.enableInstantInsert.rawValue) as? Bool ?? false
@@ -386,6 +411,9 @@ final class AppSettings: ObservableObject {
 
     private func setupPersistence() {
         $hotkeyType.dropFirst().sink { [defaults] in defaults.set($0.rawValue, forKey: Key.hotkeyType.rawValue) }.store(in: &cancellables)
+        $translationHotkeyModifier.dropFirst().sink {
+            [defaults] in defaults.set($0.rawValue, forKey: Key.translationHotkeyModifier.rawValue)
+        }.store(in: &cancellables)
         $activationMode.dropFirst().sink { [defaults] in defaults.set($0.rawValue, forKey: Key.activationMode.rawValue) }.store(in: &cancellables)
         $tapInterval.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.tapInterval.rawValue) }.store(in: &cancellables)
         $speechEngine.dropFirst().sink { [defaults] in defaults.set($0.rawValue, forKey: Key.speechEngine.rawValue) }.store(in: &cancellables)
@@ -398,6 +426,9 @@ final class AppSettings: ObservableObject {
         $playSounds.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.playSounds.rawValue) }.store(in: &cancellables)
         $enableStreamingRecognitionBeta.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.enableStreamingRecognitionBeta.rawValue) }.store(in: &cancellables)
         $inputLanguage.dropFirst().sink { [defaults] in defaults.set($0.rawValue, forKey: Key.inputLanguage.rawValue) }.store(in: &cancellables)
+        $translationTargetLanguage.dropFirst().sink {
+            [defaults] in defaults.set($0.rawValue, forKey: Key.translationTargetLanguage.rawValue)
+        }.store(in: &cancellables)
         $useScreenContext.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.useScreenContext.rawValue) }.store(in: &cancellables)
         $screenContextMode.dropFirst().sink { [defaults] in defaults.set($0.rawValue, forKey: Key.screenContextMode.rawValue) }.store(in: &cancellables)
         $enableInstantInsert.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.enableInstantInsert.rawValue) }.store(in: &cancellables)
@@ -447,6 +478,10 @@ final class AppSettings: ObservableObject {
 
     private static func validDeveloperHTTPPort(_ port: Int) -> Int {
         (1 ... 65_535).contains(port) ? port : 38_765
+    }
+
+    private static func defaultTranslationModifier(excluding hotkey: HotkeyType) -> HotkeyType {
+        hotkey == .shift ? .option : .shift
     }
 
     var zh: Bool { uiLanguage == .chinese }

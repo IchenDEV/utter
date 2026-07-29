@@ -195,6 +195,43 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertFalse(AppSettings.shared.enableInstantInsert)
     }
 
+    func testTranslationSettingsHaveSafeDefaults() {
+        let (defaults, suiteName) = makeIsolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = AppSettings(defaults: defaults)
+
+        XCTAssertEqual(settings.hotkeyType, .fn)
+        XCTAssertEqual(settings.translationHotkeyModifier, .shift)
+        XCTAssertEqual(settings.translationTargetLanguage, .english)
+    }
+
+    func testTranslationSettingsPersist() {
+        let (defaults, suiteName) = makeIsolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = AppSettings(defaults: defaults)
+        settings.translationHotkeyModifier = .option
+        settings.translationTargetLanguage = .japanese
+
+        let reloaded = AppSettings(defaults: defaults)
+        XCTAssertEqual(reloaded.translationHotkeyModifier, .option)
+        XCTAssertEqual(reloaded.translationTargetLanguage, .japanese)
+    }
+
+    func testTranslationModifierNeverMatchesPrimaryHotkey() {
+        let (defaults, suiteName) = makeIsolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(HotkeyType.shift.rawValue, forKey: "hotkeyType")
+        defaults.set(HotkeyType.shift.rawValue, forKey: "translationHotkeyModifier")
+
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(settings.translationHotkeyModifier, .option)
+
+        settings.hotkeyType = .option
+        XCTAssertEqual(settings.translationHotkeyModifier, .shift)
+    }
+
     func testDeveloperInterfaceDefaultsOff() {
         let (defaults, suiteName) = makeIsolatedDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

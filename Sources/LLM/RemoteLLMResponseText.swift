@@ -110,7 +110,7 @@ private extension RemoteLLMResponseText {
 
     static func contentText(from value: Any?) -> String? {
         if let text = value as? String {
-            return nonEmpty(text)
+            return RemoteLLMPayload.nonEmpty(text)
         }
         if let blocks = value as? [Any] {
             let text = blocks
@@ -131,12 +131,12 @@ private extension RemoteLLMResponseText {
         }
 
         if let type = object.value(forCaseInsensitiveKey: "type") as? String {
-            if matchesBlockType(type, in: textBlockTypes) {
+            if RemoteLLMPayload.matchesBlockType(type, in: textBlockTypes) {
                 return contentText(from: object.value(forCaseInsensitiveKey: "text"))
                     ?? contentText(from: object.value(forCaseInsensitiveKey: "content"))
                     ?? contentText(from: object.value(forCaseInsensitiveKey: "value"))
             }
-            if matchesBlockType(type, in: wrapperBlockTypes) {
+            if RemoteLLMPayload.matchesBlockType(type, in: wrapperBlockTypes) {
                 return toolCallText(from: object.value(forCaseInsensitiveKey: "tool_calls"))
                     ?? toolCallText(from: object.value(forCaseInsensitiveKey: "function_call"))
                     ?? structuredPayloadText(from: object.value(forCaseInsensitiveKey: "parsed"))
@@ -145,10 +145,10 @@ private extension RemoteLLMResponseText {
                     ?? contentText(from: object.value(forCaseInsensitiveKey: "output"))
                     ?? contentText(from: object.value(forCaseInsensitiveKey: "value"))
             }
-            if matchesBlockType(type, in: argumentBlockTypes) {
+            if RemoteLLMPayload.matchesBlockType(type, in: argumentBlockTypes) {
                 return toolCallText(from: object)
             }
-            if matchesBlockType(type, in: structuredBlockTypes) {
+            if RemoteLLMPayload.matchesBlockType(type, in: structuredBlockTypes) {
                 return structuredContentBlockText(object)
             }
             return nil
@@ -235,22 +235,12 @@ private extension RemoteLLMResponseText {
         if let text = contentText(from: value) {
             return text
         }
-        return jsonString(from: value)
+        return RemoteLLMPayload.jsonString(from: value)
     }
 
     static func actionableJSONText(from value: Any?) -> String? {
-        guard let text = jsonString(from: value) else { return nil }
+        guard let text = RemoteLLMPayload.jsonString(from: value) else { return nil }
         return actionableText(from: text)
-    }
-
-    static func jsonString(from value: Any?) -> String? {
-        guard let value,
-              JSONSerialization.isValidJSONObject(value),
-              let data = try? JSONSerialization.data(withJSONObject: value),
-              let text = String(data: data, encoding: .utf8) else {
-            return nil
-        }
-        return nonEmpty(text)
     }
 
     static let textBlockTypes = [
@@ -269,31 +259,4 @@ private extension RemoteLLMResponseText {
         "arguments", "input", "parameters", "params", "args", "payload", "data",
     ]
 
-    static func matchesBlockType(_ type: String, in candidates: [String]) -> Bool {
-        let normalized = normalizedBlockType(type)
-        return candidates.contains { normalizedBlockType($0) == normalized }
-    }
-
-    static func normalizedBlockType(_ value: String) -> String {
-        value
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-            .replacingOccurrences(of: "-", with: "")
-            .replacingOccurrences(of: "_", with: "")
-            .replacingOccurrences(of: " ", with: "")
-    }
-
-    static func nonEmpty(_ text: String) -> String? {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-}
-
-private extension Dictionary where Key == String {
-    func value(forCaseInsensitiveKey key: String) -> Value? {
-        if let value = self[key] {
-            return value
-        }
-        return first { $0.key.localizedCaseInsensitiveCompare(key) == .orderedSame }?.value
-    }
 }

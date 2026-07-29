@@ -60,7 +60,7 @@ enum RemoteLLMResponsesEventStreamText {
         if let text = functionArgumentsText(functionArguments) {
             return text
         }
-        return nonEmpty(textParts.joined())
+        return RemoteLLMPayload.nonEmpty(textParts.joined())
     }
 }
 
@@ -115,17 +115,12 @@ private extension RemoteLLMResponsesEventStreamText {
         if let itemID = json.value(forCaseInsensitiveKey: "item_id") as? String, !itemID.isEmpty {
             return itemID
         }
-        if let outputIndex = intValue(json.value(forCaseInsensitiveKey: "output_index")) {
+        if let outputIndex = RemoteLLMPayload.int(
+            from: json.value(forCaseInsensitiveKey: "output_index")
+        ) {
             return String(outputIndex)
         }
         return "0"
-    }
-
-    static func intValue(_ value: Any?) -> Int? {
-        if let int = value as? Int { return int }
-        if let number = value as? NSNumber { return number.intValue }
-        if let text = value as? String { return Int(text.trimmingCharacters(in: .whitespacesAndNewlines)) }
-        return nil
     }
 
     static func normalizedEventType(_ value: String) -> String {
@@ -138,17 +133,4 @@ private extension RemoteLLMResponsesEventStreamText {
             .replacingOccurrences(of: " ", with: "")
     }
 
-    static func nonEmpty(_ text: String) -> String? {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-}
-
-private extension Dictionary where Key == String {
-    func value(forCaseInsensitiveKey key: String) -> Value? {
-        if let value = self[key] {
-            return value
-        }
-        return first { $0.key.localizedCaseInsensitiveCompare(key) == .orderedSame }?.value
-    }
 }

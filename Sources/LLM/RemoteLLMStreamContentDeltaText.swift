@@ -18,13 +18,13 @@ enum RemoteLLMStreamContentDeltaText {
 private extension RemoteLLMStreamContentDeltaText {
     static func contentBlockText(_ object: [String: Any]) -> String? {
         if let type = object.value(forCaseInsensitiveKey: "type") as? String {
-            if matchesBlockType(type, in: textBlockTypes) {
+            if RemoteLLMPayload.matchesBlockType(type, in: textBlockTypes) {
                 return firstText(in: object, keys: ["text", "content", "value"])
             }
-            if matchesBlockType(type, in: deltaBlockTypes) {
+            if RemoteLLMPayload.matchesBlockType(type, in: deltaBlockTypes) {
                 return firstText(in: object, keys: ["delta", "text", "content", "value"])
             }
-            if matchesBlockType(type, in: wrapperBlockTypes) {
+            if RemoteLLMPayload.matchesBlockType(type, in: wrapperBlockTypes) {
                 return firstText(in: object, keys: ["content", "output", "value", "text"])
             }
             return nil
@@ -53,26 +53,4 @@ private extension RemoteLLMStreamContentDeltaText {
     ]
     static let wrapperBlockTypes = ["message"]
 
-    static func matchesBlockType(_ type: String, in candidates: [String]) -> Bool {
-        let normalized = normalizedBlockType(type)
-        return candidates.contains { normalizedBlockType($0) == normalized }
-    }
-
-    static func normalizedBlockType(_ value: String) -> String {
-        value
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-            .replacingOccurrences(of: "-", with: "")
-            .replacingOccurrences(of: "_", with: "")
-            .replacingOccurrences(of: " ", with: "")
-    }
-}
-
-private extension Dictionary where Key == String {
-    func value(forCaseInsensitiveKey key: String) -> Value? {
-        if let value = self[key] {
-            return value
-        }
-        return first { $0.key.localizedCaseInsensitiveCompare(key) == .orderedSame }?.value
-    }
 }

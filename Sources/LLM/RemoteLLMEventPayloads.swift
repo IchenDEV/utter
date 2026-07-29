@@ -16,6 +16,46 @@ enum RemoteLLMEventPayloads {
     }
 }
 
+enum RemoteLLMPayload {
+    static func nonEmpty(_ text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    static func int(from value: Any?) -> Int? {
+        if let int = value as? Int { return int }
+        if let number = value as? NSNumber { return number.intValue }
+        if let text = value as? String {
+            return Int(text.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return nil
+    }
+
+    static func jsonString(from value: Any?) -> String? {
+        guard let value,
+              JSONSerialization.isValidJSONObject(value),
+              let data = try? JSONSerialization.data(withJSONObject: value),
+              let text = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+        return nonEmpty(text)
+    }
+
+    static func matchesBlockType(_ type: String, in candidates: [String]) -> Bool {
+        let normalized = normalizedBlockType(type)
+        return candidates.contains { normalizedBlockType($0) == normalized }
+    }
+
+    private static func normalizedBlockType(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "_", with: "")
+            .replacingOccurrences(of: " ", with: "")
+    }
+}
+
 private extension RemoteLLMEventPayloads {
     static func sseValues(in text: String) -> [String] {
         var payloads: [String] = []
@@ -68,14 +108,5 @@ private extension RemoteLLMEventPayloads {
 private extension String {
     func localizedCaseInsensitiveComparePrefix(_ prefix: String) -> Bool {
         range(of: prefix, options: [.anchored, .caseInsensitive]) != nil
-    }
-}
-
-private extension Dictionary where Key == String {
-    func value(forCaseInsensitiveKey key: String) -> Value? {
-        if let value = self[key] {
-            return value
-        }
-        return first { $0.key.localizedCaseInsensitiveCompare(key) == .orderedSame }?.value
     }
 }

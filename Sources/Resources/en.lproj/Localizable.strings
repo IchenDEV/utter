@@ -39,8 +39,10 @@
 "pipeline.model_load_failed" = "Model load failed";
 "pipeline.model_load_failed_network" = "Model load failed — check network";
 "pipeline.recording" = "Recording…";
+"pipeline.recording_translation" = "Recording for translation…";
 "pipeline.transcribing" = "Transcribing…";
 "pipeline.formatting" = "Formatting…";
+"pipeline.translating" = "Translating…";
 "pipeline.inserting" = "Inserting…";
 "pipeline.replacing" = "Replacing…";
 "pipeline.undoing" = "Undoing…";
@@ -75,6 +77,7 @@
 
 /* ── Menu Bar ── */
 "menubar.listening" = "Listening…";
+"menubar.listening_translation" = "Listening to translate…";
 "menubar.hold" = "Hold";
 "menubar.toggle" = "Toggle";
 "menubar.replace_formatted" = "Replace";
@@ -91,6 +94,10 @@
 "settings.tap_interval" = "Double-tap interval";
 "settings.output" = "Output";
 "settings.output_mode" = "Output mode";
+"settings.translation" = "Translation";
+"settings.translation_target" = "Target language";
+"settings.translation_shortcut" = "Translation shortcut";
+"settings.translation_shortcut_help" = "Use the dictation hotkey together with this modifier. Translation follows the same hold, double-tap, or toggle mode.";
 "settings.instant_insert" = "Insert quickly, format in background";
 "settings.instant_insert_help" = "Only applies to Smart Format. Insert a normalized raw draft first, then let you replace it with the LLM-formatted version.";
 "settings.beta" = "Beta";
@@ -115,6 +122,14 @@
 "icon.waveform" = "Waveform";
 "icon.bubble" = "Speech Bubble";
 "settings.recognition_language" = "Recognition language";
+"translation.language.english" = "English";
+"translation.language.chinese_simplified" = "Chinese (Simplified)";
+"translation.language.chinese_traditional" = "Chinese (Traditional)";
+"translation.language.japanese" = "Japanese";
+"translation.language.korean" = "Korean";
+"translation.language.spanish" = "Spanish";
+"translation.language.french" = "French";
+"translation.language.german" = "German";
 "settings.sound_cues" = "Sound cues";
 "settings.microphone" = "Microphone";
 "settings.system_default" = "System Default";

@@ -101,10 +101,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private func setupHotkey() {
         hotkeyManager = HotkeyManager(
             settings: AppSettings.shared,
-            onStart: { [weak self] in
-                Task { @MainActor in self?.startRecording() }
+            onStart: { [weak self] action in
+                Task { @MainActor in self?.startRecording(action: action) }
             },
-            onStop: { [weak self] in
+            onStop: { [weak self] _ in
                 Task { @MainActor in self?.stopRecording() }
             }
         )
@@ -134,14 +134,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
 
-    private func startRecording() {
+    private func startRecording(action: HotkeyAction) {
         if integrationSessionCoordinator.isBusy {
             pipeline?.showBusyHint()
             return
         }
         savePreviousApp()
         if popover.isShown { closePopover() }
-        Task { await pipeline?.start() }
+        let mode: VoiceInputMode = action == .translation
+            ? .translation(AppSettings.shared.translationTargetLanguage)
+            : .dictation
+        Task { await pipeline?.start(mode: mode) }
     }
 
     private func stopRecording() {

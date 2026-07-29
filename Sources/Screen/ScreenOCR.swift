@@ -3,6 +3,13 @@ import AppKit
 import Vision
 import ScreenCaptureKit
 
+struct ScreenContextSnapshot: @unchecked Sendable {
+    let text: String
+    let image: CGImage?
+
+    static let empty = ScreenContextSnapshot(text: "", image: nil)
+}
+
 enum ScreenOCR {
 
     static func capture(mode: ScreenContextMode, maxLength: Int = 2000) async -> ScreenContextSnapshot {
