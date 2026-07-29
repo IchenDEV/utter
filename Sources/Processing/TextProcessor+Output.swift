@@ -38,33 +38,84 @@ extension TextProcessor {
     func formattingOptions(for text: String, style: LanguageStyle) -> GenerationOptions {
         let characterCount = text.trimmingCharacters(in: .whitespacesAndNewlines).count
 
-        let maxTokens: Int
+        let minimumTokens: Int
         switch (style, characterCount) {
         case (.professional, 0...80), (.custom, 0...80):
-            maxTokens = 224
+            minimumTokens = 224
         case (.professional, 81...220), (.custom, 81...220):
-            maxTokens = 384
+            minimumTokens = 384
         case (.professional, _), (.custom, _):
-            maxTokens = 640
+            minimumTokens = 640
         case (.casual, 0...80):
-            maxTokens = 160
+            minimumTokens = 160
         case (.casual, 81...220):
-            maxTokens = 256
+            minimumTokens = 256
         case (.casual, _):
-            maxTokens = 384
+            minimumTokens = 384
         }
 
-        let temperature: Double
-        switch style {
-        case .casual:
-            temperature = 0.08
-        case .professional, .custom:
-            temperature = 0.10
-        }
+        // CJK transcripts can approach one token per character. Leave enough
+        // room for punctuation and formatting without letting requests grow
+        // beyond the supported generation ceiling.
+        let estimatedTokens = min(characterCount, 2_048) * 2
+        let maxTokens = min(4_096, max(minimumTokens, estimatedTokens))
 
         return GenerationOptions(
             maxTokens: maxTokens,
-            temperature: temperature
+            temperature: 0
         )
+    }
+
+    /// Dictionary replacements are applied once on the input side. Applying
+    /// them again could double-expand replacements that contain the original.
+    func cleanGeneratedOutput(
+        _ text: String,
+        inputLanguage: InputLanguage,
+        fallback: String = ""
+    ) -> String {
+        var result = stripThinkingTags(text)
+        result = FormattedOutputCleaner.clean(result)
+        if result.isEmpty { return FormattedOutputCleaner.clean(fallback) }
+        return result
+    }
+
+    /// Command output is entirely model-generated, so parsing its advertised
+    /// final_text envelope cannot swallow dictated content.
+    func cleanCommandGeneratedOutput(
+        _ text: String,
+        inputLanguage: InputLanguage
+    ) -> String {
+        let stripped = stripThinkingTags(text)
+        if let finalText = LLMFinalTextOutput.text(from: stripped) {
+            return FormattedOutputCleaner.clean(finalText)
+        }
+        return cleanGeneratedOutput(text, inputLanguage: inputLanguage)
+    }
+
+    func rejectedOutputFallback(
+        _ cleanedText: String,
+        allowsGuardFallback: Bool
+    ) -> String {
+        allowsGuardFallback ? cleanedText : ""
+    }
+
+    /// Keeps line breaks while collapsing surrounding whitespace.
+    func normalizeWhitespace(_ text: String) -> String {
+        TranscriptionSanitizer.normalizeInput(text)
+            .replacingOccurrences(
+                of: "[^\\S\\n]*\\n[^\\S\\n]*",
+                with: "\n",
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: "[^\\S\\n]+",
+                with: " ",
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: "\\n{3,}",
+                with: "\n\n",
+                options: .regularExpression
+            )
     }
 }

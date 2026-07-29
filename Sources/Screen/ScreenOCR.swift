@@ -29,8 +29,14 @@ enum ScreenOCR {
             Log.info("[ScreenOCR] OCR extracted \(text.count) chars")
             return ScreenContextSnapshot(text: String(text.prefix(maxLength)), image: nil)
         case .multimodal:
-            Log.info("[ScreenOCR] captured screen image for multimodal context")
-            return ScreenContextSnapshot(text: "", image: image)
+            let text = await recognizeText(in: image)
+            Log.info(
+                "[ScreenOCR] captured multimodal image and \(text.count) OCR chars"
+            )
+            return ScreenContextSnapshot(
+                text: String(text.prefix(maxLength)),
+                image: image
+            )
         }
     }
 

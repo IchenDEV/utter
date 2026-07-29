@@ -6,6 +6,11 @@ struct GenerationOptions {
 }
 
 struct TextProcessingOptions {
+    enum FidelityPolicy {
+        case faithfulCorrection
+        case boundedCustomTransformation
+    }
+
     var inputLanguage: InputLanguage
     var languageStyle: LanguageStyle
     var customStylePrompt: String
@@ -16,6 +21,16 @@ struct TextProcessingOptions {
     var remoteModel: String
     var remoteProvider: RemoteProvider
     var screenContextMode: ScreenContextMode
+    var useCustomSystemPrompt: Bool
+    var customSystemPrompt: String
+
+    var fidelityPolicy: FidelityPolicy {
+        let hasCustomSystemPrompt = useCustomSystemPrompt
+            && !customSystemPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return hasCustomSystemPrompt
+            ? .boundedCustomTransformation
+            : .faithfulCorrection
+    }
 
     init(settings: AppSettings, inputLanguage: InputLanguage? = nil) {
         self.inputLanguage = inputLanguage ?? settings.inputLanguage
@@ -28,5 +43,7 @@ struct TextProcessingOptions {
         self.remoteModel = settings.remoteModel
         self.remoteProvider = settings.remoteProvider
         self.screenContextMode = settings.screenContextMode
+        self.useCustomSystemPrompt = settings.useCustomSystemPrompt
+        self.customSystemPrompt = settings.customSystemPrompt
     }
 }

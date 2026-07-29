@@ -10,52 +10,11 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
     private(set) var isLoading = false
     private var loadError: String?
     private var streamingSession: WhisperStreamingSession?
+    private let recognitionContextLock = NSLock()
+    private var recognitionContext = SpeechRecognitionContext.empty
 
     init(modelName: String = "large-v3") {
         self.modelName = modelName.isEmpty ? nil : modelName
-    }
-
-    struct DownloadProgress {
-        var fraction: Double
-        var completedBytes: Int64
-        var totalBytes: Int64
-        var speedBytesPerSec: Double
-        var elapsedSeconds: TimeInterval
-        var downloadFraction: Double
-        var stage: Stage
-
-        enum Stage: String {
-            case downloading = "下载中"
-            case compiling = "编译模型"
-            case loading = "加载模型"
-            case done = "完成"
-        }
-
-        var info: DownloadProgressInfo {
-            DownloadProgressInfo(
-                fraction: downloadFraction,
-                elapsedSeconds: elapsedSeconds,
-                completedBytes: completedBytes,
-                totalBytes: totalBytes,
-                speedBytesPerSecond: speedBytesPerSec
-            )
-        }
-
-        var sizeText: String {
-            info.transferredText
-        }
-
-        var speedText: String {
-            info.speedText
-        }
-
-        var remainingText: String {
-            info.remainingText
-        }
-
-        var detailText: String {
-            info.detailText
-        }
     }
 
     func loadModel(progress: @escaping (DownloadProgress) -> Void) async throws {
@@ -64,19 +23,19 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
 
         do {
             let recommended = WhisperKit.recommendedModels()
-            var selectedModel = modelName ?? recommended.default
+            let requestedModel = modelName ?? recommended.default
+            var selectedModel = ModelStorage.localWhisperURL(requestedModel) != nil
+                ? requestedModel
+                : WhisperModelSelection.resolve(
+                    requested: requestedModel,
+                    available: recommended.supported,
+                    fallback: recommended.default
+                )
             let localFolder = ModelStorage.localWhisperURL(selectedModel)
 
             if localFolder == nil, !recommended.supported.contains(selectedModel) {
-                if let match = recommended.supported.first(where: {
-                    $0.localizedCaseInsensitiveContains(selectedModel)
-                }) {
-                    Log.info("[WhisperEngine] '\(selectedModel)' not in list, matched: \(match)")
-                    selectedModel = match
-                } else {
-                    Log.info("[WhisperEngine] '\(selectedModel)' not in list, fallback: \(recommended.default)")
-                    selectedModel = recommended.default
-                }
+                Log.info("[WhisperEngine] '\(selectedModel)' is unavailable, fallback: \(recommended.default)")
+                selectedModel = recommended.default
             }
             Log.info("[WhisperEngine] using model: \(selectedModel)")
 
@@ -144,14 +103,22 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
 
     var supportsStreaming: Bool { true }
 
+    func configureRecognition(context: SpeechRecognitionContext) {
+        recognitionContextLock.lock()
+        defer { recognitionContextLock.unlock() }
+        recognitionContext = context
+    }
+
     func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
         guard let whisperKit, isReady else { return }
+        let options = decodingOptions(
+            language: language,
+            temperatureFallbackCount: 1
+        )
         streamingSession = WhisperStreamingSession(
             whisperKit: whisperKit,
             partialHandler: onPartialResult,
-            optionsBuilder: { [weak self] in
-                self?.decodingOptions(language: language) ?? DecodingOptions()
-            }
+            optionsBuilder: { options }
         )
     }
 
@@ -190,9 +157,13 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
             throw WhisperError.noAudioFile
         }
 
+        let options = decodingOptions(language: language)
         let t0 = CFAbsoluteTimeGetCurrent()
 
-        let results = try await whisperKit.transcribe(audioPath: url.path, decodeOptions: decodingOptions(language: language))
+        let results = try await whisperKit.transcribe(
+            audioPath: url.path,
+            decodeOptions: options
+        )
         let text = results
             .compactMap { $0.text }
             .joined(separator: " ")
@@ -211,22 +182,39 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         loadError = nil
     }
 
-    private func decodingOptions(language: String?) -> DecodingOptions {
-        let promptTokens = chinesePromptTokens(for: language)
+    private func decodingOptions(
+        language: String?,
+        temperatureFallbackCount: Int = 5
+    ) -> DecodingOptions {
+        let promptTokens = recognitionPromptTokens(for: language)
         return DecodingOptions(
             language: language,
-            temperatureFallbackCount: 1,
-            usePrefillPrompt: language != nil,
+            temperatureFallbackCount: temperatureFallbackCount,
+            usePrefillPrompt: language != nil || promptTokens != nil,
+            detectLanguage: language == nil,
             skipSpecialTokens: true,
             withoutTimestamps: true,
             promptTokens: promptTokens,
-            suppressBlank: true
+            suppressBlank: true,
+            chunkingStrategy: .vad
         )
     }
 
-    private func chinesePromptTokens(for language: String?) -> [Int]? {
-        guard language == "zh" else { return nil }
-        return whisperKit?.tokenizer?.encode(text: "以下是普通话的句子。")
+    private func recognitionPromptTokens(for language: String?) -> [Int]? {
+        guard let tokenizer = whisperKit?.tokenizer else { return nil }
+        let context = recognitionContextSnapshot()
+        return context.whisperPromptTokens(
+            language: language,
+            maximumCount: 160
+        ) {
+            tokenizer.encode(text: $0)
+        }
+    }
+
+    private func recognitionContextSnapshot() -> SpeechRecognitionContext {
+        recognitionContextLock.lock()
+        defer { recognitionContextLock.unlock() }
+        return recognitionContext
     }
 
     private func dp(_ fraction: Double, stage: DownloadProgress.Stage) -> DownloadProgress {
@@ -239,23 +227,5 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
             downloadFraction: fraction,
             stage: stage
         )
-    }
-}
-
-enum WhisperError: LocalizedError {
-    case modelNotLoaded(String)
-    case noAudioFile
-    case downloadFailed(String)
-    case compileFailed(String)
-    case loadFailed(String)
-
-    var errorDescription: String? {
-        switch self {
-        case .modelNotLoaded(let detail): return String(format: L("error.whisper_not_loaded"), detail)
-        case .noAudioFile: return L("error.no_audio")
-        case .downloadFailed(let detail): return String(format: L("error.download_failed"), detail)
-        case .compileFailed(let detail): return String(format: L("error.compile_failed"), detail)
-        case .loadFailed(let detail): return String(format: L("error.load_failed"), detail)
-        }
     }
 }

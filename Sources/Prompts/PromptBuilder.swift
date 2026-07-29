@@ -8,11 +8,15 @@ enum PromptBuilder {
         screenImageAvailable: Bool = false,
         memoryContext: String = "",
         inputContext: InputContext? = nil,
-        inputLanguage: InputLanguage = .chinese
+        inputLanguage: InputLanguage = .chinese,
+        useCustomSystemPrompt: Bool? = nil,
+        customSystemPrompt: String? = nil
     ) -> String {
-        let settings = AppSettings.shared
         var parts = promptParts(
-            settings: settings,
+            useCustomSystemPrompt: useCustomSystemPrompt
+                ?? AppSettings.shared.useCustomSystemPrompt,
+            customSystemPrompt: customSystemPrompt
+                ?? AppSettings.shared.customSystemPrompt,
             style: style,
             stylePrompt: stylePrompt,
             inputLanguage: inputLanguage
@@ -30,6 +34,13 @@ enum PromptBuilder {
 
     static func buildUserPrompt(text: String, inputLanguage: InputLanguage = .chinese) -> String {
         PromptCatalog.userPrompt(text: text, inputLanguage: inputLanguage)
+    }
+
+    static func buildCustomUserPrompt(
+        text: String,
+        inputLanguage: InputLanguage = .chinese
+    ) -> String {
+        PromptCatalog.customUserPrompt(text: text, inputLanguage: inputLanguage)
     }
 
     static func buildCommandUserPrompt(text: String, inputLanguage: InputLanguage = .chinese) -> String {
@@ -69,13 +80,15 @@ enum PromptBuilder {
 
 private extension PromptBuilder {
     static func promptParts(
-        settings: AppSettings,
+        useCustomSystemPrompt: Bool,
+        customSystemPrompt: String,
         style: LanguageStyle,
         stylePrompt: String,
         inputLanguage: InputLanguage
     ) -> [String] {
-        let customSystemPrompt = settings.customSystemPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        if settings.useCustomSystemPrompt, !customSystemPrompt.isEmpty {
+        let customSystemPrompt = customSystemPrompt
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if useCustomSystemPrompt, !customSystemPrompt.isEmpty {
             return [
                 customSystemPrompt,
                 PromptCatalog.customSystemPromptOutputContract(inputLanguage: inputLanguage),

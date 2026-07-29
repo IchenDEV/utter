@@ -38,18 +38,34 @@ extension VoicePipeline {
         settings: AppSettings,
         targetApp: NSRunningApplication?
     ) async {
-        let quickText = immediateInsertText(from: raw, settings: settings)
+        let processingOptions = TextProcessingOptions(settings: settings)
+        let dictionarySnapshot = PersonalDictionary.shared.snapshot()
+        let enableMemory = settings.enableMemory
+        let memoryWindowMinutes = settings.memoryWindowMinutes
+        let quickText = immediateInsertText(
+            from: raw,
+            inputLanguage: processingOptions.inputLanguage,
+            dictionarySnapshot: dictionarySnapshot
+        )
         let quickContext = InputContext.capture(
             targetApp: targetApp,
             screenContext: "",
             outputMode: .processed,
-            inputLanguage: settings.inputLanguage,
+            inputLanguage: processingOptions.inputLanguage,
             source: .menuBar
         )
         let ocrTask = screenOCRTask
         let ocrStartedAt = screenOCRStartedAt
         screenOCRTask = nil
         screenOCRStartedAt = nil
+
+        guard !quickText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            ocrTask?.cancel()
+            showNoSpeechDetected(
+                reason: "instant-insert preprocessing produced empty text"
+            )
+            return
+        }
 
         appState.processedText = quickText
         appState.phase = .inserting
@@ -94,7 +110,10 @@ extension VoicePipeline {
             await self?.finishDeferredSmartFormat(
                 replacementID: replacement.id,
                 raw: raw,
-                settings: settings,
+                processingOptions: processingOptions,
+                dictionarySnapshot: dictionarySnapshot,
+                enableMemory: enableMemory,
+                memoryWindowMinutes: memoryWindowMinutes,
                 ocrTask: ocrTask,
                 ocrStartedAt: ocrStartedAt
             )
@@ -153,7 +172,10 @@ extension VoicePipeline {
     private func finishDeferredSmartFormat(
         replacementID: UUID,
         raw: String,
-        settings: AppSettings,
+        processingOptions: TextProcessingOptions,
+        dictionarySnapshot: PersonalDictionarySnapshot,
+        enableMemory: Bool,
+        memoryWindowMinutes: Int,
         ocrTask: Task<ScreenContextSnapshot, Never>?,
         ocrStartedAt: CFAbsoluteTime?
     ) async {
@@ -167,30 +189,28 @@ extension VoicePipeline {
         guard !Task.isCancelled else { return }
         guard let currentReplacement = appState.pendingReplacement, currentReplacement.id == replacementID else { return }
 
-        let inputContext = InputContext(
-            appName: currentReplacement.targetAppName,
-            bundleIdentifier: currentReplacement.targetBundleIdentifier,
-            windowTitle: currentReplacement.context?.windowTitle,
+        let inputContext = Self.deferredInputContext(
+            for: currentReplacement,
             screenContext: screenContext.text,
-            outputMode: .processed,
-            inputLanguage: settings.inputLanguage,
-            source: .menuBar
+            inputLanguage: processingOptions.inputLanguage
         )
         let memoryContext = VoicePipelinePolicy.memoryContext(
             for: .processed,
-            settings: settings,
+            enableMemory: enableMemory,
+            memoryWindowMinutes: memoryWindowMinutes,
             currentContext: inputContext
         )
 
         let formattedText = await textProcessor.process(
             text: raw,
-            stylePrompt: settings.customStylePrompt,
-            model: settings.llmModel,
+            options: processingOptions,
             screenContext: screenContext.text,
             screenImage: screenContext.image,
             memoryContext: memoryContext,
             inputContext: inputContext,
-            allowsPreparedFallback: false
+            allowsPreparedFallback: false,
+            allowsGuardFallback: false,
+            dictionarySnapshot: dictionarySnapshot
         )
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         appState.lastFormattingDurationSeconds = elapsed
@@ -215,12 +235,43 @@ extension VoicePipeline {
         appState.pendingReplacement = replacement
     }
 
-    private func immediateInsertText(from raw: String, settings: AppSettings) -> String {
-        let cleaned = textProcessor.prepareForFormatting(text: raw, inputLanguage: settings.inputLanguage)
-        let fallback = textProcessor.basicClean(text: raw, inputLanguage: settings.inputLanguage)
+    static func deferredInputContext(
+        for replacement: DeferredReplacement,
+        screenContext: String,
+        inputLanguage: InputLanguage
+    ) -> InputContext {
+        InputContext(
+            appName: replacement.targetAppName,
+            bundleIdentifier: replacement.targetBundleIdentifier,
+            windowTitle: replacement.context?.windowTitle,
+            screenContext: screenContext,
+            textBeforeSelection: replacement.context?.textBeforeSelection,
+            selectedText: replacement.context?.selectedText,
+            textAfterSelection: replacement.context?.textAfterSelection,
+            outputMode: .processed,
+            inputLanguage: inputLanguage,
+            source: .menuBar
+        )
+    }
+
+    private func immediateInsertText(
+        from raw: String,
+        inputLanguage: InputLanguage,
+        dictionarySnapshot: PersonalDictionarySnapshot
+    ) -> String {
+        let cleaned = textProcessor.prepareForFormatting(
+            text: raw,
+            inputLanguage: inputLanguage,
+            dictionarySnapshot: dictionarySnapshot
+        )
+        let fallback = textProcessor.basicClean(
+            text: raw,
+            inputLanguage: inputLanguage,
+            dictionarySnapshot: dictionarySnapshot
+        )
         if !cleaned.isEmpty { return cleaned }
         if !fallback.isEmpty { return fallback }
-        return raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        return ""
     }
 
     private func replacementCopyMessage(for reason: DeferredReplacementCopyReason) -> String {

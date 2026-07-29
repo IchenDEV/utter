@@ -23,7 +23,7 @@ final class AutoCantonesePromptTests: XCTestCase {
         XCTAssertTrue(PromptBuilder.buildUserPrompt(
             text: "um hello",
             inputLanguage: .auto
-        ).contains("自动语言语音识别原文"))
+        ).contains("自动语言 ASR 原文"))
         XCTAssertTrue(PromptBuilder.buildUserPrompt(
             text: "啱啱講錯咗",
             inputLanguage: .cantonese

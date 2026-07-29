@@ -28,21 +28,21 @@ enum PromptStylePrompts {
         case (.auto, .professional):
             return "风格：自动语言专业整理。先判断原文主要语言和混排方式，再做纠错和表达整理。保持原语言；中文、英文、日文、韩文、粤语和中英日韩混排都要自然。只有原文明显是步骤、清单或待办时，才输出 1. 2. 3.。"
         case (.chinese, .professional):
-            return "风格：专业整理。先做纠错，再整理表达。对明显同音错字、近音错字、漏字、多字、专有名词大小写和中英混排要更主动；把口语碎片改成完整、自然的书面句子。语义完整、结构清楚；只有原文明显是步骤、清单或待办时，才输出 1. 2. 3.。"
+            return "风格：专业整理。先做忠实纠错，再整理表达。对有明确上下文依据的同音错字、近音错字、专有名词大小写和中英混排要主动修正；把已完整表达的口语整理成自然书面句子，没说完的片段仍保持未完。结构清楚；只有原文明显是步骤、清单或待办时，才输出 1. 2. 3.。"
         case (.cantonese, .professional):
             return "风格：粤语专业整理。先做粤语误识别纠错，再整理表达。保留自然粤语书面表达、必要语气词和中英混排；对专有名词、技术词和英文大小写要更主动。只有原文明显是步骤、清单或待办时，才输出 1. 2. 3.。"
         case (.auto, .custom), (.chinese, .custom), (.cantonese, .custom):
             return ""
         case (.english, .professional):
-            return "Style: professional cleanup. Correct first, then rewrite. Be more active with obvious homophones, ASR substitutions, missing words, extra words, proper nouns, capitalization, and mixed-language terms. Turn spoken fragments into complete natural written sentences. Keep the meaning complete and the structure crisp. Use 1. 2. 3. only when the raw text is clearly a list, steps, or action items."
+            return "Style: professional cleanup. Apply faithful correction before polishing. Actively fix homophones, ASR substitutions, proper nouns, capitalization, and mixed-language terms when context clearly supports the change. Turn fully expressed speech into natural written sentences, but keep unfinished fragments unfinished. Keep the structure crisp. Use 1. 2. 3. only when the raw text is clearly a list, steps, or action items."
         case (.english, .casual):
             return "Style: natural and direct. Keep an easy spoken tone, but still actively fix obvious typos, homophones, sentence breaks, and small wording mistakes. Do not leave clear ASR errors in place."
         case (.japanese, .professional):
-            return "スタイル：専門的に整理。先に誤認識を直し、その後で表現を整える。固有名詞、英字表記、抜けた語、余分な語、言い直しを積極的に補正し、自然で明確な日本語にする。原文が明らかに手順、リスト、TODO の場合だけ 1. 2. 3. を使う。"
+            return "スタイル：専門的に整理。忠実な補正を先に行い、その後で表現を整える。文脈に明確な根拠がある固有名詞、英字表記、誤認識、言い直しを補正し、最後まで述べられた内容だけを自然で明確な日本語にする。言いかけは未完のまま残す。原文が明らかに手順、リスト、TODO の場合だけ 1. 2. 3. を使う。"
         case (.japanese, .casual):
             return "スタイル：自然で直接的。話し言葉の軽さは残しつつ、明らかな誤認識、同音語、句読点、文の区切りは積極的に直す。"
         case (.korean, .professional):
-            return "스타일: 전문적으로 정리. 먼저 오인식을 바로잡고 그다음 표현을 다듬는다. 고유명사, 영문 표기, 빠진 단어, 불필요한 단어, 말 바꿈을 적극적으로 보정해 자연스럽고 명확한 한국어로 만든다. 원문이 명확히 단계, 목록, 할 일일 때만 1. 2. 3.을 사용한다."
+            return "스타일: 전문적으로 정리. 먼저 충실하게 보정하고 그다음 표현을 다듬는다. 문맥에 분명한 근거가 있는 고유명사, 영문 표기, 오인식, 말 바꿈을 바로잡고 끝까지 표현된 내용만 자연스럽고 명확한 한국어로 만든다. 미완성 발화는 그대로 미완성으로 둔다. 원문이 명확히 단계, 목록, 할 일일 때만 1. 2. 3.을 사용한다."
         case (.korean, .casual):
             return "스타일: 자연스럽고 직접적으로. 말의 편안함은 유지하되 명백한 오인식, 동음이의어, 문장 부호, 문장 경계는 적극적으로 바로잡는다."
         case (.english, .custom), (.japanese, .custom), (.korean, .custom):

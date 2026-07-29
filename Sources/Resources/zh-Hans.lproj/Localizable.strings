@@ -368,6 +368,7 @@
 "error.volc_not_configured" = "豆包语音识别未配置 — 请在 设置 → 模型 中填写 API 凭据";
 "error.volc_invalid_endpoint" = "语音识别接口地址无效";
 "error.volc_audio_conversion" = "音频转换为 PCM 16kHz 失败";
+"error.local_asr_audio_conversion" = "音频转换为 16kHz 单声道 PCM 失败";
 "error.volc_timeout" = "语音识别请求超时";
 "error.volc_handshake_rejected" = "豆包语音识别连接被服务端拒绝。请检查 App Key、Access Token、Resource ID，以及账号是否已开通流式语音识别。";
 "error.local_asr_not_configured" = "本地语音识别未配置 — 请在 设置 → 模型 中下载模型";

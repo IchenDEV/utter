@@ -52,8 +52,50 @@ final class PromptAndProcessingTests: XCTestCase {
             ]
 
             XCTAssertEqual(dictionary.applyReplacements(to: "open type should not skip me"), "OpenType should not skip me")
+            XCTAssertEqual(dictionary.applyReplacements(to: "blank replacement"), "")
             XCTAssertEqual(dictionary.activeEntriesDescription(), "open type -> OpenType")
             XCTAssertEqual(dictionary.activeRulesDescription(), "Keep product names exact.")
+        }
+    }
+
+    func testPersonalDictionaryUsesLongestNonCascadingWordMatches() {
+        withCleanSettings {
+            let dictionary = PersonalDictionary.shared
+            dictionary.entries = [
+                DictionaryEntry(original: "open", replacement: "closed", enabled: true),
+                DictionaryEntry(original: "open type", replacement: "OpenType", enabled: true),
+                DictionaryEntry(original: "OpenType", replacement: "WrongCascade", enabled: true),
+                DictionaryEntry(original: "api", replacement: "API", enabled: true),
+            ]
+
+            XCTAssertEqual(
+                dictionary.applyReplacements(to: "open type has an api, not rapid"),
+                "OpenType has an API, not rapid"
+            )
+        }
+    }
+
+    func testPersonalDictionaryStillMatchesCJKTermsWithoutWordBoundaries() {
+        withCleanSettings {
+            let dictionary = PersonalDictionary.shared
+            dictionary.entries = [
+                DictionaryEntry(original: "开放类型", replacement: "OpenType", enabled: true)
+            ]
+
+            XCTAssertEqual(dictionary.applyReplacements(to: "使用开放类型输入"), "使用OpenType输入")
+        }
+    }
+
+    func testPersonalDictionaryMatchesLatinTermsCaseInsensitively() {
+        withCleanSettings {
+            PersonalDictionary.shared.entries = [
+                DictionaryEntry(original: "OPEN TYPE", replacement: "OpenType")
+            ]
+
+            XCTAssertEqual(
+                PersonalDictionary.shared.applyReplacements(to: "open type works"),
+                "OpenType works"
+            )
         }
     }
 
@@ -209,9 +251,34 @@ final class PromptAndProcessingTests: XCTestCase {
             XCTAssertEqual(processor.formattingOptions(for: String(repeating: "长", count: 260), style: .professional).maxTokens, 640)
             XCTAssertEqual(processor.formattingOptions(for: "short", style: .casual).maxTokens, 160)
             XCTAssertEqual(processor.formattingOptions(for: String(repeating: "c", count: 120), style: .casual).maxTokens, 256)
-            XCTAssertEqual(processor.formattingOptions(for: String(repeating: "c", count: 260), style: .casual).maxTokens, 384)
-            XCTAssertEqual(processor.formattingOptions(for: "短句", style: .casual).temperature, 0.08)
-            XCTAssertEqual(processor.formattingOptions(for: "短句", style: .professional).temperature, 0.10)
+            XCTAssertEqual(processor.formattingOptions(for: String(repeating: "c", count: 260), style: .casual).maxTokens, 520)
+            XCTAssertEqual(processor.formattingOptions(for: "短句", style: .casual).temperature, 0)
+            XCTAssertEqual(processor.formattingOptions(for: "短句", style: .professional).temperature, 0)
+        }
+    }
+
+    func testFormattingOptionsExpandWithLongInputAndCapAt4096() {
+        withCleanSettings {
+            let processor = TextProcessor()
+            let longText = String(repeating: "中", count: 1_000)
+            let oversizedText = String(repeating: "中", count: 4_000)
+
+            XCTAssertGreaterThan(
+                processor.formattingOptions(for: longText, style: .professional).maxTokens,
+                640
+            )
+            XCTAssertGreaterThan(
+                processor.formattingOptions(for: longText, style: .casual).maxTokens,
+                384
+            )
+            XCTAssertEqual(
+                processor.formattingOptions(for: oversizedText, style: .professional).maxTokens,
+                4_096
+            )
+            XCTAssertEqual(
+                processor.formattingOptions(for: oversizedText, style: .casual).maxTokens,
+                4_096
+            )
         }
     }
 

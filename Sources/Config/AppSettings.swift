@@ -224,7 +224,8 @@ enum InputLanguage: String, Codable, CaseIterable {
 
     var localeIdentifier: String {
         switch self {
-        case .auto, .chinese: return "zh-CN"
+        case .auto: return Locale.current.identifier
+        case .chinese: return "zh-CN"
         case .english: return "en-US"
         case .japanese: return "ja-JP"
         case .korean: return "ko-KR"
@@ -235,6 +236,7 @@ enum InputLanguage: String, Codable, CaseIterable {
 
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
+    static let defaultLLMModelID = "mlx-community/Qwen3.5-2B-4bit"
 
     @Published var hotkeyType: HotkeyType {
         didSet {
@@ -343,7 +345,7 @@ final class AppSettings: ObservableObject {
             ?? (savedEngine.contains("Whisper") || savedEngine.contains("whisper") ? .whisper : nil)
             ?? .apple
         whisperModel = ud.string(forKey: Key.whisperModel.rawValue) ?? "large-v3"
-        llmModel = ud.string(forKey: Key.llmModel.rawValue) ?? "mlx-community/Qwen3.5-2B-4bit"
+        llmModel = ud.string(forKey: Key.llmModel.rawValue) ?? Self.defaultLLMModelID
         microphoneID = ud.string(forKey: Key.microphoneID.rawValue)
         let savedOutput = ud.string(forKey: Key.outputMode.rawValue) ?? ""
         outputMode = OutputMode(rawValue: savedOutput)

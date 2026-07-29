@@ -36,20 +36,19 @@ final class PromptBuilderTests: XCTestCase {
         }
         try body()
     }
-
     func testBuildUserPromptUsesLanguageSpecificWrappers() {
         XCTAssertEqual(PromptBuilder.buildUserPrompt(
             text: "嗯 今天开会",
             inputLanguage: .chinese
-        ), "以下是语音识别原文。请先在内部理解用户的口述意图，判断错别字、同音词、误识别词、漏字、多字、口述标点、数字单位、时间范围和专有名词，再直接输出整理后的最终文本：\n\(PromptTextBlock.block("嗯 今天开会"))")
+        ), "以下是语音识别原文。请做忠实纠错：只在原文本身、自我纠正、个人词典或提供的上下文有明确依据时修正错别字、同音词、误识别和专有名词；不要猜测漏字或补写未口述的实词。处理口述标点、数字、单位和时间范围，只输出最终文本：\n\(PromptTextBlock.block("嗯 今天开会"))")
         XCTAssertEqual(PromptBuilder.buildUserPrompt(
             text: "um hello",
             inputLanguage: .english
-        ), "Raw ASR transcript. Internally infer the user's spoken intent, including punctuation commands, numbers, units, date/time ranges, typos, homophones, ASR substitutions, missing or extra words, and proper nouns, then output only the final rewritten text:\n\(PromptTextBlock.block("um hello"))")
+        ), "Raw ASR transcript. Perform faithful correction. Fix homophones, ASR substitutions, and proper nouns only when supported by the transcript, an explicit self-correction, the personal dictionary, or provided context. Never guess missing content or add undictated lexical words. Apply spoken punctuation, numbers, units, and date/time ranges, then output only the final text:\n\(PromptTextBlock.block("um hello"))")
         XCTAssertEqual(PromptBuilder.buildUserPrompt(
             text: "こんにちは",
             inputLanguage: .japanese
-        ), "日本語の音声認識原文です。口述意図、誤認識、同音語、抜けた語、余分な語、口述された句読点、数字、単位、日時、範囲、固有名詞を内部で判断し、最終テキストだけを出力してください：\n\(PromptTextBlock.block("こんにちは"))")
+        ), "日本語の音声認識原文です。忠実に補正してください。原文、自明な言い直し、個人辞書、または提供された文脈に明確な根拠がある場合だけ、誤認識、同音語、固有名詞を直してください。抜けた内容を推測したり、口述されていない実質語を追加したりしないでください。口述された句読点、数字、単位、日時、範囲を整え、最終テキストだけを出力してください：\n\(PromptTextBlock.block("こんにちは"))")
     }
 
     func testBuildCommandUserPromptUsesLanguageSpecificWrappers() {
@@ -85,9 +84,10 @@ final class PromptBuilderTests: XCTestCase {
                 inputLanguage: .chinese
             )
 
-            XCTAssertTrue(prompt.contains("力度要高于轻度润色"))
+            XCTAssertTrue(prompt.contains("忠实纠错和整理，不做自由改写"))
             XCTAssertTrue(prompt.contains("风格：专业整理"))
-            XCTAssertTrue(prompt.contains("同音错字、近音错字、漏字、多字"))
+            XCTAssertTrue(prompt.contains("同音错字、近音错字和误识别词"))
+            XCTAssertTrue(prompt.contains("实词的新增、删除或替换必须有原文"))
             XCTAssertTrue(prompt.contains("智能理解口述格式意图"))
             XCTAssertTrue(prompt.contains("百分之二十五到三十"))
             XCTAssertTrue(prompt.contains("输出：把灰度比例改为 25%-30%，发布窗口改到下午 3 点到 4 点。"))
@@ -125,9 +125,10 @@ final class PromptBuilderTests: XCTestCase {
                 inputLanguage: .english
             )
 
-            XCTAssertTrue(prompt.contains("Do not lightly polish raw ASR"))
+            XCTAssertTrue(prompt.contains("Perform faithful correction and formatting, not free rewriting"))
             XCTAssertTrue(prompt.contains("Style: professional cleanup"))
-            XCTAssertTrue(prompt.contains("homophones, ASR substitutions, missing words, extra words"))
+            XCTAssertTrue(prompt.contains("homophones, ASR substitutions, proper nouns"))
+            XCTAssertTrue(prompt.contains("adding, deleting, or replacing lexical words requires direct support"))
             XCTAssertTrue(prompt.contains("intelligently interpret spoken formatting intent"))
             XCTAssertTrue(prompt.contains("twenty five percent to thirty percent"))
             XCTAssertTrue(prompt.contains("Output: Set the rollout to 25%-30%, and move the release window to 3 PM to 4 PM."))

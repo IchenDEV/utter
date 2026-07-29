@@ -29,6 +29,50 @@ actor RemoteLLMClient {
     ) async throws -> String {
         guard !apiKey.isEmpty else { throw RemoteLLMError.noAPIKey }
 
+        do {
+            return try await generateOnce(
+                prompt: prompt,
+                systemPrompt: systemPrompt,
+                baseURL: baseURL,
+                apiKey: apiKey,
+                model: model,
+                provider: provider,
+                maxTokens: maxTokens,
+                temperature: temperature
+            )
+        } catch RemoteLLMError.requestFailed(let message) {
+            guard let retryTokens = Self.retryTokenBudget(
+                maxTokens: maxTokens,
+                failureMessage: message
+            ) else {
+                throw RemoteLLMError.requestFailed(message)
+            }
+            Log.info(
+                "[RemoteLLM] retrying token-limit failure with \(retryTokens) max tokens"
+            )
+            return try await generateOnce(
+                prompt: prompt,
+                systemPrompt: systemPrompt,
+                baseURL: baseURL,
+                apiKey: apiKey,
+                model: model,
+                provider: provider,
+                maxTokens: retryTokens,
+                temperature: temperature
+            )
+        }
+    }
+
+    private func generateOnce(
+        prompt: String,
+        systemPrompt: String?,
+        baseURL: String,
+        apiKey: String,
+        model: String,
+        provider: RemoteProvider,
+        maxTokens: Int,
+        temperature: Double
+    ) async throws -> String {
         switch provider.apiFormat {
         case .anthropic:
             return try await generateAnthropic(
@@ -44,6 +88,47 @@ actor RemoteLLMClient {
                 maxTokens: maxTokens, temperature: temperature
             )
         }
+    }
+
+    nonisolated static func retryTokenBudget(
+        maxTokens: Int,
+        failureMessage: String
+    ) -> Int? {
+        let message = failureMessage.lowercased()
+        let indicatesUnsupportedParameter = [
+            "unsupported parameter",
+            "unknown parameter",
+            "unrecognized parameter",
+            "use max_completion_tokens",
+        ].contains { message.contains($0) }
+        guard !indicatesUnsupportedParameter else { return nil }
+
+        if let statusRange = message.range(
+            of: #"http\s+(\d{3})"#,
+            options: .regularExpression
+        ) {
+            let status = Int(message[statusRange].filter(\.isNumber))
+            guard status == 400 || status == 413 || status == 422 else {
+                return nil
+            }
+        }
+
+        let indicatesContextLimit = [
+            "maximum context",
+            "context length",
+            "context_length",
+            "too many tokens",
+            "token limit",
+            "max output",
+            "maximum number of tokens",
+        ].contains { message.contains($0) }
+        let indicatesOutputBudgetLimit = message.contains("max_tokens")
+            && ["must be less", "too large", "exceed", "limit"]
+                .contains { message.contains($0) }
+        guard indicatesContextLimit || indicatesOutputBudgetLimit else { return nil }
+
+        let retryTokens = max(256, min(1_024, maxTokens / 2))
+        return retryTokens < maxTokens ? retryTokens : nil
     }
 
     // MARK: - OpenAI-compatible format

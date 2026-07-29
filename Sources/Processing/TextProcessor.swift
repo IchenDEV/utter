@@ -32,14 +32,24 @@ final class TextProcessor {
         }
     }
 
-    func basicClean(text: String, inputLanguage: InputLanguage = .auto) -> String {
-        var result = dictionary.applyReplacements(to: text)
+    func basicClean(
+        text: String,
+        inputLanguage: InputLanguage = .auto,
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil
+    ) -> String {
+        let snapshot = dictionarySnapshot ?? dictionary.snapshot()
+        var result = snapshot.applyReplacements(to: text)
         result = normalizeWhitespace(result)
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    func prepareForFormatting(text: String, inputLanguage: InputLanguage) -> String {
-        var result = dictionary.applyReplacements(to: text)
+    func prepareForFormatting(
+        text: String,
+        inputLanguage: InputLanguage,
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil
+    ) -> String {
+        let snapshot = dictionarySnapshot ?? dictionary.snapshot()
+        var result = snapshot.applyReplacements(to: text)
         result = TranscriptionSanitizer.normalizeInput(result)
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
@@ -52,7 +62,8 @@ final class TextProcessor {
         screenImage: CGImage? = nil,
         memoryContext: String = "",
         inputContext: InputContext? = nil,
-        allowsPreparedFallback: Bool = TextProcessor.defaultAllowsPreparedFallback
+        allowsPreparedFallback: Bool = TextProcessor.defaultAllowsPreparedFallback,
+        allowsGuardFallback: Bool = true
     ) async -> String {
         let settings = AppSettings.shared
         var options = TextProcessingOptions(settings: settings)
@@ -65,7 +76,8 @@ final class TextProcessor {
             screenImage: screenImage,
             memoryContext: memoryContext,
             inputContext: inputContext,
-            allowsPreparedFallback: allowsPreparedFallback
+            allowsPreparedFallback: allowsPreparedFallback,
+            allowsGuardFallback: allowsGuardFallback
         )
     }
 
@@ -76,34 +88,41 @@ final class TextProcessor {
         screenImage: CGImage? = nil,
         memoryContext: String = "",
         inputContext: InputContext? = nil,
-        allowsPreparedFallback: Bool = TextProcessor.defaultAllowsPreparedFallback
+        allowsPreparedFallback: Bool = TextProcessor.defaultAllowsPreparedFallback,
+        allowsGuardFallback: Bool = true,
+        dictionarySnapshot requestedDictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
         let prepareStarted = CFAbsoluteTimeGetCurrent()
-        let cleanedText = prepareForFormatting(text: text, inputLanguage: options.inputLanguage)
+        let dictionarySnapshot = requestedDictionarySnapshot ?? dictionary.snapshot()
+        let cleanedText = prepareForFormatting(
+            text: text,
+            inputLanguage: options.inputLanguage,
+            dictionarySnapshot: dictionarySnapshot
+        )
         let prepareElapsed = CFAbsoluteTimeGetCurrent() - prepareStarted
         Log.info("[TextProcessor] prepared LLM input \(text.count) chars to \(cleanedText.count) chars in \(String(format: "%.2f", prepareElapsed))s")
         guard !cleanedText.isEmpty else { return "" }
 
-        let systemPrompt = systemPromptWithPersonalContext(
-            PromptBuilder.buildSystemPrompt(
-                style: options.languageStyle,
-                stylePrompt: options.customStylePrompt,
-                screenContext: screenContext,
-                screenImageAvailable: shouldUseScreenImage(options: options, image: screenImage),
-                memoryContext: memoryContext,
-                inputContext: inputContext,
-                inputLanguage: options.inputLanguage
-            ),
-            inputLanguage: options.inputLanguage
+        let useScreenImage = shouldUseScreenImage(options: options, image: screenImage)
+        let systemPrompt = formattingSystemPrompt(
+            options: options,
+            screenContext: screenContext,
+            screenImageAvailable: useScreenImage,
+            memoryContext: memoryContext,
+            inputContext: inputContext,
+            dictionarySnapshot: dictionarySnapshot
         )
 
-        let userPrompt = PromptBuilder.buildUserPrompt(text: cleanedText, inputLanguage: options.inputLanguage)
+        let userPrompt = formattingUserPrompt(
+            text: cleanedText,
+            options: options
+        )
         let generationOptions = formattingOptions(for: cleanedText, style: options.languageStyle)
 
         do {
             var result: String
             let llmStarted = CFAbsoluteTimeGetCurrent()
-            if let screenImage, shouldUseScreenImage(options: options, image: screenImage) {
+            if let screenImage, useScreenImage {
                 do {
                     result = try await generateWithScreenImage(
                         prompt: userPrompt,
@@ -115,9 +134,17 @@ final class TextProcessor {
                     )
                 } catch {
                     Log.error("[TextProcessor] VLM failed, falling back to text LLM: \(error.localizedDescription)")
+                    let textFallbackSystemPrompt = formattingSystemPrompt(
+                        options: options,
+                        screenContext: screenContext,
+                        screenImageAvailable: false,
+                        memoryContext: memoryContext,
+                        inputContext: inputContext,
+                        dictionarySnapshot: dictionarySnapshot
+                    )
                     result = try await generateText(
                         prompt: userPrompt,
-                        systemPrompt: systemPrompt,
+                        systemPrompt: textFallbackSystemPrompt,
                         options: options,
                         maxTokens: generationOptions.maxTokens,
                         temperature: generationOptions.temperature
@@ -136,11 +163,29 @@ final class TextProcessor {
             Log.info("[TextProcessor] formatting LLM completed in \(String(format: "%.2f", llmElapsed))s with budget \(generationOptions.maxTokens) tokens")
 
             let fallback = allowsPreparedFallback ? cleanedText : ""
-            return cleanGeneratedOutput(result, inputLanguage: options.inputLanguage, fallback: fallback)
+            let output = cleanGeneratedOutput(
+                result,
+                inputLanguage: options.inputLanguage,
+                fallback: fallback
+            )
+            if let violation = TranscriptFidelityGuard.violation(
+                source: cleanedText,
+                candidate: output,
+                protectedTerms: dictionarySnapshot.protectedTerms,
+                inputLanguage: options.inputLanguage,
+                enforceSemanticFidelity: options.fidelityPolicy == .faithfulCorrection
+            ) {
+                Log.error("[TextProcessor] rejected unsafe formatting output: \(violation)")
+                return rejectedOutputFallback(
+                    cleanedText,
+                    allowsGuardFallback: allowsGuardFallback
+                )
+            }
+            return output
         } catch {
             if allowsPreparedFallback {
                 Log.error("[TextProcessor] LLM failed, falling back to prepared raw text: \(error.localizedDescription)")
-                return FormattedOutputCleaner.clean(cleanedText)
+                return cleanedText
             }
             Log.error("[TextProcessor] LLM failed with prepared fallback disabled: \(error.localizedDescription)")
             return ""
@@ -175,17 +220,18 @@ final class TextProcessor {
         screenContext: String,
         screenImage: CGImage? = nil,
         memoryContext: String = "",
-        inputContext: InputContext? = nil
+        inputContext: InputContext? = nil,
+        dictionarySnapshot requestedDictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
-        let systemPrompt = systemPromptWithPersonalContext(
-            PromptBuilder.buildCommandSystemPrompt(
-                screenContext: screenContext,
-                screenImageAvailable: shouldUseScreenImage(options: options, image: screenImage),
-                memoryContext: memoryContext,
-                inputContext: inputContext,
-                inputLanguage: options.inputLanguage
-            ),
-            inputLanguage: options.inputLanguage
+        let dictionarySnapshot = requestedDictionarySnapshot ?? dictionary.snapshot()
+        let useScreenImage = shouldUseScreenImage(options: options, image: screenImage)
+        let systemPrompt = commandSystemPrompt(
+            options: options,
+            screenContext: screenContext,
+            screenImageAvailable: useScreenImage,
+            memoryContext: memoryContext,
+            inputContext: inputContext,
+            dictionarySnapshot: dictionarySnapshot
         )
         let userPrompt = PromptBuilder.buildCommandUserPrompt(
             text: text,
@@ -194,7 +240,7 @@ final class TextProcessor {
 
         do {
             var result: String
-            if let screenImage, shouldUseScreenImage(options: options, image: screenImage) {
+            if let screenImage, useScreenImage {
                 do {
                     result = try await generateWithScreenImage(
                         prompt: userPrompt,
@@ -206,9 +252,17 @@ final class TextProcessor {
                     )
                 } catch {
                     Log.error("[TextProcessor] Command VLM failed, falling back to text LLM: \(error.localizedDescription)")
+                    let textFallbackSystemPrompt = commandSystemPrompt(
+                        options: options,
+                        screenContext: screenContext,
+                        screenImageAvailable: false,
+                        memoryContext: memoryContext,
+                        inputContext: inputContext,
+                        dictionarySnapshot: dictionarySnapshot
+                    )
                     result = try await generateText(
                         prompt: userPrompt,
-                        systemPrompt: systemPrompt,
+                        systemPrompt: textFallbackSystemPrompt,
                         options: options,
                         maxTokens: 4096,
                         temperature: 0.3
@@ -231,49 +285,4 @@ final class TextProcessor {
         }
     }
 
-    /// Dictionary replacements are applied once on the input side
-    /// (`prepareForFormatting` / `basicClean`); reapplying them here could
-    /// double-expand terms whose replacement contains the original.
-    func cleanGeneratedOutput(_ text: String, inputLanguage: InputLanguage, fallback: String = "") -> String {
-        var result = stripThinkingTags(text)
-        result = FormattedOutputCleaner.clean(result)
-        if result.isEmpty { return FormattedOutputCleaner.clean(fallback) }
-        return result
-    }
-
-    /// Command prompts advertise a final_text JSON contract, so honoring that
-    /// envelope here is contract parsing, not guessing. The command output is
-    /// entirely model-generated — no dictated content can be swallowed.
-    func cleanCommandGeneratedOutput(_ text: String, inputLanguage: InputLanguage) -> String {
-        let stripped = stripThinkingTags(text)
-        if let finalText = LLMFinalTextOutput.text(from: stripped) {
-            return FormattedOutputCleaner.clean(finalText)
-        }
-        return cleanGeneratedOutput(text, inputLanguage: inputLanguage)
-    }
-
-    func systemPromptWithPersonalContext(_ systemPrompt: String, inputLanguage: InputLanguage) -> String {
-        let extraSections = [
-            PromptCatalog.activePersonalDictionarySection(
-                dictionary.activeEntriesDescription(),
-                inputLanguage: inputLanguage
-            ),
-            PromptCatalog.activeEditRulesSection(
-                dictionary.activeRulesDescription(),
-                inputLanguage: inputLanguage
-            ),
-        ].compactMap { $0 }
-
-        guard !extraSections.isEmpty else { return systemPrompt }
-        return ([systemPrompt] + extraSections).joined(separator: "\n\n")
-    }
-
-    /// Collapses runs of spaces but keeps line breaks: direct mode promises
-    /// verbatim output, and ASR engines only emit newlines deliberately.
-    private func normalizeWhitespace(_ text: String) -> String {
-        TranscriptionSanitizer.normalizeInput(text)
-            .replacingOccurrences(of: "[^\\S\\n]*\\n[^\\S\\n]*", with: "\n", options: .regularExpression)
-            .replacingOccurrences(of: "[^\\S\\n]+", with: " ", options: .regularExpression)
-            .replacingOccurrences(of: "\\n{3,}", with: "\n\n", options: .regularExpression)
-    }
 }

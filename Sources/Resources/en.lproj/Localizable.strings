@@ -368,6 +368,7 @@
 "error.volc_not_configured" = "Doubao ASR not configured — enter API credentials in Settings → Models";
 "error.volc_invalid_endpoint" = "Invalid ASR endpoint URL";
 "error.volc_audio_conversion" = "Audio conversion to PCM 16kHz failed";
+"error.local_asr_audio_conversion" = "Audio conversion to PCM 16kHz failed";
 "error.volc_timeout" = "ASR request timed out";
 "error.volc_handshake_rejected" = "Doubao ASR connection was rejected by the server. Check App Key, Access Token, Resource ID, and whether streaming ASR is enabled for this account.";
 "error.local_asr_not_configured" = "Local ASR is not configured — download the model in Settings → Models";

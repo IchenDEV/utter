@@ -23,6 +23,40 @@ final class TextProcessorFallbackTests: XCTestCase {
         )
     }
 
+    func testRejectedOutputFallbackRespectsPreparedFallbackPolicy() {
+        let processor = TextProcessor()
+
+        XCTAssertEqual(
+            processor.rejectedOutputFallback(
+                "raw transcript",
+                allowsGuardFallback: true
+            ),
+            "raw transcript"
+        )
+        XCTAssertEqual(
+            processor.rejectedOutputFallback(
+                "raw transcript",
+                allowsGuardFallback: false
+            ),
+            ""
+        )
+    }
+
+    func testCustomTransformationUsesNeutralUserPromptAndExplicitPolicy() {
+        let settings = AppSettings.shared
+        var options = TextProcessingOptions(settings: settings, inputLanguage: .english)
+        options.useCustomSystemPrompt = true
+        options.customSystemPrompt = "Summarize concisely."
+
+        XCTAssertEqual(options.fidelityPolicy, .boundedCustomTransformation)
+        let prompt = TextProcessor().formattingUserPrompt(
+            text: "A long raw transcript",
+            options: options
+        )
+        XCTAssertTrue(prompt.contains("Apply the custom instructions"))
+        XCTAssertFalse(prompt.contains("Never guess missing content"))
+    }
+
     func testGeneratedOutputUsesFinalSectionAfterAnalysisScaffold() {
         let processor = TextProcessor()
         let output = """
@@ -131,5 +165,30 @@ final class TextProcessorFallbackTests: XCTestCase {
             processor.cleanGeneratedOutput(output, inputLanguage: .english),
             output
         )
+    }
+
+    func testTextFallbackPromptsDoNotClaimScreenImageIsAttached() {
+        let processor = TextProcessor()
+        let options = TextProcessingOptions(settings: AppSettings.shared, inputLanguage: .english)
+
+        let formattingPrompt = processor.formattingSystemPrompt(
+            options: options,
+            screenContext: "OpenType settings",
+            screenImageAvailable: false,
+            memoryContext: "",
+            inputContext: nil
+        )
+        let commandPrompt = processor.commandSystemPrompt(
+            options: options,
+            screenContext: "OpenType settings",
+            screenImageAvailable: false,
+            memoryContext: "",
+            inputContext: nil
+        )
+
+        XCTAssertTrue(formattingPrompt.contains("OpenType settings"))
+        XCTAssertTrue(commandPrompt.contains("OpenType settings"))
+        XCTAssertFalse(formattingPrompt.contains("A screen image is attached"))
+        XCTAssertFalse(commandPrompt.contains("A screen image is attached"))
     }
 }

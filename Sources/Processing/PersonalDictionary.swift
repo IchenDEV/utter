@@ -1,16 +1,124 @@
 import Foundation
 
-struct DictionaryEntry: Codable, Identifiable {
+struct DictionaryEntry: Codable, Identifiable, Sendable {
     var id = UUID()
     var original: String
     var replacement: String
     var enabled: Bool = true
 }
 
-struct EditRule: Codable, Identifiable {
+struct EditRule: Codable, Identifiable, Sendable {
     var id = UUID()
     var description: String
     var enabled: Bool = true
+}
+
+struct PersonalDictionarySnapshot: Sendable {
+    let entries: [DictionaryEntry]
+    let editRules: [EditRule]
+
+    func applyReplacements(to text: String) -> String {
+        let rules = entries.enumerated().compactMap { offset, entry -> ReplacementRule? in
+            let original = entry.original
+            let replacement = entry.replacement
+            guard entry.enabled,
+                  !original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                return nil
+            }
+            return ReplacementRule(
+                original: original,
+                replacement: replacement,
+                insertionOrder: offset
+            )
+        }
+        .sorted {
+            if $0.original.count != $1.original.count {
+                return $0.original.count > $1.original.count
+            }
+            return $0.insertionOrder < $1.insertionOrder
+        }
+
+        guard !rules.isEmpty, !text.isEmpty else { return text }
+
+        var result = ""
+        result.reserveCapacity(text.count)
+        var cursor = text.startIndex
+        while cursor < text.endIndex {
+            if let match = rules.first(where: {
+                Self.matches($0.original, in: text, at: cursor)
+            }) {
+                result += match.replacement
+                cursor = text.index(cursor, offsetBy: match.original.count)
+            } else {
+                result.append(text[cursor])
+                cursor = text.index(after: cursor)
+            }
+        }
+        return result
+    }
+
+    var activeEntriesDescription: String {
+        entries
+            .filter(\.enabled)
+            .compactMap { entry -> String? in
+                let original = entry.original.trimmingCharacters(in: .whitespacesAndNewlines)
+                let replacement = entry.replacement.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !original.isEmpty, !replacement.isEmpty else { return nil }
+                return "\(original) -> \(replacement)"
+            }
+            .joined(separator: "\n")
+    }
+
+    var activeRulesDescription: String {
+        editRules
+            .filter(\.enabled)
+            .map { $0.description.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
+    }
+
+    var protectedTerms: [String] {
+        var seen = Set<String>()
+        return entries.compactMap { entry in
+            guard entry.enabled else { return nil }
+            let term = entry.replacement.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !term.isEmpty,
+                  seen.insert(term.lowercased()).inserted else {
+                return nil
+            }
+            return term
+        }
+    }
+
+    private static func matches(
+        _ original: String,
+        in text: String,
+        at start: String.Index
+    ) -> Bool {
+        guard let end = text.index(start, offsetBy: original.count, limitedBy: text.endIndex),
+              String(text[start..<end]).compare(
+                  original,
+                  options: .caseInsensitive
+              ) == .orderedSame else {
+            return false
+        }
+
+        if let first = original.first, isASCIIWordCharacter(first),
+           start > text.startIndex,
+           isASCIIWordCharacter(text[text.index(before: start)]) {
+            return false
+        }
+        if let last = original.last, isASCIIWordCharacter(last),
+           end < text.endIndex,
+           isASCIIWordCharacter(text[end]) {
+            return false
+        }
+        return true
+    }
+
+    private static func isASCIIWordCharacter(_ character: Character) -> Bool {
+        character.isASCIIWord
+    }
 }
 
 final class PersonalDictionary: ObservableObject {
@@ -33,31 +141,19 @@ final class PersonalDictionary: ObservableObject {
     }
 
     func applyReplacements(to text: String) -> String {
-        var result = text
-        for entry in entries where entry.enabled {
-            result = result.replacingOccurrences(of: entry.original, with: entry.replacement)
-        }
-        return result
+        snapshot().applyReplacements(to: text)
     }
 
     func activeEntriesDescription() -> String {
-        entries
-            .filter(\.enabled)
-            .compactMap { entry -> String? in
-                let original = entry.original.trimmingCharacters(in: .whitespacesAndNewlines)
-                let replacement = entry.replacement.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !original.isEmpty, !replacement.isEmpty else { return nil }
-                return "\(original) -> \(replacement)"
-            }
-            .joined(separator: "\n")
+        snapshot().activeEntriesDescription
     }
 
     func activeRulesDescription() -> String {
-        editRules
-            .filter(\.enabled)
-            .map { $0.description.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .joined(separator: "\n")
+        snapshot().activeRulesDescription
+    }
+
+    func snapshot() -> PersonalDictionarySnapshot {
+        PersonalDictionarySnapshot(entries: entries, editRules: editRules)
     }
 
     func addEntry(original: String, replacement: String) {
@@ -101,4 +197,11 @@ final class PersonalDictionary: ObservableObject {
             editRules = decoded
         }
     }
+
+}
+
+private struct ReplacementRule {
+    let original: String
+    let replacement: String
+    let insertionOrder: Int
 }
