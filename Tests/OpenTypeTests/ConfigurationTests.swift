@@ -270,35 +270,61 @@ final class ConfigurationTests: XCTestCase {
     }
 
     func testStartupPreloadPolicyLoadsOnlyWhisperSpeechModel() {
-        XCTAssertTrue(StartupModelPreloadPolicy.shouldPreloadSpeechModel(enabled: true, speechEngine: .whisper))
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(enabled: true, speechEngine: .apple))
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(enabled: true, speechEngine: .volc))
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(enabled: true, speechEngine: .qwen3))
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(enabled: true, speechEngine: .mimo))
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(enabled: false, speechEngine: .whisper))
+        XCTAssertTrue(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
+            enabled: true, speechEngine: .whisper, modelDownloaded: true
+        ))
+        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
+            enabled: true, speechEngine: .whisper, modelDownloaded: false
+        ))
+        for engine in [SpeechEngineType.apple, .volc, .qwen3, .mimo] {
+            XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
+                enabled: true, speechEngine: engine, modelDownloaded: true
+            ))
+        }
+        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
+            enabled: false, speechEngine: .whisper, modelDownloaded: true
+        ))
     }
 
-    func testStartupPreloadPolicyLoadsOnlyLocalFormattingModelWithID() {
+    func testStartupPreloadPolicyLoadsOnlyDownloadedLocalFormattingModelWithID() {
         XCTAssertTrue(StartupModelPreloadPolicy.shouldPreloadFormattingModel(
             enabled: true,
             useRemoteLLM: false,
-            modelID: "mlx-community/Qwen3.5-2B-4bit"
+            modelID: "mlx-community/Qwen3.5-2B-4bit",
+            modelDownloaded: true
+        ))
+        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadFormattingModel(
+            enabled: true,
+            useRemoteLLM: false,
+            modelID: "mlx-community/Qwen3.5-2B-4bit",
+            modelDownloaded: false
         ))
         XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadFormattingModel(
             enabled: true,
             useRemoteLLM: true,
-            modelID: "gpt-4.1-mini"
+            modelID: "gpt-4.1-mini",
+            modelDownloaded: true
         ))
         XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadFormattingModel(
             enabled: true,
             useRemoteLLM: false,
-            modelID: "  "
+            modelID: "  ",
+            modelDownloaded: true
         ))
         XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadFormattingModel(
             enabled: false,
             useRemoteLLM: false,
-            modelID: "mlx-community/Qwen3.5-2B-4bit"
+            modelID: "mlx-community/Qwen3.5-2B-4bit",
+            modelDownloaded: true
         ))
+    }
+
+    func testLocalASRRuntimeCapabilityDoesNotTreatSystemPythonAsMiMoRuntime() {
+        XCTAssertEqual(
+            LocalASRRuntime.availability(for: .mimo),
+            .unavailable(L("model.mimo_macos_unavailable"))
+        )
+        XCTAssertFalse(LocalASRRuntime.isReady(for: .mimo))
     }
 }
 

@@ -44,6 +44,63 @@ final class UtilityTests: XCTestCase {
         XCTAssertTrue(suffix.hasSuffix("/models/XiaomiMiMo/MiMo-V2.5-ASR"))
     }
 
+    func testModelStorageRequiresWeightsBeforeLLMIsComplete() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        try Data("{}".utf8).write(to: root.appendingPathComponent("config.json"))
+        XCTAssertFalse(ModelStorage.llmRepoIsComplete(at: root))
+
+        try Data("weights".utf8).write(to: root.appendingPathComponent("model.safetensors"))
+        XCTAssertTrue(ModelStorage.llmRepoIsComplete(at: root))
+    }
+
+    func testModelStorageRequiresEveryIndexedLLMShard() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        try Data("{}".utf8).write(to: root.appendingPathComponent("config.json"))
+        let index = """
+        {"weight_map":{"first":"model-00001-of-00002.safetensors","second":"model-00002-of-00002.safetensors"}}
+        """
+        try Data(index.utf8).write(to: root.appendingPathComponent("model.safetensors.index.json"))
+        try Data("one".utf8).write(to: root.appendingPathComponent("model-00001-of-00002.safetensors"))
+        XCTAssertFalse(ModelStorage.llmRepoIsComplete(at: root))
+
+        try Data("two".utf8).write(to: root.appendingPathComponent("model-00002-of-00002.safetensors"))
+        XCTAssertTrue(ModelStorage.llmRepoIsComplete(at: root))
+    }
+
+    func testModelStorageRequiresAllWhisperComponents() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        try FileManager.default.createDirectory(
+            at: root.appendingPathComponent("MelSpectrogram.mlmodelc"),
+            withIntermediateDirectories: true
+        )
+        try Data("model".utf8).write(
+            to: root.appendingPathComponent("MelSpectrogram.mlmodelc/model.bin")
+        )
+        XCTAssertFalse(ModelStorage.whisperModelIsComplete(at: root))
+
+        for name in ["AudioEncoder", "TextDecoder"] {
+            let component = root.appendingPathComponent("\(name).mlmodelc")
+            try FileManager.default.createDirectory(
+                at: component,
+                withIntermediateDirectories: true
+            )
+            try Data("model".utf8).write(to: component.appendingPathComponent("model.bin"))
+        }
+        XCTAssertTrue(ModelStorage.whisperModelIsComplete(at: root))
+    }
+
     @MainActor
     func testDownloadEstimateParsesModelHints() {
         XCTAssertEqual(

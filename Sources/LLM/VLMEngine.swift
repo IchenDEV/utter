@@ -14,19 +14,13 @@ actor VLMEngine {
         Log.info("[VLMEngine] loading model: \(id)")
         let started = CFAbsoluteTimeGetCurrent()
 
-        if let localURL = ModelStorage.localLLMURL(id) {
-            container = try await VLMModelFactory.shared.loadContainer(
-                from: localURL,
-                using: MLXModelLoading.tokenizerLoader
-            )
-        } else {
-            let config = LLMEngine.modelConfiguration(for: id)
-            container = try await VLMModelFactory.shared.loadContainer(
-                from: MLXModelLoading.downloader,
-                using: MLXModelLoading.tokenizerLoader,
-                configuration: config
-            )
+        guard let localURL = ModelStorage.installedLLMURL(id) else {
+            throw LLMError.modelNotDownloaded
         }
+        container = try await VLMModelFactory.shared.loadContainer(
+            from: localURL,
+            using: MLXModelLoading.tokenizerLoader
+        )
 
         currentModelID = id
         let elapsed = CFAbsoluteTimeGetCurrent() - started

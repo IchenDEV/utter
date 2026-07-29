@@ -268,6 +268,9 @@ struct OverlayContentView: View {
         case .processing, .inserting:
             Image(systemName: "brain")
                 .foregroundStyle(Color(red: 1.0, green: 0.6, blue: 0.25))
+        case .loadingModel:
+            Image(systemName: "shippingbox.fill")
+                .foregroundStyle(.blue)
         case .downloading:
             Image(systemName: "arrow.down.circle.fill")
                 .foregroundStyle(.blue)

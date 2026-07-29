@@ -1,7 +1,7 @@
 import SwiftUI
 
 extension ModelManagementView {
-    enum ModelType {
+    enum ModelType: Equatable {
         case whisper
         case llm
         case asr
@@ -27,60 +27,65 @@ extension ModelManagementView {
     func modelRow(
         _ model: ModelCatalog.ModelEntry, isActive: Bool, type: ModelType
     ) -> some View {
-        HStack(spacing: 10) {
-            statusDot(model.status)
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 10) {
+                statusDot(model.status)
 
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(model.displayName)
-                        .font(.system(size: 12, weight: isActive ? .semibold : .regular))
-                    if model.tier == .recommended {
-                        Text(L("common.recommended"))
-                            .font(.system(size: 9, weight: .medium))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(Color.green.opacity(0.15))
-                            .foregroundStyle(.green)
-                            .clipShape(Capsule())
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(model.displayName)
+                            .font(.system(size: 12, weight: isActive ? .semibold : .regular))
+                        if model.tier == .recommended {
+                            Text(L("common.recommended"))
+                                .font(.system(size: 9, weight: .medium))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(Color.green.opacity(0.15))
+                                .foregroundStyle(.green)
+                                .clipShape(Capsule())
+                        }
+                        if isActive {
+                            Text(L("model.active"))
+                                .font(.system(size: 9, weight: .medium))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(Color.accentColor.opacity(0.15))
+                                .foregroundStyle(Color.accentColor)
+                                .clipShape(Capsule())
+                        }
                     }
-                    if isActive {
-                        Text(L("model.active"))
-                            .font(.system(size: 9, weight: .medium))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(Color.accentColor.opacity(0.15))
-                            .foregroundStyle(Color.accentColor)
-                            .clipShape(Capsule())
+                    HStack(spacing: 6) {
+                        Text(secondaryText(for: model))
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                        if let tps = model.benchmarkTPS {
+                            Text(String(format: "%.1f tok/s", tps))
+                                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(Color.orange.opacity(0.12))
+                                .foregroundStyle(.orange)
+                                .clipShape(Capsule())
+                        }
                     }
                 }
-                HStack(spacing: 6) {
-                    Text(secondaryText(for: model))
+
+                Spacer()
+
+                if !model.status.isBusy && model.cacheSize > 0 {
+                    Text(ModelCatalog.formatBytes(model.cacheSize))
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
-                    if let tps = model.benchmarkTPS {
-                        Text(String(format: "%.1f tok/s", tps))
-                            .font(.system(size: 9, weight: .medium, design: .monospaced))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(Color.orange.opacity(0.12))
-                            .foregroundStyle(.orange)
-                            .clipShape(Capsule())
-                    }
+                        .monospacedDigit()
                 }
-            }
 
-            Spacer()
+                rowActions(model, isActive: isActive, type: type)
+            }
 
             if model.status.isBusy {
                 busyModelStatus(model)
-            } else if model.cacheSize > 0 {
-                Text(ModelCatalog.formatBytes(model.cacheSize))
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                    .padding(.leading, 18)
             }
-
-            rowActions(model, isActive: isActive, type: type)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -89,10 +94,10 @@ extension ModelManagementView {
 
     @ViewBuilder
     func busyModelStatus(_ model: ModelCatalog.ModelEntry) -> some View {
-        VStack(alignment: .trailing, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {
             if model.status.isDownloading {
                 ProgressView(value: model.downloadProgress)
-                    .frame(width: 86)
+                    .progressViewStyle(.linear)
             } else {
                 ProgressView()
                     .controlSize(.small)
@@ -101,20 +106,25 @@ extension ModelManagementView {
                 Text(model.downloadDetail)
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: 220, alignment: .trailing)
+                    .lineLimit(3)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
     func rowActions(
         _ model: ModelCatalog.ModelEntry, isActive: Bool, type: ModelType
     ) -> some View {
-        if model.status == .notDownloaded || model.status.isError {
-            Button(L("common.download")) {
-                Task { await download(model, type: type) }
+        if model.status.isDownloading {
+            Button(L("common.cancel")) {
+                catalog.cancelDownload(model.id, kind: type.downloadKind)
+            }
+            .controlSize(.mini)
+        } else if canDownload(model, type: type) &&
+                    (model.status == .notDownloaded || model.status.isError) {
+            Button(model.status.isError ? L("model.resume") : L("common.download")) {
+                requestDownload(model, type: type, isActive: isActive)
             }
             .controlSize(.mini)
         }
@@ -130,9 +140,9 @@ extension ModelManagementView {
             benchmarkButton(model)
         }
 
-        if model.status.canDelete {
-            Button(role: .destructive) {
-                delete(model, isActive: isActive, type: type)
+        if model.status.canDelete && model.cacheSize > 0 {
+            Button {
+                requestDelete(model, type: type, isActive: isActive)
             } label: {
                 Image(systemName: "trash")
                     .font(.system(size: 10))
@@ -168,6 +178,20 @@ extension ModelManagementView {
             await catalog.downloadLLM(model.id)
         case .asr:
             await catalog.downloadASR(model.id)
+        }
+    }
+
+    func canDownload(_ model: ModelCatalog.ModelEntry, type: ModelType) -> Bool {
+        switch type {
+        case .whisper:
+            return ModelStorage.localWhisperURL(model.id) == nil
+        case .llm:
+            return ModelStorage.localLLMURL(model.id) == nil
+        case .asr:
+            if case .supported = catalog.asrRuntimeAvailability(for: model.id) {
+                return true
+            }
+            return false
         }
     }
 
@@ -239,7 +263,12 @@ extension ModelManagementView {
     }
 
     func secondaryText(for model: ModelCatalog.ModelEntry) -> String {
-        model.hint
+        switch model.status {
+        case .unavailable(let message), .error(let message):
+            return message
+        default:
+            return model.hint
+        }
     }
 
     func statusDot(_ status: ModelCatalog.ModelStatus) -> some View {
@@ -251,6 +280,8 @@ extension ModelManagementView {
                 ProgressView().controlSize(.mini)
             case .downloaded, .ready:
                 Circle().fill(.green)
+            case .unavailable:
+                Circle().fill(.orange)
             case .error:
                 Circle().fill(.red)
             }
