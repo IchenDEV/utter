@@ -40,6 +40,8 @@
 "pipeline.model_load_failed_network" = "The model could not be loaded. Check your network and try again.";
 "pipeline.recording" = "Recording…";
 "pipeline.recording_translation" = "Recording for translation…";
+"overlay.cancel_recording" = "Cancel recording";
+"overlay.finish_recording" = "Finish recording";
 "pipeline.transcribing" = "Transcribing…";
 "pipeline.formatting" = "Formatting…";
 "pipeline.translating" = "Translating…";

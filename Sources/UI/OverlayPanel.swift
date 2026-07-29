@@ -6,7 +6,11 @@ final class OverlayPanel {
     private var hostingView: NSHostingView<AnyView>?
 
     @MainActor
-    func show(appState: AppState) {
+    func show(
+        appState: AppState,
+        onCancel: @escaping () -> Void,
+        onConfirm: @escaping () -> Void
+    ) {
         let initialLayout = OverlayLayout(appState: appState)
 
         if window == nil {
@@ -21,14 +25,19 @@ final class OverlayPanel {
             panel.backgroundColor = .clear
             panel.hasShadow = false
             panel.hidesOnDeactivate = false
-            panel.ignoresMouseEvents = true
+            panel.ignoresMouseEvents = !initialLayout.isInteractive
+            panel.becomesKeyOnlyIfNeeded = true
             panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
 
-            let view = OverlayContentView { [weak self] layout in
-                Task { @MainActor in
-                    self?.apply(layout: layout, animated: true)
-                }
-            }
+            let view = OverlayContentView(
+                onLayoutChange: { [weak self] layout in
+                    Task { @MainActor in
+                        self?.apply(layout: layout, animated: true)
+                    }
+                },
+                onCancel: onCancel,
+                onConfirm: onConfirm
+            )
             .environmentObject(appState)
 
             let hostingView = NSHostingView(rootView: AnyView(view))
@@ -62,6 +71,7 @@ final class OverlayPanel {
         hostingView.frame = NSRect(origin: .zero, size: layout.panelSize)
         hostingView.layer?.cornerRadius = layout.outerCornerRadius
         hostingView.layer?.cornerCurve = .continuous
+        window.ignoresMouseEvents = !layout.isInteractive
         window.setFrame(frame, display: true, animate: animated)
     }
 
@@ -69,8 +79,19 @@ final class OverlayPanel {
     private func frame(for size: CGSize, window: NSWindow) -> NSRect {
         let screen = window.screen ?? NSScreen.main
         let visibleFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: size.width, height: size.height)
-        let x = visibleFrame.midX - size.width / 2
-        let y = visibleFrame.maxY - size.height - 28
-        return NSRect(origin: NSPoint(x: x, y: y), size: size)
+        return OverlayPanelPlacement.frame(for: size, in: visibleFrame)
+    }
+}
+
+enum OverlayPanelPlacement {
+    static let bottomMargin: CGFloat = 24
+
+    static func frame(for size: CGSize, in visibleFrame: CGRect) -> CGRect {
+        CGRect(
+            x: visibleFrame.midX - size.width / 2,
+            y: visibleFrame.minY + bottomMargin,
+            width: size.width,
+            height: size.height
+        )
     }
 }

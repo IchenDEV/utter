@@ -19,6 +19,7 @@ final class VoicePipeline {
     var processingTask: Task<Void, Never>?
     var replacementTask: Task<Void, Never>?
     var hideOverlayTask: Task<Void, Never>?
+    var recordingTargetApp: NSRunningApplication?
 
     var currentEngine: (any SpeechEngine)? {
         switch appState.settings.speechEngine {
@@ -64,7 +65,10 @@ final class VoicePipeline {
 
     // MARK: - Recording
 
-    func start(mode: VoiceInputMode = .dictation) async {
+    func start(
+        mode: VoiceInputMode = .dictation,
+        targetApp: NSRunningApplication? = nil
+    ) async {
         if appState.isBusy {
             Log.info("[VoicePipeline] start: busy (\(appState.phase)), ignoring")
             showBusyHint()
@@ -98,6 +102,7 @@ final class VoicePipeline {
         appState.statusMessage = mode.isTranslation
             ? L("pipeline.recording_translation")
             : L("pipeline.recording")
+        recordingTargetApp = targetApp
 
         if mode.isTranslation {
             cancelScreenContextCapture()
@@ -106,7 +111,7 @@ final class VoicePipeline {
         }
 
         soundPlayer.playStart()
-        overlay.show(appState: appState)
+        showOverlay()
 
         let micID = appState.settings.microphoneID
         let language = appState.settings.inputLanguage.whisperCode
@@ -137,6 +142,8 @@ final class VoicePipeline {
         )
         guard micStarted else {
             currentEngine?.cancelListening()
+            cancelScreenContextCapture()
+            recordingTargetApp = nil
             appState.phase = .error(L("pipeline.mic_failed_permissions"))
             appState.statusMessage = L("pipeline.mic_unavailable")
             overlay.hide()
@@ -150,6 +157,8 @@ final class VoicePipeline {
             return
         }
 
+        let resolvedTargetApp = targetApp ?? recordingTargetApp
+        recordingTargetApp = nil
         soundPlayer.playStop()
         audioCapture.stop()
 
@@ -170,9 +179,26 @@ final class VoicePipeline {
                 language: language,
                 settings: settings,
                 inputMode: inputMode,
-                targetApp: targetApp
+                targetApp: resolvedTargetApp
             )
         }
+    }
+
+    func cancel() {
+        guard appState.isRecording else {
+            Log.info("[VoicePipeline] cancel: not recording (\(appState.phase)), ignoring")
+            return
+        }
+
+        Log.info("[VoicePipeline] recording cancelled by user")
+        clearInFlightWork()
+        currentEngine?.cancelListening()
+        audioCapture.stop()
+        audioCapture.cleanupLastRecording()
+        recordingTargetApp = nil
+        soundPlayer.playStop()
+        appState.reset()
+        overlay.hide()
     }
 
     private func clearInFlightWork() {
