@@ -144,7 +144,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let mode: VoiceInputMode = action == .translation
             ? .translation(AppSettings.shared.translationTargetLanguage)
             : .dictation
-        Task { await pipeline?.start(mode: mode) }
+        Task { await pipeline?.start(mode: mode, targetApp: previousApp) }
     }
 
     private func stopRecording() {

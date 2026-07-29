@@ -3,6 +3,20 @@ import Foundation
 
 @MainActor
 extension VoicePipeline {
+    func showOverlay() {
+        overlay.show(
+            appState: appState,
+            onCancel: { [weak self] in
+                self?.cancel()
+            },
+            onConfirm: { [weak self] in
+                Task { @MainActor in
+                    await self?.stop()
+                }
+            }
+        )
+    }
+
     func showNoSpeechDetected(reason: String) {
         Log.info("[VoicePipeline] no speech detected: \(reason)")
         cancelScreenContextCapture()
@@ -12,6 +26,7 @@ extension VoicePipeline {
     }
 
     func resetToIdle() {
+        recordingTargetApp = nil
         appState.phase = .idle
         appState.statusMessage = L("status.ready")
         overlay.hide()
@@ -35,7 +50,7 @@ extension VoicePipeline {
         let saved = appState.statusMessage
         appState.statusMessage = L("pipeline.busy")
         soundPlayer.playStop()
-        overlay.show(appState: appState)
+        showOverlay()
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             if appState.statusMessage == L("pipeline.busy") {
@@ -49,7 +64,7 @@ extension VoicePipeline {
         appState.statusMessage = message
         appState.resetDownloadProgress()
         soundPlayer.playStop()
-        overlay.show(appState: appState)
+        showOverlay()
         hideOverlayAfterDelay()
     }
 

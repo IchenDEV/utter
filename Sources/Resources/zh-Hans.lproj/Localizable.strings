@@ -40,6 +40,8 @@
 "pipeline.model_load_failed_network" = "模型未能加载，请检查网络后重试";
 "pipeline.recording" = "录音中…";
 "pipeline.recording_translation" = "正在录音并准备翻译…";
+"overlay.cancel_recording" = "取消录音";
+"overlay.finish_recording" = "结束录音";
 "pipeline.transcribing" = "识别中…";
 "pipeline.formatting" = "整理中…";
 "pipeline.translating" = "翻译中…";
