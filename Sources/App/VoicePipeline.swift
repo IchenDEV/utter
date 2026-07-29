@@ -36,14 +36,19 @@ final class VoicePipeline {
 
     func warmUp() async {
         let settings = appState.settings
+        let catalog = ModelCatalog.shared
+        catalog.refreshStatus(recheckingErrors: true)
+        let llmStatus = catalog.llmModels.first(where: { $0.id == settings.llmModel })?.status
         let shouldLoadSpeech = StartupModelPreloadPolicy.shouldPreloadSpeechModel(
             enabled: settings.preloadSpeechModelOnLaunch,
-            speechEngine: settings.speechEngine
+            speechEngine: settings.speechEngine,
+            modelDownloaded: catalog.isWhisperDownloaded(settings.whisperModel)
         )
         let shouldLoadFormatting = StartupModelPreloadPolicy.shouldPreloadFormattingModel(
             enabled: settings.preloadFormattingModelOnLaunch,
             useRemoteLLM: settings.useRemoteLLM,
-            modelID: settings.llmModel
+            modelID: settings.llmModel,
+            modelDownloaded: llmStatus == .downloaded || llmStatus == .ready
         )
 
         if shouldLoadSpeech {
@@ -184,16 +189,21 @@ final class VoicePipeline {
 enum StartupModelPreloadPolicy {
     static func shouldPreloadSpeechModel(
         enabled: Bool,
-        speechEngine: SpeechEngineType
+        speechEngine: SpeechEngineType,
+        modelDownloaded: Bool
     ) -> Bool {
-        enabled && speechEngine == .whisper
+        enabled && speechEngine == .whisper && modelDownloaded
     }
 
     static func shouldPreloadFormattingModel(
         enabled: Bool,
         useRemoteLLM: Bool,
-        modelID: String
+        modelID: String,
+        modelDownloaded: Bool
     ) -> Bool {
-        enabled && !useRemoteLLM && !modelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        enabled &&
+            !useRemoteLLM &&
+            modelDownloaded &&
+            !modelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

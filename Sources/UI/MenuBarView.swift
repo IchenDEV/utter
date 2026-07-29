@@ -90,7 +90,7 @@ struct MenuBarView: View {
 
     private var showActiveStatus: Bool {
         switch appState.phase {
-        case .transcribing, .processing, .inserting, .error: return true
+        case .loadingModel, .transcribing, .processing, .inserting, .error: return true
         default: return false
         }
     }
@@ -243,6 +243,7 @@ struct MenuBarView: View {
 
     private var statusColor: Color {
         switch appState.phase {
+        case .loadingModel: return .blue
         case .transcribing, .processing: return .orange
         case .inserting: return .yellow
         case .error: return .red

@@ -13,6 +13,13 @@ extension ModelManagementView {
                 .lineLimit(2)
                 .textSelection(.enabled)
 
+            Text(String(
+                format: L("model.storage.usage"),
+                ModelCatalog.formatBytes(knownStorageBytes)
+            ))
+            .font(.system(size: 10))
+            .foregroundStyle(.secondary)
+
             HStack(spacing: 8) {
                 Button(L("model.storage.choose")) {
                     chooseModelStorageLocation()
@@ -21,10 +28,11 @@ extension ModelManagementView {
                     NSWorkspace.shared.activateFileViewerSelecting([ModelStorage.root])
                 }
                 Button(L("model.storage.reset")) {
-                    updateModelStoragePath(ModelStorage.defaultRoot.path)
+                    requestModelStoragePath(ModelStorage.defaultRoot.path)
                 }
             }
             .controlSize(.small)
+            .disabled(hasActiveDownloads)
         }
     }
 

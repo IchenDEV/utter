@@ -7,46 +7,19 @@ actor LLMEngine {
     private var container: ModelContainer?
     private var currentModelID: String?
 
-    func loadModel(
-        id: String,
-        estimatedDownloadBytes: Int64? = nil,
-        progress: (@Sendable (DownloadProgressInfo) -> Void)? = nil
-    ) async throws {
+    func loadModel(id: String) async throws {
         if currentModelID == id, container != nil { return }
 
         Log.info("[LLMEngine] loading model: \(id)")
         let t0 = CFAbsoluteTimeGetCurrent()
 
-        if let localURL = ModelStorage.localLLMURL(id) {
-            container = try await LLMModelFactory.shared.loadContainer(
-                from: localURL,
-                using: MLXModelLoading.tokenizerLoader
-            )
-            progress?(DownloadProgressInfo(
-                fraction: 1,
-                elapsedSeconds: CFAbsoluteTimeGetCurrent() - t0,
-                completedBytes: 0,
-                totalBytes: 0,
-                speedBytesPerSecond: 0
-            ))
-        } else {
-            let estimatedTotalBytes = estimatedDownloadBytes ?? 0
-            let repoDir = ModelStorage.hubModelRepoDir(id)
-            let tracker = DownloadProgressTracker(initialBytes: ModelStorage.directorySize(at: repoDir))
-            let config = Self.modelConfiguration(for: id)
-            container = try await LLMModelFactory.shared.loadContainer(
-                from: MLXModelLoading.downloader,
-                using: MLXModelLoading.tokenizerLoader,
-                configuration: config
-            ) { p in
-                let completedBytes = ModelStorage.directorySize(at: repoDir)
-                progress?(tracker.update(
-                    completedBytes: completedBytes,
-                    totalBytes: estimatedTotalBytes,
-                    fraction: p.fractionCompleted
-                ))
-            }
+        guard let localURL = ModelStorage.installedLLMURL(id) else {
+            throw LLMError.modelNotDownloaded
         }
+        container = try await LLMModelFactory.shared.loadContainer(
+            from: localURL,
+            using: MLXModelLoading.tokenizerLoader
+        )
 
         currentModelID = id
         let elapsed = CFAbsoluteTimeGetCurrent() - t0
@@ -153,10 +126,12 @@ actor LLMEngine {
 
 enum LLMError: LocalizedError {
     case modelNotLoaded
+    case modelNotDownloaded
 
     var errorDescription: String? {
         switch self {
-        case .modelNotLoaded: return "LLM 模型未加载"
+        case .modelNotLoaded: return L("error.llm_not_loaded")
+        case .modelNotDownloaded: return L("error.llm_not_downloaded")
         }
     }
 }

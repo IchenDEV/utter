@@ -8,6 +8,7 @@ struct OnboardingView: View {
     @ObservedObject private var settings = AppSettings.shared
     @ObservedObject private var catalog = ModelCatalog.shared
     @State private var skippedModelDownload = false
+    @State private var showModelDownloadConfirmation = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,6 +27,14 @@ struct OnboardingView: View {
             navigationBar
         }
         .frame(width: 480, height: 420)
+        .alert(L("model.download_confirm_title"), isPresented: $showModelDownloadConfirmation) {
+            Button(L("common.cancel"), role: .cancel) { }
+            Button(L("common.download")) {
+                Task { await catalog.downloadLLM(settings.llmModel) }
+            }
+        } message: {
+            Text(onboardingDownloadConfirmationMessage)
+        }
     }
 
     // MARK: - Welcome
@@ -248,6 +257,17 @@ struct OnboardingView: View {
                              : L("onboarding.downloading_model"))
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
+                        if model.status.isDownloading {
+                            Button(L("common.cancel")) {
+                                catalog.cancelDownload(model.id, kind: .llm)
+                            }
+                            .controlSize(.small)
+                        }
+                    }
+                    if model.status.isDownloading {
+                        Text(L("model.download_stalled_help"))
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
                     }
                 } else if model.status == .downloaded || model.status == .ready {
                     HStack(spacing: 6) {
@@ -272,7 +292,16 @@ struct OnboardingView: View {
                         }
                     }
                     Button(L("common.retry")) {
-                        Task { await catalog.downloadLLM(settings.llmModel) }
+                        showModelDownloadConfirmation = true
+                    }
+                    .controlSize(.small)
+                } else {
+                    Text(L("onboarding.download_notice"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+
+                    Button(onboardingDownloadButtonTitle) {
+                        showModelDownloadConfirmation = true
                     }
                     .controlSize(.small)
                 }
@@ -291,14 +320,30 @@ struct OnboardingView: View {
         }
         .padding(.horizontal, 32)
         .onAppear {
-            if !skippedModelDownload,
-               let model = catalog.llmModels.first(where: { $0.id == settings.llmModel }),
-               model.status != .downloaded && model.status != .ready && !model.status.isBusy {
-                Task {
-                    await catalog.downloadLLM(settings.llmModel)
-                }
-            }
+            catalog.refreshStatus(recheckingErrors: true)
         }
+    }
+
+    private var onboardingDownloadButtonTitle: String {
+        guard let bytes = catalog.estimatedLLMDownloadBytes(settings.llmModel) else {
+            return L("common.download")
+        }
+        return String(
+            format: L("onboarding.download_size"),
+            ModelCatalog.formatBytes(bytes)
+        )
+    }
+
+    private var onboardingDownloadConfirmationMessage: String {
+        let model = catalog.llmModels.first(where: { $0.id == settings.llmModel })
+        let estimate = catalog.estimatedLLMDownloadBytes(settings.llmModel)
+        let remaining = estimate.map { max($0 - (model?.cacheSize ?? 0), 0) }
+        return String(
+            format: L("model.download_confirm_message"),
+            model?.displayName ?? settings.llmModel,
+            remaining.map(ModelCatalog.formatBytes) ?? L("download.unknown"),
+            ModelStorage.root.path
+        )
     }
 
     private var canContinueFromModelPrep: Bool {

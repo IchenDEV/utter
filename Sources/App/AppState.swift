@@ -4,6 +4,7 @@ import Combine
 enum AppPhase: Equatable {
     case idle
     case downloading
+    case loadingModel
     case recording
     case transcribing
     case processing

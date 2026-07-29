@@ -34,8 +34,8 @@ enum ModelStorage {
         root.appendingPathComponent("runtimes")
     }
 
-    static func qwenASRRuntimeDir() -> URL {
-        asrRuntimeBase.appendingPathComponent("qwen3-asr")
+    static func localASRRuntimeDir(for provider: LocalASRConfiguration.Provider) -> URL {
+        asrRuntimeBase.appendingPathComponent("\(provider.rawValue)-asr")
     }
 
     static func whisperVariantDir(_ variant: String) -> URL {
@@ -58,6 +58,11 @@ enum ModelStorage {
         return FileManager.default.fileExists(atPath: dir.path) ? dir : nil
     }
 
+    static func installedLLMURL(_ modelID: String) -> URL? {
+        guard let dir = llmRepoDir(modelID), llmRepoIsComplete(at: dir) else { return nil }
+        return dir
+    }
+
     static func asrRepoDir(_ modelID: String) -> URL? {
         let dir = hubModelRepoDir(modelID)
         return FileManager.default.fileExists(atPath: dir.path) ? dir : nil
@@ -73,6 +78,46 @@ enum ModelStorage {
         return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
     }
 
+    static func whisperModelIsComplete(at dir: URL) -> Bool {
+        ["MelSpectrogram", "AudioEncoder", "TextDecoder"].allSatisfy { name in
+            resourceHasContent(dir.appendingPathComponent("\(name).mlmodelc")) ||
+                resourceHasContent(dir.appendingPathComponent("\(name).mlpackage"))
+        }
+    }
+
+    static func llmRepoIsComplete(at dir: URL) -> Bool {
+        guard fileExists(dir.appendingPathComponent("config.json")) else { return false }
+        let indexURL = dir.appendingPathComponent("model.safetensors.index.json")
+        if fileExists(indexURL),
+           let data = try? Data(contentsOf: indexURL),
+           let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let weightMap = object["weight_map"] as? [String: String] {
+            let shards = Set(weightMap.values)
+            return !shards.isEmpty && shards.allSatisfy {
+                fileExists(dir.appendingPathComponent($0))
+            }
+        }
+
+        if fileExists(dir.appendingPathComponent("model.safetensors")) ||
+            fileExists(dir.appendingPathComponent("weights.safetensors")) {
+            return true
+        }
+
+        guard let enumerator = FileManager.default.enumerator(
+            at: dir,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else { return false }
+
+        for case let fileURL as URL in enumerator {
+            if fileURL.pathExtension.lowercased() == "npz",
+               fileExists(fileURL) {
+                return true
+            }
+        }
+        return false
+    }
+
     static func directorySize(at url: URL) -> Int64 {
         guard let enumerator = FileManager.default.enumerator(
             at: url, includingPropertiesForKeys: [.fileSizeKey]
@@ -84,6 +129,22 @@ enum ModelStorage {
             }
         }
         return total
+    }
+
+    private static func fileExists(_ url: URL) -> Bool {
+        var isDirectory = ObjCBool(false)
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+              !isDirectory.boolValue else { return false }
+        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+        return (attributes?[.size] as? NSNumber)?.int64Value ?? 0 > 0
+    }
+
+    private static func resourceHasContent(_ url: URL) -> Bool {
+        var isDirectory = ObjCBool(false)
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
+            return false
+        }
+        return isDirectory.boolValue ? directorySize(at: url) > 0 : fileExists(url)
     }
 
     static func makeLocalID(prefix: String, folderName: String, existing: Set<String>) -> String {

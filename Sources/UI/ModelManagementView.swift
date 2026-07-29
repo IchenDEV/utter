@@ -16,11 +16,16 @@ struct ModelManagementView: View {
     @State var importErrorMessage = ""
     @State var selectedModelFamily: ModelCatalog.ModelFamily? = .qwen
     @State var showLegacyModels = false
+    @State var pendingModelAction: PendingModelAction?
     let benchmarkEngine = LLMEngine()
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                if hasActiveDownloads {
+                    activeDownloadsSection
+                    Divider()
+                }
                 storageSection
                 Divider()
                 preloadSection
@@ -44,7 +49,7 @@ struct ModelManagementView: View {
             .padding(20)
         }
         .onAppear {
-            catalog.refreshStatus()
+            catalog.refreshStatus(recheckingErrors: true)
             syncSelectedFamilyFromActiveModel()
         }
         .onChange(of: settings.llmModel) { _, _ in syncSelectedFamilyFromActiveModel() }
@@ -52,6 +57,7 @@ struct ModelManagementView: View {
         .onChange(of: settings.mimoASRRepoPath) { _, _ in onUnloadLocalASR?() }
         .onChange(of: settings.qwenASRModel) { _, _ in onUnloadLocalASR?() }
         .onChange(of: settings.mimoASRModel) { _, _ in onUnloadLocalASR?() }
+        .alert(item: $pendingModelAction, content: modelActionAlert)
     }
 }
 
@@ -65,8 +71,32 @@ extension ModelManagementView {
         panel.directoryURL = ModelStorage.root
         panel.message = L("model.storage.choose")
         if panel.runModal() == .OK, let url = panel.url {
-            updateModelStoragePath(url.path)
+            requestModelStoragePath(url.path)
         }
+    }
+
+    func requestModelStoragePath(_ path: String) {
+        let currentURL = ModelStorage.root.standardizedFileURL
+        let nextURL = URL(fileURLWithPath: path).standardizedFileURL
+        guard currentURL != nextURL else { return }
+
+        let currentSize = ModelStorage.directorySize(at: currentURL)
+        if currentSize > 0 {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = L("model.storage.change_confirm_title")
+            alert.informativeText = String(
+                format: L("model.storage.change_confirm_message"),
+                ModelCatalog.formatBytes(currentSize),
+                currentURL.path,
+                nextURL.path
+            )
+            alert.addButton(withTitle: L("common.cancel"))
+            alert.addButton(withTitle: L("model.storage.switch_anyway"))
+            guard alert.runModal() == .alertSecondButtonReturn else { return }
+        }
+
+        updateModelStoragePath(nextURL.path)
     }
 
     func updateModelStoragePath(_ path: String) {
@@ -103,7 +133,7 @@ extension ModelManagementView {
         panel.canCreateDirectories = false
         panel.message = L("model.import_local")
         if panel.runModal() == .OK, let url = panel.url {
-            guard FileManager.default.fileExists(atPath: url.appendingPathComponent("config.json").path) else {
+            guard ModelStorage.llmRepoIsComplete(at: url) else {
                 importErrorMessage = ""
                 showImportError = true
                 return
@@ -114,9 +144,6 @@ extension ModelManagementView {
     }
 
     private func isValidWhisperFolder(_ url: URL) -> Bool {
-        ["MelSpectrogram", "AudioEncoder", "TextDecoder"].allSatisfy { name in
-            FileManager.default.fileExists(atPath: url.appendingPathComponent("\(name).mlmodelc").path)
-                || FileManager.default.fileExists(atPath: url.appendingPathComponent("\(name).mlpackage").path)
-        }
+        ModelStorage.whisperModelIsComplete(at: url)
     }
 }
