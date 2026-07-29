@@ -21,18 +21,10 @@ final class TextProcessor {
     }
 
     @discardableResult
-    func warmUpLLM(
-        model: String,
-        estimatedDownloadBytes: Int64? = nil,
-        progress: (@Sendable (DownloadProgressInfo) -> Void)? = nil
-    ) async -> Bool {
+    func warmUpLLM(model: String) async -> Bool {
         if AppSettings.shared.useRemoteLLM { return true }
         do {
-            try await llm.loadModel(
-                id: model,
-                estimatedDownloadBytes: estimatedDownloadBytes,
-                progress: progress
-            )
+            try await llm.loadModel(id: model)
             return true
         } catch {
             Log.error("[TextProcessor] LLM warmup failed: \(error.localizedDescription)")
@@ -58,7 +50,7 @@ final class TextProcessor {
     ) -> String {
         let snapshot = dictionarySnapshot ?? dictionary.snapshot()
         var result = snapshot.applyReplacements(to: text)
-        result = FormattingHeuristics.normalizeInput(result)
+        result = TranscriptionSanitizer.normalizeInput(result)
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 

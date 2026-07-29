@@ -21,7 +21,7 @@ extension TextProcessor {
         options: TextProcessingOptions,
         context: SpokenEditCommandResolutionContext = .unknown
     ) async -> SpokenEditCommandLLMResolution? {
-        let transcript = FormattingHeuristics.normalizeInput(text).trimmingCharacters(in: .whitespacesAndNewlines)
+        let transcript = TranscriptionSanitizer.normalizeInput(text)
         guard !transcript.isEmpty else { return nil }
 
         do {

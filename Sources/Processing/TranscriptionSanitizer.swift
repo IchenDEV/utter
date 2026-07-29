@@ -1,6 +1,16 @@
 import Foundation
 
 enum TranscriptionSanitizer {
+    static func normalizeInput(_ text: String) -> String {
+        text
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+            .replacingOccurrences(of: "\t", with: " ")
+            .replacingOccurrences(of: "[ ]{2,}", with: " ", options: .regularExpression)
+            .replacingOccurrences(of: " *\n *", with: "\n", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     static func prepare(_ text: String, audioActivity: AudioCaptureActivity? = nil) -> String? {
         let normalized = normalizeTranscript(text)
         guard !isNonSpeechArtifact(normalized) else { return nil }
@@ -28,7 +38,7 @@ enum TranscriptionSanitizer {
     }
 
     static func previewText(_ text: String, inputLanguage: InputLanguage = .auto) -> String {
-        let normalized = FormattingHeuristics.normalizeInput(normalizeTranscript(text))
+        let normalized = normalizeInput(normalizeTranscript(text))
         return isNonSpeechArtifact(normalized) ? "" : normalized
     }
 
@@ -79,7 +89,7 @@ enum TranscriptionSanitizer {
     }
 
     private static func normalizeTranscript(_ text: String) -> String {
-        FormattingHeuristics.normalizeInput(text)
+        normalizeInput(text)
             .replacingOccurrences(of: "\u{00A0}", with: " ")
             .replacingOccurrences(of: "\u{200B}", with: "")
             .replacingOccurrences(

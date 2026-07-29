@@ -19,6 +19,7 @@ final class VoicePipeline {
     var processingTask: Task<Void, Never>?
     var replacementTask: Task<Void, Never>?
     var hideOverlayTask: Task<Void, Never>?
+    var recordingTargetApp: NSRunningApplication?
 
     var currentEngine: (any SpeechEngine)? {
         switch appState.settings.speechEngine {
@@ -36,14 +37,19 @@ final class VoicePipeline {
 
     func warmUp() async {
         let settings = appState.settings
+        let catalog = ModelCatalog.shared
+        catalog.refreshStatus(recheckingErrors: true)
+        let llmStatus = catalog.llmModels.first(where: { $0.id == settings.llmModel })?.status
         let shouldLoadSpeech = StartupModelPreloadPolicy.shouldPreloadSpeechModel(
             enabled: settings.preloadSpeechModelOnLaunch,
-            speechEngine: settings.speechEngine
+            speechEngine: settings.speechEngine,
+            modelDownloaded: catalog.isWhisperDownloaded(settings.whisperModel)
         )
         let shouldLoadFormatting = StartupModelPreloadPolicy.shouldPreloadFormattingModel(
             enabled: settings.preloadFormattingModelOnLaunch,
             useRemoteLLM: settings.useRemoteLLM,
-            modelID: settings.llmModel
+            modelID: settings.llmModel,
+            modelDownloaded: llmStatus == .downloaded || llmStatus == .ready
         )
 
         if shouldLoadSpeech {
@@ -59,7 +65,10 @@ final class VoicePipeline {
 
     // MARK: - Recording
 
-    func start() async {
+    func start(
+        mode: VoiceInputMode = .dictation,
+        targetApp: NSRunningApplication? = nil
+    ) async {
         if appState.isBusy {
             Log.info("[VoicePipeline] start: busy (\(appState.phase)), ignoring")
             showBusyHint()
@@ -88,13 +97,21 @@ final class VoicePipeline {
         clearInFlightWork()
 
         appState.reset()
+        appState.activeInputMode = mode
         appState.phase = .recording
-        appState.statusMessage = L("pipeline.recording")
+        appState.statusMessage = mode.isTranslation
+            ? L("pipeline.recording_translation")
+            : L("pipeline.recording")
+        recordingTargetApp = targetApp
 
-        startScreenContextCaptureIfNeeded()
+        if mode.isTranslation {
+            cancelScreenContextCapture()
+        } else {
+            startScreenContextCaptureIfNeeded()
+        }
 
         soundPlayer.playStart()
-        overlay.show(appState: appState)
+        showOverlay()
 
         let micID = appState.settings.microphoneID
         let language = appState.settings.inputLanguage.whisperCode
@@ -130,6 +147,8 @@ final class VoicePipeline {
         )
         guard micStarted else {
             currentEngine?.cancelListening()
+            cancelScreenContextCapture()
+            recordingTargetApp = nil
             appState.phase = .error(L("pipeline.mic_failed_permissions"))
             appState.statusMessage = L("pipeline.mic_unavailable")
             overlay.hide()
@@ -143,6 +162,8 @@ final class VoicePipeline {
             return
         }
 
+        let resolvedTargetApp = targetApp ?? recordingTargetApp
+        recordingTargetApp = nil
         soundPlayer.playStop()
         audioCapture.stop()
 
@@ -153,6 +174,7 @@ final class VoicePipeline {
         let audioURL = audioCapture.lastRecordingURL
         let audioActivity = audioCapture.lastActivity
         let settings = appState.settings
+        let inputMode = appState.activeInputMode
 
         processingTask = Task { @MainActor [weak self] in
             guard let self else { return }
@@ -161,9 +183,27 @@ final class VoicePipeline {
                 audioActivity: audioActivity,
                 language: language,
                 settings: settings,
-                targetApp: targetApp
+                inputMode: inputMode,
+                targetApp: resolvedTargetApp
             )
         }
+    }
+
+    func cancel() {
+        guard appState.isRecording else {
+            Log.info("[VoicePipeline] cancel: not recording (\(appState.phase)), ignoring")
+            return
+        }
+
+        Log.info("[VoicePipeline] recording cancelled by user")
+        clearInFlightWork()
+        currentEngine?.cancelListening()
+        audioCapture.stop()
+        audioCapture.cleanupLastRecording()
+        recordingTargetApp = nil
+        soundPlayer.playStop()
+        appState.reset()
+        overlay.hide()
     }
 
     private func clearInFlightWork() {
@@ -174,5 +214,27 @@ final class VoicePipeline {
         cancelScreenContextCapture()
         hideOverlayTask?.cancel()
         hideOverlayTask = nil
+    }
+}
+
+enum StartupModelPreloadPolicy {
+    static func shouldPreloadSpeechModel(
+        enabled: Bool,
+        speechEngine: SpeechEngineType,
+        modelDownloaded: Bool
+    ) -> Bool {
+        enabled && speechEngine == .whisper && modelDownloaded
+    }
+
+    static func shouldPreloadFormattingModel(
+        enabled: Bool,
+        useRemoteLLM: Bool,
+        modelID: String,
+        modelDownloaded: Bool
+    ) -> Bool {
+        enabled &&
+            !useRemoteLLM &&
+            modelDownloaded &&
+            !modelID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

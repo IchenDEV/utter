@@ -132,10 +132,7 @@ final class LocalASREngine: SpeechEngine, @unchecked Sendable {
     func prepare() async {
         guard configuration.hasRequiredFiles,
               let runnerURL = Self.runnerScriptURL(),
-              let pythonPath = try? await LocalASRRuntime.ensurePythonPath(
-                  for: configuration.provider,
-                  preferredPath: configuration.pythonPath
-              ) else {
+              let pythonPath = try? LocalASRRuntime.pythonPath(for: configuration.provider) else {
             return
         }
         await server.warmUp(runnerURL: runnerURL, pythonPath: pythonPath)
@@ -143,10 +140,7 @@ final class LocalASREngine: SpeechEngine, @unchecked Sendable {
 
     func transcribe(audioURL: URL?, language: String?) async throws -> String {
         guard configuration.hasRequiredFiles else { throw LocalASRError.notConfigured }
-        let pythonPath = try await LocalASRRuntime.ensurePythonPath(
-            for: configuration.provider,
-            preferredPath: configuration.pythonPath
-        )
+        let pythonPath = try LocalASRRuntime.pythonPath(for: configuration.provider)
         guard let audioURL else { throw LocalASRError.noAudioFile }
         guard let runnerURL = Self.runnerScriptURL() else { throw LocalASRError.runnerMissing }
 

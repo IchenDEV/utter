@@ -43,17 +43,6 @@ final class SpeechEngineProvider {
                 resourceId: settings.volcResourceId
             )
         case .qwen3:
-            if !LocalASRRuntime.isReady(for: .qwen3),
-               !ModelCatalog.shared.asrModelPath(for: settings.qwenASRModel).isEmpty {
-                do {
-                    _ = try await LocalASRRuntime.ensurePythonPath(
-                        for: .qwen3,
-                        preferredPath: settings.localASRPythonPath
-                    )
-                } catch {
-                    Log.error("[SpeechEngineProvider] Qwen ASR runtime migration failed: \(error.localizedDescription)")
-                }
-            }
             guard localASRIsAvailable(settings.qwenASRModel) else {
                 qwenSpeechEngine = nil
                 Log.info("[SpeechEngineProvider] Qwen ASR model requires manual download: \(settings.qwenASRModel)")

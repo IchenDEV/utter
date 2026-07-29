@@ -4,7 +4,7 @@ struct OverlayLayout: Equatable {
     let width: CGFloat
     let height: CGFloat
     let outerCornerRadius: CGFloat
-    let innerCornerRadius: CGFloat
+    let isInteractive: Bool
     let horizontalPadding: CGFloat
     let topPadding: CGFloat
     let bottomPadding: CGFloat
@@ -17,62 +17,62 @@ struct OverlayLayout: Equatable {
     @MainActor
     init(appState: AppState) {
         let hasPreview = appState.phase == .recording && !appState.rawTranscription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        isInteractive = appState.isRecording
 
         switch appState.phase {
         case .recording where hasPreview:
-            width = 396
-            height = 148
-            outerCornerRadius = 28
-            innerCornerRadius = 20
-            horizontalPadding = 18
-            topPadding = 18
-            bottomPadding = 16
-            stackSpacing = 12
+            width = 304
+            height = 80
+            outerCornerRadius = 22
+            horizontalPadding = 14
+            topPadding = 8
+            bottomPadding = 8
+            stackSpacing = 6
         case .recording:
-            let compactHeight: CGFloat = 64
-            width = 324
-            height = compactHeight
-            outerCornerRadius = compactHeight / 2
-            innerCornerRadius = 18
-            horizontalPadding = 18
-            topPadding = 16
-            bottomPadding = 16
-            stackSpacing = 10
+            width = 148
+            height = 40
+            outerCornerRadius = 20
+            horizontalPadding = 7
+            topPadding = 7
+            bottomPadding = 7
+            stackSpacing = 6
         case .transcribing, .processing, .inserting:
-            width = 348
-            height = 76
-            outerCornerRadius = 24
-            innerCornerRadius = 18
-            horizontalPadding = 18
-            topPadding = 16
-            bottomPadding = 14
-            stackSpacing = 10
+            width = 216
+            height = 48
+            outerCornerRadius = 18
+            horizontalPadding = 12
+            topPadding = 10
+            bottomPadding = 9
+            stackSpacing = 6
         case .error:
-            width = 372
-            height = 76
-            outerCornerRadius = 24
-            innerCornerRadius = 18
-            horizontalPadding = 18
-            topPadding = 16
-            bottomPadding = 14
-            stackSpacing = 10
+            width = 288
+            height = 56
+            outerCornerRadius = 18
+            horizontalPadding = 12
+            topPadding = 8
+            bottomPadding = 8
+            stackSpacing = 6
         default:
-            width = 324
-            height = 60
-            outerCornerRadius = 24
-            innerCornerRadius = 18
-            horizontalPadding = 18
-            topPadding = 16
-            bottomPadding = 16
-            stackSpacing = 10
+            width = 192
+            height = 40
+            outerCornerRadius = 20
+            horizontalPadding = 12
+            topPadding = 10
+            bottomPadding = 10
+            stackSpacing = 6
         }
     }
 }
 
 struct OverlayContentView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     let onLayoutChange: (OverlayLayout) -> Void
+    let onCancel: () -> Void
+    let onConfirm: () -> Void
 
     @State private var fakeProgress: Double = 0
     @State private var progressTimer: Timer?
@@ -103,11 +103,16 @@ struct OverlayContentView: View {
 
     var body: some View {
         VStack(spacing: layout.stackSpacing) {
-            statusRow
-                .padding(.top, layout.topPadding)
+            if layout.isInteractive {
+                recordingControls
+                    .padding(.top, layout.topPadding)
+            } else {
+                statusRow
+                    .padding(.top, layout.topPadding)
+            }
 
             if let livePreview {
-                previewCard(text: livePreview)
+                livePreviewText(livePreview)
             }
 
             if showsProgress {
@@ -117,27 +122,9 @@ struct OverlayContentView: View {
         .padding(.horizontal, layout.horizontalPadding)
         .padding(.bottom, layout.bottomPadding)
         .frame(width: layout.width, height: layout.height, alignment: .center)
-        .background(
-            RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color.black.opacity(0.34),
-                            Color.black.opacity(0.18),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-        )
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous)
-                .stroke(.white.opacity(0.16), lineWidth: 0.7)
-        )
+        .background(panelBackground)
         .clipShape(RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous))
         .compositingGroup()
-        .shadow(color: .black.opacity(0.18), radius: 18, x: 0, y: 12)
         .onAppear {
             handlePhaseChange(appState.phase)
             onLayoutChange(layout)
@@ -148,81 +135,89 @@ struct OverlayContentView: View {
         .onChange(of: layout) { _, newLayout in
             onLayoutChange(newLayout)
         }
-        .animation(.easeInOut(duration: 0.24), value: layout)
-        .animation(.easeInOut(duration: 0.28), value: fakeProgress)
+        .onDisappear {
+            progressTimer?.invalidate()
+            progressTimer = nil
+        }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: layout)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: fakeProgress)
     }
 
     private var statusRow: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(statusAccent.opacity(0.16))
-                    .frame(width: 28, height: 28)
-                statusIcon
-                    .font(.system(size: 14, weight: .semibold))
-            }
+        HStack(spacing: 8) {
+            statusIcon
+                .font(.caption.weight(.medium))
+                .frame(width: 16, height: 16)
+                .accessibilityHidden(true)
 
             Text(appState.statusMessage)
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.96))
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.white.opacity(isError ? 0.94 : 0.88))
                 .lineLimit(isError ? 2 : 1)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Spacer(minLength: 0)
-
-            if appState.isRecording {
-                WaveformView(level: appState.audioLevel)
-                    .frame(width: 38, height: 18)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .background(
-                        Capsule()
-                            .fill(.white.opacity(0.08))
-                    )
-            }
+            Spacer(minLength: 4)
         }
     }
 
-    private func previewCard(text: String) -> some View {
+    private var recordingControls: some View {
+        HStack(spacing: 0) {
+            OverlayActionButton(kind: .cancel, action: onCancel)
+
+            Spacer(minLength: 0)
+
+            WaveformView(level: appState.audioLevel)
+                .frame(width: 42, height: 14)
+                .accessibilityHidden(true)
+
+            Spacer(minLength: 0)
+
+            OverlayActionButton(kind: .confirm, action: onConfirm)
+        }
+        .frame(width: OverlayControlMetrics.recordingControlsWidth)
+    }
+
+    private func livePreviewText(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 13, weight: .medium, design: .rounded))
-            .foregroundStyle(.white.opacity(0.94))
-            .lineLimit(3)
+            .font(.caption)
+            .foregroundStyle(.white.opacity(0.7))
+            .lineLimit(2)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: layout.innerCornerRadius, style: .continuous)
-                    .fill(.white.opacity(0.09))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: layout.innerCornerRadius, style: .continuous)
-                            .stroke(.white.opacity(0.12), lineWidth: 0.6)
-                    )
-            )
     }
 
     private var progressBar: some View {
         GeometryReader { geo in
             Capsule()
-                .fill(.white.opacity(0.12))
-                .frame(height: 5)
+                .fill(.white.opacity(0.1))
+                .frame(height: 2)
                 .overlay(alignment: .leading) {
                     Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 1.0, green: 0.76, blue: 0.28),
-                                    Color(red: 1.0, green: 0.47, blue: 0.18),
-                                ],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(width: geo.size.width * fakeProgress, height: 5)
+                        .fill(.white.opacity(0.66))
+                        .frame(width: geo.size.width * fakeProgress, height: 2)
                 }
         }
-        .frame(height: 5)
+        .frame(height: 2)
+        .padding(.leading, 24)
+        .accessibilityHidden(true)
+    }
+
+    private var panelBackground: some View {
+        let shape = RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous)
+        return ZStack {
+            if reduceTransparency {
+                shape.fill(Color.black.opacity(0.92))
+            } else {
+                shape.fill(.ultraThinMaterial)
+                shape.fill(Color.black.opacity(0.22))
+            }
+        }
+        .overlay {
+            shape.strokeBorder(
+                .white.opacity(colorSchemeContrast == .increased ? 0.28 : 0.12),
+                lineWidth: colorSchemeContrast == .increased ? 1 : 0.5
+            )
+        }
     }
 
     private func handlePhaseChange(_ phase: AppPhase) {
@@ -260,43 +255,32 @@ struct OverlayContentView: View {
         switch appState.phase {
         case .recording:
             Image(systemName: "mic.fill")
-                .foregroundStyle(Color(red: 1.0, green: 0.45, blue: 0.34))
+                .foregroundStyle(Color(nsColor: .systemRed).opacity(0.82))
         case .transcribing:
             Image(systemName: "waveform.badge.magnifyingglass")
-                .foregroundStyle(Color(red: 1.0, green: 0.78, blue: 0.28))
-                .symbolEffect(.pulse.byLayer)
-        case .processing, .inserting:
-            Image(systemName: "brain")
-                .foregroundStyle(Color(red: 1.0, green: 0.6, blue: 0.25))
+                .foregroundStyle(.white.opacity(0.76))
+                .symbolEffect(.pulse.byLayer, isActive: !reduceMotion)
+        case .processing:
+            Image(systemName: "textformat")
+                .foregroundStyle(.white.opacity(0.76))
+        case .inserting:
+            Image(systemName: "text.cursor")
+                .foregroundStyle(.white.opacity(0.76))
+        case .loadingModel:
+            Image(systemName: "shippingbox.fill")
+                .foregroundStyle(.white.opacity(0.76))
         case .downloading:
-            Image(systemName: "arrow.down.circle.fill")
-                .foregroundStyle(.blue)
+            Image(systemName: "arrow.down")
+                .foregroundStyle(.white.opacity(0.76))
         case .done:
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
+            Image(systemName: "checkmark")
+                .foregroundStyle(.white.opacity(0.84))
         case .error:
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.red)
+            Image(systemName: "exclamationmark")
+                .foregroundStyle(Color(nsColor: .systemRed).opacity(0.88))
         default:
             Image(systemName: "mic")
-                .foregroundStyle(.white.opacity(0.72))
-        }
-    }
-
-    private var statusAccent: Color {
-        switch appState.phase {
-        case .recording:
-            return Color(red: 1.0, green: 0.45, blue: 0.34)
-        case .transcribing:
-            return Color(red: 1.0, green: 0.78, blue: 0.28)
-        case .processing, .inserting:
-            return Color(red: 1.0, green: 0.6, blue: 0.25)
-        case .done:
-            return .green
-        case .error:
-            return .red
-        default:
-            return .white
+                .foregroundStyle(.white.opacity(0.7))
         }
     }
 }

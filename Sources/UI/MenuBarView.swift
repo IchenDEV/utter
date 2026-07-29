@@ -28,9 +28,11 @@ struct MenuBarView: View {
             AppIconView(size: 18)
             Text("OpenType")
                 .font(.system(size: 13, weight: .semibold))
-            Text(settings.inputLanguage.rawValue)
+            Text(activeLanguageSummary)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
             Spacer()
             Text(activationHint)
                 .font(.caption2)
@@ -48,6 +50,14 @@ struct MenuBarView: View {
         case .doubleTap: return "\(key) ×2"
         case .toggle: return "\(key) " + L("menubar.toggle")
         }
+    }
+
+    private var activeLanguageSummary: String {
+        if appState.isRecording,
+           case .translation(let targetLanguage) = appState.activeInputMode {
+            return "\(settings.inputLanguage.rawValue) → \(targetLanguage.label)"
+        }
+        return settings.inputLanguage.rawValue
     }
 
     // MARK: - Main content
@@ -80,7 +90,7 @@ struct MenuBarView: View {
 
     private var showActiveStatus: Bool {
         switch appState.phase {
-        case .transcribing, .processing, .inserting, .error: return true
+        case .loadingModel, .transcribing, .processing, .inserting, .error: return true
         default: return false
         }
     }
@@ -89,7 +99,11 @@ struct MenuBarView: View {
         VStack(spacing: 4) {
             HStack(spacing: 8) {
                 Circle().fill(.red).frame(width: 7, height: 7)
-                Text(L("menubar.listening"))
+                Text(
+                    appState.activeInputMode.isTranslation
+                        ? L("menubar.listening_translation")
+                        : L("menubar.listening")
+                )
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -229,6 +243,7 @@ struct MenuBarView: View {
 
     private var statusColor: Color {
         switch appState.phase {
+        case .loadingModel: return .blue
         case .transcribing, .processing: return .orange
         case .inserting: return .yellow
         case .error: return .red

@@ -39,46 +39,12 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
             }
             Log.info("[WhisperEngine] using model: \(selectedModel)")
 
-            progress(dp(0.02, stage: .downloading))
-
-            let modelDir = ModelStorage.whisperVariantDir(selectedModel)
-            let tracker = DownloadProgressTracker(initialBytes: ModelStorage.directorySize(at: modelDir))
-
-            let folder: URL
-            if let localFolder {
-                folder = localFolder
-            } else {
-                do {
-                    folder = try await WhisperKit.download(
-                        variant: selectedModel,
-                        downloadBase: ModelCatalog.whisperDownloadBase,
-                        progressCallback: { p in
-                            let downloadedBytes = ModelStorage.directorySize(at: modelDir)
-                            let completed = downloadedBytes > 0 ? downloadedBytes : p.completedUnitCount
-                            let total = p.totalUnitCount
-
-                            let frac = 0.02 + p.fractionCompleted * 0.58
-                            let info = tracker.update(
-                                completedBytes: completed,
-                                totalBytes: total,
-                                fraction: frac
-                            )
-                            progress(DownloadProgress(
-                                fraction: frac, completedBytes: completed,
-                                totalBytes: total,
-                                speedBytesPerSec: info.speedBytesPerSecond,
-                                elapsedSeconds: info.elapsedSeconds,
-                                downloadFraction: p.fractionCompleted,
-                                stage: .downloading
-                            ))
-                        }
-                    )
-                } catch {
-                    isLoading = false
-                    throw WhisperError.downloadFailed(error.localizedDescription)
-                }
+            let folder = localFolder ?? ModelStorage.whisperVariantDir(selectedModel)
+            guard ModelStorage.whisperModelIsComplete(at: folder) else {
+                isLoading = false
+                throw WhisperError.modelNotLoaded(L("model.download_required"))
             }
-            Log.info("[WhisperEngine] download complete")
+            Log.info("[WhisperEngine] loading local model assets")
 
             progress(dp(0.62, stage: .compiling))
 

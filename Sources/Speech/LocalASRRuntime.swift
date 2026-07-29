@@ -7,6 +7,17 @@ enum LocalASRRuntime {
     private static let markerName = ".opentype-runtime-ready"
     private static let nativeMarkerName = ".opentype-native-runtime-ready"
 
+    static func availability(
+        for provider: LocalASRConfiguration.Provider
+    ) -> LocalASRRuntimeAvailability {
+        switch provider {
+        case .qwen3:
+            return .supported
+        case .mimo:
+            return .unavailable(L("model.mimo_macos_unavailable"))
+        }
+    }
+
     static func isReady(for provider: LocalASRConfiguration.Provider) -> Bool {
         switch provider {
         case .qwen3:
@@ -15,10 +26,22 @@ enum LocalASRRuntime {
                 qwenMarkerIsCurrent(at: qwenMarkerURL()) &&
                 qwenMarkerIsCurrent(at: qwenNativeMarkerURL())
         case .mimo:
-            return LocalASRConfiguration.resolvePythonPath() != nil
+            return false
         }
     }
 
+    static func pythonPath(for provider: LocalASRConfiguration.Provider) throws -> String {
+        guard case .supported = availability(for: provider) else {
+            throw LocalASRRuntimeError.unsupported(L("model.mimo_macos_unavailable"))
+        }
+        guard isReady(for: provider) else {
+            throw LocalASRRuntimeError.notInstalled
+        }
+        return qwenPythonURL().path
+    }
+
+    /// Installs a managed runtime. Call only from an explicit, user-confirmed
+    /// model download or repair action.
     static func ensurePythonPath(
         for provider: LocalASRConfiguration.Provider,
         preferredPath: String
@@ -27,15 +50,12 @@ enum LocalASRRuntime {
         case .qwen3:
             return try await ensureQwenRuntime(preferredPath: preferredPath)
         case .mimo:
-            guard let python = LocalASRConfiguration.resolvePythonPath(preferredPath: preferredPath) else {
-                throw LocalASRRuntimeError.pythonMissing
-            }
-            return python
+            throw LocalASRRuntimeError.unsupported(L("model.mimo_macos_unavailable"))
         }
     }
 
     private static func ensureQwenRuntime(preferredPath: String) async throws -> String {
-        let runtimeDir = ModelStorage.qwenASRRuntimeDir()
+        let runtimeDir = ModelStorage.localASRRuntimeDir(for: .qwen3)
         let runtimePython = qwenPythonURL().path
         if isReady(for: .qwen3) { return runtimePython }
 
@@ -103,15 +123,15 @@ enum LocalASRRuntime {
     }
 
     private static func qwenPythonURL() -> URL {
-        ModelStorage.qwenASRRuntimeDir().appendingPathComponent("bin/python")
+        ModelStorage.localASRRuntimeDir(for: .qwen3).appendingPathComponent("bin/python")
     }
 
     private static func qwenMarkerURL() -> URL {
-        ModelStorage.qwenASRRuntimeDir().appendingPathComponent(markerName)
+        ModelStorage.localASRRuntimeDir(for: .qwen3).appendingPathComponent(markerName)
     }
 
     private static func qwenNativeMarkerURL() -> URL {
-        ModelStorage.qwenASRRuntimeDir().appendingPathComponent(nativeMarkerName)
+        ModelStorage.localASRRuntimeDir(for: .qwen3).appendingPathComponent(nativeMarkerName)
     }
 
     private static func prepareNativeExtensions(in runtimeDir: URL) async throws {
@@ -149,40 +169,109 @@ enum LocalASRRuntime {
     }
 
     private static func runProcess(executable: String, arguments: [String]) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            let process = Process()
-            let stderr = Pipe()
-            process.executableURL = URL(fileURLWithPath: executable)
-            process.arguments = arguments
-            process.standardOutput = FileHandle(forWritingAtPath: "/dev/null")
-            process.standardError = stderr
-            process.terminationHandler = { process in
-                let data = stderr.fileHandleForReading.readDataToEndOfFile()
-                let message = String(data: data, encoding: .utf8)?
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                guard process.terminationStatus == 0 else {
-                    continuation.resume(throwing: LocalASRRuntimeError.processFailed(message ?? ""))
-                    return
+        let cancellation = ProcessCancellation()
+        try await withTaskCancellationHandler {
+            try Task.checkCancellation()
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                let process = Process()
+                let stderr = Pipe()
+                process.executableURL = URL(fileURLWithPath: executable)
+                process.arguments = arguments
+                process.standardOutput = FileHandle(forWritingAtPath: "/dev/null")
+                process.standardError = stderr
+                process.terminationHandler = { process in
+                    let data = stderr.fileHandleForReading.readDataToEndOfFile()
+                    let message = String(data: data, encoding: .utf8)?
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    cancellation.clear(process)
+                    if cancellation.isCancelled {
+                        continuation.resume(throwing: CancellationError())
+                    } else if process.terminationStatus != 0 {
+                        continuation.resume(throwing: LocalASRRuntimeError.processFailed(message ?? ""))
+                    } else {
+                        continuation.resume(returning: ())
+                    }
                 }
-                continuation.resume(returning: ())
+                cancellation.register(process)
+                do {
+                    try process.run()
+                    cancellation.terminateIfCancelled()
+                } catch {
+                    cancellation.clear(process)
+                    continuation.resume(throwing: error)
+                }
             }
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        } onCancel: {
+            cancellation.cancel()
         }
     }
 }
 
+private final class ProcessCancellation: @unchecked Sendable {
+    private let lock = NSLock()
+    private var process: Process?
+    private var wasCancelled = false
+
+    var isCancelled: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return wasCancelled
+    }
+
+    func register(_ process: Process) {
+        lock.lock()
+        self.process = process
+        lock.unlock()
+    }
+
+    func clear(_ process: Process) {
+        lock.lock()
+        if self.process === process {
+            self.process = nil
+        }
+        lock.unlock()
+    }
+
+    func cancel() {
+        lock.lock()
+        wasCancelled = true
+        let process = self.process
+        lock.unlock()
+        if process?.isRunning == true {
+            process?.terminate()
+        }
+    }
+
+    func terminateIfCancelled() {
+        lock.lock()
+        let shouldTerminate = wasCancelled
+        let process = self.process
+        lock.unlock()
+        if shouldTerminate, process?.isRunning == true {
+            process?.terminate()
+        }
+    }
+}
+
+enum LocalASRRuntimeAvailability: Equatable {
+    case supported
+    case unavailable(String)
+}
+
 enum LocalASRRuntimeError: LocalizedError {
     case pythonMissing
+    case notInstalled
+    case unsupported(String)
     case processFailed(String)
 
     var errorDescription: String? {
         switch self {
         case .pythonMissing:
             return L("error.local_asr_python_missing")
+        case .notInstalled:
+            return L("model.asr_runtime_missing")
+        case .unsupported(let message):
+            return message
         case .processFailed(let message):
             return message.isEmpty ? L("error.local_asr_runtime_failed") : message
         }

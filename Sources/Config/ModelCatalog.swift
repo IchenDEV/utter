@@ -1,7 +1,5 @@
 import Foundation
 import WhisperKit
-import MLXLMCommon
-import MLXLLM
 
 @MainActor
 final class ModelCatalog: ObservableObject {
@@ -11,7 +9,8 @@ final class ModelCatalog: ObservableObject {
     @Published var llmModels: [ModelEntry] = []
     @Published var asrModels: [ModelEntry] = []
 
-    private let settings = AppSettings.shared
+    let settings = AppSettings.shared
+    let downloadTasks = ModelDownloadTasks()
 
     /// LLM model family categories
     enum ModelFamily: String, CaseIterable {
@@ -65,7 +64,9 @@ final class ModelCatalog: ObservableObject {
     }
 
     enum ModelStatus: Equatable {
-        case notDownloaded, downloading, compiling, loading, downloaded, ready, error(String)
+        case notDownloaded, downloading, compiling, loading, downloaded, ready
+        case unavailable(String)
+        case error(String)
 
         var isDownloading: Bool { if case .downloading = self { return true }; return false }
         var isError: Bool { if case .error = self { return true }; return false }
@@ -73,7 +74,10 @@ final class ModelCatalog: ObservableObject {
             switch self { case .downloading, .compiling, .loading: return true; default: return false }
         }
         var canDelete: Bool {
-            switch self { case .downloaded, .ready, .error: return true; default: return false }
+            switch self {
+            case .downloaded, .ready, .unavailable, .error: return true
+            default: return false
+            }
         }
     }
 
@@ -185,10 +189,13 @@ final class ModelCatalog: ObservableObject {
             let size = whisperVariantSize(id)
             whisperModels[i].cacheSize = size
             if recheckingErrors || (whisperModels[i].status != .ready && !whisperModels[i].status.isError) {
-                if ModelStorage.localWhisperURL(id) != nil, size == 0 {
+                let isComplete = isWhisperDownloaded(id)
+                if ModelStorage.localWhisperURL(id) != nil, !isComplete {
                     whisperModels[i].status = .error(L("model.local_missing"))
                 } else {
-                    whisperModels[i].status = size > 0 ? .downloaded : .notDownloaded
+                    whisperModels[i].status = isComplete
+                        ? .downloaded
+                        : (size > 0 ? .error(L("model.download_incomplete")) : .notDownloaded)
                 }
             }
         }
@@ -197,161 +204,17 @@ final class ModelCatalog: ObservableObject {
             let size = llmRepoSize(id)
             llmModels[i].cacheSize = size
             if recheckingErrors || (llmModels[i].status != .ready && !llmModels[i].status.isError) {
-                if ModelStorage.localLLMURL(id) != nil, !llmRepoHasConfig(id) {
+                let isComplete = llmRepoIsComplete(id)
+                if ModelStorage.localLLMURL(id) != nil, !isComplete {
                     llmModels[i].status = .error(L("model.local_missing"))
                 } else {
-                    llmModels[i].status = size > 0 ? .downloaded : .notDownloaded
+                    llmModels[i].status = isComplete
+                        ? .downloaded
+                        : (size > 0 ? .error(L("model.download_incomplete")) : .notDownloaded)
                 }
             }
         }
         refreshASRStatus(recheckingErrors: recheckingErrors)
-    }
-
-    // MARK: - Whisper Operations
-
-    func downloadWhisper(_ id: String) async {
-        guard let idx = whisperModels.firstIndex(where: { $0.id == id }),
-              !whisperModels[idx].status.isDownloading else { return }
-
-        whisperModels[idx].status = .downloading
-        whisperModels[idx].downloadProgress = 0
-
-        do {
-            let modelDir = ModelStorage.whisperVariantDir(id)
-            let tracker = DownloadProgressTracker(initialBytes: ModelStorage.directorySize(at: modelDir))
-
-            _ = try await WhisperKit.download(
-                variant: id,
-                downloadBase: Self.whisperDownloadBase,
-                progressCallback: { [weak self] p in
-                    Task { @MainActor in
-                        guard let self, let i = self.whisperModels.firstIndex(where: { $0.id == id }) else { return }
-                        let completedBytes = ModelStorage.directorySize(at: modelDir)
-                        let info = tracker.update(
-                            completedBytes: completedBytes > 0 ? completedBytes : p.completedUnitCount,
-                            totalBytes: p.totalUnitCount,
-                            fraction: p.fractionCompleted
-                        )
-                        self.whisperModels[i].downloadProgress = info.fraction
-                        self.whisperModels[i].downloadDetail = info.detailText
-                    }
-                }
-            )
-            whisperModels[idx].status = .downloaded
-            whisperModels[idx].cacheSize = whisperVariantSize(id)
-            whisperModels[idx].downloadDetail = ""
-        } catch is CancellationError {
-            if let i = whisperModels.firstIndex(where: { $0.id == id }) {
-                whisperModels[i].status = .notDownloaded
-                whisperModels[i].downloadDetail = ""
-            }
-        } catch {
-            whisperModels[idx].status = .error(error.localizedDescription)
-            whisperModels[idx].downloadDetail = ""
-        }
-    }
-
-    func deleteWhisper(_ id: String) {
-        guard let idx = whisperModels.firstIndex(where: { $0.id == id }) else { return }
-        if ModelStorage.localWhisperURL(id) != nil {
-            var paths = settings.localWhisperModelPaths
-            paths.removeValue(forKey: id)
-            settings.localWhisperModelPaths = paths
-            whisperModels.remove(at: idx)
-        } else {
-            deleteWhisperVariant(id)
-            whisperModels[idx].status = .notDownloaded
-            whisperModels[idx].cacheSize = 0
-        }
-
-        if settings.whisperModel == id {
-            settings.whisperModel = nextAvailableWhisper(excluding: id) ?? whisperModels.first?.id ?? ""
-        }
-    }
-
-    func nextAvailableWhisper(excluding id: String) -> String? {
-        whisperModels.first { $0.id != id && ($0.status == .downloaded || $0.status == .ready) }?.id
-    }
-
-    // MARK: - LLM Operations
-
-    func downloadLLM(_ id: String) async {
-        guard let idx = llmModels.firstIndex(where: { $0.id == id }),
-              !llmModels[idx].status.isDownloading else { return }
-        if ModelStorage.localLLMURL(id) != nil {
-            llmModels[idx].status = llmRepoHasConfig(id) ? .downloaded : .error(L("model.local_missing"))
-            llmModels[idx].cacheSize = llmRepoSize(id)
-            return
-        }
-        if let dir = llmRepoDir(id), !llmRepoHasConfig(id) {
-            Log.info("[ModelCatalog] removing incomplete LLM cache before redownload: \(dir.path)")
-            try? FileManager.default.removeItem(at: dir)
-        }
-
-        llmModels[idx].status = .downloading
-        llmModels[idx].downloadProgress = 0
-
-        do {
-            let estimatedTotalBytes = estimatedLLMDownloadBytes(id) ?? 0
-            let repoDir = ModelStorage.hubModelRepoDir(id)
-            let tracker = DownloadProgressTracker(initialBytes: ModelStorage.directorySize(at: repoDir))
-            let config = ModelConfiguration(id: id)
-            _ = try await LLMModelFactory.shared.loadContainer(
-                from: MLXModelLoading.downloader,
-                using: MLXModelLoading.tokenizerLoader,
-                configuration: config
-            ) { [weak self] p in
-                Task { @MainActor in
-                    guard let self, let i = self.llmModels.firstIndex(where: { $0.id == id }) else { return }
-                    let completedBytes = ModelStorage.directorySize(at: repoDir)
-                    let info = tracker.update(
-                        completedBytes: completedBytes,
-                        totalBytes: estimatedTotalBytes,
-                        fraction: p.fractionCompleted
-                    )
-                    self.llmModels[i].downloadProgress = info.fraction
-                    self.llmModels[i].downloadDetail = info.detailText
-                }
-            }
-            if let i = llmModels.firstIndex(where: { $0.id == id }) {
-                llmModels[i].status = .downloaded
-                llmModels[i].cacheSize = llmRepoSize(id)
-                llmModels[i].downloadDetail = ""
-            }
-        } catch is CancellationError {
-            if let i = llmModels.firstIndex(where: { $0.id == id }) {
-                llmModels[i].status = .notDownloaded
-                llmModels[i].downloadDetail = ""
-            }
-        } catch {
-            if let i = llmModels.firstIndex(where: { $0.id == id }) {
-                llmModels[i].status = .error(error.localizedDescription)
-                llmModels[i].cacheSize = llmRepoSize(id)
-                llmModels[i].downloadDetail = ""
-            }
-        }
-    }
-
-    func deleteLLM(_ id: String) {
-        guard let idx = llmModels.firstIndex(where: { $0.id == id }) else { return }
-        if ModelStorage.localLLMURL(id) != nil {
-            var paths = settings.localLLMModelPaths
-            paths.removeValue(forKey: id)
-            settings.localLLMModelPaths = paths
-            llmModels.remove(at: idx)
-        } else {
-            if let dir = llmRepoDir(id) { try? FileManager.default.removeItem(at: dir) }
-            llmModels[idx].status = .notDownloaded
-            llmModels[idx].cacheSize = 0
-        }
-
-        if settings.llmModel == id {
-            settings.llmModel = nextAvailableLLM(excluding: id) ?? llmModels.first?.id ?? ""
-        }
-    }
-
-    func nextAvailableLLM(excluding id: String) -> String? {
-        llmModels.first { $0.id != id && ($0.status == .downloaded || $0.status == .ready) }?.id
     }
 
     func addCustomLLM(_ modelID: String) {
@@ -410,46 +273,6 @@ final class ModelCatalog: ObservableObject {
         if bytes >= 1_000_000 { return String(format: "%.1f MB", Double(bytes) / 1e6) }
         if bytes >= 1_000 { return String(format: "%.0f KB", Double(bytes) / 1e3) }
         return "\(bytes) B"
-    }
-
-    static var whisperDownloadBase: URL { ModelStorage.huggingFaceBase }
-
-    // MARK: Whisper cache
-
-    private func whisperVariantDir(_ variant: String) -> URL {
-        ModelStorage.localWhisperURL(variant) ?? ModelStorage.whisperVariantDir(variant)
-    }
-
-    private func whisperVariantSize(_ variant: String) -> Int64 {
-        let dir = whisperVariantDir(variant)
-        guard FileManager.default.fileExists(atPath: dir.path) else { return 0 }
-        return ModelStorage.directorySize(at: dir)
-    }
-
-    /// Returns true if the Whisper variant is already downloaded (skip download progress UI).
-    func isWhisperDownloaded(_ variant: String) -> Bool {
-        whisperVariantSize(variant) > 0
-    }
-
-    private func deleteWhisperVariant(_ variant: String) {
-        let dir = whisperVariantDir(variant)
-        try? FileManager.default.removeItem(at: dir)
-    }
-
-    // MARK: LLM cache
-
-    private func llmRepoDir(_ modelID: String) -> URL? {
-        ModelStorage.llmRepoDir(modelID)
-    }
-
-    private func llmRepoHasConfig(_ modelID: String) -> Bool {
-        guard let dir = llmRepoDir(modelID) else { return false }
-        return FileManager.default.fileExists(atPath: dir.appendingPathComponent("config.json").path)
-    }
-
-    private func llmRepoSize(_ modelID: String) -> Int64 {
-        guard let dir = llmRepoDir(modelID), llmRepoHasConfig(modelID) else { return 0 }
-        return ModelStorage.directorySize(at: dir)
     }
 
     private func appendLocalWhisperModels() {

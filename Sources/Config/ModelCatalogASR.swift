@@ -31,6 +31,11 @@ extension ModelCatalog {
         Self.defaultASRModels.first { $0.id == id }?.provider
     }
 
+    func asrRuntimeAvailability(for id: String) -> LocalASRRuntimeAvailability {
+        guard let provider = asrProvider(for: id) else { return .supported }
+        return LocalASRRuntime.availability(for: provider)
+    }
+
     func asrModelPath(for id: String) -> String {
         asrSingleRepoIsComplete(id) ? ModelStorage.asrRepoDir(id)?.path ?? "" : ""
     }
@@ -50,6 +55,10 @@ extension ModelCatalog {
             let id = asrModels[i].id
             let size = asrRepoSize(id)
             asrModels[i].cacheSize = size
+            if case .unavailable(let message) = asrRuntimeAvailability(for: id) {
+                asrModels[i].status = .unavailable(message)
+                continue
+            }
             if recheckingErrors || (asrModels[i].status != .ready && !asrModels[i].status.isError) {
                 asrModels[i].status = asrRepoIsComplete(id)
                     ? .downloaded
@@ -59,7 +68,20 @@ extension ModelCatalog {
     }
 
     func downloadASR(_ id: String, onProgress: ((DownloadProgressInfo) -> Void)? = nil) async {
+        await downloadTasks.run(key: ModelDownloadKey(kind: .asr, modelID: id)) { [weak self] in
+            await self?.performASRDownload(id, onProgress: onProgress)
+        }
+    }
+
+    private func performASRDownload(
+        _ id: String,
+        onProgress: ((DownloadProgressInfo) -> Void)?
+    ) async {
         guard let idx = asrModels.firstIndex(where: { $0.id == id }), !asrModels[idx].status.isDownloading else { return }
+        if case .unavailable(let message) = asrRuntimeAvailability(for: id) {
+            asrModels[idx].status = .unavailable(message)
+            return
+        }
 
         if asrRepoIsComplete(id) {
             asrModels[idx].status = .downloaded
@@ -77,17 +99,15 @@ extension ModelCatalog {
             let api = HubApi(downloadBase: Self.asrDownloadBase)
             let startedAt = Date()
             let estimatedTotalBytes = estimatedASRDownloadBytes(id) ?? 0
-            if asrProvider(for: id) == .mimo {
-                asrModels[idx].downloadDetail = L("model.asr_preparing_runtime")
-                try await ensureMimoRepository()
-            }
             if !asrModelFilesAreComplete(id) {
                 let tracker = DownloadProgressTracker(startDate: startedAt, initialBytes: asrRepoSize(id))
                 for (repoIndex, repoID) in repos.enumerated() {
                     _ = try await api.snapshot(from: ModelStorage.hubModelRepo(repoID)) { [weak self] progress in
                         Task { @MainActor in
                             guard let self, let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
-                            let fraction = (Double(repoIndex) + progress.fractionCompleted) / Double(repos.count)
+                            let repositoryFraction =
+                                (Double(repoIndex) + progress.fractionCompleted) / Double(repos.count)
+                            let fraction = repositoryFraction * 0.9
                             let completedBytes = self.asrRepoSize(id)
                             let info = tracker.update(
                                 completedBytes: completedBytes,
@@ -102,12 +122,14 @@ extension ModelCatalog {
                 }
             }
             if asrProvider(for: id) == .qwen3 {
+                asrModels[idx].downloadProgress = max(asrModels[idx].downloadProgress, 0.9)
                 asrModels[idx].downloadDetail = L("model.asr_installing_runtime")
                 _ = try await LocalASRRuntime.ensurePythonPath(
                     for: .qwen3,
                     preferredPath: AppSettings.shared.localASRPythonPath
                 )
             }
+            try Task.checkCancellation()
             if let i = asrModels.firstIndex(where: { $0.id == id }) {
                 asrModels[i].status = asrRepoIsComplete(id) ? .downloaded : .error(L("model.asr_incomplete"))
                 asrModels[i].cacheSize = asrRepoSize(id)
@@ -115,14 +137,15 @@ extension ModelCatalog {
             }
         } catch is CancellationError {
             if let i = asrModels.firstIndex(where: { $0.id == id }) {
-                asrModels[i].status = asrRepoIsComplete(id)
-                    ? .downloaded
-                    : asrMissingStatus(for: id, size: asrRepoSize(id))
+                asrModels[i].status = .error(L("model.download_paused"))
+                asrModels[i].cacheSize = asrRepoSize(id)
+                asrModels[i].downloadProgress = 0
                 asrModels[i].downloadDetail = ""
             }
         } catch {
             if let i = asrModels.firstIndex(where: { $0.id == id }) {
-                asrModels[i].status = .error(error.localizedDescription)
+                Log.error("[ModelCatalog] ASR download failed: \(error.localizedDescription)")
+                asrModels[i].status = .error(ModelDownloadFailureMessage.userFacing(error))
                 asrModels[i].cacheSize = asrRepoSize(id)
                 asrModels[i].downloadDetail = ""
             }
@@ -138,8 +161,11 @@ extension ModelCatalog {
         if provider == .mimo {
             try? FileManager.default.removeItem(at: ModelStorage.mimoASRRepositoryDir())
         }
-        asrModels[idx].status = .notDownloaded
+        if let provider {
+            try? FileManager.default.removeItem(at: ModelStorage.localASRRuntimeDir(for: provider))
+        }
         asrModels[idx].cacheSize = 0
+        asrModels[idx].status = asrMissingStatus(for: id, size: 0)
         asrModels[idx].downloadDetail = ""
 
         let settings = AppSettings.shared
@@ -172,7 +198,9 @@ extension ModelCatalog {
         case .qwen3:
             return hasFiles && LocalASRRuntime.isReady(for: .qwen3)
         case .mimo:
-            return hasFiles && Self.mimoRepositoryIsReady(at: ModelStorage.mimoASRRepositoryDir())
+            return hasFiles &&
+                Self.mimoRepositoryIsReady(at: ModelStorage.mimoASRRepositoryDir()) &&
+                LocalASRRuntime.isReady(for: .mimo)
         case nil:
             return hasFiles
         }
@@ -183,6 +211,9 @@ extension ModelCatalog {
     }
 
     private func asrMissingStatus(for id: String, size: Int64) -> ModelStatus {
+        if case .unavailable(let message) = asrRuntimeAvailability(for: id) {
+            return .unavailable(message)
+        }
         guard size > 0 else { return .notDownloaded }
         if asrModelFilesAreComplete(id), asrProvider(for: id) == .qwen3 {
             return .error(L("model.asr_runtime_missing"))
@@ -192,8 +223,12 @@ extension ModelCatalog {
 
     private func asrRepoSize(_ id: String) -> Int64 {
         let modelSize = asrRequiredRepoIDs(for: id).reduce(Int64(0)) { $0 + asrSingleRepoSize($1) }
-        guard asrProvider(for: id) == .mimo else { return modelSize }
-        return modelSize + ModelStorage.directorySize(at: ModelStorage.mimoASRRepositoryDir())
+        guard let provider = asrProvider(for: id) else { return modelSize }
+        let runtimeSize = ModelStorage.directorySize(at: ModelStorage.localASRRuntimeDir(for: provider))
+        let repositorySize = provider == .mimo
+            ? ModelStorage.directorySize(at: ModelStorage.mimoASRRepositoryDir())
+            : 0
+        return modelSize + runtimeSize + repositorySize
     }
 
     private func asrSingleRepoIsComplete(_ id: String) -> Bool {
@@ -248,57 +283,4 @@ extension ModelCatalog {
         }
     }
 
-    static func mimoRepositoryIsReady(at dir: URL) -> Bool {
-        FileManager.default.fileExists(
-            atPath: dir.appendingPathComponent("src/mimo_audio/mimo_audio.py").path
-        )
-    }
-
-    private func ensureMimoRepository() async throws {
-        let dir = ModelStorage.mimoASRRepositoryDir()
-        if Self.mimoRepositoryIsReady(at: dir) { return }
-
-        let parent = dir.deletingLastPathComponent()
-        let temp = parent.appendingPathComponent(".MiMo-V2.5-ASR.download")
-        try? FileManager.default.removeItem(at: temp)
-        try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
-
-        try await runProcess(
-            executable: "/usr/bin/env",
-            arguments: [
-                "git", "clone", "--quiet", "--depth", "1",
-                LocalASRConfiguration.mimoRepositoryURL,
-                temp.path,
-            ]
-        )
-
-        try? FileManager.default.removeItem(at: dir)
-        try FileManager.default.moveItem(at: temp, to: dir)
-        guard Self.mimoRepositoryIsReady(at: dir) else { throw ASRDownloadError.incompleteRuntime }
-    }
-
-    private func runProcess(executable: String, arguments: [String]) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            let process = Process()
-            let stderr = Pipe()
-            process.executableURL = URL(fileURLWithPath: executable)
-            process.arguments = arguments
-            process.standardError = stderr
-            process.terminationHandler = { process in
-                let data = stderr.fileHandleForReading.readDataToEndOfFile()
-                let message = String(data: data, encoding: .utf8)?
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                guard process.terminationStatus == 0 else {
-                    continuation.resume(throwing: ASRDownloadError.processFailed(message ?? ""))
-                    return
-                }
-                continuation.resume(returning: ())
-            }
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(throwing: error)
-            }
-        }
-    }
 }

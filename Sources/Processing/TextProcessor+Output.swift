@@ -101,7 +101,7 @@ extension TextProcessor {
 
     /// Keeps line breaks while collapsing surrounding whitespace.
     func normalizeWhitespace(_ text: String) -> String {
-        FormattingHeuristics.normalizeInput(text)
+        TranscriptionSanitizer.normalizeInput(text)
             .replacingOccurrences(
                 of: "[^\\S\\n]*\\n[^\\S\\n]*",
                 with: "\n",
