@@ -4,6 +4,9 @@ import Foundation
 extension InputSessionCoordinator {
     func outputText(for raw: String, active: ActiveSession) async throws -> String {
         let options = TextProcessingOptions(settings: settings, inputLanguage: active.inputLanguage)
+        let dictionarySnapshot = PersonalDictionary.shared.snapshot()
+        let enableMemory = settings.enableMemory
+        let memoryWindowMinutes = settings.memoryWindowMinutes
         let text: String
         let context: InputContext
 
@@ -11,13 +14,18 @@ extension InputSessionCoordinator {
         case .direct:
             active.screenContextTask?.cancel()
             context = inputContext(for: active, screenContext: "", mode: .direct)
-            text = textProcessor.basicClean(text: raw, inputLanguage: active.inputLanguage)
+            text = textProcessor.basicClean(
+                text: raw,
+                inputLanguage: active.inputLanguage,
+                dictionarySnapshot: dictionarySnapshot
+            )
         case .processed:
             let screenContext = await screenContext(from: active)
             context = inputContext(for: active, screenContext: screenContext.text, mode: .processed)
             let memoryContext = VoicePipelinePolicy.memoryContext(
                 for: .processed,
-                settings: settings,
+                enableMemory: enableMemory,
+                memoryWindowMinutes: memoryWindowMinutes,
                 currentContext: context
             )
             text = await textProcessor.process(
@@ -26,14 +34,16 @@ extension InputSessionCoordinator {
                 screenContext: screenContext.text,
                 screenImage: screenContext.image,
                 memoryContext: memoryContext,
-                inputContext: context
+                inputContext: context,
+                dictionarySnapshot: dictionarySnapshot
             )
         case .command:
             let screenContext = await screenContext(from: active)
             context = inputContext(for: active, screenContext: screenContext.text, mode: .command)
             let memoryContext = VoicePipelinePolicy.memoryContext(
                 for: .command,
-                settings: settings,
+                enableMemory: enableMemory,
+                memoryWindowMinutes: memoryWindowMinutes,
                 currentContext: context
             )
             text = await textProcessor.processCommand(
@@ -42,7 +52,8 @@ extension InputSessionCoordinator {
                 screenContext: screenContext.text,
                 screenImage: screenContext.image,
                 memoryContext: memoryContext,
-                inputContext: context
+                inputContext: context,
+                dictionarySnapshot: dictionarySnapshot
             )
         }
 

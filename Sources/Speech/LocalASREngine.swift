@@ -151,12 +151,25 @@ final class LocalASREngine: SpeechEngine, @unchecked Sendable {
         guard let runnerURL = Self.runnerScriptURL() else { throw LocalASRError.runnerMissing }
 
         let started = CFAbsoluteTimeGetCurrent()
-        let text = try await server.transcribe(
-            audioURL: audioURL,
-            language: language,
-            runnerURL: runnerURL,
-            pythonPath: pythonPath
-        )
+        let text: String
+        switch configuration.provider {
+        case .qwen3:
+            text = try await QwenAudioPreprocessor.withPreparedAudio(from: audioURL) { preparedURL in
+                try await server.transcribe(
+                    audioURL: preparedURL,
+                    language: language,
+                    runnerURL: runnerURL,
+                    pythonPath: pythonPath
+                )
+            }
+        case .mimo:
+            text = try await server.transcribe(
+                audioURL: audioURL,
+                language: language,
+                runnerURL: runnerURL,
+                pythonPath: pythonPath
+            )
+        }
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         Log.info("[\(configuration.logName)] transcribed \(text.count) chars locally in \(String(format: "%.1f", elapsed))s")
         return text

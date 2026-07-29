@@ -28,9 +28,26 @@ enum VoicePipelinePolicy {
         currentContext: InputContext? = nil,
         recentContextProvider: ((Int, InputContext?) -> String)? = nil
     ) -> String {
-        guard settings.enableMemory else { return "" }
+        memoryContext(
+            for: outputMode,
+            enableMemory: settings.enableMemory,
+            memoryWindowMinutes: settings.memoryWindowMinutes,
+            currentContext: currentContext,
+            recentContextProvider: recentContextProvider
+        )
+    }
+
+    @MainActor
+    static func memoryContext(
+        for outputMode: OutputMode,
+        enableMemory: Bool,
+        memoryWindowMinutes: Int,
+        currentContext: InputContext? = nil,
+        recentContextProvider: ((Int, InputContext?) -> String)? = nil
+    ) -> String {
+        guard enableMemory else { return "" }
         guard outputMode != .direct else { return "" }
         let provider = recentContextProvider ?? { MemoryStore.recentContext(windowMinutes: $0, currentContext: $1) }
-        return provider(settings.memoryWindowMinutes, currentContext)
+        return provider(memoryWindowMinutes, currentContext)
     }
 }

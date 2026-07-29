@@ -53,6 +53,11 @@ final class InputSessionCoordinator {
         guard let engine = await engineProvider.engine(settings: settings), engine.isReady else {
             throw IntegrationError.modelNotReady
         }
+        engine.configureRecognition(
+            context: SpeechRecognitionContext(
+                dictionaryEntries: PersonalDictionary.shared.entries
+            )
+        )
 
         if effective.streamingEnabled, engine.supportsStreaming {
             engine.startListening(language: effective.languageCode) { [weak service] partialText in

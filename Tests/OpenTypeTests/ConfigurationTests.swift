@@ -3,6 +3,11 @@ import XCTest
 @testable import OpenType
 
 final class ConfigurationTests: XCTestCase {
+    func testDefaultFormattingModelDoesNotUseTinyFallback() {
+        XCTAssertEqual(AppSettings.defaultLLMModelID, "mlx-community/Qwen3.5-2B-4bit")
+        XCTAssertNotEqual(AppSettings.defaultLLMModelID, "mlx-community/Qwen3.5-0.8B-MLX-4bit")
+    }
+
     func testRemoteProviderDefaultsMatchExpectedAPIs() {
         XCTAssertEqual(RemoteProvider.openai.defaultBaseURL, "https://api.openai.com/v1")
         XCTAssertEqual(RemoteProvider.openai.defaultModel, "gpt-4.1-mini")
@@ -40,7 +45,7 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(InputLanguage.korean.whisperCode, "ko")
         XCTAssertEqual(InputLanguage.cantonese.whisperCode, "yue")
 
-        XCTAssertEqual(InputLanguage.auto.localeIdentifier, "zh-CN")
+        XCTAssertEqual(InputLanguage.auto.localeIdentifier, Locale.current.identifier)
         XCTAssertEqual(InputLanguage.chinese.localeIdentifier, "zh-CN")
         XCTAssertEqual(InputLanguage.english.localeIdentifier, "en-US")
         XCTAssertEqual(InputLanguage.japanese.localeIdentifier, "ja-JP")

@@ -9,6 +9,7 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var bestSoFar = ""
     private var finishContinuation: CheckedContinuation<String, Error>?
+    private var recognitionContext = SpeechRecognitionContext.empty
     private let stateQueue = DispatchQueue(label: "opentype.apple-speech")
 
     /// Maximum time (seconds) to wait for the recognition task to deliver a final result.
@@ -27,6 +28,12 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
 
     var supportsStreaming: Bool { true }
 
+    func configureRecognition(context: SpeechRecognitionContext) {
+        stateQueue.sync {
+            recognitionContext = context
+        }
+    }
+
     func requestAccess() {
         guard SFSpeechRecognizer.authorizationStatus() != .authorized else {
             isReady = true
@@ -41,6 +48,7 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
 
     func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
         configureRecognizer(language: language)
+        let contextualStrings = stateQueue.sync { recognitionContext.phrases }
 
         stateQueue.sync {
             self.teardownLocked()
@@ -48,6 +56,8 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
             let request = SFSpeechAudioBufferRecognitionRequest()
             request.shouldReportPartialResults = true
             request.taskHint = .dictation
+            request.requiresOnDeviceRecognition = true
+            request.contextualStrings = contextualStrings
             if #available(macOS 16, *) {
                 request.addsPunctuation = true
             }
@@ -135,11 +145,14 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
         }
 
         configureRecognizer(language: language)
+        let contextualStrings = stateQueue.sync { recognitionContext.phrases }
 
         return try await withCheckedThrowingContinuation { continuation in
             let request = SFSpeechURLRecognitionRequest(url: url)
             request.shouldReportPartialResults = true
             request.taskHint = .dictation
+            request.requiresOnDeviceRecognition = true
+            request.contextualStrings = contextualStrings
             if #available(macOS 16, *) {
                 request.addsPunctuation = true
             }
@@ -181,14 +194,14 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
     }
 
     private func configureRecognizer(language: String?) {
-        guard let language else { return }
         let localeId: String
         switch language {
         case "zh": localeId = "zh-CN"
         case "ja": localeId = "ja-JP"
         case "ko": localeId = "ko-KR"
         case "yue": localeId = "zh-HK"
-        default: localeId = "en-US"
+        case "en": localeId = "en-US"
+        default: localeId = Locale.current.identifier
         }
 
         if let newRecognizer = SFSpeechRecognizer(locale: Locale(identifier: localeId)) {

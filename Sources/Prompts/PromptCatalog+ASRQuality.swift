@@ -8,6 +8,7 @@ extension PromptCatalog {
             - 口述控制词要按意图处理：逗号、句号、问号、换行、空格、不要空格、大写、全大写、引号、冒号；如果用户是在讨论这些词本身，就保留字面
             - 技术词、产品词和缩写优先按常见写法输出，例如 OpenType、hotkey、menu bar、API、JSON、i18n、URL
             - 屏幕、历史和词库只用于纠错和术语选择；不要补出原文没有说出的动作、结论、数值或承诺
+            - 除明确的口头禅、自我纠正和无意重复外，实词的增删改必须有原文、词库或提供的上下文直接支持；不要根据常识猜测没听到的内容
             """
         case .chinese:
             return """
@@ -16,6 +17,7 @@ extension PromptCatalog {
             - 口述控制词要按意图处理：逗号、句号、问号、换行、空格、不要空格、大写、全大写、引号、冒号；如果用户是在讨论这些词本身，就保留字面
             - 技术词、产品词和缩写优先按常见写法输出，例如 OpenType、hotkey、menu bar、API、JSON、i18n、URL
             - 屏幕、历史和词库只用于纠错和术语选择；不要补出原文没有说出的动作、结论、数值或承诺
+            - 除明确的口头禅、自我纠正和无意重复外，实词的增删改必须有原文、词库或提供的上下文直接支持；不要根据常识猜测没听到的内容
             """
         case .cantonese:
             return """
@@ -24,6 +26,7 @@ extension PromptCatalog {
             - 口述控制词要按意图处理：逗号、句号、问号、换行、空格、唔要空格、大写、全大写、引号、冒号；如果用户是在讨论这些词本身，就保留字面
             - 技术词、产品词和缩写优先按常见写法输出，例如 OpenType、hotkey、menu bar、API、JSON、i18n、URL
             - 屏幕、历史和词库只用于纠错和术语选择；不要补出原文没有说出的动作、结论、数值或承诺
+            - 除咗明确口头禅、自我纠正同无意重复，实词增删改必须有原文、词库或提供嘅上下文直接支持；唔好靠常识估冇听到嘅内容
             """
         case .english:
             return """
@@ -32,6 +35,7 @@ extension PromptCatalog {
             - Interpret spoken controls by intent: comma, period, question mark, new line, space, no space, caps, all caps, quote, colon; keep them literal when the user is talking about the words themselves
             - Prefer standard spelling for product names, technical terms, and acronyms, such as OpenType, hotkey, menu bar, API, JSON, i18n, and URL
             - Use screen context, history, and dictionary only for corrections and terminology; do not add undictated actions, conclusions, numbers, or commitments
+            - Except for explicit fillers, self-corrections, and accidental repetition, lexical additions, deletions, or substitutions need direct support from the transcript, dictionary, or provided context; do not guess unheard content from plausibility
             """
         case .japanese:
             return """
@@ -40,6 +44,7 @@ extension PromptCatalog {
             - 口述された制御語は意図として扱う：句読点、改行、スペース、スペースなし、大文字、引用符、コロン。ただしその語自体を話題にしている場合は字面を残す
             - 製品名、技術語、略語は OpenType、hotkey、menu bar、API、JSON、i18n、URL のような標準表記を優先する
             - 画面、履歴、辞書は補正と用語選択にだけ使い、口述されていない動作、結論、数値、約束を追加しない
+            - 明確なフィラー、言い直し、無意識の重複を除き、実質語の追加、削除、置換には原文、辞書、または提供された文脈の直接的な根拠が必要。聞こえていない内容をもっともらしさで推測しない
             """
         case .korean:
             return """
@@ -48,6 +53,7 @@ extension PromptCatalog {
             - 말로 지시한 제어어는 의도로 처리한다: 쉼표, 마침표, 물음표, 줄바꿈, 공백, 공백 없음, 대문자, 모두 대문자, 따옴표, 콜론. 그 단어 자체를 말하는 경우에는 그대로 둔다
             - 제품명, 기술 용어, 약어는 OpenType, hotkey, menu bar, API, JSON, i18n, URL 같은 표준 표기를 우선한다
             - 화면, 기록, 사전은 보정과 용어 선택에만 사용하고 말하지 않은 동작, 결론, 숫자, 약속을 추가하지 않는다
+            - 명확한 군더더기, 자기 수정, 무의식적 반복을 제외하면 실질어의 추가, 삭제, 대체에는 원문, 사전 또는 제공된 문맥의 직접적인 근거가 필요하다. 듣지 못한 내용을 그럴듯함만으로 추측하지 않는다
             """
         }
     }

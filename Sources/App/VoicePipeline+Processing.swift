@@ -126,29 +126,34 @@ extension VoicePipeline {
         appState.statusMessage = L("pipeline.formatting")
 
         let started = CFAbsoluteTimeGetCurrent()
+        let processingOptions = TextProcessingOptions(settings: settings)
+        let dictionarySnapshot = PersonalDictionary.shared.snapshot()
+        let enableMemory = settings.enableMemory
+        let memoryWindowMinutes = settings.memoryWindowMinutes
         let screenContext = await finishScreenContextCapture()
         let inputContext = InputContext.capture(
             targetApp: targetApp,
             screenContext: screenContext.text,
             outputMode: .processed,
-            inputLanguage: settings.inputLanguage,
+            inputLanguage: processingOptions.inputLanguage,
             source: .menuBar
         )
         guard !Task.isCancelled else { return VoicePipelineOutput(text: "", context: inputContext) }
 
         let memoryContext = VoicePipelinePolicy.memoryContext(
             for: .processed,
-            settings: settings,
+            enableMemory: enableMemory,
+            memoryWindowMinutes: memoryWindowMinutes,
             currentContext: inputContext
         )
         let text = await textProcessor.process(
             text: raw,
-            stylePrompt: settings.customStylePrompt,
-            model: settings.llmModel,
+            options: processingOptions,
             screenContext: screenContext.text,
             screenImage: screenContext.image,
             memoryContext: memoryContext,
-            inputContext: inputContext
+            inputContext: inputContext,
+            dictionarySnapshot: dictionarySnapshot
         )
         recordFormattingDuration(started, label: "Smart Format")
         return VoicePipelineOutput(text: text, context: inputContext)
@@ -163,28 +168,34 @@ extension VoicePipeline {
         appState.statusMessage = L("pipeline.formatting")
 
         let started = CFAbsoluteTimeGetCurrent()
+        let processingOptions = TextProcessingOptions(settings: settings)
+        let dictionarySnapshot = PersonalDictionary.shared.snapshot()
+        let enableMemory = settings.enableMemory
+        let memoryWindowMinutes = settings.memoryWindowMinutes
         let screenContext = await finishScreenContextCapture()
         let inputContext = InputContext.capture(
             targetApp: targetApp,
             screenContext: screenContext.text,
             outputMode: .command,
-            inputLanguage: settings.inputLanguage,
+            inputLanguage: processingOptions.inputLanguage,
             source: .menuBar
         )
         guard !Task.isCancelled else { return VoicePipelineOutput(text: "", context: inputContext) }
 
         let memoryContext = VoicePipelinePolicy.memoryContext(
             for: .command,
-            settings: settings,
+            enableMemory: enableMemory,
+            memoryWindowMinutes: memoryWindowMinutes,
             currentContext: inputContext
         )
         let text = await textProcessor.processCommand(
             text: raw,
-            model: settings.llmModel,
+            options: processingOptions,
             screenContext: screenContext.text,
             screenImage: screenContext.image,
             memoryContext: memoryContext,
-            inputContext: inputContext
+            inputContext: inputContext,
+            dictionarySnapshot: dictionarySnapshot
         )
         recordFormattingDuration(started, label: "Voice Command formatting")
         return VoicePipelineOutput(text: text, context: inputContext)

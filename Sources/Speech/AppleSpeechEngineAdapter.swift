@@ -4,6 +4,8 @@ import Foundation
 final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
     private let locale: Locale
     private let legacy: LegacyAppleSpeechEngine
+    private let recognitionContextLock = NSLock()
+    private var recognitionContext = SpeechRecognitionContext.empty
 
     init(locale: Locale = Locale(identifier: "zh-CN")) {
         self.locale = locale
@@ -15,6 +17,13 @@ final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
 
     func requestAccess() {
         legacy.requestAccess()
+    }
+
+    func configureRecognition(context: SpeechRecognitionContext) {
+        recognitionContextLock.lock()
+        recognitionContext = context
+        recognitionContextLock.unlock()
+        legacy.configureRecognition(context: context)
     }
 
     func prepare() async {
@@ -40,9 +49,11 @@ final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
         guard let audioURL else { return try await fallbackTask.value }
 
         do {
+            let context = recognitionContextSnapshot()
             let text = try await AppleSpeechAnalyzer.transcribe(
                 audioURL: audioURL,
-                locale: resolvedLocale(for: language)
+                locale: resolvedLocale(for: language),
+                context: context
             )
             legacy.cancelListening()
             let fallback = try? await fallbackTask.value
@@ -62,9 +73,11 @@ final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
     func transcribe(audioURL: URL?, language: String?) async throws -> String {
         guard let audioURL else { throw AppleSpeechError.noAudioFile }
         do {
+            let context = recognitionContextSnapshot()
             let text = try await AppleSpeechAnalyzer.transcribe(
                 audioURL: audioURL,
-                locale: resolvedLocale(for: language)
+                locale: resolvedLocale(for: language),
+                context: context
             )
             if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return text
@@ -75,14 +88,20 @@ final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
         return try await legacy.transcribe(audioURL: audioURL, language: language)
     }
 
+    private func recognitionContextSnapshot() -> SpeechRecognitionContext {
+        recognitionContextLock.lock()
+        defer { recognitionContextLock.unlock() }
+        return recognitionContext
+    }
+
     private func resolvedLocale(for language: String?) -> Locale {
         switch language {
         case "zh": return Locale(identifier: "zh-CN")
         case "en": return Locale(identifier: "en-US")
         case "ja": return Locale(identifier: "ja-JP")
         case "ko": return Locale(identifier: "ko-KR")
-        case "yue": return Locale(identifier: "yue-CN")
-        default: return locale
+        case "yue": return Locale(identifier: "zh-HK")
+        default: return Locale.current
         }
     }
 }

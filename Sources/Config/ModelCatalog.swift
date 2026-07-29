@@ -87,11 +87,11 @@ final class ModelCatalog: ObservableObject {
         let supported = Set(rec.supported)
 
         whisperModels = Self.curatedWhisperVariants.compactMap { variant in
-            let fullName = rec.supported.first { name in
-                guard let range = name.range(of: variant) else { return false }
-                let after = name[range.upperBound...]
-                return after.isEmpty || after.first == "_"
-            }
+            let fullName = WhisperModelSelection.matches(defaultID, variant: variant)
+                ? defaultID
+                : rec.supported.first {
+                    WhisperModelSelection.matches($0, variant: variant)
+                }
             guard let fullName, supported.contains(fullName) else { return nil }
             return ModelEntry(
                 id: fullName,
@@ -102,8 +102,13 @@ final class ModelCatalog: ObservableObject {
         }
 
         appendLocalWhisperModels()
-        if !whisperModels.contains(where: { $0.id == settings.whisperModel }) {
-            settings.whisperModel = defaultID
+        let resolvedWhisperModel = WhisperModelSelection.resolve(
+            requested: settings.whisperModel,
+            available: whisperModels.map(\.id),
+            fallback: defaultID
+        )
+        if settings.whisperModel != resolvedWhisperModel {
+            settings.whisperModel = resolvedWhisperModel
         }
 
         llmModels = Self.defaultLLMModels.map {
@@ -111,7 +116,9 @@ final class ModelCatalog: ObservableObject {
         }
         appendLocalLLMModels()
         if !llmModels.contains(where: { $0.id == settings.llmModel }) {
-            settings.llmModel = llmModels.first?.id ?? ""
+            settings.llmModel = llmModels.first(where: {
+                $0.id == AppSettings.defaultLLMModelID
+            })?.id ?? llmModels.first?.id ?? ""
         }
 
         asrModels = Self.defaultASRModels.map {

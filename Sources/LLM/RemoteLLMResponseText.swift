@@ -3,12 +3,17 @@ import Foundation
 enum RemoteLLMResponseText {
     static func openAI(from data: Data) throws -> String {
         if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            try RemoteLLMResponseTruncation.validateOpenAI(
+                data: data,
+                json: json
+            )
             if let text = openAIText(in: json) {
                 return resolveStructuredOutput(text)
             }
             throw RemoteLLMError.invalidResponse
         }
 
+        try RemoteLLMResponseTruncation.validateOpenAI(data: data, json: nil)
         if let text = RemoteLLMEventStreamText.openAI(from: data) {
             return resolveStructuredOutput(text)
         }
@@ -34,12 +39,17 @@ enum RemoteLLMResponseText {
 
     static func anthropic(from data: Data) throws -> String {
         if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            try RemoteLLMResponseTruncation.validateAnthropic(
+                data: data,
+                json: json
+            )
             if let text = anthropicText(in: json) {
                 return resolveStructuredOutput(text)
             }
             throw RemoteLLMError.invalidResponse
         }
 
+        try RemoteLLMResponseTruncation.validateAnthropic(data: data, json: nil)
         if let text = RemoteLLMEventStreamText.anthropic(from: data) {
             return resolveStructuredOutput(text)
         }
