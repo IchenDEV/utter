@@ -67,12 +67,13 @@ final class OverlayPanel {
     private func apply(layout: OverlayLayout, animated: Bool) {
         guard let window, let hostingView else { return }
         let frame = frame(for: layout.panelSize, window: window)
+        let shouldAnimate = animated && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
 
         hostingView.frame = NSRect(origin: .zero, size: layout.panelSize)
         hostingView.layer?.cornerRadius = layout.outerCornerRadius
         hostingView.layer?.cornerCurve = .continuous
         window.ignoresMouseEvents = !layout.isInteractive
-        window.setFrame(frame, display: true, animate: animated)
+        window.setFrame(frame, display: true, animate: shouldAnimate)
     }
 
     @MainActor
