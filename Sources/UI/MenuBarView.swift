@@ -108,7 +108,7 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
                 Spacer()
                 WaveformView(level: appState.audioLevel)
-                    .frame(width: 58, height: 18)
+                    .frame(width: 40, height: 16)
             }
 
             if !appState.rawTranscription.isEmpty {

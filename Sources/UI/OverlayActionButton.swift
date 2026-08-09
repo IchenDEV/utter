@@ -76,24 +76,24 @@ private struct OverlayActionButtonStyle: ButtonStyle {
 
     private var foregroundStyle: Color {
         switch kind {
-        case .cancel: return .primary.opacity(0.72)
-        case .confirm: return Color(nsColor: .alternateSelectedControlTextColor).opacity(0.92)
+        case .cancel: return .white.opacity(0.72)
+        case .confirm: return .black.opacity(0.82)
         }
     }
 
     private func backgroundStyle(isPressed: Bool) -> Color {
         switch kind {
         case .cancel:
-            return .primary.opacity(isPressed ? 0.18 : isHovering ? 0.13 : 0.07)
+            return .white.opacity(isPressed ? 0.18 : isHovering ? 0.13 : 0.07)
         case .confirm:
-            return Color.accentColor.opacity(isPressed ? 0.76 : isHovering ? 1 : 0.9)
+            return .white.opacity(isPressed ? 0.76 : isHovering ? 1 : 0.9)
         }
     }
 
     private var borderStyle: Color {
         switch kind {
-        case .cancel: return .primary.opacity(0.08)
-        case .confirm: return Color.accentColor.opacity(0.42)
+        case .cancel: return .white.opacity(0.08)
+        case .confirm: return .white.opacity(0.42)
         }
     }
 }
