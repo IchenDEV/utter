@@ -21,6 +21,8 @@ final class InputHistoryTests: XCTestCase {
         XCTAssertEqual(record.rawCharCount, 9)
         XCTAssertEqual(record.processedCharCount, 8)
         XCTAssertNil(record.context)
+        XCTAssertNil(record.userFinalText)
+        XCTAssertNil(record.formatKind)
     }
 
     func testInputRecordSearchMatchesContextFields() {
@@ -119,5 +121,29 @@ final class InputHistoryTests: XCTestCase {
         XCTAssertFalse(context.contains("Latest notes"))
         XCTAssertTrue(context.contains("Safari"))
         XCTAssertTrue(context.contains("Gmail"))
+    }
+
+    @MainActor
+    func testMemoryStorePrefersUserFinalText() {
+        let now = Date(timeIntervalSince1970: 10_000)
+        let record = InputRecord(
+            id: UUID(),
+            date: now,
+            rawText: "open tape",
+            processedText: "OpenTape",
+            wasProcessed: true,
+            userFinalText: "OpenType",
+            formatKind: .plainParagraph
+        )
+
+        let context = MemoryStore.recentContext(
+            records: [record],
+            limit: 1,
+            windowMinutes: 30,
+            now: now
+        )
+
+        XCTAssertTrue(context.contains("OpenType"))
+        XCTAssertFalse(context.contains("OpenTape"))
     }
 }

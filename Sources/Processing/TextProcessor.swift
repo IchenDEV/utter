@@ -62,6 +62,7 @@ final class TextProcessor {
         screenImage: CGImage? = nil,
         memoryContext: String = "",
         inputContext: InputContext? = nil,
+        formatKind: TextFormatKind? = nil,
         allowsPreparedFallback: Bool = TextProcessor.defaultAllowsPreparedFallback,
         allowsGuardFallback: Bool = true
     ) async -> String {
@@ -76,6 +77,7 @@ final class TextProcessor {
             screenImage: screenImage,
             memoryContext: memoryContext,
             inputContext: inputContext,
+            formatKind: formatKind,
             allowsPreparedFallback: allowsPreparedFallback,
             allowsGuardFallback: allowsGuardFallback
         )
@@ -88,6 +90,7 @@ final class TextProcessor {
         screenImage: CGImage? = nil,
         memoryContext: String = "",
         inputContext: InputContext? = nil,
+        formatKind: TextFormatKind? = nil,
         allowsPreparedFallback: Bool = TextProcessor.defaultAllowsPreparedFallback,
         allowsGuardFallback: Bool = true,
         dictionarySnapshot requestedDictionarySnapshot: PersonalDictionarySnapshot? = nil
@@ -110,6 +113,7 @@ final class TextProcessor {
             screenImageAvailable: useScreenImage,
             memoryContext: memoryContext,
             inputContext: inputContext,
+            formatKind: formatKind,
             dictionarySnapshot: dictionarySnapshot
         )
 
@@ -140,6 +144,7 @@ final class TextProcessor {
                         screenImageAvailable: false,
                         memoryContext: memoryContext,
                         inputContext: inputContext,
+                        formatKind: formatKind,
                         dictionarySnapshot: dictionarySnapshot
                     )
                     result = try await generateText(

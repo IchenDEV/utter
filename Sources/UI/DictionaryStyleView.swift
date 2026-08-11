@@ -9,6 +9,8 @@ struct DictionaryStyleView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                DictionaryManagementView()
+                Divider()
                 customSystemPromptSection
                 if !settings.useCustomSystemPrompt {
                     Divider()

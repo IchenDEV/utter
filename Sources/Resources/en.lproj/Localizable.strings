@@ -272,7 +272,7 @@
 "screen_context_mode.multimodal" = "Multimodal";
 "style.prompt.concise" = "Minimalist. Keep only core information, remove repetition and filler, break long sentences short.";
 "style.prompt.formal" = "Formal written style. Use proper wording, reduce colloquial tone, keep the text clear and well-formed.";
-"style.prompt.professional" = "Professional cleanup. Actively fix typos, homophones, ASR mistakes, and proper nouns, then turn the text into complete natural written sentences. Use numbered lists only when the raw text is clearly a list or action items.";
+"style.prompt.professional" = "Professional cleanup. Actively fix typos, homophones, ASR mistakes, and proper nouns, then turn the text into complete natural written sentences. Use bullets for unordered collections and numbering only for explicit steps.";
 "style.prompt.casual" = "Natural cleanup. Keep the tone easy, but actively fix obvious typos, homophones, and ASR mistakes without over-formalizing.";
 "style.prompt.custom" = "Format the text with my own rules: preserve meaning, fix obvious ASR mistakes, and add line breaks when useful.";
 
@@ -295,6 +295,31 @@
 "rules.subtitle" = "Additional instructions for the LLM when formatting text";
 "rules.placeholder" = "e.g. Use Arabic numerals for all numbers";
 "rules.empty" = "No rules yet";
+"dictionary.title" = "Personal Dictionary";
+"dictionary.subtitle" = "Manual terms work immediately. With learning enabled, only local edits to the text OpenType just inserted can become candidates.";
+"dictionary.auto_learning" = "Learn corrections";
+"dictionary.spoken_form" = "Recognized form";
+"dictionary.preferred_form" = "Preferred spelling";
+"dictionary.filter" = "Dictionary filter";
+"dictionary.filter.all" = "All";
+"dictionary.filter.learned" = "Learned";
+"dictionary.filter.manual" = "Manual";
+"dictionary.filter.pending" = "Pending";
+"dictionary.search" = "Search terms";
+"dictionary.empty" = "No matching terms";
+"dictionary.import" = "Import…";
+"dictionary.export" = "Export…";
+"dictionary.clear_learned" = "Clear Learned";
+"dictionary.clear_learned_confirm" = "Clear all automatically learned terms?";
+"dictionary.added" = "Term added";
+"dictionary.imported_fmt" = "Imported %d terms";
+"dictionary.import_failed" = "Could not import this dictionary";
+"dictionary.exported" = "Dictionary exported";
+"dictionary.export_failed" = "Could not export the dictionary";
+"dictionary.manual_badge" = "Manual";
+"dictionary.learned_badge_fmt" = "Learned · %d";
+"dictionary.save" = "Save";
+"dictionary.approve" = "Approve";
 
 /* ── History & Stats ── */
 "history.total" = "Total";

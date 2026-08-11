@@ -7,6 +7,7 @@ final class VoicePipeline {
     let soundPlayer = SoundPlayer()
     let audioCapture = AudioCaptureManager()
     let textInserter = TextInserter()
+    let correctionCapture = CorrectionCaptureService()
     let textProcessor = TextProcessor()
     let overlay = OverlayPanel()
     var whisperEngine: WhisperEngine?
@@ -76,6 +77,8 @@ final class VoicePipeline {
         }
 
         if appState.isDownloading { return }
+
+        correctionCapture.finishCurrentSession()
 
         if !(currentEngine?.isReady ?? false) {
             await ensureEngineLoaded(requestPermission: true)

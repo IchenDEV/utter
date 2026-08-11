@@ -9,6 +9,7 @@ extension InputSessionCoordinator {
         let memoryWindowMinutes = settings.memoryWindowMinutes
         let text: String
         let context: InputContext
+        let formatKind: TextFormatKind?
 
         switch active.mode {
         case .direct:
@@ -19,6 +20,7 @@ extension InputSessionCoordinator {
                 inputLanguage: active.inputLanguage,
                 dictionarySnapshot: dictionarySnapshot
             )
+            formatKind = nil
         case .processed:
             let screenContext = await screenContext(from: active)
             context = inputContext(for: active, screenContext: screenContext.text, mode: .processed)
@@ -28,6 +30,8 @@ extension InputSessionCoordinator {
                 memoryWindowMinutes: memoryWindowMinutes,
                 currentContext: context
             )
+            let decision = TextFormatClassifier.classify(text: raw, context: context)
+            formatKind = decision.kind
             text = await textProcessor.process(
                 text: raw,
                 options: options,
@@ -35,6 +39,7 @@ extension InputSessionCoordinator {
                 screenImage: screenContext.image,
                 memoryContext: memoryContext,
                 inputContext: context,
+                formatKind: decision.kind,
                 dictionarySnapshot: dictionarySnapshot
             )
         case .command:
@@ -46,6 +51,7 @@ extension InputSessionCoordinator {
                 memoryWindowMinutes: memoryWindowMinutes,
                 currentContext: context
             )
+            formatKind = nil
             text = await textProcessor.processCommand(
                 text: raw,
                 options: options,
@@ -66,7 +72,8 @@ extension InputSessionCoordinator {
             rawText: raw,
             processedText: text,
             wasProcessed: active.mode != .direct,
-            context: context
+            context: context,
+            formatKind: formatKind
         )
         return text
     }

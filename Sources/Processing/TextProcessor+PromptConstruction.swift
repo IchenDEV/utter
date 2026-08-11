@@ -25,6 +25,7 @@ extension TextProcessor {
         screenImageAvailable: Bool,
         memoryContext: String,
         inputContext: InputContext?,
+        formatKind: TextFormatKind? = nil,
         dictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) -> String {
         systemPromptWithPersonalContext(
@@ -35,6 +36,7 @@ extension TextProcessor {
                 screenImageAvailable: screenImageAvailable,
                 memoryContext: memoryContext,
                 inputContext: inputContext,
+                formatKind: formatKind,
                 inputLanguage: options.inputLanguage,
                 useCustomSystemPrompt: options.useCustomSystemPrompt,
                 customSystemPrompt: options.customSystemPrompt

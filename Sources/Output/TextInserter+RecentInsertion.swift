@@ -121,6 +121,35 @@ extension TextInserter {
     func forgetRecentInsertion() {
         recentInsertionAnchor = nil
     }
+
+    func correctionCaptureSeed(
+        expectedText: String,
+        context: InputContext
+    ) -> CorrectionCaptureSeed? {
+        guard let anchor = recentInsertionAnchor,
+              anchor.text == expectedText,
+              let currentText = value(of: anchor.element),
+              RecentInsertionGuard.isReplacementSafe(
+                sameTarget: true,
+                currentSelection: selectedRange(of: anchor.element),
+                insertedRange: anchor.range,
+                currentText: currentText,
+                inserted: expectedText
+              ),
+              let locator = CorrectionCaptureRegionLocator(
+                documentText: currentText,
+                insertedRange: anchor.range
+              ) else {
+            return nil
+        }
+        return CorrectionCaptureSeed(
+            processIdentifier: anchor.processIdentifier,
+            element: anchor.element,
+            insertedText: expectedText,
+            locator: locator,
+            context: context
+        )
+    }
 }
 
 private extension TextInserter {

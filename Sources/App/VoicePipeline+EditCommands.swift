@@ -100,13 +100,18 @@ extension VoicePipeline {
             return
         }
 
-        InputHistory.shared.addRecord(
+        let recordID = InputHistory.shared.addRecord(
             rawText: raw,
             processedText: replacementText,
             wasProcessed: true,
             context: context
         )
         appState.lastInsertedText = replacementText
+        beginCorrectionCapture(
+            recordID: recordID,
+            insertedText: replacementText,
+            context: context
+        )
     }
 
     private func replaceSelectedText(
@@ -142,13 +147,18 @@ extension VoicePipeline {
             return
         }
 
-        InputHistory.shared.addRecord(
+        let recordID = InputHistory.shared.addRecord(
             rawText: raw,
             processedText: replacementText,
             wasProcessed: true,
             context: context
         )
         appState.lastInsertedText = replacementText
+        beginCorrectionCapture(
+            recordID: recordID,
+            insertedText: replacementText,
+            context: context
+        )
     }
 
     private func replacementInputContext(
@@ -287,12 +297,17 @@ extension VoicePipeline {
             return
         }
 
-        InputHistory.shared.addRecord(
+        let recordID = InputHistory.shared.addRecord(
             rawText: raw,
             processedText: rewrittenText,
             wasProcessed: true,
             context: context
         )
         appState.lastInsertedText = rewrittenText
+        beginCorrectionCapture(
+            recordID: recordID,
+            insertedText: rewrittenText,
+            context: context
+        )
     }
 }

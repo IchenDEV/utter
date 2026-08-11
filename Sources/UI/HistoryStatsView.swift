@@ -158,7 +158,7 @@ struct HistoryStatsView: View {
 
     private func recordCard(_ record: InputRecord) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(record.processedText)
+            Text(record.displayText)
                 .font(.system(size: 12))
                 .lineLimit(3)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -195,7 +195,7 @@ struct HistoryStatsView: View {
 
                 Button {
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(record.processedText, forType: .string)
+                    NSPasteboard.general.setString(record.displayText, forType: .string)
                 } label: {
                     Image(systemName: "doc.on.doc")
                         .font(.system(size: 9))

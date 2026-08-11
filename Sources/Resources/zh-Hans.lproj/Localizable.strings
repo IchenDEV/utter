@@ -272,7 +272,7 @@
 "screen_context_mode.multimodal" = "多模态";
 "style.prompt.concise" = "极简。只保留核心信息，删掉修饰、重复和过渡，长句拆短。";
 "style.prompt.formal" = "正式书面。用规范表达，减少口语感，保持句子完整、逻辑顺畅。";
-"style.prompt.professional" = "专业整理。更主动纠正错别字、同音词、识别错误和专有名词，整理成完整自然的书面句子；只有原文明显是步骤或待办时才用编号。";
+"style.prompt.professional" = "专业整理。更主动纠正错别字、同音词、识别错误和专有名词，整理成完整自然的书面句子；无序清单用项目符号，只有明确步骤才用编号。";
 "style.prompt.casual" = "自然整理。保留口吻，但要主动修正常见错别字、同音词和识别错误，不过度书面化。";
 "style.prompt.custom" = "按以下要求整理：保留原意，修正明显错别字和识别错误，按需要分段换行。";
 
@@ -295,6 +295,31 @@
 "rules.subtitle" = "LLM 整理文本时遵循的额外指令";
 "rules.placeholder" = "如：所有数字用阿拉伯数字";
 "rules.empty" = "暂无规则";
+"dictionary.title" = "个人词库";
+"dictionary.subtitle" = "手动词条立即生效；开启学习后，只有 OpenType 刚插入文本里的局部修改才会成为候选。";
+"dictionary.auto_learning" = "学习纠正";
+"dictionary.spoken_form" = "识别写法";
+"dictionary.preferred_form" = "正确写法";
+"dictionary.filter" = "词库筛选";
+"dictionary.filter.all" = "全部";
+"dictionary.filter.learned" = "自动学习";
+"dictionary.filter.manual" = "手动添加";
+"dictionary.filter.pending" = "待确认";
+"dictionary.search" = "搜索词条";
+"dictionary.empty" = "没有匹配的词条";
+"dictionary.import" = "导入…";
+"dictionary.export" = "导出…";
+"dictionary.clear_learned" = "清空自动词条";
+"dictionary.clear_learned_confirm" = "清空所有自动学习词条？";
+"dictionary.added" = "词条已添加";
+"dictionary.imported_fmt" = "已导入 %d 个词条";
+"dictionary.import_failed" = "无法导入这个词库";
+"dictionary.exported" = "词库已导出";
+"dictionary.export_failed" = "无法导出词库";
+"dictionary.manual_badge" = "手动";
+"dictionary.learned_badge_fmt" = "已学习 · %d";
+"dictionary.save" = "保存";
+"dictionary.approve" = "确认";
 
 /* ── History & Stats ── */
 "history.total" = "总输入";

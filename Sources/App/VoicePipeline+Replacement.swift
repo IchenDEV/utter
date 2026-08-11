@@ -54,6 +54,7 @@ extension VoicePipeline {
             inputLanguage: processingOptions.inputLanguage,
             source: .menuBar
         )
+        let formatDecision = TextFormatClassifier.classify(text: raw, context: quickContext)
         let ocrTask = screenOCRTask
         let ocrStartedAt = screenOCRStartedAt
         screenOCRTask = nil
@@ -88,20 +89,27 @@ extension VoicePipeline {
             return
         }
 
-        InputHistory.shared.addRecord(
+        let recordID = InputHistory.shared.addRecord(
             rawText: raw,
             processedText: quickText,
             wasProcessed: false,
-            context: quickContext
+            context: quickContext,
+            formatKind: formatDecision.kind
         )
         appState.lastInsertedText = quickText
+        beginCorrectionCapture(
+            recordID: recordID,
+            insertedText: quickText,
+            context: quickContext
+        )
 
         let replacement = DeferredReplacement(
             rawText: raw,
             insertedText: quickText,
             targetApp: targetApp,
             message: L("pipeline.background_formatting"),
-            context: quickContext
+            context: quickContext,
+            formatKind: formatDecision.kind
         )
         appState.pendingReplacement = replacement
 
@@ -131,6 +139,8 @@ extension VoicePipeline {
         appState.phase = .inserting
         appState.statusMessage = L("pipeline.replacing")
 
+        correctionCapture.finishCurrentSession()
+
         let result = await textInserter.replaceRecentInsertion(
             text: formattedText,
             previouslyInserted: replacement.insertedText,
@@ -150,11 +160,23 @@ extension VoicePipeline {
 
         appState.processedText = formattedText
         appState.lastInsertedText = formattedText
-        InputHistory.shared.replaceLatestRecord(
+        let recordID = InputHistory.shared.replaceLatestRecord(
             rawText: replacement.rawText,
             processedText: formattedText,
             wasProcessed: true,
-            context: replacement.context
+            context: replacement.context,
+            formatKind: replacement.formatKind
+        )
+        beginCorrectionCapture(
+            recordID: recordID,
+            insertedText: formattedText,
+            context: replacement.context ?? InputContext(
+                appName: replacement.targetAppName,
+                bundleIdentifier: replacement.targetBundleIdentifier,
+                outputMode: .processed,
+                inputLanguage: appState.settings.inputLanguage,
+                source: .menuBar
+            )
         )
         appState.clearPendingReplacement()
         appState.phase = .done
@@ -208,6 +230,7 @@ extension VoicePipeline {
             screenImage: screenContext.image,
             memoryContext: memoryContext,
             inputContext: inputContext,
+            formatKind: currentReplacement.formatKind,
             allowsPreparedFallback: false,
             allowsGuardFallback: false,
             dictionarySnapshot: dictionarySnapshot

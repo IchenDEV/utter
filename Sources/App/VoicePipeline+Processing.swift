@@ -174,6 +174,8 @@ extension VoicePipeline {
             memoryWindowMinutes: memoryWindowMinutes,
             currentContext: inputContext
         )
+        let formatDecision = TextFormatClassifier.classify(text: raw, context: inputContext)
+        Log.info("[VoicePipeline] format kind \(formatDecision.kind.rawValue) (\(formatDecision.reason.rawValue))")
         let text = await textProcessor.process(
             text: raw,
             options: processingOptions,
@@ -181,10 +183,11 @@ extension VoicePipeline {
             screenImage: screenContext.image,
             memoryContext: memoryContext,
             inputContext: inputContext,
+            formatKind: formatDecision.kind,
             dictionarySnapshot: dictionarySnapshot
         )
         recordFormattingDuration(started, label: "Smart Format")
-        return VoicePipelineOutput(text: text, context: inputContext)
+        return VoicePipelineOutput(text: text, context: inputContext, formatKind: formatDecision.kind)
     }
 
     private func processCommand(
@@ -273,19 +276,34 @@ extension VoicePipeline {
         let wasProcessed = inputMode.isTranslation
             || settings.outputMode == .processed
             || settings.outputMode == .command
-        InputHistory.shared.addRecord(
+        let recordID = InputHistory.shared.addRecord(
             rawText: raw,
             processedText: finalText,
             wasProcessed: wasProcessed,
-            context: output.context
+            context: output.context,
+            formatKind: output.formatKind
         )
         appState.lastInsertedText = finalText
+        if !inputMode.isTranslation {
+            beginCorrectionCapture(
+                recordID: recordID,
+                insertedText: finalText,
+                context: output.context
+            )
+        }
     }
 }
 
 struct VoicePipelineOutput {
     let text: String
     let context: InputContext
+    let formatKind: TextFormatKind?
+
+    init(text: String, context: InputContext, formatKind: TextFormatKind? = nil) {
+        self.text = text
+        self.context = context
+        self.formatKind = formatKind
+    }
 }
 
 private enum VoicePipelineStop: Error {
