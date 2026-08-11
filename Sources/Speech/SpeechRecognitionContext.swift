@@ -20,8 +20,23 @@ struct SpeechRecognitionContext: Equatable, Sendable {
     }
 
     init(dictionaryEntries: [DictionaryEntry]) {
-        self.init(phrases: dictionaryEntries.compactMap { entry -> String? in
-            guard entry.enabled else { return nil }
+        let ranked = dictionaryEntries.enumerated().sorted { lhs, rhs in
+            if lhs.element.origin != rhs.element.origin {
+                return lhs.element.origin == .manual
+            }
+            if lhs.element.origin == .manual {
+                return lhs.offset < rhs.offset
+            }
+            if lhs.element.evidenceCount != rhs.element.evidenceCount {
+                return lhs.element.evidenceCount > rhs.element.evidenceCount
+            }
+            let lhsDate = lhs.element.lastSeenAt ?? lhs.element.createdAt
+            let rhsDate = rhs.element.lastSeenAt ?? rhs.element.createdAt
+            if lhsDate != rhsDate { return lhsDate > rhsDate }
+            return lhs.offset < rhs.offset
+        }.map(\.element)
+        self.init(phrases: ranked.compactMap { entry -> String? in
+            guard entry.isEffective else { return nil }
             let replacement = entry.replacement.trimmingCharacters(in: .whitespacesAndNewlines)
             return replacement.isEmpty ? nil : replacement
         })

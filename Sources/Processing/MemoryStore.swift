@@ -33,7 +33,7 @@ enum MemoryStore {
         guard !selected.isEmpty else { return "" }
 
         let lines = selected.map { record in
-            let text = record.wasProcessed ? record.processedText : record.rawText
+            let text = record.userFinalText ?? (record.wasProcessed ? record.processedText : record.rawText)
             return "[\(formatTime(record.date))\(formatContext(record.context))] \(text)"
         }
 

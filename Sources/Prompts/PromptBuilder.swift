@@ -8,6 +8,7 @@ enum PromptBuilder {
         screenImageAvailable: Bool = false,
         memoryContext: String = "",
         inputContext: InputContext? = nil,
+        formatKind: TextFormatKind? = nil,
         inputLanguage: InputLanguage = .chinese,
         useCustomSystemPrompt: Bool? = nil,
         customSystemPrompt: String? = nil
@@ -21,6 +22,12 @@ enum PromptBuilder {
             stylePrompt: stylePrompt,
             inputLanguage: inputLanguage
         )
+        if let formatKind {
+            parts.append(PromptCatalog.formatContractSection(
+                kind: formatKind,
+                inputLanguage: inputLanguage
+            ))
+        }
         parts.append(contentsOf: PromptCatalog.processingContextSections(
             screenContext: screenContext,
             screenImageAvailable: screenImageAvailable,

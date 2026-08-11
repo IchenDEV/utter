@@ -9,19 +9,43 @@ struct InputRecord: Codable, Identifiable {
     let processedCharCount: Int
     let wasProcessed: Bool
     let context: InputContext?
+    let userFinalText: String?
+    let formatKind: TextFormatKind?
 
-    init(rawText: String, processedText: String, wasProcessed: Bool, context: InputContext? = nil) {
+    var displayText: String {
+        userFinalText ?? processedText
+    }
+
+    init(
+        rawText: String,
+        processedText: String,
+        wasProcessed: Bool,
+        context: InputContext? = nil,
+        userFinalText: String? = nil,
+        formatKind: TextFormatKind? = nil
+    ) {
         self.init(
             id: UUID(),
             date: Date(),
             rawText: rawText,
             processedText: processedText,
             wasProcessed: wasProcessed,
-            context: context
+            context: context,
+            userFinalText: userFinalText,
+            formatKind: formatKind
         )
     }
 
-    init(id: UUID, date: Date, rawText: String, processedText: String, wasProcessed: Bool, context: InputContext? = nil) {
+    init(
+        id: UUID,
+        date: Date,
+        rawText: String,
+        processedText: String,
+        wasProcessed: Bool,
+        context: InputContext? = nil,
+        userFinalText: String? = nil,
+        formatKind: TextFormatKind? = nil
+    ) {
         self.id = id
         self.date = date
         self.rawText = rawText
@@ -30,10 +54,13 @@ struct InputRecord: Codable, Identifiable {
         self.processedCharCount = processedText.count
         self.wasProcessed = wasProcessed
         self.context = context
+        self.userFinalText = userFinalText
+        self.formatKind = formatKind
     }
 
     enum CodingKeys: String, CodingKey {
         case id, date, rawText, processedText, rawCharCount, processedCharCount, wasProcessed, context
+        case userFinalText, formatKind
     }
 
     init(from decoder: Decoder) throws {
@@ -46,6 +73,8 @@ struct InputRecord: Codable, Identifiable {
         processedCharCount = try container.decodeIfPresent(Int.self, forKey: .processedCharCount) ?? processedText.count
         wasProcessed = try container.decode(Bool.self, forKey: .wasProcessed)
         context = try container.decodeIfPresent(InputContext.self, forKey: .context)
+        userFinalText = try container.decodeIfPresent(String.self, forKey: .userFinalText)
+        formatKind = try container.decodeIfPresent(TextFormatKind.self, forKey: .formatKind)
     }
 
     func matchesSearch(_ query: String) -> Bool {
@@ -55,6 +84,7 @@ struct InputRecord: Codable, Identifiable {
         return [
             rawText,
             processedText,
+            userFinalText,
             context?.appName,
             context?.bundleIdentifier,
             context?.windowTitle,
@@ -98,20 +128,46 @@ final class InputHistory: ObservableObject {
         pruneExpired()
     }
 
-    func addRecord(rawText: String, processedText: String, wasProcessed: Bool, context: InputContext? = nil) {
-        let record = InputRecord(rawText: rawText, processedText: processedText, wasProcessed: wasProcessed, context: context)
+    @discardableResult
+    func addRecord(
+        rawText: String,
+        processedText: String,
+        wasProcessed: Bool,
+        context: InputContext? = nil,
+        formatKind: TextFormatKind? = nil
+    ) -> UUID {
+        let record = InputRecord(
+            rawText: rawText,
+            processedText: processedText,
+            wasProcessed: wasProcessed,
+            context: context,
+            formatKind: formatKind
+        )
         records.insert(record, at: 0)
         if records.count > Self.maxRecords {
             records = Array(records.prefix(Self.maxRecords))
         }
         pruneExpired()
         save()
+        return record.id
     }
 
-    func replaceLatestRecord(rawText: String, processedText: String, wasProcessed: Bool, context: InputContext? = nil) {
+    @discardableResult
+    func replaceLatestRecord(
+        rawText: String,
+        processedText: String,
+        wasProcessed: Bool,
+        context: InputContext? = nil,
+        formatKind: TextFormatKind? = nil
+    ) -> UUID {
         guard let latest = records.first, latest.rawText == rawText else {
-            addRecord(rawText: rawText, processedText: processedText, wasProcessed: wasProcessed, context: context)
-            return
+            return addRecord(
+                rawText: rawText,
+                processedText: processedText,
+                wasProcessed: wasProcessed,
+                context: context,
+                formatKind: formatKind
+            )
         }
 
         records[0] = InputRecord(
@@ -120,7 +176,27 @@ final class InputHistory: ObservableObject {
             rawText: rawText,
             processedText: processedText,
             wasProcessed: wasProcessed,
-            context: context ?? latest.context
+            context: context ?? latest.context,
+            formatKind: formatKind ?? latest.formatKind
+        )
+        save()
+        return latest.id
+    }
+
+    func updateUserFinalText(recordID: UUID, text: String) {
+        guard let index = records.firstIndex(where: { $0.id == recordID }) else { return }
+        let record = records[index]
+        let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalText = normalized.isEmpty || normalized == record.processedText ? nil : normalized
+        records[index] = InputRecord(
+            id: record.id,
+            date: record.date,
+            rawText: record.rawText,
+            processedText: record.processedText,
+            wasProcessed: record.wasProcessed,
+            context: record.context,
+            userFinalText: finalText,
+            formatKind: record.formatKind
         )
         save()
     }
@@ -157,7 +233,7 @@ final class InputHistory: ObservableObject {
             totalProcessedChars: totalProcessed,
             charsSaved: max(0, totalRaw - totalProcessed),
             todayInputs: todayRecords.count,
-            todayChars: todayRecords.reduce(0) { $0 + $1.processedCharCount },
+            todayChars: todayRecords.reduce(0) { $0 + $1.displayText.count },
             streakDays: streak
         )
     }

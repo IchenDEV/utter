@@ -22,6 +22,7 @@ struct DeferredReplacement {
     var state: DeferredReplacementState
     var message: String
     var context: InputContext?
+    let formatKind: TextFormatKind
 
     init(
         rawText: String,
@@ -29,6 +30,7 @@ struct DeferredReplacement {
         targetApp: NSRunningApplication?,
         message: String,
         context: InputContext? = nil,
+        formatKind: TextFormatKind = .plainParagraph,
         createdAt: Date = Date(),
         expirationInterval: TimeInterval = DeferredReplacementPolicy.expirationInterval
     ) {
@@ -44,6 +46,7 @@ struct DeferredReplacement {
         self.state = .formatting
         self.message = message
         self.context = context
+        self.formatKind = formatKind
     }
 
     var targetApplication: NSRunningApplication? {

@@ -26,23 +26,23 @@ enum PromptStylePrompts {
         case (.cantonese, .casual):
             return "风格：自然粤语、直接。保留粤语口语感和必要语气词，主动修正明显粤语误识别、断句和专有名词；不要默认改成普通话书面中文。"
         case (.auto, .professional):
-            return "风格：自动语言专业整理。先判断原文主要语言和混排方式，再做纠错和表达整理。保持原语言；中文、英文、日文、韩文、粤语和中英日韩混排都要自然。只有原文明显是步骤、清单或待办时，才输出 1. 2. 3.。"
+            return "风格：自动语言专业整理。先判断原文主要语言和混排方式，再做纠错和表达整理。保持原语言；中文、英文、日文、韩文、粤语和中英日韩混排都要自然。无序清单用项目符号，只有明确顺序或步骤时才使用 1. 2. 3.。"
         case (.chinese, .professional):
-            return "风格：专业整理。先做忠实纠错，再整理表达。对有明确上下文依据的同音错字、近音错字、专有名词大小写和中英混排要主动修正；把已完整表达的口语整理成自然书面句子，没说完的片段仍保持未完。结构清楚；只有原文明显是步骤、清单或待办时，才输出 1. 2. 3.。"
+            return "风格：专业整理。先做忠实纠错，再整理表达。对有明确上下文依据的同音错字、近音错字、专有名词大小写和中英混排要主动修正；把已完整表达的口语整理成自然书面句子，没说完的片段仍保持未完。结构清楚；无序清单用项目符号，只有明确顺序或步骤时才使用 1. 2. 3.。"
         case (.cantonese, .professional):
-            return "风格：粤语专业整理。先做粤语误识别纠错，再整理表达。保留自然粤语书面表达、必要语气词和中英混排；对专有名词、技术词和英文大小写要更主动。只有原文明显是步骤、清单或待办时，才输出 1. 2. 3.。"
+            return "风格：粤语专业整理。先做粤语误识别纠错，再整理表达。保留自然粤语书面表达、必要语气词和中英混排；对专有名词、技术词和英文大小写要更主动。无序清单用项目符号，只有明确顺序或步骤时才使用 1. 2. 3.。"
         case (.auto, .custom), (.chinese, .custom), (.cantonese, .custom):
             return ""
         case (.english, .professional):
-            return "Style: professional cleanup. Apply faithful correction before polishing. Actively fix homophones, ASR substitutions, proper nouns, capitalization, and mixed-language terms when context clearly supports the change. Turn fully expressed speech into natural written sentences, but keep unfinished fragments unfinished. Keep the structure crisp. Use 1. 2. 3. only when the raw text is clearly a list, steps, or action items."
+            return "Style: professional cleanup. Apply faithful correction before polishing. Actively fix homophones, ASR substitutions, proper nouns, capitalization, and mixed-language terms when context clearly supports the change. Turn fully expressed speech into natural written sentences, but keep unfinished fragments unfinished. Keep the structure crisp. Use bullets for unordered collections and 1. 2. 3. only for explicit sequences or steps."
         case (.english, .casual):
             return "Style: natural and direct. Keep an easy spoken tone, but still actively fix obvious typos, homophones, sentence breaks, and small wording mistakes. Do not leave clear ASR errors in place."
         case (.japanese, .professional):
-            return "スタイル：専門的に整理。忠実な補正を先に行い、その後で表現を整える。文脈に明確な根拠がある固有名詞、英字表記、誤認識、言い直しを補正し、最後まで述べられた内容だけを自然で明確な日本語にする。言いかけは未完のまま残す。原文が明らかに手順、リスト、TODO の場合だけ 1. 2. 3. を使う。"
+            return "スタイル：専門的に整理。忠実な補正を先に行い、その後で表現を整える。文脈に明確な根拠がある固有名詞、英字表記、誤認識、言い直しを補正し、最後まで述べられた内容だけを自然で明確な日本語にする。言いかけは未完のまま残す。順序のないリストは箇条書き、明確な手順だけ 1. 2. 3. を使う。"
         case (.japanese, .casual):
             return "スタイル：自然で直接的。話し言葉の軽さは残しつつ、明らかな誤認識、同音語、句読点、文の区切りは積極的に直す。"
         case (.korean, .professional):
-            return "스타일: 전문적으로 정리. 먼저 충실하게 보정하고 그다음 표현을 다듬는다. 문맥에 분명한 근거가 있는 고유명사, 영문 표기, 오인식, 말 바꿈을 바로잡고 끝까지 표현된 내용만 자연스럽고 명확한 한국어로 만든다. 미완성 발화는 그대로 미완성으로 둔다. 원문이 명확히 단계, 목록, 할 일일 때만 1. 2. 3.을 사용한다."
+            return "스타일: 전문적으로 정리. 먼저 충실하게 보정하고 그다음 표현을 다듬는다. 문맥에 분명한 근거가 있는 고유명사, 영문 표기, 오인식, 말 바꿈을 바로잡고 끝까지 표현된 내용만 자연스럽고 명확한 한국어로 만든다. 미완성 발화는 그대로 미완성으로 둔다. 순서 없는 목록은 글머리표로, 명확한 단계만 1. 2. 3.으로 쓴다."
         case (.korean, .casual):
             return "스타일: 자연스럽고 직접적으로. 말의 편안함은 유지하되 명백한 오인식, 동음이의어, 문장 부호, 문장 경계는 적극적으로 바로잡는다."
         case (.english, .custom), (.japanese, .custom), (.korean, .custom):
@@ -81,9 +81,9 @@ enum PromptStylePrompts {
 
             原文：这周重点一个是稳定注册流程一个是补完埋点最后把文档更新掉
             输出：
-            1. 稳定注册流程。
-            2. 补完埋点。
-            3. 更新文档。
+            - 稳定注册流程。
+            - 补完埋点。
+            - 更新文档。
 
             专业整理强纠错示例：
             原文：把 open type 的 hot key 文案改一下不要影响菜单蓝
@@ -122,9 +122,9 @@ enum PromptStylePrompts {
 
             Raw: this week the priorities are stabilizing signup finishing the tracking work and updating the docs
             Output:
-            1. Stabilize signup.
-            2. Finish the tracking work.
-            3. Update the docs.
+            - Stabilize signup.
+            - Finish the tracking work.
+            - Update the docs.
 
             Strong correction examples:
             Raw: update the open type hot key copy and do not affect the menu bore

@@ -67,12 +67,17 @@ extension VoicePipeline {
             return
         }
 
-        InputHistory.shared.addRecord(
+        let recordID = InputHistory.shared.addRecord(
             rawText: raw,
             processedText: rewrittenText,
             wasProcessed: true,
             context: context
         )
         appState.lastInsertedText = rewrittenText
+        beginCorrectionCapture(
+            recordID: recordID,
+            insertedText: rewrittenText,
+            context: context
+        )
     }
 }

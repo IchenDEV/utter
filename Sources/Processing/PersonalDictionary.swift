@@ -1,12 +1,5 @@
 import Foundation
 
-struct DictionaryEntry: Codable, Identifiable, Sendable {
-    var id = UUID()
-    var original: String
-    var replacement: String
-    var enabled: Bool = true
-}
-
 struct EditRule: Codable, Identifiable, Sendable {
     var id = UUID()
     var description: String
@@ -21,7 +14,7 @@ struct PersonalDictionarySnapshot: Sendable {
         let rules = entries.enumerated().compactMap { offset, entry -> ReplacementRule? in
             let original = entry.original
             let replacement = entry.replacement
-            guard entry.enabled,
+            guard entry.isEffective,
                   !original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 return nil
             }
@@ -59,7 +52,7 @@ struct PersonalDictionarySnapshot: Sendable {
 
     var activeEntriesDescription: String {
         entries
-            .filter(\.enabled)
+            .filter(\.isEffective)
             .compactMap { entry -> String? in
                 let original = entry.original.trimmingCharacters(in: .whitespacesAndNewlines)
                 let replacement = entry.replacement.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -80,7 +73,7 @@ struct PersonalDictionarySnapshot: Sendable {
     var protectedTerms: [String] {
         var seen = Set<String>()
         return entries.compactMap { entry in
-            guard entry.enabled else { return nil }
+            guard entry.isEffective else { return nil }
             let term = entry.replacement.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !term.isEmpty,
                   seen.insert(term.lowercased()).inserted else {
@@ -130,9 +123,11 @@ final class PersonalDictionary: ObservableObject {
     private let entriesURL: URL
     private let rulesURL: URL
 
-    private init() {
-        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("OpenType", isDirectory: true)
+    init(directoryURL: URL? = nil) {
+        let dir = directoryURL ?? FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first!.appendingPathComponent("OpenType", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         entriesURL = dir.appendingPathComponent("dictionary.json")
@@ -156,13 +151,68 @@ final class PersonalDictionary: ObservableObject {
         PersonalDictionarySnapshot(entries: entries, editRules: editRules)
     }
 
-    func addEntry(original: String, replacement: String) {
-        entries.append(DictionaryEntry(original: original, replacement: replacement))
+    @discardableResult
+    func addEntry(original: String, replacement: String) -> UUID? {
+        let original = normalized(original)
+        let replacement = normalized(replacement)
+        guard !original.isEmpty, !replacement.isEmpty, original != replacement else { return nil }
+
+        if let index = entries.firstIndex(where: {
+            $0.original.caseInsensitiveCompare(original) == .orderedSame
+        }) {
+            entries[index].original = original
+            entries[index].replacement = replacement
+            entries[index].enabled = true
+            entries[index].origin = .manual
+            entries[index].status = .active
+            entries[index].confidence = 1
+            entries[index].evidenceCount = max(1, entries[index].evidenceCount)
+            save()
+            return entries[index].id
+        }
+
+        let entry = DictionaryEntry(original: original, replacement: replacement)
+        entries.append(entry)
         save()
+        return entry.id
     }
 
     func removeEntry(at offsets: IndexSet) {
         entries.remove(atOffsets: offsets)
+        save()
+    }
+
+    func removeEntry(id: UUID) {
+        entries.removeAll { $0.id == id }
+        save()
+    }
+
+    func updateEntry(id: UUID, original: String, replacement: String) {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        let original = normalized(original)
+        let replacement = normalized(replacement)
+        guard !original.isEmpty, !replacement.isEmpty, original != replacement else { return }
+        entries[index].original = original
+        entries[index].replacement = replacement
+        save()
+    }
+
+    func setEntryEnabled(id: UUID, enabled: Bool) {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        entries[index].enabled = enabled
+        save()
+    }
+
+    func approveEntry(id: UUID) {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        let original = entries[index].original
+        for otherIndex in entries.indices where otherIndex != index
+            && entries[otherIndex].origin == .learned
+            && entries[otherIndex].original.caseInsensitiveCompare(original) == .orderedSame {
+            entries[otherIndex].status = .pending
+        }
+        entries[index].status = .active
+        entries[index].enabled = true
         save()
     }
 
@@ -178,24 +228,32 @@ final class PersonalDictionary: ObservableObject {
 
     func save() {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         if let data = try? encoder.encode(entries) {
-            try? data.write(to: entriesURL)
+            try? data.write(to: entriesURL, options: .atomic)
         }
         if let data = try? encoder.encode(editRules) {
-            try? data.write(to: rulesURL)
+            try? data.write(to: rulesURL, options: .atomic)
         }
     }
 
     private func load() {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         if let data = try? Data(contentsOf: entriesURL),
-           let decoded = try? JSONDecoder().decode([DictionaryEntry].self, from: data) {
+           let decoded = try? decoder.decode([DictionaryEntry].self, from: data) {
             entries = decoded
         }
         if let data = try? Data(contentsOf: rulesURL),
-           let decoded = try? JSONDecoder().decode([EditRule].self, from: data) {
+           let decoded = try? decoder.decode([EditRule].self, from: data) {
             editRules = decoded
         }
+    }
+
+    private func normalized(_ text: String) -> String {
+        text.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
 }

@@ -275,6 +275,7 @@ final class AppSettings: ObservableObject {
     @Published var historyRetention: HistoryRetention
     @Published var enableMemory: Bool
     @Published var memoryWindowMinutes: Int
+    @Published var enableCorrectionLearning: Bool
     @Published var useCustomSystemPrompt: Bool
     @Published var customSystemPrompt: String
     @Published var useRemoteLLM: Bool
@@ -309,7 +310,7 @@ final class AppSettings: ObservableObject {
         case enableStreamingRecognitionBeta
         case inputLanguage, translationTargetLanguage
         case useScreenContext, screenContextMode, enableInstantInsert, hasCompletedOnboarding, uiLanguage, historyRetention
-        case enableMemory, memoryWindowMinutes
+        case enableMemory, memoryWindowMinutes, enableCorrectionLearning
         case useCustomSystemPrompt, customSystemPrompt
         case useRemoteLLM, remoteProvider, remoteAPIKey, remoteBaseURL, remoteModel
         case menuBarIcon, appIconAppearance
@@ -373,6 +374,7 @@ final class AppSettings: ObservableObject {
         historyRetention = HistoryRetention(rawValue: ud.string(forKey: Key.historyRetention.rawValue) ?? "") ?? .forever
         enableMemory = ud.object(forKey: Key.enableMemory.rawValue) as? Bool ?? true
         memoryWindowMinutes = (ud.integer(forKey: Key.memoryWindowMinutes.rawValue)).nonZeroInt ?? 30
+        enableCorrectionLearning = ud.object(forKey: Key.enableCorrectionLearning.rawValue) as? Bool ?? true
         useCustomSystemPrompt = ud.bool(forKey: Key.useCustomSystemPrompt.rawValue)
         customSystemPrompt = ud.string(forKey: Key.customSystemPrompt.rawValue) ?? ""
         useRemoteLLM = ud.bool(forKey: Key.useRemoteLLM.rawValue)
@@ -439,6 +441,9 @@ final class AppSettings: ObservableObject {
         $historyRetention.dropFirst().sink { [defaults] in defaults.set($0.rawValue, forKey: Key.historyRetention.rawValue) }.store(in: &cancellables)
         $enableMemory.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.enableMemory.rawValue) }.store(in: &cancellables)
         $memoryWindowMinutes.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.memoryWindowMinutes.rawValue) }.store(in: &cancellables)
+        $enableCorrectionLearning.dropFirst().sink {
+            [defaults] in defaults.set($0, forKey: Key.enableCorrectionLearning.rawValue)
+        }.store(in: &cancellables)
         $useCustomSystemPrompt.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.useCustomSystemPrompt.rawValue) }.store(in: &cancellables)
         $customSystemPrompt.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.customSystemPrompt.rawValue) }.store(in: &cancellables)
         $useRemoteLLM.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.useRemoteLLM.rawValue) }.store(in: &cancellables)
