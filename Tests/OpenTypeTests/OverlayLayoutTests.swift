@@ -34,16 +34,18 @@ final class OverlayLayoutTests: XCTestCase {
         XCTAssertEqual(layout.outerCornerRadius, 22)
     }
 
-    func testProcessingOverlayLeavesRoomForThinProgressTrack() {
+    func testWorkingOverlaysKeepTheRecordingCapsuleHeight() {
         let appState = AppState()
-        appState.phase = .processing
 
-        let layout = OverlayLayout(appState: appState)
+        for phase in [AppPhase.transcribing, .processing, .inserting] {
+            appState.phase = phase
+            let layout = OverlayLayout(appState: appState)
 
-        XCTAssertEqual(layout.width, 216)
-        XCTAssertEqual(layout.height, 48)
-        XCTAssertEqual(layout.outerCornerRadius, 18)
-        XCTAssertFalse(layout.isInteractive)
+            XCTAssertEqual(layout.width, 216)
+            XCTAssertEqual(layout.height, 40)
+            XCTAssertEqual(layout.outerCornerRadius, layout.height / 2)
+            XCTAssertFalse(layout.isInteractive)
+        }
     }
 
     func testOverlayPlacementCentersAboveVisibleScreenBottom() {

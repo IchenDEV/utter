@@ -38,11 +38,11 @@ struct OverlayLayout: Equatable {
             stackSpacing = 6
         case .transcribing, .processing, .inserting:
             width = 216
-            height = 48
-            outerCornerRadius = 18
+            height = 40
+            outerCornerRadius = 20
             horizontalPadding = 12
             topPadding = 10
-            bottomPadding = 9
+            bottomPadding = 10
             stackSpacing = 6
         case .error:
             width = 288
@@ -74,18 +74,6 @@ struct OverlayContentView: View {
     let onCancel: () -> Void
     let onConfirm: () -> Void
 
-    @State private var fakeProgress: Double = 0
-    @State private var progressTimer: Timer?
-
-    private var showsProgress: Bool {
-        switch appState.phase {
-        case .transcribing, .processing, .inserting:
-            return true
-        default:
-            return false
-        }
-    }
-
     private var livePreview: String? {
         guard appState.isRecording else { return nil }
         let text = appState.rawTranscription.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -114,10 +102,6 @@ struct OverlayContentView: View {
             if let livePreview {
                 livePreviewText(livePreview)
             }
-
-            if showsProgress {
-                progressBar
-            }
         }
         .padding(.horizontal, layout.horizontalPadding)
         .padding(.bottom, layout.bottomPadding)
@@ -126,21 +110,12 @@ struct OverlayContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous))
         .compositingGroup()
         .onAppear {
-            handlePhaseChange(appState.phase)
             onLayoutChange(layout)
-        }
-        .onChange(of: appState.phase) { _, newPhase in
-            handlePhaseChange(newPhase)
         }
         .onChange(of: layout) { _, newLayout in
             onLayoutChange(newLayout)
         }
-        .onDisappear {
-            progressTimer?.invalidate()
-            progressTimer = nil
-        }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: layout)
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: fakeProgress)
     }
 
     private var statusRow: some View {
@@ -186,22 +161,6 @@ struct OverlayContentView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var progressBar: some View {
-        GeometryReader { geo in
-            Capsule()
-                .fill(.white.opacity(0.1))
-                .frame(height: 2)
-                .overlay(alignment: .leading) {
-                    Capsule()
-                        .fill(.white.opacity(0.66))
-                        .frame(width: geo.size.width * fakeProgress, height: 2)
-                }
-        }
-        .frame(height: 2)
-        .padding(.leading, 24)
-        .accessibilityHidden(true)
-    }
-
     private var panelBackground: some View {
         let shape = RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous)
         return ZStack {
@@ -217,36 +176,6 @@ struct OverlayContentView: View {
                 .white.opacity(colorSchemeContrast == .increased ? 0.28 : 0.12),
                 lineWidth: colorSchemeContrast == .increased ? 1 : 0.5
             )
-        }
-    }
-
-    private func handlePhaseChange(_ phase: AppPhase) {
-        progressTimer?.invalidate()
-        progressTimer = nil
-
-        switch phase {
-        case .transcribing:
-            fakeProgress = 0.08
-            startProgressTimer(target: 0.34, step: 0.04, interval: 0.16)
-        case .processing:
-            if fakeProgress < 0.34 { fakeProgress = 0.34 }
-            startProgressTimer(target: 0.92, step: 0.015, interval: 0.28)
-        case .inserting:
-            fakeProgress = 0.96
-        case .done:
-            fakeProgress = 1.0
-        default:
-            fakeProgress = 0
-        }
-    }
-
-    private func startProgressTimer(target: Double, step: Double, interval: TimeInterval) {
-        progressTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
-            Task { @MainActor in
-                if fakeProgress < target {
-                    fakeProgress = min(fakeProgress + step, target)
-                }
-            }
         }
     }
 
