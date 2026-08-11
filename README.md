@@ -1,6 +1,6 @@
 <div align="center">
 
-# OpenType
+# Utter
 
 **Local AI-powered voice input for macOS menu bar**
 
@@ -26,7 +26,7 @@
 
 ## Overview
 
-**OpenType** is a macOS menu bar app for AI-powered voice input and dictation. It supports both fully local on-device inference and remote LLM APIs. Press a hotkey to start recording, release to transcribe, and the result is typed directly into whatever app you're using.
+**Utter** is a macOS menu bar app for AI-powered voice input and dictation. It supports both fully local on-device inference and remote LLM APIs. Press a hotkey to start recording, release to transcribe, and the result is typed directly into whatever app you're using.
 
 Three output modes are available:
 
@@ -41,7 +41,7 @@ Three output modes are available:
 | **Multiple Speech Engines** | Apple Speech, WhisperKit, Doubao ASR, Qwen3-ASR, or MiMo-V2.5-ASR |
 | **Smart Text Processing** | Local MLX Qwen2.5/Qwen3 or remote LLM infers spoken intent — contextual cleanup, "scratch that" restarts, self-correction handling, spoken punctuation, technical terms, numbers/ranges/units, and structured formatting |
 | **LLM-Owned Spoken Formatting** | Spoken casing, no-space dictation, identifiers, file paths, shortcuts, emoji, Markdown tasks, dates/times, quantities, units, formulas, fractions, and digit sequences are handled by the Smart Format / Voice Command prompts instead of local hardcoded rewrite rules |
-| **Voice Edit Commands** | In Voice Command mode, an LLM classifies safe structured actions for replacing, undoing, proofreading, titling, summarizing, drafting replies, making meeting notes, extracting key points/decisions/questions/risks/deadlines/owners/action items, rewriting tone, expanding, making tables/lists, or deleting the previous OpenType insertion or selected text |
+| **Voice Edit Commands** | In Voice Command mode, an LLM classifies safe structured actions for replacing, undoing, proofreading, titling, summarizing, drafting replies, making meeting notes, extracting key points/decisions/questions/risks/deadlines/owners/action items, rewriting tone, expanding, making tables/lists, or deleting the previous Utter insertion or selected text |
 | **Verbatim & Preview Boundary** | Verbatim mode, streaming HUD, integration partials, and instant-insert drafts keep ASR text close to raw output with only dictionary, whitespace, duplicate, and non-speech-artifact cleanup |
 | **Remote LLM Support** | OpenAI, Claude (Anthropic format), Gemini, OpenRouter, SiliconFlow, Doubao, Bailian, MiniMax (CN & Global) |
 | **Global Hotkey** | Configurable key (Fn/Ctrl/Shift/Option) with long-press, double-tap, or single-tap activation |
@@ -66,11 +66,11 @@ Three output modes are available:
 
 ### Download
 
-Grab the latest `.dmg` from [Releases](https://github.com/IchenDEV/opentype/releases), open it, and drag **OpenType.app** to Applications.
+Grab the latest `.dmg` from [Releases](https://github.com/IchenDEV/opentype/releases), open it, and drag **Utter.app** to Applications.
 
 > **"Cannot verify the developer" on first launch?** The app is not notarized by Apple. Before first run, execute in Terminal:
 > ```bash
-> xattr -cr /Applications/OpenType.app
+> xattr -cr /Applications/Utter.app
 > ```
 > Or go to System Settings → Privacy & Security and click "Open Anyway".
 
@@ -91,9 +91,11 @@ bash scripts/build-and-run.sh --verify
 open Package.swift
 ```
 
+The public app is `Utter.app`. The Swift package product remains `OpenType` so existing source integrations and upgrade paths continue to work.
+
 ## First Run
 
-1. Launch OpenType — it appears as a waveform icon in the menu bar
+1. Launch Utter — it appears as a waveform icon in the menu bar
 2. The onboarding wizard guides you through permissions and model setup
 3. Grant **Microphone** and **Accessibility** permissions (required)
 4. Wait for the LLM model to download (~335 MB, one-time)
@@ -111,7 +113,7 @@ open Package.swift
 
 ## Remote LLM Providers
 
-OpenType supports both **OpenAI-compatible** and **Anthropic** API formats:
+Utter supports both **OpenAI-compatible** and **Anthropic** API formats:
 
 | Provider | API Format | Base URL |
 |---|---|---|

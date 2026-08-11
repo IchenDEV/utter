@@ -90,8 +90,13 @@ func drawText(_ text: String, x: CGFloat, y: CGFloat, font: NSFont, color: NSCol
     ]
     let str = NSString(string: text)
     let size = str.size(withAttributes: attrs)
-    let rect = CGRect(x: x, y: y, width: size.width, height: size.height)
+    let originX = align == .right ? x - size.width : x
+    let rect = CGRect(x: originX, y: y, width: size.width, height: size.height)
+    ctx.saveGState()
+    ctx.translateBy(x: 0, y: rect.minY * 2 + rect.height)
+    ctx.scaleBy(x: 1, y: -1)
     str.draw(in: rect, withAttributes: attrs)
+    ctx.restoreGState()
 }
 
 let serifBold = NSFont(name: "NewYork-Bold", size: 60)
@@ -120,10 +125,12 @@ let iconRect = CGRect(x: iconX, y: iconY, width: iconBox, height: iconBox)
 ctx.saveGState()
 let clip = NSBezierPath(roundedRect: iconRect, xRadius: 18, yRadius: 18)
 clip.addClip()
+ctx.translateBy(x: 0, y: iconRect.minY * 2 + iconRect.height)
+ctx.scaleBy(x: 1, y: -1)
 icon.draw(in: iconRect)
 ctx.restoreGState()
 
-drawText("OPENTYPE", x: CGFloat(iconX + iconBox + 22), y: CGFloat(iconY + 26), font: sansBold, color: paper)
+drawText("UTTER", x: CGFloat(iconX + iconBox + 22), y: CGFloat(iconY + 26), font: sansBold, color: paper)
 drawText("FOR macOS", x: CGFloat(iconX + iconBox + 22), y: CGFloat(iconY + iconBox + 8), font: monoBold, color: muted2)
 
 // MARK: Headline
@@ -137,7 +144,12 @@ let subAttrs: [NSAttributedString.Key: Any] = [
     .paragraphStyle: { let p = NSMutableParagraphStyle(); p.lineSpacing = 4; return p }()
 ]
 let sub = NSString(string: "Local AI voice input for macOS. Hold a key, speak naturally, and polished text appears at your cursor — on-device speech recognition and LLM cleanup.")
-sub.draw(in: CGRect(x: 80, y: 372, width: 1040, height: 90), withAttributes: subAttrs)
+let subRect = CGRect(x: 80, y: 372, width: 1040, height: 90)
+ctx.saveGState()
+ctx.translateBy(x: 0, y: subRect.minY * 2 + subRect.height)
+ctx.scaleBy(x: 1, y: -1)
+sub.draw(in: subRect, withAttributes: subAttrs)
+ctx.restoreGState()
 
 // MARK: Capability rail
 let rail = "LOCAL ASR   ·   ON-DEVICE CLEANUP   ·   SCREEN CONTEXT   ·   WORKS IN ANY APP"

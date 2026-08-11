@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>OpenType</string>
+    <string>Utter</string>
     <key>CFBundleDisplayName</key>
-    <string>OpenType</string>
+    <string>Utter</string>
     <key>CFBundleIdentifier</key>
     <string>com.opentype.voiceinput</string>
     <key>CFBundleExecutable</key>
-    <string>OpenType</string>
+    <string>Utter</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIconName</key>
@@ -32,12 +32,12 @@
         <true/>
     </dict>
     <key>NSMicrophoneUsageDescription</key>
-    <string>OpenType needs microphone access to capture voice for transcription.</string>
+    <string>Utter needs microphone access to capture voice for transcription.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>OpenType uses speech recognition to convert voice to text.</string>
+    <string>Utter uses speech recognition to convert voice to text.</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>OpenType needs automation access to type text into other applications.</string>
+    <string>Utter needs automation access to type text into other applications.</string>
     <key>NSScreenCaptureUsageDescription</key>
-    <string>OpenType uses screen content for context-aware text correction.</string>
+    <string>Utter uses screen content for context-aware text correction.</string>
 </dict>
 </plist>

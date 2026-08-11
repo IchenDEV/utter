@@ -44,7 +44,7 @@ extension PromptCatalog {
         输出：星期五下晝開會。
 
         原文：把 open type 的 hot key 文案改一下不要影响菜单蓝
-        输出：把 OpenType 的 hotkey 文案改一下，不要影响菜单栏。
+        输出：把 Utter 的 hotkey 文案改一下，不要影响菜单栏。
         """
     }
 
@@ -90,7 +90,7 @@ extension PromptCatalog {
         3. Update budget。
 
         原文：幫我將 open type 個 hot key 文案改一改唔好影響 menu bar
-        输出：幫我將 OpenType 個 hotkey 文案改一改，唔好影響 menu bar。
+        输出：幫我將 Utter 個 hotkey 文案改一改，唔好影響 menu bar。
         """
     }
 }

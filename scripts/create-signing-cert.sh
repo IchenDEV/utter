@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-CERT_NAME="OpenType Signing"
+CERT_NAME="Utter Signing"
 DAYS_VALID=3650   # ~10 years
 P12_PASSWORD="opentype"
 EXPORT_PATH=""
@@ -21,7 +21,7 @@ EXPORT_PATH=""
 for arg in "$@"; do
     case "$arg" in
         --export=*) EXPORT_PATH="${arg#*=}" ;;
-        --export)   EXPORT_PATH="OpenType-Signing.p12" ;;
+        --export)   EXPORT_PATH="Utter-Signing.p12" ;;
         --help|-h)
             echo "Usage: $0 [--export[=path.p12]]"
             echo ""
@@ -29,7 +29,7 @@ for arg in "$@"; do
             echo "  and installs it to your login keychain."
             echo ""
             echo "  --export[=path]  Also export as .p12 (for GitHub Actions secrets)"
-            echo "                   Default export name: OpenType-Signing.p12"
+            echo "                   Default export name: Utter-Signing.p12"
             echo "                   P12 password: ${P12_PASSWORD}"
             exit 0
             ;;

@@ -164,7 +164,7 @@ def render_text(report: dict[str, Any]) -> str:
 
 def parse_arguments(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Evaluate OpenType ASR and post-processing quality from JSONL.",
+        description="Evaluate Utter ASR and post-processing quality from JSONL.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""JSONL schema (one object per non-empty line):
   Required:

@@ -3,7 +3,7 @@ import os
 /// Centralized logging with privacy-aware output.
 /// In release builds, `.private` data is automatically redacted by os_log.
 enum Log {
-    private static let logger = Logger(subsystem: "com.opentype.voiceinput", category: "app")
+    private static let logger = Logger(subsystem: ProductBrand.bundleIdentifier, category: "app")
 
     /// Operational messages (model loading, phase transitions, etc.)
     static func info(_ message: String) {

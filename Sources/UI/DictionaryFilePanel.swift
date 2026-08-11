@@ -18,7 +18,7 @@ enum DictionaryFilePanel {
     static func export(_ data: Data) throws -> Bool {
         let panel = NSSavePanel()
         panel.title = L("dictionary.export")
-        panel.nameFieldStringValue = "OpenType-Dictionary.json"
+        panel.nameFieldStringValue = "Utter-Dictionary.json"
         panel.allowedContentTypes = [.json]
         guard panel.runModal() == .OK, let url = panel.url else { return false }
         try data.write(to: url, options: .atomic)

@@ -127,7 +127,7 @@ final class PersonalDictionary: ObservableObject {
         let dir = directoryURL ?? FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
-        ).first!.appendingPathComponent("OpenType", isDirectory: true)
+        ).first!.appendingPathComponent(ProductBrand.applicationSupportDirectoryName, isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         entriesURL = dir.appendingPathComponent("dictionary.json")

@@ -8,7 +8,7 @@ struct DeveloperInterfaceConfig {
 
     static func load() throws -> DeveloperInterfaceConfig {
         guard let defaults = UserDefaults(suiteName: OpenTypeLauncher.bundleIdentifier) else {
-            throw CLIError("cannot read OpenType preferences")
+            throw CLIError("cannot read Utter preferences")
         }
         let enabled = defaults.object(forKey: "developerInterfaceEnabled") as? Bool ?? false
         guard enabled else {
@@ -31,7 +31,7 @@ enum OpenTypeLauncher {
             return
         }
         guard let appURL = findAppURL() else {
-            throw CLIError("OpenType.app was not found")
+            throw CLIError("Utter.app was not found")
         }
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = false
@@ -48,6 +48,8 @@ enum OpenTypeLauncher {
         }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         return [
+            "/Applications/Utter.app",
+            "\(home)/Applications/Utter.app",
             "/Applications/OpenType.app",
             "\(home)/Applications/OpenType.app"
         ]

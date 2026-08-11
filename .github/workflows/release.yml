@@ -86,7 +86,7 @@ jobs:
       - name: Verify artifacts
         run: |
           ls -lh dist/
-          codesign -dvv dist/OpenType.app
+          codesign -dvv dist/Utter.app
 
       # ── Notarize (Developer ID only) ───────────────────────────
       - name: Notarize DMG
@@ -96,7 +96,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
-          DMG="dist/OpenType-${{ steps.version.outputs.value }}.dmg"
+          DMG="dist/Utter-${{ steps.version.outputs.value }}.dmg"
           xcrun notarytool submit "$DMG" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
@@ -113,8 +113,8 @@ jobs:
           shopt -s nullglob
 
           TAG="${GITHUB_REF_NAME}"
-          TITLE="OpenType ${TAG}"
-          FILES=(dist/OpenType-*.dmg)
+          TITLE="Utter ${TAG}"
+          FILES=(dist/Utter-*.dmg)
 
           if [ ${#FILES[@]} -eq 0 ]; then
             echo "No DMG artifacts found in dist/"

@@ -65,7 +65,7 @@ enum PromptStylePrompts {
             输出：啱啱講錯咗，唔係星期四，係星期五下晝開會。
 
             原文：把 open type 的 hot key 文案改一下不要影响菜单蓝
-            输出：把 OpenType 的 hotkey 文案改一下，不要影响菜单栏。
+            输出：把 Utter 的 hotkey 文案改一下，不要影响菜单栏。
             """
         case (.chinese, .professional):
             return """
@@ -87,7 +87,7 @@ enum PromptStylePrompts {
 
             专业整理强纠错示例：
             原文：把 open type 的 hot key 文案改一下不要影响菜单蓝
-            输出：把 OpenType 的 hotkey 文案改一下，不要影响菜单栏。
+            输出：把 Utter 的 hotkey 文案改一下，不要影响菜单栏。
 
             原文：这次发版先看登录留成有没有问题再看数据库前一有没有慢查询
             输出：这次发版先看登录流程有没有问题，再看数据库迁移有没有慢查询。
@@ -106,7 +106,7 @@ enum PromptStylePrompts {
 
             粤语强纠错示例：
             原文：幫我將 open type 個 hot key 文案改一改唔好影響 menu bar
-            输出：幫我將 OpenType 個 hotkey 文案改一改，唔好影響 menu bar。
+            输出：幫我將 Utter 個 hotkey 文案改一改，唔好影響 menu bar。
             """
         case (.english, .professional):
             return """
@@ -128,7 +128,7 @@ enum PromptStylePrompts {
 
             Strong correction examples:
             Raw: update the open type hot key copy and do not affect the menu bore
-            Output: Update the OpenType hotkey copy, and do not affect the menu bar.
+            Output: Update the Utter hotkey copy, and do not affect the menu bar.
 
             Raw: check the log in floor before release and then check whether the database migration has slow queries
             Output: Check the login flow before release, then check whether the database migration has slow queries.
@@ -144,7 +144,7 @@ enum PromptStylePrompts {
 
             強い誤認識補正の例：
             原文：オープンタイプのホットキー文言を直してメニューバーに影響しないように
-            出力：OpenType の hotkey 文言を直して、メニューバーに影響しないようにする。
+            出力：Utter の hotkey 文言を直して、メニューバーに影響しないようにする。
             """
         case (.korean, .professional):
             return """
@@ -157,7 +157,7 @@ enum PromptStylePrompts {
 
             강한 오인식 보정 예시:
             원문：오픈 타입 핫키 문구를 고치고 메뉴 바에는 영향 없게 해줘
-            출력：OpenType hotkey 문구를 고치고, 메뉴 바에는 영향이 없게 해줘.
+            출력：Utter hotkey 문구를 고치고, 메뉴 바에는 영향이 없게 해줘.
             """
         case (.auto, .casual), (.chinese, .casual), (.cantonese, .casual),
              (.auto, .custom), (.chinese, .custom), (.cantonese, .custom),

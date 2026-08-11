@@ -171,7 +171,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             backing: .buffered,
             defer: false
         )
-        window.title = "OpenType"
+        window.title = ProductBrand.displayName
         window.center()
         window.contentView = NSHostingView(rootView: view)
         window.isReleasedWhenClosed = false

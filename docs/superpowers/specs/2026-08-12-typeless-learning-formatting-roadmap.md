@@ -2,9 +2,11 @@
 
 > 日期：2026-08-12
 >
-> 状态：外部证据调研完成；OpenType P0 已在当前工作树实现；未对 Typeless 客户端做逆向或受控黑盒实验
+> 品牌说明：产品现名为 Utter；Swift 模块、Bundle ID 与 `Application Support/OpenType` 数据目录暂时保留旧标识以兼容升级
 >
-> 目标：回答 Typeless 的听写后纠正、个人词典、风格学习和结构化输出有哪些可证实行为，以及 OpenType 应如何追赶
+> 状态：外部证据调研完成；Utter P0 已在当前工作树实现；未对 Typeless 客户端做逆向或受控黑盒实验
+>
+> 目标：回答 Typeless 的听写后纠正、个人词典、风格学习和结构化输出有哪些可证实行为，以及 Utter 应如何追赶
 >
 > 证据规则：Typeless 官方帮助、发布说明和隐私文件优先；用户报告只作旁证；专有实现未知时明确写为推断
 
@@ -14,7 +16,7 @@
 2. **它不是把所有编辑混成一个学习系统**。官方把“个人词典”和“写作风格 Personalization”分开：词典负责名称、术语、偏好拼写；Personalization 随使用适应正式/随意、简洁/详细等风格，而且可以关闭。请求时还会使用当前应用和相关文本做上下文处理。
 3. **“为什么只偶尔采集关键词”没有官方算法说明**。官方没有披露观察时限、需要几次重复、如何识别一个编辑属于刚才的听写、哪些词会被过滤，也没有说明词典本地保存还是账号同步。一份 40 天、9000+ 次输入的长期用户报告称，80 多个专业词是在反复使用后逐渐自动加入，少数词多试几次仍不加入就手动添加。这与“低频、偏术语”的观察一致，但不能证明固定阈值。
 4. **Typeless 的质量优势不只是 ASR**。官方对比展示了三个独立能力：识别自我纠正并删除旧意图；把语义清单变成列表；按文体拆分邮件并规范数字。官方还宣称会依当前应用调整语气。这更像“识别 + 意图判断 + 文体格式化 + 个性化词汇”组成的链路，而不是一个词典开关。
-5. **实施前的 OpenType 已有词库生效所需的大部分组件，缺的是可用入口、纠正采集闭环和更细的格式决策**。本次 P0 已补上这些缺口：仅观察刚插入区域的 60 秒纠正会话、保守局部候选、自动/手动/待确认词条管理，以及六类显式 `formatKind` 契约。Qwen / Volc 的 ASR 上下文注入、真实语料基准和 per-app 风格画像仍属于后续工作。
+5. **实施前的 Utter 已有词库生效所需的大部分组件，缺的是可用入口、纠正采集闭环和更细的格式决策**。本次 P0 已补上这些缺口：仅观察刚插入区域的 60 秒纠正会话、保守局部候选、自动/手动/待确认词条管理，以及六类显式 `formatKind` 契约。Qwen / Volc 的 ASR 上下文注入、真实语料基准和 per-app 风格画像仍属于后续工作。
 
 ### 1.1 当前工作树的 P0 实施状态
 
@@ -28,7 +30,7 @@
 
 ## 2. Typeless 官方可复现的前后对比
 
-以下均来自 Typeless 官方安装指南的演示内容。为避免把营销样例误当成独立实测，表中采用中文意译和结构复现，不声称这是 OpenType 或本次调研的运行结果。
+以下均来自 Typeless 官方安装指南的演示内容。为避免把营销样例误当成独立实测，表中采用中文意译和结构复现，不声称这是 Utter 或本次调研的运行结果。
 
 | 场景 | 口述输入的结构 | 官方展示的输出变化 | 能证明什么 | 不能证明什么 |
 |---|---|---|---|---|
@@ -95,7 +97,7 @@ Typeless 当前官方文件给出的边界是：
 - Data Controls 更明确称听写数据中的音频、转写和 edits 不会被云端保存或用于训练。[Data Controls，2026-01-09](https://www.typeless.com/data-controls) 官方 Quickstart 另称听写历史由用户控制保留时长并留在设备上。[Typeless Quickstart](https://www.typeless.com/help/quickstart/key-features)
 - 用户主动反馈是例外：在明确同意时，可能上传经过假名化的文本或纠正用于改进。[Privacy Policy](https://www.typeless.com/privacy)
 
-这里存在一个未解释的产品边界：既然个人词典和风格会持续生效，必然有某种持久状态，但官方公开文件没有说明这两类状态的具体字段、位置、保留期或同步机制。“云端零留存”不等于“没有本地历史或个性化数据”。OpenType 不应复制这种模糊表达，应在 UI 中分别解释音频、转写历史、自动学习词条、风格画像和远程模型请求。
+这里存在一个未解释的产品边界：既然个人词典和风格会持续生效，必然有某种持久状态，但官方公开文件没有说明这两类状态的具体字段、位置、保留期或同步机制。“云端零留存”不等于“没有本地历史或个性化数据”。Utter 不应复制这种模糊表达，应在 UI 中分别解释音频、转写历史、自动学习词条、风格画像和远程模型请求。
 
 ## 5. 对 Typeless 产品链路的最小推断
 
@@ -114,7 +116,7 @@ Typeless 当前官方文件给出的边界是：
 
 公开证据足以支持“存在词典层、风格层、请求时上下文层”这三种产品概念，但不足以支持具体模型、提示词、阈值、数据库或监听 API 的断言。
 
-## 6. OpenType 实施前差距（P0 基线）
+## 6. Utter 实施前差距（P0 基线）
 
 以下内容保留为本次实现的审计基线；对应 P0 缺口已经由 1.1 节所列实现覆盖。
 
@@ -130,13 +132,13 @@ Typeless 当前官方文件给出的边界是：
 
 - 没有在用户手动编辑目标应用后读取变化并生成学习候选。
 - `PersonalDictionary.addEntry(...)` 在 `Sources/` 中没有调用点；`DictionaryStyleView` 只有自定义提示、风格和编辑规则，没有词条新增、查看、停用或删除 UI。也就是说，现有词典能力在正常产品流程里没有首个词条的来源。
-- `InputHistory` 只记录 OpenType 插入时的 raw/processed 文本，不会反映随后在外部应用发生的用户修正。
+- `InputHistory` 只记录 Utter 插入时的 raw/processed 文本，不会反映随后在外部应用发生的用户修正。
 - 词条没有来源、语言、应用范围、置信度、出现次数、最后使用时间或“自动学习/手动添加”标记。
 - 当前专业风格示例将明显的列表统一引向 `1. 2. 3.`；Typeless 的官方对比则区分无序购物清单和有序步骤。
 - 没有可审计的 `formatKind` 决策，也没有邮件的称呼/正文/落款契约；只靠一段通用提示，很难稳定复现跨模型、跨语言格式。
 - 应用名称被作为宽泛语气上下文，但没有明确的 per-app 输出 profile 和用户可见的覆盖方式。
 
-## 7. 推荐给 OpenType 的方案
+## 7. 推荐给 Utter 的方案
 
 ### P0：建立“只观察刚插入内容”的纠正闭环
 
@@ -145,7 +147,7 @@ Typeless 当前官方文件给出的边界是：
 1. 插入完成后保存目标 PID、AX 元素、原插入范围、原始 ASR、最终插入文本、语言、应用和时间。
 2. 仅对该元素注册文本值变化通知；Apple 官方允许用 `AXObserverCreate` 和 `AXObserverAddNotification` 监听指定应用/元素，`kAXValueChangedNotification` 表示元素 value 改变。不是所有应用都支持通知，失败时只在前台、短时、低频读取锚点附近文本，切应用或超时立即停止。参考：[AXObserverCreate](https://developer.apple.com/documentation/applicationservices/1460133-axobservercreate)、[AXObserverAddNotification](https://developer.apple.com/documentation/applicationservices/1462089-axobserveraddnotification)、[kAXValueChangedNotification](https://developer.apple.com/documentation/applicationservices/kaxvaluechangednotification)。
 3. 只对锚点范围附近做局部 diff，不扫描或保存整个文档。选择变化可用 [kAXSelectedTextChangedNotification](https://developer.apple.com/documentation/applicationservices/kaxselectedtextchangednotification) 辅助定位，但它不能替代值变化。
-4. 会话在 60 秒、焦点离开、应用切换、目标元素销毁或文本大范围重写时结束。时间只是 OpenType 的首版建议，不是 Typeless 已知参数。
+4. 会话在 60 秒、焦点离开、应用切换、目标元素销毁或文本大范围重写时结束。时间只是 Utter 的首版建议，不是 Typeless 已知参数。
 5. 密码/安全输入框、浏览器地址栏、终端密钥场景和用户禁用的应用永不学习。
 
 ### P0：保守候选分类，而不是“每次改字都入库”
@@ -167,11 +169,11 @@ confidence / origin(auto, suggested, manual)
 - 高置信单一专名可立即加入，但应显示可撤销通知；其余候选重复出现 2 次后再自动加入，或先在 Dictionary 的“待确认”区域展示。
 - 同一 `preferredForm` 合并多个听错形式；发生冲突时降级为待确认，不静默覆盖用户手动词条。
 
-这组规则解释了为什么一个成熟产品不会高频采集：错误学习的代价比漏学一次更高。它是对 OpenType 的设计建议，不是 Typeless 算法复刻。
+这组规则解释了为什么一个成熟产品不会高频采集：错误学习的代价比漏学一次更高。它是对 Utter 的设计建议，不是 Typeless 算法复刻。
 
 ### P0：让词条在三处生效并可验证
 
-OpenType 已基本具备三层，新增自动词条后要保持一致：
+Utter 已基本具备三层，新增自动词条后要保持一致：
 
 1. ASR context/hotword：提高专名首次解码召回；先保持 Apple Speech / Whisper 一致，再为 Qwen 增加上下文注入，并依据 Volc 接口能力决定是否同步。
 2. 确定性映射：已知听错形式直接替换为 preferred spelling。
@@ -231,7 +233,7 @@ OpenType 已基本具备三层，新增自动词条后要保持一致：
 
 ### 词典闭环最小集
 
-- `open type -> OpenType`：局部手改后形成候选，下一次 raw/final 分层验证。
+- `utter -> Utter`：局部手改后形成候选，下一次 raw/final 分层验证。
 - 常用词纠正：不得自动污染词典。
 - 标点/换行调整：只更新格式偏好，不生成词条。
 - 整句重写：不得拆出伪词条。
@@ -248,7 +250,7 @@ OpenType 已基本具备三层，新增自动词条后要保持一致：
 [P0 已完成] 词条管理 UI + CorrectionCaptureSession + 局部 diff + 候选审核/隐私开关
   -> [P0 已完成] 高置信自动加入、重复证据激活、三层词典数据接入
   -> [P0 已完成] formatKind 与段落/邮件/聊天/清单/步骤/代码契约
-  -> [下一步] 建立 Typeless/OpenType 对照语料与 baseline，记录 userFinalText / formatKind / dictionary event
+  -> [下一步] 建立 Typeless/Utter 对照语料与 baseline，记录 userFinalText / formatKind / dictionary event
   -> [下一步] 用同一语料盲测本地小/大模型和用户自选远程模型，再决定默认质量档和路由
   -> [下一步] 为 Qwen / Volc 接入可验证的 ASR context/hotword
   -> per-app 偏好与低维风格画像

@@ -41,7 +41,7 @@ struct IntegrationClient: Codable, Equatable, Identifiable {
     static func localCLI(executablePath: String) -> IntegrationClient {
         IntegrationClient(
             id: stableID(prefix: "cli", value: executablePath),
-            displayName: "OpenType CLI",
+            displayName: "Utter CLI",
             bundleIdentifier: nil,
             teamIdentifier: nil,
             codeRequirement: executablePath,

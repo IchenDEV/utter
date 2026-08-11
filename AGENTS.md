@@ -1,8 +1,8 @@
-# OpenType — Agent Guidelines
+# Utter — Agent Guidelines
 
 ## Project Overview
 
-OpenType is a macOS menu bar voice input app built with Swift 6 / SwiftUI / AppKit. It runs on macOS 26+ (Apple Silicon only) and uses WhisperKit and MLX-LM for local inference, with optional remote LLM support.
+Utter is a macOS menu bar voice input app built with Swift 6 / SwiftUI / AppKit. The Swift package, module, and compatibility identifiers retain the original `OpenType` name. It runs on macOS 26+ (Apple Silicon only) and uses WhisperKit and MLX-LM for local inference, with optional remote LLM support.
 
 ## Architecture
 

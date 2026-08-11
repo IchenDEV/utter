@@ -1,14 +1,14 @@
-# OpenType
+# Utter
 
-> OpenType is a native macOS menu bar app for AI-powered voice input and dictation. Hold a hotkey, speak, and polished text appears at your cursor in any app. Speech recognition and LLM cleanup run on-device on Apple Silicon; remote LLM providers are optional. MIT licensed, open source.
+> Utter is a native macOS menu bar app for AI-powered voice input and dictation. Hold a hotkey, speak, and polished text appears at your cursor in any app. Speech recognition and LLM cleanup run on-device on Apple Silicon; remote LLM providers are optional. MIT licensed, open source.
 
-OpenType is a macOS 26+ (Tahoe) menu bar utility for Apple Silicon (M1/M2/M3/M4). It captures audio with AVAudioEngine, transcribes it locally with WhisperKit, Apple Speech, Qwen3-ASR, or MiMo, and refines the transcript with a local MLX LLM (Qwen2.5/Qwen3) or a remote provider (OpenAI, Anthropic Claude, Google Gemini, OpenRouter, SiliconFlow, Volcengine Doubao, Alibaba Bailian, MiniMax). The result is typed at the cursor via the macOS Accessibility API, with a clipboard-paste fallback. A Voice Command mode uses ScreenCaptureKit + the Vision framework to give the LLM on-screen context for summarizing, replying, translating, or rewriting what is visible.
+Utter is a macOS 26+ (Tahoe) menu bar utility for Apple Silicon (M1/M2/M3/M4). It captures audio with AVAudioEngine, transcribes it locally with WhisperKit, Apple Speech, Qwen3-ASR, or MiMo, and refines the transcript with a local MLX LLM (Qwen2.5/Qwen3) or a remote provider (OpenAI, Anthropic Claude, Google Gemini, OpenRouter, SiliconFlow, Volcengine Doubao, Alibaba Bailian, MiniMax). The result is typed at the cursor via the macOS Accessibility API, with a clipboard-paste fallback. A Voice Command mode uses ScreenCaptureKit + the Vision framework to give the LLM on-screen context for summarizing, replying, translating, or rewriting what is visible.
 
 Three output modes: Verbatim (raw transcription, lowest latency), Smart Format (LLM cleanup with filler removal, grammar fixes, and structured formatting), and Voice Command (screen-aware AI response).
 
 By default, audio and transcription stay on-device; no audio upload and zero required cloud calls. Remote providers are opt-in. The UI is bilingual (English and Simplified Chinese), independent of the recognition language. Additional features include input history with stats, input memory for continuity, personal edit rules, language style presets, and sound feedback.
 
-OpenType is a pure Swift Package (no .xcodeproj) built with Swift 6 / SwiftUI / AppKit. Source and releases are on GitHub; the landing page is at opentype.idevlab.dev.
+Utter is a pure Swift Package (no .xcodeproj) built with Swift 6 / SwiftUI / AppKit. Source and releases are on GitHub; the landing page is at opentype.idevlab.dev.
 
 ## Links
 
