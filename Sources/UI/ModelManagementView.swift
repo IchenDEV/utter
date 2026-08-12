@@ -20,34 +20,36 @@ struct ModelManagementView: View {
     let benchmarkEngine = LLMEngine()
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                if hasActiveDownloads {
-                    activeDownloadsSection
-                    Divider()
-                }
-                storageSection
-                Divider()
-                preloadSection
-                Divider()
-                enginePickerSection
-                if settings.speechEngine == .whisper {
-                    whisperSection
-                }
-                if settings.speechEngine == .volc {
-                    volcSection
-                }
-                if settings.speechEngine == .qwen3 {
-                    qwenASRSection
-                }
-                if settings.speechEngine == .mimo {
-                    mimoASRSection
-                }
-                Divider()
-                llmSection
+        VStack(spacing: 0) {
+            SettingsPageHeader(
+                kind: .models,
+                title: L("settings.page.models.title"),
+                subtitle: L("settings.page.models.subtitle")
+            ) {
+                SettingsPageBadge(title: settings.speechEngine.label, symbol: "waveform")
             }
-            .padding(20)
+            Divider()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    if hasActiveDownloads {
+                        SettingsPanel { activeDownloadsSection }
+                    }
+
+                    SettingsPanel {
+                        enginePickerSection
+                        Divider().padding(.vertical, 4)
+                        selectedRecognitionConfiguration
+                    }
+
+                    SettingsPanel { llmSection }
+                    SettingsPanel { preloadSection }
+                    SettingsPanel { storageSection }
+                }
+                .padding(20)
+            }
         }
+        .settingsPageSurface()
         .onAppear {
             catalog.refreshStatus(recheckingErrors: true)
             syncSelectedFamilyFromActiveModel()
@@ -58,6 +60,24 @@ struct ModelManagementView: View {
         .onChange(of: settings.qwenASRModel) { _, _ in onUnloadLocalASR?() }
         .onChange(of: settings.mimoASRModel) { _, _ in onUnloadLocalASR?() }
         .alert(item: $pendingModelAction, content: modelActionAlert)
+    }
+
+    @ViewBuilder
+    private var selectedRecognitionConfiguration: some View {
+        switch settings.speechEngine {
+        case .whisper:
+            whisperSection
+        case .volc:
+            volcSection
+        case .qwen3:
+            qwenASRSection
+        case .mimo:
+            mimoASRSection
+        case .apple:
+            Text(L("model.apple_managed_by_system"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 }
 

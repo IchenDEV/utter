@@ -146,4 +146,91 @@ final class InputHistoryTests: XCTestCase {
         XCTAssertTrue(context.contains("OpenType"))
         XCTAssertFalse(context.contains("OpenTape"))
     }
+
+    func testAnalyticsBuildsCompleteDailySeriesAndAppRanking() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        let now = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 12, hour: 18
+        )))
+        let notes = InputContext(
+            appName: "Notes",
+            bundleIdentifier: "com.apple.Notes",
+            outputMode: .processed,
+            inputLanguage: .english,
+            source: .menuBar
+        )
+        let safari = InputContext(
+            appName: "Safari",
+            bundleIdentifier: "com.apple.Safari",
+            outputMode: .direct,
+            inputLanguage: .english,
+            source: .menuBar
+        )
+        let records = [
+            analyticsRecord(daysAgo: 0, hour: 9, text: "123456", context: notes, now: now, calendar: calendar),
+            analyticsRecord(daysAgo: 1, hour: 14, text: "1234", context: safari, now: now, calendar: calendar),
+            analyticsRecord(daysAgo: 8, hour: 12, text: "12345", context: safari, now: now, calendar: calendar),
+        ]
+
+        let analytics = InputHistoryAnalytics.make(
+            records: records,
+            range: .sevenDays,
+            now: now,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(analytics.totalInputs, 2)
+        XCTAssertEqual(analytics.totalCharacters, 10)
+        XCTAssertEqual(analytics.averageCharacters, 5)
+        XCTAssertEqual(analytics.activeDays, 2)
+        XCTAssertEqual(analytics.dailyActivity.count, 7)
+        XCTAssertEqual(analytics.dailyActivity.reduce(0) { $0 + $1.inputCount }, 2)
+        XCTAssertEqual(analytics.appActivity.map(\.name), ["Notes", "Safari"])
+        XCTAssertEqual(analytics.hourlyActivity[9].inputCount, 1)
+        XCTAssertEqual(analytics.hourlyActivity[14].inputCount, 1)
+        XCTAssertEqual(try XCTUnwrap(analytics.characterChange), 1, accuracy: 0.001)
+    }
+
+    func testAllTimeAnalyticsStartsAtOldestRecord() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        let now = try XCTUnwrap(calendar.date(from: DateComponents(
+            year: 2026, month: 8, day: 12, hour: 18
+        )))
+        let records = [
+            analyticsRecord(daysAgo: 2, hour: 9, text: "one", now: now, calendar: calendar),
+            analyticsRecord(daysAgo: 0, hour: 10, text: "two", now: now, calendar: calendar),
+        ]
+
+        let analytics = InputHistoryAnalytics.make(
+            records: records,
+            range: .allTime,
+            now: now,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(analytics.dailyActivity.count, 3)
+        XCTAssertNil(analytics.characterChange)
+    }
+
+    private func analyticsRecord(
+        daysAgo: Int,
+        hour: Int,
+        text: String,
+        context: InputContext? = nil,
+        now: Date,
+        calendar: Calendar
+    ) -> InputRecord {
+        let day = calendar.date(byAdding: .day, value: -daysAgo, to: calendar.startOfDay(for: now))!
+        let date = calendar.date(byAdding: .hour, value: hour, to: day)!
+        return InputRecord(
+            id: UUID(),
+            date: date,
+            rawText: text,
+            processedText: text,
+            wasProcessed: context?.outputMode == .processed,
+            context: context
+        )
+    }
 }

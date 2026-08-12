@@ -3,51 +3,59 @@ import AVFoundation
 import Speech
 
 struct AboutView: View {
-    @State private var showPermissions = false
-
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                appInfo
-                    .padding(.top, 24)
-                    .padding(.bottom, 20)
+        VStack(spacing: 0) {
+            SettingsPageHeader(
+                kind: .about,
+                title: ProductBrand.displayName,
+                subtitle: L("settings.page.about.subtitle")
+            ) {
+                SettingsPageBadge(title: version, symbol: "shippingbox")
+            }
+            Divider()
 
-                Divider()
-
-                permissionsSection
-                    .padding(20)
+            ScrollView {
+                VStack(spacing: 14) {
+                    SettingsPanel { permissionsSection }
+                    SettingsPanel { appInfo }
+                }
+                .padding(20)
             }
         }
+        .settingsPageSurface()
     }
 
     // MARK: - App Info
 
     private var appInfo: some View {
-        VStack(spacing: 6) {
+        HStack(spacing: 14) {
             appIcon
-
-            Text(ProductBrand.displayName)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-
-            Text(L("about.subtitle"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev")")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-
-            HStack(spacing: 20) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(ProductBrand.displayName)
+                    .font(.headline)
+                Text(L("about.body"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("© 2026 Utter · \(version)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            Spacer(minLength: 12)
+            VStack(alignment: .trailing, spacing: 8) {
                 Link("GitHub", destination: URL(string: "https://github.com/IchenDEV/utter")!)
                 Link(L("about.feedback"), destination: URL(string: "https://github.com/IchenDEV/utter/issues")!)
             }
             .font(.caption)
-            .padding(.top, 8)
         }
     }
 
     private var appIcon: some View {
-        AppIconView(size: 64)
+        AppIconView(size: 52)
+    }
+
+    private var version: String {
+        "v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev")"
     }
 
     // MARK: - Permissions
@@ -90,11 +98,6 @@ struct AboutView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(nsColor: .separatorColor), lineWidth: 0.5))
 
-            Text("© 2026 Utter")
-                .font(.caption2)
-                .foregroundStyle(.quaternary)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 8)
         }
         .onAppear { checkAll() }
     }

@@ -60,6 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         if !AppSettings.shared.hasCompletedOnboarding {
             showOnboarding()
         }
+
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -213,11 +214,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 width: SettingsWindowLayout.width,
                 height: SettingsWindowLayout.height
             ),
-            styleMask: [.titled, .closable, .miniaturizable],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = SettingsWindowTitle.current
+        window.minSize = NSSize(
+            width: SettingsWindowLayout.minimumWidth,
+            height: SettingsWindowLayout.minimumHeight
+        )
+        window.setFrameAutosaveName("UtterSettingsWindow")
         window.center()
         window.contentView = NSHostingView(rootView: settingsView)
         window.isReleasedWhenClosed = false

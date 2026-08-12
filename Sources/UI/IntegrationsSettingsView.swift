@@ -8,70 +8,76 @@ struct IntegrationsSettingsView: View {
     private let registry = IntegrationClientRegistry()
 
     var body: some View {
-        Form {
-            Section(L("settings.developer_interface")) {
-                Toggle(isOn: $settings.developerInterfaceEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L("settings.developer_interface"))
-                        Text(L("settings.developer_interface_help"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
+        VStack(spacing: 0) {
+            SettingsPageHeader(
+                kind: .integrations,
+                title: L("settings.page.integrations.title"),
+                subtitle: L("settings.page.integrations.subtitle")
+            )
+            Divider()
 
-            Section("HTTP") {
-                LabeledContent(L("settings.developer_http_address")) {
-                    Text("127.0.0.1:\(settings.developerHTTPPort)")
-                        .font(.system(.body, design: .monospaced))
-                        .textSelection(.enabled)
-                }
-                LabeledContent(L("settings.developer_http_token")) {
-                    Text(settings.developerHTTPToken)
-                        .font(.system(.caption, design: .monospaced))
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .textSelection(.enabled)
-                }
-                Button(L("settings.developer_reset_token")) {
-                    settings.resetDeveloperHTTPToken()
-                }
-            }
-
-            Section(L("settings.developer_registered_apps")) {
-                if approvedClients.isEmpty {
-                    Text(L("settings.developer_no_registered_apps"))
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(approvedClients) { client in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(client.displayName)
-                                Text(clientDetail(client))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                                    .truncationMode(.middle)
-                            }
-                            Spacer()
-                            Button(L("common.delete")) {
-                                registry.revoke(clientID: client.id)
-                                refreshClients()
-                            }
+            Form {
+                Section(L("settings.developer_interface")) {
+                    Toggle(isOn: $settings.developerInterfaceEnabled) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L("settings.developer_interface"))
+                            Text(L("settings.developer_interface_help"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
 
-                Button(L("settings.developer_register_cli")) {
-                    registerCLIHelper()
+                Section(L("settings.developer_registered_apps")) {
+                    if approvedClients.isEmpty {
+                        Text(L("settings.developer_no_registered_apps"))
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(approvedClients) { client in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(client.displayName)
+                                    Text(clientDetail(client))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                        .truncationMode(.middle)
+                                }
+                                Spacer()
+                                Button(L("common.delete")) {
+                                    registry.revoke(clientID: client.id)
+                                    refreshClients()
+                                }
+                            }
+                        }
+                    }
+
+                    Button(L("settings.developer_add_app")) { addApp() }
+                    Button(L("settings.developer_register_cli")) { registerCLIHelper() }
                 }
-                Button(L("settings.developer_add_app")) {
-                    addApp()
+
+                Section("HTTP") {
+                    LabeledContent(L("settings.developer_http_address")) {
+                        Text("127.0.0.1:\(settings.developerHTTPPort)")
+                            .font(.system(.body, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+                    LabeledContent(L("settings.developer_http_token")) {
+                        Text(settings.developerHTTPToken)
+                            .font(.system(.caption, design: .monospaced))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .textSelection(.enabled)
+                    }
+                    Button(L("settings.developer_reset_token")) {
+                        settings.resetDeveloperHTTPToken()
+                    }
                 }
             }
+            .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
+        .settingsPageSurface()
         .onAppear(perform: refreshClients)
     }
 
