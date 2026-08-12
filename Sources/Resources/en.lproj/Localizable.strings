@@ -25,11 +25,22 @@
 
 /* ── Tabs ── */
 "settings.window_title" = "Utter Settings";
+"settings.hero.title" = "Voice input, tuned to your workflow.";
+"settings.hero.subtitle" = "Use your shortcut anywhere. Utter recognizes, refines, translates, and inserts without breaking your flow.";
+"settings.page.general.title" = "Voice Input";
+"settings.page.general.subtitle" = "Choose how Utter listens, responds, and fits into your Mac.";
+"settings.page.models.title" = "Models & Engines";
+"settings.page.models.subtitle" = "Choose the engines that recognize speech and refine your words.";
+"settings.page.style.title" = "Writing & Vocabulary";
+"settings.page.style.subtitle" = "Shape your tone, preferred terms, and repeatable editing rules.";
+"settings.page.integrations.title" = "Apps & Integrations";
+"settings.page.integrations.subtitle" = "Control which local tools can securely request Utter services.";
+"settings.page.about.subtitle" = "Review permissions, version details, and project links.";
 "tab.general" = "General";
 "tab.voice" = "Voice";
 "tab.models" = "Models";
 "tab.style" = "Style & Rules";
-"tab.history" = "History";
+"tab.history" = "Activity";
 "tab.about" = "About";
 
 /* ── Pipeline / Status Messages ── */
@@ -94,7 +105,9 @@
 "settings.hotkey" = "Hotkey";
 "settings.mode" = "Mode";
 "settings.tap_interval" = "Double-tap interval";
+"settings.activation_help" = "Choose the shortcut and interaction that feel natural for repeated voice input.";
 "settings.output" = "Output";
+"settings.context_feedback" = "Context & Feedback";
 "settings.output_mode" = "Output mode";
 "settings.translation" = "Translation";
 "settings.translation_target" = "Target language";
@@ -109,6 +122,7 @@
 "settings.enable_memory" = "Enable input memory";
 "settings.memory_window" = "Memory window";
 "settings.memory_minutes_fmt" = "%d minutes";
+"settings.memory_help" = "Recent input helps Utter keep names and context consistent. History stays on this Mac.";
 "settings.screen_context" = "Screen context assist";
 "settings.screen_context_help" = "Capture on-screen text to help the LLM correct homophones (requires Screen Recording; toggle applies to Smart Format, Voice Command uses it automatically)";
 "settings.screen_context_mode" = "Screen reading";
@@ -174,6 +188,7 @@
 "model.preload.formatting" = "Preload formatting model on launch";
 "model.preload.formatting_help" = "Applies to local MLX models. Remote LLM providers are called when formatting starts.";
 "model.speech_recognition" = "Speech Recognition";
+"model.apple_managed_by_system" = "Apple Speech uses the language and recognition services managed by macOS.";
 "model.text_formatting" = "Text Formatting (LLM)";
 "model.family.title" = "Model Type";
 "model.family.qwen" = "Alibaba Qwen - Multilingual";
@@ -336,6 +351,40 @@
 "history.chars_saved_fmt" = "−%d chars";
 "history.chars_added_fmt" = "+%d chars";
 "history.raw_label" = "Original";
+"history.title" = "Input activity";
+"history.subtitle" = "See how voice input fits into your day.";
+"history.section.label" = "History view";
+"history.section.insights" = "Insights";
+"history.section.records" = "History";
+"history.overview.title" = "Your voice, at a glance";
+"history.overview.subtitle" = "A private, on-device view of your writing rhythm.";
+"history.range.label" = "Time range";
+"history.range.sevenDays" = "Last 7 days";
+"history.range.thirtyDays" = "Last 30 days";
+"history.range.allTime" = "All time";
+"history.metric.characters" = "Characters inserted";
+"history.metric.inputs" = "Voice inputs";
+"history.metric.inputs_detail" = "%d active days";
+"history.metric.active_days" = "Active days";
+"history.metric.average" = "Average length";
+"history.metric.average_detail" = "chars per input";
+"history.change.new" = "New period";
+"history.change.flat" = "Steady";
+"history.change.up" = "↑ %.0f%% vs prior period";
+"history.change.down" = "↓ %.0f%% vs prior period";
+"history.chart.title" = "Output trend";
+"history.chart.subtitle" = "Characters inserted each day";
+"history.chart.day" = "Day";
+"history.chart.characters" = "Characters";
+"history.chart.accessibility" = "Character output trend chart";
+"history.apps.title" = "Where you speak";
+"history.apps.subtitle" = "Top apps by characters";
+"history.apps.empty" = "App usage appears after your first input.";
+"history.apps.unknown" = "Unknown app";
+"history.rhythm.title" = "Daily rhythm";
+"history.rhythm.subtitle" = "Input activity by hour of day";
+"history.rhythm.hour_detail" = "%02d:00, %d inputs";
+"history.records_count" = "%d records";
 
 /* ── Onboarding ── */
 "onboarding.welcome" = "Welcome to Utter";

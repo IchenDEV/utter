@@ -7,20 +7,29 @@ struct DictionaryStyleView: View {
     @State private var newRule = ""
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                DictionaryManagementView()
-                Divider()
-                customSystemPromptSection
-                if !settings.useCustomSystemPrompt {
-                    Divider()
-                    styleSection
-                }
-                Divider()
-                editRulesSection
+        VStack(spacing: 0) {
+            SettingsPageHeader(
+                kind: .style,
+                title: L("settings.page.style.title"),
+                subtitle: L("settings.page.style.subtitle")
+            ) {
+                SettingsPageBadge(title: settings.languageStyle.label, symbol: settings.languageStyle.icon)
             }
-            .padding(20)
+            Divider()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    if !settings.useCustomSystemPrompt {
+                        SettingsPanel { styleSection }
+                    }
+                    SettingsPanel { DictionaryManagementView() }
+                    SettingsPanel { editRulesSection }
+                    SettingsPanel { customSystemPromptSection }
+                }
+                .padding(20)
+            }
         }
+        .settingsPageSurface()
     }
 
     // MARK: - Custom System Prompt
@@ -224,7 +233,6 @@ private struct StylePresetCard: View {
             )
         }
         .buttonStyle(.plain)
-        .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
     }
 }
 
@@ -233,12 +241,7 @@ private struct StylePresetCard: View {
 private struct ListCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .background(Color(nsColor: .controlBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-            )
+            .background(SettingsCardBackground(cornerRadius: 8))
     }
 }
 

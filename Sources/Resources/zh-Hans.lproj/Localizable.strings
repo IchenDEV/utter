@@ -25,11 +25,22 @@
 
 /* ── Tabs ── */
 "settings.window_title" = "Utter 设置";
+"settings.hero.title" = "让语音输入贴合你的工作流。";
+"settings.hero.subtitle" = "在任何地方按下快捷键，Utter 会完成识别、整理、翻译与插入，不打断当前思路。";
+"settings.page.general.title" = "语音输入";
+"settings.page.general.subtitle" = "依次设置触发、收音、输出与界面，让 Utter 自然融入这台 Mac。";
+"settings.page.models.title" = "模型与引擎";
+"settings.page.models.subtitle" = "选择负责语音识别与文本整理的本地或远程引擎。";
+"settings.page.style.title" = "表达与词库";
+"settings.page.style.subtitle" = "统一语气、常用词与可重复执行的编辑规则。";
+"settings.page.integrations.title" = "应用与集成";
+"settings.page.integrations.subtitle" = "控制哪些本机工具可以安全调用 Utter 服务。";
+"settings.page.about.subtitle" = "查看权限、版本信息与项目链接。";
 "tab.general" = "通用";
 "tab.voice" = "语音";
 "tab.models" = "模型";
 "tab.style" = "风格与规则";
-"tab.history" = "历史";
+"tab.history" = "活动记录";
 "tab.about" = "关于";
 
 /* ── Pipeline / Status Messages ── */
@@ -94,7 +105,9 @@
 "settings.hotkey" = "快捷键";
 "settings.mode" = "触发模式";
 "settings.tap_interval" = "双击间隔";
+"settings.activation_help" = "选择最适合连续语音输入的快捷键和触发方式。";
 "settings.output" = "输出";
+"settings.context_feedback" = "上下文与反馈";
 "settings.output_mode" = "输出模式";
 "settings.translation" = "翻译";
 "settings.translation_target" = "目标语言";
@@ -109,6 +122,7 @@
 "settings.enable_memory" = "启用输入记忆";
 "settings.memory_window" = "记忆时间窗口";
 "settings.memory_minutes_fmt" = "%d 分钟";
+"settings.memory_help" = "近期输入可帮助 Utter 保持名称和上下文一致，历史记录仅保存在这台 Mac 上。";
 "settings.screen_context" = "屏幕上下文辅助";
 "settings.screen_context_help" = "录音时截取屏幕文字辅助 LLM 纠正同音字（需屏幕录制权限；开关用于智能整理，语音命令会自动使用）";
 "settings.screen_context_mode" = "读屏幕方式";
@@ -174,6 +188,7 @@
 "model.preload.formatting" = "启动时预加载修稿模型";
 "model.preload.formatting_help" = "仅对本地 MLX 模型生效。远程 LLM 会在整理开始时调用。";
 "model.speech_recognition" = "语音识别";
+"model.apple_managed_by_system" = "Apple 语音使用由 macOS 管理的语言与识别服务。";
 "model.text_formatting" = "文本整理 (LLM)";
 "model.family.title" = "模型类型";
 "model.family.qwen" = "阿里通义千问 - 多语言";
@@ -336,6 +351,40 @@
 "history.chars_saved_fmt" = "精简 %d 字";
 "history.chars_added_fmt" = "增加 %d 字";
 "history.raw_label" = "原始识别";
+"history.title" = "输入活动";
+"history.subtitle" = "了解语音输入如何融入你的一天。";
+"history.section.label" = "历史视图";
+"history.section.insights" = "洞察";
+"history.section.records" = "记录";
+"history.overview.title" = "你的语音输入，一目了然";
+"history.overview.subtitle" = "完全在本机呈现你的表达节奏与使用习惯。";
+"history.range.label" = "时间范围";
+"history.range.sevenDays" = "最近 7 天";
+"history.range.thirtyDays" = "最近 30 天";
+"history.range.allTime" = "全部时间";
+"history.metric.characters" = "已插入字数";
+"history.metric.inputs" = "语音输入";
+"history.metric.inputs_detail" = "%d 个活跃日";
+"history.metric.active_days" = "活跃天数";
+"history.metric.average" = "平均长度";
+"history.metric.average_detail" = "每次输入字数";
+"history.change.new" = "新的周期";
+"history.change.flat" = "保持稳定";
+"history.change.up" = "较上一周期 ↑ %.0f%%";
+"history.change.down" = "较上一周期 ↓ %.0f%%";
+"history.chart.title" = "输出趋势";
+"history.chart.subtitle" = "每天实际插入的字数";
+"history.chart.day" = "日期";
+"history.chart.characters" = "字数";
+"history.chart.accessibility" = "每日插入字数趋势图";
+"history.apps.title" = "常用场景";
+"history.apps.subtitle" = "按输入字数统计的应用";
+"history.apps.empty" = "完成首次输入后会显示应用分布。";
+"history.apps.unknown" = "未知应用";
+"history.rhythm.title" = "每日节奏";
+"history.rhythm.subtitle" = "按一天中的时段统计输入活动";
+"history.rhythm.hour_detail" = "%02d:00，%d 次输入";
+"history.records_count" = "%d 条记录";
 
 /* ── Onboarding ── */
 "onboarding.welcome" = "欢迎使用 Utter";
