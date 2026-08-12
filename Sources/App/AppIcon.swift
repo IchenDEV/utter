@@ -4,8 +4,14 @@ enum AppIcon {
 
     @MainActor
     static func install() {
+        let appearance = AppSettings.shared.appIconAppearance
+        if appearance == .system {
+            NSApp.applicationIconImage = nil
+            return
+        }
+
         guard let image = image(
-            for: AppSettings.shared.appIconAppearance,
+            for: appearance,
             systemIsDark: systemIsDark,
             size: 512
         ) else {
