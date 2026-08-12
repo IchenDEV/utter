@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Build, bundle, sign, and run the development OpenType.app.
+# Build, bundle, sign, and run the development Utter.app.
 # Usage: ./scripts/build-and-run.sh [run|--debug|--logs|--telemetry|--verify]
 
 MODE="${1:-run}"
-APP_NAME="OpenType"
+APP_NAME="Utter"
+BUILD_PRODUCT="OpenType"
 BUNDLE_ID="com.opentype.voiceinput"
 CLI_HELPER_NAME="opentype-cli"
 MIN_SYSTEM_VERSION="26.0"
@@ -27,10 +28,10 @@ mkdir -p "$CLANG_MODULE_CACHE_PATH"
 pkill -x "$APP_NAME" >/dev/null 2>&1 || true
 
 cd "$ROOT_DIR"
-swift build --product "$APP_NAME"
+swift build --product "$BUILD_PRODUCT"
 swift build --product OpenTypeCLI
 BUILD_DIR="$(swift build --show-bin-path)"
-BUILD_BINARY="$BUILD_DIR/$APP_NAME"
+BUILD_BINARY="$BUILD_DIR/$BUILD_PRODUCT"
 CLI_BUILD_BINARY="$BUILD_DIR/OpenTypeCLI"
 
 rm -rf "$APP_BUNDLE"
@@ -60,13 +61,13 @@ cat >"$INFO_PLIST" <<PLIST
   <key>LSUIElement</key>
   <true/>
   <key>NSMicrophoneUsageDescription</key>
-  <string>OpenType needs microphone access to capture voice for transcription.</string>
+  <string>Utter needs microphone access to capture voice for transcription.</string>
   <key>NSSpeechRecognitionUsageDescription</key>
-  <string>OpenType uses speech recognition to convert voice to text.</string>
+  <string>Utter uses speech recognition to convert voice to text.</string>
   <key>NSAppleEventsUsageDescription</key>
-  <string>OpenType needs automation access to type text into other applications.</string>
+  <string>Utter needs automation access to type text into other applications.</string>
   <key>NSScreenCaptureUsageDescription</key>
-  <string>OpenType uses screen content for context-aware text correction.</string>
+  <string>Utter uses screen content for context-aware text correction.</string>
   <key>NSPrincipalClass</key>
   <string>NSApplication</string>
 </dict>
@@ -82,7 +83,7 @@ done
 ENTITLEMENTS="$ROOT_DIR/Resources/OpenType.entitlements"
 SIGN_IDENTITY="${SIGN_IDENTITY:-}"
 if [ -z "$SIGN_IDENTITY" ]; then
-  for candidate in "Developer ID Application" "Apple Development" "OpenType Signing"; do
+  for candidate in "Developer ID Application" "Apple Development" "Utter Signing" "OpenType Signing"; do
     if security find-identity -v -p codesigning 2>/dev/null | grep -q "$candidate"; then
       SIGN_IDENTITY="$candidate"
       break

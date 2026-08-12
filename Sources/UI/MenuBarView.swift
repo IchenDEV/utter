@@ -26,7 +26,7 @@ struct MenuBarView: View {
     private var header: some View {
         HStack(spacing: 6) {
             AppIconView(size: 18)
-            Text("OpenType")
+            Text(ProductBrand.displayName)
                 .font(.system(size: 13, weight: .semibold))
             Text(activeLanguageSummary)
                 .font(.caption2)

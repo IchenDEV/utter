@@ -152,7 +152,7 @@ final class IntegrationHTTPTests: XCTestCase {
     func testHTTPServerDispatchRequiresRegisteredCLIClient() async throws {
         let store = registry()
         defer { store.cleanup() }
-        let client = IntegrationClient.localCLI(executablePath: "/Applications/OpenType.app/Contents/MacOS/opentype-cli")
+        let client = IntegrationClient.localCLI(executablePath: "/Applications/Utter.app/Contents/MacOS/opentype-cli")
         let server = makeServer(
             registry: store.registry,
             settings: IntegrationServiceSettings(developerInterfaceEnabled: true, httpToken: "token")

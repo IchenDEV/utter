@@ -24,7 +24,7 @@
 "status.no_speech_detected" = "未检测到语音";
 
 /* ── Tabs ── */
-"settings.window_title" = "OpenType 设置";
+"settings.window_title" = "Utter 设置";
 "tab.general" = "通用";
 "tab.voice" = "语音";
 "tab.models" = "模型";
@@ -61,7 +61,7 @@
 "pipeline.replacement_copied_app_changed" = "你已经切换到别的应用，已改为复制整理版。";
 "pipeline.replacement_copied_failed" = "无法安全替换，已改为复制整理版。";
 "pipeline.replacement_reason_text_changed" = "插入后文字已被继续编辑，替换不再安全";
-"pipeline.no_previous_insert_to_replace" = "没有可替换的上一段 OpenType 输入";
+"pipeline.no_previous_insert_to_replace" = "没有可替换的上一段 Utter 输入";
 "pipeline.no_selected_text_to_replace" = "未找到选中文本";
 "pipeline.preparing_model" = "准备下载语音模型…";
 "pipeline.downloading" = "下载模型";
@@ -138,7 +138,7 @@
 "settings.permissions" = "权限管理";
 "settings.history_retention" = "历史保留时长";
 "settings.developer_interface" = "开发者接口";
-"settings.developer_interface_help" = "允许已授权的本机应用通过 OpenType 请求语音识别和文本整理。";
+"settings.developer_interface_help" = "允许已授权的本机应用通过 Utter 请求语音识别和文本整理。";
 "settings.developer_http_address" = "HTTP 地址";
 "settings.developer_http_token" = "HTTP Token";
 "settings.developer_reset_token" = "重置 Token";
@@ -225,11 +225,11 @@
 "model.downloads_active" = "%d 个下载任务";
 "model.download_confirm_title" = "开始下载模型？";
 "model.download_confirm_message" = "%@ 预计需要约 %@ 网络流量，文件将保存到 %@。下载可能产生流量费用；只有确认后才会开始，并且可以取消。";
-"model.download_runtime_note" = "对应模型的专用运行环境也可能下载到 OpenType 的统一模型目录。";
+"model.download_runtime_note" = "对应模型的专用运行环境也可能下载到 Utter 的统一模型目录。";
 "model.delete_confirm_title" = "删除本地模型文件？";
 "model.delete_confirm_message" = "删除 %@ 并释放 %@ 空间？之后仍可重新下载。";
 "model.remove_reference_confirm_title" = "移除导入的模型？";
-"model.remove_reference_confirm_message" = "从 OpenType 中移除 %@？原始文件仍会保留在原位置。";
+"model.remove_reference_confirm_message" = "从 Utter 中移除 %@？原始文件仍会保留在原位置。";
 "model.download_incomplete" = "模型只下载了一部分。点击“继续下载”即可接着下载，已有文件会保留";
 "model.download_paused" = "下载已暂停。点击“继续下载”可从现有文件接着下载";
 "model.download_required" = "模型文件尚未下载。请前往 设置 → 模型，确认流量后下载";
@@ -278,7 +278,7 @@
 
 /* ── Custom System Prompt ── */
 "custom_prompt.title" = "自定义系统提示词";
-"custom_prompt.desc" = "开启后使用你自己的提示词控制语音文本的风格和处理方式，同时保留 OpenType 的最终输出契约。";
+"custom_prompt.desc" = "开启后使用你自己的提示词控制语音文本的风格和处理方式，同时保留 Utter 的最终输出契约。";
 "custom_prompt.hint" = "你的提示词会加入 LLM System Prompt。屏幕上下文、输入记忆和只输出最终文本的约束仍会自动附加。";
 
 /* ── Style & Dictionary ── */
@@ -296,7 +296,7 @@
 "rules.placeholder" = "如：所有数字用阿拉伯数字";
 "rules.empty" = "暂无规则";
 "dictionary.title" = "个人词库";
-"dictionary.subtitle" = "手动词条立即生效；开启学习后，只有 OpenType 刚插入文本里的局部修改才会成为候选。";
+"dictionary.subtitle" = "手动词条立即生效；开启学习后，只有 Utter 刚插入文本里的局部修改才会成为候选。";
 "dictionary.auto_learning" = "学习纠正";
 "dictionary.spoken_form" = "识别写法";
 "dictionary.preferred_form" = "正确写法";
@@ -338,27 +338,27 @@
 "history.raw_label" = "原始识别";
 
 /* ── Onboarding ── */
-"onboarding.welcome" = "欢迎使用 OpenType";
+"onboarding.welcome" = "欢迎使用 Utter";
 "onboarding.welcome_body" = "完全本地运行的智能语音输入法。\n基于 WhisperKit 语音识别与 MLX 文本整理，无需联网。";
 "onboarding.voice_input" = "语音输入";
 "onboarding.smart_format" = "智能整理";
 "onboarding.local" = "完全本地";
 "onboarding.language" = "界面语言";
 "onboarding.grant_permissions" = "授权权限";
-"onboarding.permissions_body" = "OpenType 需要以下权限才能正常工作，也可稍后在设置中配置。";
+"onboarding.permissions_body" = "Utter 需要以下权限才能正常工作，也可稍后在设置中配置。";
 "onboarding.all_set" = "准备就绪";
-"onboarding.ready_body" = "OpenType 已就绪。使用快捷键即可开始语音输入。\n所有设置可通过菜单栏图标访问。";
+"onboarding.ready_body" = "Utter 已就绪。使用快捷键即可开始语音输入。\n所有设置可通过菜单栏图标访问。";
 "onboarding.hold_hint" = "长按说话，松开输入";
 "onboarding.get_started" = "开始使用";
 "onboarding.model_prep" = "准备模型";
-"onboarding.model_prep_body" = "OpenType 需要下载一个小型语言模型用于文本处理，仅需下载一次。";
+"onboarding.model_prep_body" = "Utter 需要下载一个小型语言模型用于文本处理，仅需下载一次。";
 "onboarding.downloading_model" = "正在下载模型…";
 "onboarding.model_ready" = "模型已就绪！";
 "onboarding.skip_download" = "跳过，稍后下载";
 "onboarding.download_failed" = "下载失败";
 
 /* ── Permissions ── */
-"perm.intro" = "OpenType 需要以下权限才能正常工作。";
+"perm.intro" = "Utter 需要以下权限才能正常工作。";
 "perm.accessibility" = "辅助功能";
 "perm.accessibility_hint" = "必需 — 模拟键盘粘贴";
 "perm.accessibility_desc" = "模拟键盘粘贴，将文本输入到其他应用";
@@ -427,7 +427,7 @@
 "model.asr_runtime_missing" = "模型文件已下载，但运行环境尚未安装。请点击“继续下载”完成安装";
 "model.asr_runtime_download_failed" = "运行文件下载失败";
 "model.asr_runtime_incomplete" = "运行文件不完整";
-"error.llm_not_loaded" = "模型文件已在本地，但当前尚未加载到内存。请重新执行；OpenType 会再次尝试加载";
+"error.llm_not_loaded" = "模型文件已在本地，但当前尚未加载到内存。请重新执行；Utter 会再次尝试加载";
 "error.llm_not_downloaded" = "模型文件尚未下载。请前往 设置 → 模型，确认流量后下载";
 "onboarding.download_notice" = "这里不会自动下载。请先确认体积，再决定是否下载这个本地模型。";
 "onboarding.download_size" = "下载（%@）";

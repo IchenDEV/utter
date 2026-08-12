@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# build-app.sh — Build OpenType.app and (optionally) package it as a DMG.
+# build-app.sh — Build Utter.app and (optionally) package it as a DMG.
 #
 # Uses xcodebuild (not bare swift build) so that Metal shaders required
 # by mlx-swift are compiled into default.metallib.
@@ -19,7 +19,9 @@ set -euo pipefail
 
 # ─── Configuration ──────────────────────────────────────────────────────────────
 
-APP_NAME="OpenType"
+APP_NAME="Utter"
+BUILD_PRODUCT="OpenType"
+SCHEME_NAME="OpenType"
 BUNDLE_ID="com.opentype.voiceinput"
 CLI_HELPER_NAME="opentype-cli"
 # Default: use latest git tag (strip leading "v"), fallback to 0.0.0-dev
@@ -80,7 +82,7 @@ fi
 step "Building ${APP_NAME} (Release, arm64)…"
 cd "${PROJECT_DIR}"
 xcodebuild \
-    -scheme "${APP_NAME}" \
+    -scheme "${SCHEME_NAME}" \
     -configuration Release \
     -derivedDataPath "${DERIVED_DATA}" \
     -destination 'platform=macOS' \
@@ -90,7 +92,7 @@ xcodebuild \
     -quiet
 done_msg "Build succeeded"
 
-step "Building OpenType CLI helper (Release, arm64)…"
+step "Building Utter CLI helper (Release, arm64)…"
 swift build -c release --product OpenTypeCLI --arch arm64
 CLI_BUILD_DIR="$(swift build -c release --product OpenTypeCLI --arch arm64 --show-bin-path)"
 done_msg "CLI helper built"
@@ -104,7 +106,7 @@ mkdir -p "${APP_BUNDLE}/Contents/MacOS"
 mkdir -p "${APP_BUNDLE}/Contents/Resources"
 
 # Binary
-cp "${BUILD_DIR}/${APP_NAME}" "${APP_BUNDLE}/Contents/MacOS/"
+cp "${BUILD_DIR}/${BUILD_PRODUCT}" "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 cp "${CLI_BUILD_DIR}/OpenTypeCLI" "${APP_BUNDLE}/Contents/MacOS/${CLI_HELPER_NAME}"
 
 # Info.plist (with version injected)
@@ -161,7 +163,7 @@ step "Code signing (hardened runtime + entitlements)…"
 ENTITLEMENTS="${PROJECT_DIR}/Resources/OpenType.entitlements"
 
 if [ -z "$SIGN_IDENTITY" ]; then
-    for candidate in "Developer ID Application" "Apple Development" "OpenType Signing"; do
+    for candidate in "Developer ID Application" "Apple Development" "Utter Signing" "OpenType Signing"; do
         if security find-identity -v -p codesigning 2>/dev/null | grep -q "$candidate"; then
             SIGN_IDENTITY="$candidate"
             break
@@ -178,7 +180,7 @@ else
     codesign "${SIGN_FLAGS[@]}" --sign - "${APP_BUNDLE}"
     done_msg "Signed (ad-hoc, hardened runtime)"
     echo "  ⚠ Ad-hoc signing: first launch on other machines may require:"
-    echo "    xattr -cr OpenType.app"
+    echo "    xattr -cr Utter.app"
 fi
 
 # ─── Step 5: Create DMG ────────────────────────────────────────────────────────

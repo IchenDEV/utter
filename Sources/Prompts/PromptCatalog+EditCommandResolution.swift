@@ -32,12 +32,12 @@ extension PromptCatalog {
 
             可用 action：
             - none：不是编辑动作，或不够确定
-            - replace_last：用户明确要把 OpenType 刚才插入的内容替换成另一段文字，必须提供 replacement
+            - replace_last：用户明确要把 Utter 刚才插入的内容替换成另一段文字，必须提供 replacement
             - replace_selection：用户明确要把当前选中文字替换成另一段文字，必须提供 replacement
-            - rewrite_last：用户要让 LLM 改写、补充、追加、润色、总结、翻译、回复或结构化 OpenType 刚才插入的内容，必须提供 intent
+            - rewrite_last：用户要让 LLM 改写、补充、追加、润色、总结、翻译、回复或结构化 Utter 刚才插入的内容，必须提供 intent
             - rewrite_selection：用户要让 LLM 改写、补充、追加、整理、总结、翻译、回复或结构化当前选中文字，必须提供 intent
             - delete_selection：用户明确要删除当前选中文字
-            - undo_last_insertion：用户明确要撤销 OpenType 刚才插入的内容
+            - undo_last_insertion：用户明确要撤销 Utter 刚才插入的内容
 
             只有在预设能完整表达用户口令时才使用这些 intent；如果用户口令包含额外受众、语气、内容、格式或约束细节，intent 要用一句简短自然语言指令完整保留这些细节：
             \(EditCommandResolverPromptCatalog.intentList)
@@ -46,7 +46,7 @@ extension PromptCatalog {
             - 不要执行任意系统命令，不要发明 action；intent 必须来自预设或用户口令中明确表达的目标文本改写/补充要求
             - 正常听写、普通写作、普通回复、普通总结都输出 none
             - 只有用户明确指向“选中内容/当前这段/这段文字/刚才输入/上一段输入”等可编辑对象时，才输出编辑动作
-            - 如果当前状态显示没有上一段 OpenType 插入，则涉及“刚才/上一段/what I just said/last insertion”的替换、改写或撤销应输出 none
+            - 如果当前状态显示没有上一段 Utter 插入，则涉及“刚才/上一段/what I just said/last insertion”的替换、改写或撤销应输出 none
             - 如果当前状态显示没有选中文字，则涉及选区替换、选区改写或删除选区的动作应输出 none
             - confidence 是 0 到 1 的数字；只有非常确定时才给 0.8 或以上，否则 action 用 none
             - replace_last 和 replace_selection 只把用户想替换进去的新文字放进 replacement，不要包含“改成/替换成”等口令词
@@ -78,12 +78,12 @@ extension PromptCatalog {
 
             Allowed action values:
             - none: not an edit action, or not confident
-            - replace_last: the user clearly wants to replace OpenType's last inserted text with new text; requires replacement
+            - replace_last: the user clearly wants to replace Utter's last inserted text with new text; requires replacement
             - replace_selection: the user clearly wants to replace the current selected text with new text; requires replacement
-            - rewrite_last: the user wants the LLM to rewrite, extend, add explicitly supplied content to, polish, summarize, translate, reply to, or structure OpenType's last inserted text; requires intent
+            - rewrite_last: the user wants the LLM to rewrite, extend, add explicitly supplied content to, polish, summarize, translate, reply to, or structure Utter's last inserted text; requires intent
             - rewrite_selection: the user wants the LLM to rewrite, extend, add explicitly supplied content to, polish, summarize, translate, reply to, or structure the current selected text; requires intent
             - delete_selection: the user clearly wants to delete the current selected text
-            - undo_last_insertion: the user clearly wants to undo OpenType's last inserted text
+            - undo_last_insertion: the user clearly wants to undo Utter's last inserted text
 
             Use one of these preset intent values only when it fully captures the user's command. If the command includes extra audience, tone, content, format, or constraint details, intent should be a concise natural-language instruction that preserves those details:
             \(EditCommandResolverPromptCatalog.intentList)
@@ -92,7 +92,7 @@ extension PromptCatalog {
             - Do not execute arbitrary commands or invent actions; intent must be either a preset or an explicit rewrite/edit request for the referenced text from the user's command
             - Normal dictation, ordinary writing, ordinary reply drafting, and ordinary summarization are none
             - Only return an edit action when the user clearly refers to an editable object such as selected text, this text, current selection, last insertion, or what they just dictated
-            - If runtime state says there is no previous OpenType insertion, commands about replacing, rewriting, or undoing what was just said / the last insertion should be none
+            - If runtime state says there is no previous Utter insertion, commands about replacing, rewriting, or undoing what was just said / the last insertion should be none
             - If runtime state says there is no selected text, commands about replacing, rewriting, or deleting the selection should be none
             - confidence is a number from 0 to 1; use 0.8 or higher only when very confident, otherwise set action to none
             - For replace_last and replace_selection, put only the new replacement text in replacement, without command words like "replace with"
@@ -124,12 +124,12 @@ extension PromptCatalog {
 
             使用できる action：
             - none：編集動作ではない、または確信が足りない
-            - replace_last：ユーザーが OpenType の直前挿入テキストを別のテキストに置き換えたい場合。replacement が必須
+            - replace_last：ユーザーが Utter の直前挿入テキストを別のテキストに置き換えたい場合。replacement が必須
             - replace_selection：ユーザーが現在の選択テキストを別のテキストに置き換えたい場合。replacement が必須
-            - rewrite_last：ユーザーが LLM に OpenType の直前挿入テキストの書き換え、明示内容の追加、整理、要約、翻訳、返信作成、構造化を求めている場合。intent が必須
+            - rewrite_last：ユーザーが LLM に Utter の直前挿入テキストの書き換え、明示内容の追加、整理、要約、翻訳、返信作成、構造化を求めている場合。intent が必須
             - rewrite_selection：ユーザーが LLM に現在の選択テキストの書き換え、明示内容の追加、整理、要約、翻訳、返信作成、構造化を求めている場合。intent が必須
             - delete_selection：ユーザーが現在の選択テキストを削除したい場合
-            - undo_last_insertion：ユーザーが OpenType の直前挿入を取り消したい場合
+            - undo_last_insertion：ユーザーが Utter の直前挿入を取り消したい場合
 
             ユーザーコマンドを完全に表せる場合だけ、これらのプリセット intent を使ってください。対象読者、語調、内容、形式、制約など追加の詳細がある場合は、それらを保つ短い自然言語指示を intent にしてください：
             \(EditCommandResolverPromptCatalog.intentList)
@@ -138,7 +138,7 @@ extension PromptCatalog {
             - 任意のシステム操作を実行せず、action を発明しない。intent はプリセット、またはユーザーコマンドで明確に表現された対象テキストの書き換え/追加要求だけにする
             - 通常の聞き取り、普通の文章作成、普通の返信作成、普通の要約は none
             - ユーザーが「選択部分」「この文章」「現在の選択」「さっき入力した内容」「直前の入力」など編集対象を明確に指す場合だけ編集 action を返す
-            - 現在状態で直前の OpenType 挿入が不可用なら、直前入力の置換、書き換え、取り消しは none
+            - 現在状態で直前の Utter 挿入が不可用なら、直前入力の置換、書き換え、取り消しは none
             - 現在状態で選択テキストが不可用なら、選区の置換、改写、削除は none
             - confidence は 0 から 1 の数字。非常に確信がある場合だけ 0.8 以上、それ以外は action を none
             - replace_last と replace_selection では、replacement に新しい本文だけを入れ、「〜に置き換えて」などの口令語を入れない
@@ -170,12 +170,12 @@ extension PromptCatalog {
 
             사용할 수 있는 action:
             - none: 편집 동작이 아니거나 확신이 부족함
-            - replace_last: 사용자가 OpenType이 방금 삽입한 텍스트를 새 텍스트로 바꾸려는 경우. replacement 필수
+            - replace_last: 사용자가 Utter이 방금 삽입한 텍스트를 새 텍스트로 바꾸려는 경우. replacement 필수
             - replace_selection: 사용자가 현재 선택된 텍스트를 새 텍스트로 바꾸려는 경우. replacement 필수
-            - rewrite_last: 사용자가 LLM에게 OpenType의 직전 삽입 텍스트를 재작성, 명시 내용 추가, 정리, 요약, 번역, 답장 작성, 구조화하도록 요청하는 경우. intent 필수
+            - rewrite_last: 사용자가 LLM에게 Utter의 직전 삽입 텍스트를 재작성, 명시 내용 추가, 정리, 요약, 번역, 답장 작성, 구조화하도록 요청하는 경우. intent 필수
             - rewrite_selection: 사용자가 LLM에게 현재 선택 텍스트의 재작성, 명시 내용 추가, 정리, 요약, 번역, 답장 작성, 구조화를 요청하는 경우. intent 필수
             - delete_selection: 사용자가 현재 선택 텍스트를 삭제하려는 경우
-            - undo_last_insertion: 사용자가 OpenType의 직전 삽입을 되돌리려는 경우
+            - undo_last_insertion: 사용자가 Utter의 직전 삽입을 되돌리려는 경우
 
             사용자 명령을 완전히 표현할 수 있을 때만 이 preset intent를 사용하세요. 대상, 어조, 내용, 형식, 제약 같은 추가 세부사항이 있으면 intent는 그 세부사항을 보존하는 짧은 자연어 지시여야 합니다:
             \(EditCommandResolverPromptCatalog.intentList)
@@ -184,7 +184,7 @@ extension PromptCatalog {
             - 임의의 시스템 명령을 실행하지 말고 action을 만들지 않는다. intent는 preset이거나 사용자 명령에 명확히 드러난 대상 텍스트 재작성/추가 요청이어야 한다
             - 일반 받아쓰기, 일반 문장 작성, 일반 답장 작성, 일반 요약은 none
             - 사용자가 “선택한 내용”, “이 문장”, “현재 선택 영역”, “방금 입력한 내용”, “직전 입력”처럼 편집 대상을 명확히 가리킬 때만 편집 action을 반환한다
-            - 현재 상태에서 직전 OpenType 삽입이 사용할 수 없으면 직전 입력의 교체, 재작성, 취소는 none
+            - 현재 상태에서 직전 Utter 삽입이 사용할 수 없으면 직전 입력의 교체, 재작성, 취소는 none
             - 현재 상태에서 선택 텍스트가 사용할 수 없으면 선택 영역 교체, 재작성, 삭제는 none
             - confidence는 0부터 1 사이 숫자다. 매우 확신할 때만 0.8 이상을 사용하고, 아니면 action을 none으로 둔다
             - replace_last와 replace_selection에서는 replacement에 새 본문만 넣고 “바꿔줘” 같은 명령어는 넣지 않는다
@@ -235,7 +235,7 @@ extension PromptCatalog {
             }
             return """
             当前状态：
-            - 上一次 OpenType 插入：\(context.lastInsertion.chinesePromptDescription)
+            - 上一次 Utter 插入：\(context.lastInsertion.chinesePromptDescription)
             - 当前选区：\(context.selectedText.chinesePromptDescription)
             \(editCommandResolverContextPreview(context, inputLanguage: inputLanguage))
             如果上一次插入不可用，不要输出 replace_last、rewrite_last 或 undo_last_insertion。如果当前选区不可用，不要输出 replace_selection、rewrite_selection 或 delete_selection。当前选区未知时，只有语音明确指向选中内容、当前这段或这段文字，才可以输出选区相关动作。
@@ -247,7 +247,7 @@ extension PromptCatalog {
         case .english:
             return """
             Runtime state:
-            - Previous OpenType insertion: \(context.lastInsertion.englishPromptDescription)
+            - Previous Utter insertion: \(context.lastInsertion.englishPromptDescription)
             - Current selection: \(context.selectedText.englishPromptDescription)
             \(editCommandResolverContextPreview(context, inputLanguage: inputLanguage))
             If the previous insertion is unavailable, do not output replace_last, rewrite_last, or undo_last_insertion. If current selection is unavailable, do not output replace_selection, rewrite_selection, or delete_selection. When current selection is unknown, output selection actions only if the voice command clearly refers to selected text, the current selection, this text, or this passage.
@@ -258,7 +258,7 @@ extension PromptCatalog {
         case .japanese:
             return """
             現在状態：
-            - 直前の OpenType 挿入：\(context.lastInsertion.japanesePromptDescription)
+            - 直前の Utter 挿入：\(context.lastInsertion.japanesePromptDescription)
             - 現在の選択範囲：\(context.selectedText.japanesePromptDescription)
             \(editCommandResolverContextPreview(context, inputLanguage: inputLanguage))
             直前の挿入が利用不可なら replace_last、rewrite_last、undo_last_insertion を出力しないでください。現在の選択範囲が利用不可なら replace_selection、rewrite_selection、delete_selection を出力しないでください。現在の選択範囲が不明な場合は、音声コマンドが選択テキスト、現在の選択、この文章、この部分を明確に指す場合だけ選区関連 action を出力してください。
@@ -269,7 +269,7 @@ extension PromptCatalog {
         case .korean:
             return """
             현재 상태:
-            - 직전 OpenType 삽입: \(context.lastInsertion.koreanPromptDescription)
+            - 직전 Utter 삽입: \(context.lastInsertion.koreanPromptDescription)
             - 현재 선택 영역: \(context.selectedText.koreanPromptDescription)
             \(editCommandResolverContextPreview(context, inputLanguage: inputLanguage))
             직전 삽입을 사용할 수 없으면 replace_last, rewrite_last 또는 undo_last_insertion을 출력하지 마세요. 현재 선택 영역을 사용할 수 없으면 replace_selection, rewrite_selection, delete_selection을 출력하지 마세요. 현재 선택 영역이 알 수 없음이면 음성 명령이 선택 텍스트, 현재 선택 영역, 이 문장, 이 부분을 명확히 가리킬 때만 선택 영역 관련 action을 출력하세요.

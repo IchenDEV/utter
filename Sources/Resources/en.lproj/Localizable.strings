@@ -24,7 +24,7 @@
 "status.no_speech_detected" = "No Speech Detected";
 
 /* ── Tabs ── */
-"settings.window_title" = "OpenType Settings";
+"settings.window_title" = "Utter Settings";
 "tab.general" = "General";
 "tab.voice" = "Voice";
 "tab.models" = "Models";
@@ -61,7 +61,7 @@
 "pipeline.replacement_copied_app_changed" = "You switched apps. The formatted text was copied instead.";
 "pipeline.replacement_copied_failed" = "Could not safely replace the text. The formatted text was copied instead.";
 "pipeline.replacement_reason_text_changed" = "The text was edited after insertion, so replacing it is no longer safe";
-"pipeline.no_previous_insert_to_replace" = "No previous OpenType insertion to replace";
+"pipeline.no_previous_insert_to_replace" = "No previous Utter insertion to replace";
 "pipeline.no_selected_text_to_replace" = "No selected text found";
 "pipeline.preparing_model" = "Preparing speech model…";
 "pipeline.downloading" = "Downloading";
@@ -138,7 +138,7 @@
 "settings.permissions" = "Permissions";
 "settings.history_retention" = "History retention";
 "settings.developer_interface" = "Developer interface";
-"settings.developer_interface_help" = "Allow approved local apps to request transcription and formatted text through OpenType.";
+"settings.developer_interface_help" = "Allow approved local apps to request transcription and formatted text through Utter.";
 "settings.developer_http_address" = "HTTP address";
 "settings.developer_http_token" = "HTTP token";
 "settings.developer_reset_token" = "Reset Token";
@@ -225,11 +225,11 @@
 "model.downloads_active" = "%d Active Download(s)";
 "model.download_confirm_title" = "Start model download?";
 "model.download_confirm_message" = "%@ needs about %@ of network data. Files will be saved to %@. This may incur data charges; the download starts only after you confirm and can be cancelled.";
-"model.download_runtime_note" = "A provider-specific runtime may also be downloaded into OpenType's managed storage.";
+"model.download_runtime_note" = "A provider-specific runtime may also be downloaded into Utter's managed storage.";
 "model.delete_confirm_title" = "Delete local model files?";
 "model.delete_confirm_message" = "Delete %@ and reclaim %@? The model can be downloaded again later.";
 "model.remove_reference_confirm_title" = "Remove imported model?";
-"model.remove_reference_confirm_message" = "Remove %@ from OpenType? The original files will stay where they are.";
+"model.remove_reference_confirm_message" = "Remove %@ from Utter? The original files will stay where they are.";
 "model.download_incomplete" = "Only part of this model was downloaded. Select Resume to continue; existing files are preserved.";
 "model.download_paused" = "Download paused. Select Resume to continue from the files already saved.";
 "model.download_required" = "The model files have not been downloaded. Open Settings → Models and confirm the data usage first.";
@@ -237,7 +237,7 @@
 "model.download_failed_timeout" = "The download connection timed out. Existing files are preserved; check your network and select Resume.";
 "model.download_failed_network" = "The network connection was interrupted and the download paused. Restore the connection and select Resume.";
 "model.download_failed_disk_space" = "The model storage disk is out of space. Free space or change the storage location, then resume.";
-"model.download_failed_permission" = "OpenType cannot write to the model folder. Check its permissions or choose another storage location.";
+"model.download_failed_permission" = "Utter cannot write to the model folder. Check its permissions or choose another storage location.";
 "model.download_failed_retry" = "The download did not finish. Select Resume; if progress still does not change, cancel and try again.";
 "model.resume" = "Resume";
 "model.mimo_macos_unavailable" = "Unavailable on macOS: Xiaomi's official runtime currently requires Linux, CUDA, and flash-attn";
@@ -278,7 +278,7 @@
 
 /* ── Custom System Prompt ── */
 "custom_prompt.title" = "Custom System Prompt";
-"custom_prompt.desc" = "When enabled, uses your own prompt for voice-text style and processing while keeping OpenType's final-output contract.";
+"custom_prompt.desc" = "When enabled, uses your own prompt for voice-text style and processing while keeping Utter's final-output contract.";
 "custom_prompt.hint" = "Your prompt is included in the LLM System Prompt. Screen context, input memory, and output-only guardrails are still appended automatically.";
 
 /* ── Style & Dictionary ── */
@@ -296,7 +296,7 @@
 "rules.placeholder" = "e.g. Use Arabic numerals for all numbers";
 "rules.empty" = "No rules yet";
 "dictionary.title" = "Personal Dictionary";
-"dictionary.subtitle" = "Manual terms work immediately. With learning enabled, only local edits to the text OpenType just inserted can become candidates.";
+"dictionary.subtitle" = "Manual terms work immediately. With learning enabled, only local edits to the text Utter just inserted can become candidates.";
 "dictionary.auto_learning" = "Learn corrections";
 "dictionary.spoken_form" = "Recognized form";
 "dictionary.preferred_form" = "Preferred spelling";
@@ -338,27 +338,27 @@
 "history.raw_label" = "Original";
 
 /* ── Onboarding ── */
-"onboarding.welcome" = "Welcome to OpenType";
+"onboarding.welcome" = "Welcome to Utter";
 "onboarding.welcome_body" = "An intelligent voice input method that runs entirely on your Mac.\nPowered by WhisperKit for speech recognition and MLX for text formatting.";
 "onboarding.voice_input" = "Voice Input";
 "onboarding.smart_format" = "Smart Format";
 "onboarding.local" = "100% Local";
 "onboarding.language" = "Language";
 "onboarding.grant_permissions" = "Grant Permissions";
-"onboarding.permissions_body" = "OpenType needs the following permissions. You can also configure these later in Settings.";
+"onboarding.permissions_body" = "Utter needs the following permissions. You can also configure these later in Settings.";
 "onboarding.all_set" = "All Set!";
-"onboarding.ready_body" = "OpenType is ready. Use the hotkey to start voice input.\nYou can adjust all settings from the menu bar icon.";
+"onboarding.ready_body" = "Utter is ready. Use the hotkey to start voice input.\nYou can adjust all settings from the menu bar icon.";
 "onboarding.hold_hint" = "Hold to speak, release to insert";
 "onboarding.get_started" = "Get Started";
 "onboarding.model_prep" = "Model Preparation";
-"onboarding.model_prep_body" = "OpenType needs to download a small language model for text processing. This only happens once.";
+"onboarding.model_prep_body" = "Utter needs to download a small language model for text processing. This only happens once.";
 "onboarding.downloading_model" = "Downloading model…";
 "onboarding.model_ready" = "Model ready!";
 "onboarding.skip_download" = "Skip, download later";
 "onboarding.download_failed" = "Download failed";
 
 /* ── Permissions ── */
-"perm.intro" = "OpenType requires the following permissions to function properly.";
+"perm.intro" = "Utter requires the following permissions to function properly.";
 "perm.accessibility" = "Accessibility";
 "perm.accessibility_hint" = "Required — simulate keyboard paste";
 "perm.accessibility_desc" = "Simulate keyboard input to paste text into other applications";
@@ -427,7 +427,7 @@
 "model.asr_runtime_missing" = "The model files are present, but the runtime is not installed. Select Resume to finish setup.";
 "model.asr_runtime_download_failed" = "Runtime files download failed";
 "model.asr_runtime_incomplete" = "Runtime files are incomplete";
-"error.llm_not_loaded" = "The model is stored locally but is not loaded into memory. Run the action again and OpenType will retry.";
+"error.llm_not_loaded" = "The model is stored locally but is not loaded into memory. Run the action again and Utter will retry.";
 "error.llm_not_downloaded" = "The model files have not been downloaded. Open Settings → Models and confirm the data usage first.";
 "onboarding.download_notice" = "No download starts automatically. Review the size, then confirm if you want this local model.";
 "onboarding.download_size" = "Download (%@)";

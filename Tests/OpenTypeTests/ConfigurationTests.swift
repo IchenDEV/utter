@@ -126,6 +126,13 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(AppIconAppearance.system.resourceName(systemIsDark: false), "AppIconLight")
     }
 
+    func testBrandRenamePreservesUpgradeIdentifiers() {
+        XCTAssertEqual(ProductBrand.displayName, "Utter")
+        XCTAssertEqual(ProductBrand.bundleIdentifier, "com.opentype.voiceinput")
+        XCTAssertEqual(ProductBrand.applicationSupportDirectoryName, "OpenType")
+        XCTAssertEqual(ProductBrand.cliExecutableName, "opentype-cli")
+    }
+
     func testLanguageStyleStaticMetadata() {
         XCTAssertEqual(LanguageStyle.professional.icon, "list.number")
         XCTAssertEqual(LanguageStyle.casual.icon, "bubble.left")
@@ -188,8 +195,8 @@ final class ConfigurationTests: XCTestCase {
 
     @MainActor
     func testSettingsWindowTitleFollowsUILanguage() {
-        XCTAssertEqual(SettingsWindowTitle.text(for: .english), "OpenType Settings")
-        XCTAssertEqual(SettingsWindowTitle.text(for: .chinese), "OpenType 设置")
+        XCTAssertEqual(SettingsWindowTitle.text(for: .english), "Utter Settings")
+        XCTAssertEqual(SettingsWindowTitle.text(for: .chinese), "Utter 设置")
     }
 
     func testSettingsWindowWidthAllowsEnglishTabLabels() {

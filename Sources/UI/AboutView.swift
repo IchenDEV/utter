@@ -26,7 +26,7 @@ struct AboutView: View {
         VStack(spacing: 6) {
             appIcon
 
-            Text("OpenType")
+            Text(ProductBrand.displayName)
                 .font(.system(size: 20, weight: .bold, design: .rounded))
 
             Text(L("about.subtitle"))
@@ -38,8 +38,8 @@ struct AboutView: View {
                 .foregroundStyle(.tertiary)
 
             HStack(spacing: 20) {
-                Link("GitHub", destination: URL(string: "https://github.com/IchenDEV/opentype")!)
-                Link(L("about.feedback"), destination: URL(string: "https://github.com/IchenDEV/opentype/issues")!)
+                Link("GitHub", destination: URL(string: "https://github.com/IchenDEV/utter")!)
+                Link(L("about.feedback"), destination: URL(string: "https://github.com/IchenDEV/utter/issues")!)
             }
             .font(.caption)
             .padding(.top, 8)
@@ -90,7 +90,7 @@ struct AboutView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(nsColor: .separatorColor), lineWidth: 0.5))
 
-            Text("© 2026 OpenType")
+            Text("© 2026 Utter")
                 .font(.caption2)
                 .foregroundStyle(.quaternary)
                 .frame(maxWidth: .infinity, alignment: .center)

@@ -31,7 +31,7 @@ struct AppIconView: View {
             RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
                 .fill(.quaternary)
                 .overlay {
-                    Text("OT")
+                    Text("U")
                         .font(.system(size: size * 0.34, weight: .bold, design: .rounded))
                         .foregroundStyle(.secondary)
                 }

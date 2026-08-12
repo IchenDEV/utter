@@ -226,7 +226,7 @@ final class SpokenEditCommandLLMResolverTests: XCTestCase {
             )
         )
         XCTAssertTrue(user.contains("Voice command transcript"))
-        XCTAssertTrue(user.contains("Previous OpenType insertion: unavailable"))
+        XCTAssertTrue(user.contains("Previous Utter insertion: unavailable"))
         XCTAssertTrue(user.contains("Current selection: unavailable"))
         XCTAssertTrue(user.contains("do not output replace_last, rewrite_last, or undo_last_insertion"))
         XCTAssertTrue(user.contains("do not output replace_selection, rewrite_selection, or delete_selection"))
@@ -265,7 +265,7 @@ final class SpokenEditCommandLLMResolverTests: XCTestCase {
             )
         )
 
-        XCTAssertTrue(user.contains("Previous OpenType insertion: available"))
+        XCTAssertTrue(user.contains("Previous Utter insertion: available"))
         XCTAssertTrue(user.contains("Current selection: unknown"))
         XCTAssertTrue(user.contains("only if the voice command clearly refers to selected text"))
         XCTAssertFalse(user.contains("Current selection: unavailable"))

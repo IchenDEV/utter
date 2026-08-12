@@ -26,7 +26,7 @@ class VoiceQualityEvaluatorTests(unittest.TestCase):
 
     def test_reports_asr_processed_fidelity_hallucination_and_latency(self):
         exact = (
-            "OpenType 2.5 访问 https://example.com，发到 test@example.com，"
+            "Utter 2.5 访问 https://example.com，发到 test@example.com，"
             "路径 /tmp/demo.txt"
         )
         result = self.run_cli(
@@ -38,7 +38,7 @@ class VoiceQualityEvaluatorTests(unittest.TestCase):
                     "asr_text": exact,
                     "sendable_reference": exact,
                     "processed_text": exact,
-                    "terms": ["OpenType"],
+                    "terms": ["Utter"],
                     "asr_latency_ms": 100,
                     "processing_latency_ms": 20,
                 },

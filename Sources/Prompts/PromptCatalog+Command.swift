@@ -20,7 +20,7 @@ extension PromptCatalog {
         switch inputLanguage {
         case .auto:
             return """
-            你是一个多语言语音助手。用户通过语音下达指令，你需要生成 OpenType 可以插入或发送的文本。
+            你是一个多语言语音助手。用户通过语音下达指令，你需要生成 Utter 可以插入或发送的文本。
             直接输出回复内容，不要使用思维标签，不要解释推理过程，不要添加输出标签、开场白、备注、引号说明或代码围栏。
             如果模型接口必须返回 JSON，只能用 final_text 承载可插入或可发送正文，不要包含解释字段。
 
@@ -45,7 +45,7 @@ extension PromptCatalog {
             """
         case .chinese:
             return """
-            你是一个语音助手。用户通过语音下达指令，你需要生成 OpenType 可以插入或发送的文本。
+            你是一个语音助手。用户通过语音下达指令，你需要生成 Utter 可以插入或发送的文本。
             直接输出回复内容，不要使用思维标签，不要解释推理过程，不要添加输出标签、开场白、备注、引号说明或代码围栏。
             如果模型接口必须返回 JSON，只能用 final_text 承载可插入或可发送正文，不要包含解释字段。
 
@@ -65,7 +65,7 @@ extension PromptCatalog {
             """
         case .cantonese:
             return """
-            你是一个粤语语音助手。用户通过粤语语音下达指令，你需要生成 OpenType 可以插入或发送的文本。
+            你是一个粤语语音助手。用户通过粤语语音下达指令，你需要生成 Utter 可以插入或发送的文本。
             直接输出回复内容，不要使用思维标签，不要解释推理过程，不要添加输出标签、开场白、备注、引号说明或代码围栏。
             如果模型接口必须返回 JSON，只能用 final_text 承载可插入或可发送正文，不要包含解释字段。
 
@@ -90,7 +90,7 @@ extension PromptCatalog {
             """
         case .english:
             return """
-            You are a voice assistant. The user gives voice commands, and you generate text that OpenType can insert or send.
+            You are a voice assistant. The user gives voice commands, and you generate text that Utter can insert or send.
             Output the response directly without thinking tags, explanations, output labels, preambles, notes, quote wrappers, or code fences.
             If the model adapter must return JSON, use final_text for the insertable or sendable body and do not include explanation fields.
 
@@ -110,7 +110,7 @@ extension PromptCatalog {
             """
         case .japanese:
             return """
-            あなたは日本語の音声アシスタントです。ユーザーの音声指令から、OpenType が挿入または送信できる本文を生成します。
+            あなたは日本語の音声アシスタントです。ユーザーの音声指令から、Utter が挿入または送信できる本文を生成します。
             思考タグ、説明、出力ラベル、前置き、注釈、引用囲み、コードフェンスを出さず、本文だけを直接出力してください。
             モデルアダプターが JSON を返す必要がある場合は final_text に挿入または送信できる本文だけを入れ、説明フィールドは含めないでください。
 
@@ -128,7 +128,7 @@ extension PromptCatalog {
             """
         case .korean:
             return """
-            당신은 한국어 음성 어시스턴트입니다. 사용자의 음성 명령에서 OpenType이 삽입하거나 보낼 수 있는 본문을 생성합니다.
+            당신은 한국어 음성 어시스턴트입니다. 사용자의 음성 명령에서 Utter이 삽입하거나 보낼 수 있는 본문을 생성합니다.
             사고 태그, 설명, 출력 라벨, 서두, 주석, 인용 표시, 코드 펜스를 쓰지 말고 본문만 직접 출력하세요.
             모델 어댑터가 JSON을 반환해야 한다면 final_text에 삽입하거나 보낼 수 있는 본문만 넣고 설명 필드는 포함하지 마세요.
 

@@ -36,13 +36,13 @@ final class ASRQualityPromptTests: XCTestCase {
             XCTAssertTrue(chinese.contains("模型幻听和模板尾巴"))
             XCTAssertTrue(chinese.contains("谢谢观看"))
             XCTAssertTrue(chinese.contains("逗号、句号、问号、换行"))
-            XCTAssertTrue(chinese.contains("OpenType、hotkey、menu bar、API、JSON、i18n、URL"))
+            XCTAssertTrue(chinese.contains("Utter、hotkey、menu bar、API、JSON、i18n、URL"))
 
             XCTAssertTrue(english.contains("ASR quality rules:"))
             XCTAssertTrue(english.contains("model hallucinations or template tails"))
             XCTAssertTrue(english.contains("thank you for watching"))
             XCTAssertTrue(english.contains("comma, period, question mark, new line"))
-            XCTAssertTrue(english.contains("OpenType, hotkey, menu bar, API, JSON, i18n, and URL"))
+            XCTAssertTrue(english.contains("Utter, hotkey, menu bar, API, JSON, i18n, and URL"))
         }
     }
 }

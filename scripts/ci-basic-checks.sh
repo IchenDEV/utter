@@ -26,6 +26,16 @@ plutil -lint Resources/OpenType.entitlements
 plutil -lint Sources/Resources/en.lproj/Localizable.strings
 plutil -lint Sources/Resources/zh-Hans.lproj/Localizable.strings
 
+step "Checking brand and compatibility identifiers"
+test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' Resources/Info.plist)" = "Utter" \
+    || fail "CFBundleDisplayName must be Utter"
+test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' Resources/Info.plist)" = "Utter" \
+    || fail "CFBundleExecutable must be Utter"
+test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' Resources/Info.plist)" = "Utter" \
+    || fail "CFBundleName must be Utter"
+test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' Resources/Info.plist)" = "com.opentype.voiceinput" \
+    || fail "bundle identifier changed and would break upgrade compatibility"
+
 step "Checking localization key parity"
 en_keys="$(mktemp)"
 zh_keys="$(mktemp)"
@@ -47,6 +57,12 @@ test -f Sources/Resources/Sounds/start.caf || fail "missing start sound"
 test -f Sources/Resources/Sounds/stop.caf || fail "missing stop sound"
 test -s Resources/Info.plist || fail "missing Info.plist"
 test -s Resources/OpenType.entitlements || fail "missing entitlements"
+test -s Sources/Resources/AppIconLight.png || fail "missing light app icon"
+test -s Sources/Resources/AppIconDark.png || fail "missing dark app icon"
+test -s Sources/Resources/AppIcon.icon/Assets/AppIconLightForeground.png \
+    || fail "missing light Icon Composer foreground"
+test -s Sources/Resources/AppIcon.icon/Assets/AppIconDarkForeground.png \
+    || fail "missing dark Icon Composer foreground"
 
 step "Checking bundled helper names"
 app_executable="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' Resources/Info.plist)"

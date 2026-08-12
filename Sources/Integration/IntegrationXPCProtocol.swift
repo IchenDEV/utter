@@ -1,7 +1,7 @@
 import Foundation
 
 enum IntegrationXPCConstants {
-    static let machServiceName = "com.opentype.voiceinput.xpc"
+    static let machServiceName = "\(ProductBrand.bundleIdentifier).xpc"
 }
 
 @objc protocol OpenTypeXPCProtocol {

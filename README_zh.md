@@ -1,14 +1,14 @@
 <div align="center">
 
-# OpenType
+# Utter
 
 **macOS 菜单栏 AI 语音输入**
 
 ---
 
-[![GitHub Stars](https://img.shields.io/github/stars/IchenDEV/opentype?style=flat-square&logo=github&color=ffcc00)](https://github.com/IchenDEV/opentype/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/IchenDEV/opentype?style=flat-square&logo=github&color=4a90d9)](https://github.com/IchenDEV/opentype/network/members)
-[![GitHub Issues](https://img.shields.io/github/issues/IchenDEV/opentype?style=flat-square&logo=github&color=red)](https://github.com/IchenDEV/opentype/issues)
+[![GitHub Stars](https://img.shields.io/github/stars/IchenDEV/utter?style=flat-square&logo=github&color=ffcc00)](https://github.com/IchenDEV/utter/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/IchenDEV/utter?style=flat-square&logo=github&color=4a90d9)](https://github.com/IchenDEV/utter/network/members)
+[![GitHub Issues](https://img.shields.io/github/issues/IchenDEV/utter?style=flat-square&logo=github&color=red)](https://github.com/IchenDEV/utter/issues)
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2026%2B-black?style=flat-square&logo=apple)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-6.0-FA7343?style=flat-square&logo=swift&logoColor=white)](https://swift.org)
@@ -18,7 +18,7 @@
 [![WhisperKit](https://img.shields.io/badge/驱动-WhisperKit-blue?style=flat-square)](https://github.com/argmaxinc/argmax-oss-swift)
 [![MLX](https://img.shields.io/badge/驱动-MLX--LM-orange?style=flat-square)](https://github.com/ml-explore/mlx-swift-lm)
 
-[官网](https://opentype.idevlab.dev) · [English](README.md)
+[官网](https://utter.idevlab.dev) · [English](README.md)
 
 </div>
 
@@ -26,7 +26,7 @@
 
 ## 项目简介
 
-**OpenType** 是一款 macOS 菜单栏 AI 语音输入与听写应用，支持完全本地推理和远程 LLM API 两种模式。按住快捷键开始录音，松开后自动转写，结果直接输入到当前激活的应用中。
+**Utter** 是一款 macOS 菜单栏 AI 语音输入与听写应用，支持完全本地推理和远程 LLM API 两种模式。按住快捷键开始录音，松开后自动转写，结果直接输入到当前激活的应用中。
 
 三种输出模式：
 
@@ -66,11 +66,11 @@
 
 ### 下载安装
 
-从 [Releases](https://github.com/IchenDEV/opentype/releases) 页面下载最新 `.dmg`，打开后将 **OpenType.app** 拖入"应用程序"文件夹。
+从 [Releases](https://github.com/IchenDEV/utter/releases) 页面下载最新 `.dmg`，打开后将 **Utter.app** 拖入"应用程序"文件夹。
 
 > **首次打开提示"无法验证开发者"？** 由于应用未经 Apple 公证，首次运行前需在终端执行：
 > ```bash
-> xattr -cr /Applications/OpenType.app
+> xattr -cr /Applications/Utter.app
 > ```
 > 或在"系统设置 → 隐私与安全性"中点击"仍然打开"。
 
@@ -91,9 +91,11 @@ bash scripts/build-and-run.sh --verify
 open Package.swift
 ```
 
+对外应用名为 `Utter.app`；Swift 包产物暂时保留 `OpenType`，以兼容现有源码集成和升级路径。
+
 ## 首次使用
 
-1. 启动 OpenType — 菜单栏出现波形图标
+1. 启动 Utter — 菜单栏出现波形图标
 2. 新手引导自动启动，引导完成权限和模型配置
 3. 授予 **麦克风** 和 **辅助功能** 权限（必需）
 4. 等待 LLM 模型下载完成（约 335 MB，仅首次）
@@ -111,7 +113,7 @@ open Package.swift
 
 ## 远程 LLM 服务商
 
-OpenType 同时支持 **OpenAI 兼容** 和 **Anthropic** 两种 API 格式：
+Utter 同时支持 **OpenAI 兼容** 和 **Anthropic** 两种 API 格式：
 
 | 服务商 | API 格式 | 接口地址 |
 |---|---|---|

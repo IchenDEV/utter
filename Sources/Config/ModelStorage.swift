@@ -4,7 +4,8 @@ import Hub
 enum ModelStorage {
     static var defaultRoot: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("OpenType/huggingface")
+            .appendingPathComponent(ProductBrand.applicationSupportDirectoryName)
+            .appendingPathComponent("huggingface")
     }
 
     static var root: URL {

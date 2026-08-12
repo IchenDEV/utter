@@ -37,7 +37,7 @@ extension AppDelegate {
 
     static func micIcon() -> NSImage {
         let name = AppSettings.shared.menuBarIcon.symbolName
-        guard let img = NSImage(systemSymbolName: name, accessibilityDescription: "OpenType") else {
+        guard let img = NSImage(systemSymbolName: name, accessibilityDescription: ProductBrand.displayName) else {
             return NSImage()
         }
         img.isTemplate = true

@@ -1,4 +1,4 @@
-// OpenType — Transcript Demo
+// Utter — Transcript Demo
 // Zero dependencies. Reads pre-recorded audio + timing JSON and drives
 // the waveform (Web Audio API) + per-word reveal (setTimeout chain).
 

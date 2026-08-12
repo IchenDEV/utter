@@ -121,7 +121,7 @@ final class InputHistory: ObservableObject {
 
     private init() {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("OpenType", isDirectory: true)
+            .appendingPathComponent(ProductBrand.applicationSupportDirectoryName, isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         fileURL = dir.appendingPathComponent("input_history.json")
         load()

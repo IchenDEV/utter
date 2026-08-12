@@ -1,5 +1,5 @@
-# https://opentype.idevlab.dev
+# https://utter.idevlab.dev
 User-agent: *
 Allow: /
 
-Sitemap: https://opentype.idevlab.dev/sitemap.xml
+Sitemap: https://utter.idevlab.dev/sitemap.xml

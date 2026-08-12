@@ -22,7 +22,7 @@ enum IntegrationError: Error, Equatable {
         case .developerInterfaceDisabled:
             return Payload(error: "developer_interface_disabled", message: "Developer interface is disabled.")
         case .unauthorizedClient:
-            return Payload(error: "unauthorized_client", message: "This app is not allowed to use OpenType.")
+            return Payload(error: "unauthorized_client", message: "This app is not allowed to use Utter.")
         case .busy:
             return Payload(error: "busy", message: "Another input session is active.")
         case .modelNotReady:
@@ -38,7 +38,7 @@ enum IntegrationError: Error, Equatable {
         case .noSpeechDetected:
             return Payload(error: "no_speech_detected", message: "No speech was detected in the recording.")
         case .operationFailed:
-            return Payload(error: "operation_failed", message: "OpenType could not complete the input session.")
+            return Payload(error: "operation_failed", message: "Utter could not complete the input session.")
         }
     }
 }
