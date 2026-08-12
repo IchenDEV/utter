@@ -38,8 +38,8 @@ struct AboutView: View {
                 .foregroundStyle(.tertiary)
 
             HStack(spacing: 20) {
-                Link("GitHub", destination: URL(string: "https://github.com/IchenDEV/opentype")!)
-                Link(L("about.feedback"), destination: URL(string: "https://github.com/IchenDEV/opentype/issues")!)
+                Link("GitHub", destination: URL(string: "https://github.com/IchenDEV/utter")!)
+                Link(L("about.feedback"), destination: URL(string: "https://github.com/IchenDEV/utter/issues")!)
             }
             .font(.caption)
             .padding(.top, 8)

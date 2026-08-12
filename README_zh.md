@@ -6,9 +6,9 @@
 
 ---
 
-[![GitHub Stars](https://img.shields.io/github/stars/IchenDEV/opentype?style=flat-square&logo=github&color=ffcc00)](https://github.com/IchenDEV/opentype/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/IchenDEV/opentype?style=flat-square&logo=github&color=4a90d9)](https://github.com/IchenDEV/opentype/network/members)
-[![GitHub Issues](https://img.shields.io/github/issues/IchenDEV/opentype?style=flat-square&logo=github&color=red)](https://github.com/IchenDEV/opentype/issues)
+[![GitHub Stars](https://img.shields.io/github/stars/IchenDEV/utter?style=flat-square&logo=github&color=ffcc00)](https://github.com/IchenDEV/utter/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/IchenDEV/utter?style=flat-square&logo=github&color=4a90d9)](https://github.com/IchenDEV/utter/network/members)
+[![GitHub Issues](https://img.shields.io/github/issues/IchenDEV/utter?style=flat-square&logo=github&color=red)](https://github.com/IchenDEV/utter/issues)
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2026%2B-black?style=flat-square&logo=apple)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-6.0-FA7343?style=flat-square&logo=swift&logoColor=white)](https://swift.org)
@@ -18,7 +18,7 @@
 [![WhisperKit](https://img.shields.io/badge/驱动-WhisperKit-blue?style=flat-square)](https://github.com/argmaxinc/argmax-oss-swift)
 [![MLX](https://img.shields.io/badge/驱动-MLX--LM-orange?style=flat-square)](https://github.com/ml-explore/mlx-swift-lm)
 
-[官网](https://opentype.idevlab.dev) · [English](README.md)
+[官网](https://utter.idevlab.dev) · [English](README.md)
 
 </div>
 
@@ -66,7 +66,7 @@
 
 ### 下载安装
 
-从 [Releases](https://github.com/IchenDEV/opentype/releases) 页面下载最新 `.dmg`，打开后将 **Utter.app** 拖入"应用程序"文件夹。
+从 [Releases](https://github.com/IchenDEV/utter/releases) 页面下载最新 `.dmg`，打开后将 **Utter.app** 拖入"应用程序"文件夹。
 
 > **首次打开提示"无法验证开发者"？** 由于应用未经 Apple 公证，首次运行前需在终端执行：
 > ```bash

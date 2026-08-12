@@ -158,7 +158,7 @@ drawText(rail, x: 80, y: 488, font: monoBold, color: muted2)
 // MARK: Bottom strip — green dot + URL
 ctx.setFillColor(signal.cgColor)
 ctx.fillEllipse(in: CGRect(x: 82, y: 560, width: 10, height: 10))
-drawText("opentype.idevlab.dev", x: 104, y: 555, font: monoBold, color: paper2)
+drawText("utter.idevlab.dev", x: 104, y: 555, font: monoBold, color: paper2)
 drawText("macOS 26+ · Apple Silicon · MIT licensed", x: CGFloat(W) - 80, y: 555, font: monoBold, color: muted2, align: .right)
 
 NSGraphicsContext.restoreGraphicsState()

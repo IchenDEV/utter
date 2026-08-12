@@ -8,14 +8,14 @@ Three output modes: Verbatim (raw transcription, lowest latency), Smart Format (
 
 By default, audio and transcription stay on-device; no audio upload and zero required cloud calls. Remote providers are opt-in. The UI is bilingual (English and Simplified Chinese), independent of the recognition language. Additional features include input history with stats, input memory for continuity, personal edit rules, language style presets, and sound feedback.
 
-Utter is a pure Swift Package (no .xcodeproj) built with Swift 6 / SwiftUI / AppKit. Source and releases are on GitHub; the landing page is at opentype.idevlab.dev.
+Utter is a pure Swift Package (no .xcodeproj) built with Swift 6 / SwiftUI / AppKit. Source and releases are on GitHub; the landing page is at utter.idevlab.dev.
 
 ## Links
 
-- [Website](https://opentype.idevlab.dev/)
-- [GitHub repository](https://github.com/IchenDEV/opentype)
-- [Latest release](https://github.com/IchenDEV/opentype/releases/latest)
-- [README (English)](https://github.com/IchenDEV/opentype/blob/main/README.md)
-- [README (中文)](https://github.com/IchenDEV/opentype/blob/main/README_zh.md)
-- [License (MIT)](https://github.com/IchenDEV/opentype/blob/main/LICENSE)
-- [Issue tracker](https://github.com/IchenDEV/opentype/issues)
+- [Website](https://utter.idevlab.dev/)
+- [GitHub repository](https://github.com/IchenDEV/utter)
+- [Latest release](https://github.com/IchenDEV/utter/releases/latest)
+- [README (English)](https://github.com/IchenDEV/utter/blob/main/README.md)
+- [README (中文)](https://github.com/IchenDEV/utter/blob/main/README_zh.md)
+- [License (MIT)](https://github.com/IchenDEV/utter/blob/main/LICENSE)
+- [Issue tracker](https://github.com/IchenDEV/utter/issues)
