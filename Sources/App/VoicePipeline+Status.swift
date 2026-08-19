@@ -6,6 +6,7 @@ extension VoicePipeline {
     func showOverlay() {
         overlay.show(
             appState: appState,
+            targetApp: recordingTargetApp,
             onCancel: { [weak self] in
                 self?.cancel()
             },
