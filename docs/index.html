@@ -28,13 +28,13 @@
   <meta name="twitter:description" content="Hold a key, speak naturally, and Utter turns messy speech into polished text in any Mac app." />
   <meta name="twitter:image" content="https://utter.idevlab.dev/assets/social-card.png" />
   <meta name="twitter:image:alt" content="Utter - Local AI voice input for macOS" />
-  <meta name="theme-color" content="#050707" />
-  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#f7f7f4" />
+  <meta name="color-scheme" content="light" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="apple-touch-icon" href="assets/opentype-icon.png" />
   <link rel="preconnect" href="https://github.com" crossorigin />
-  <link rel="stylesheet" href="assets/styles.css?v=20260621-product" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260819-terminal" />
 
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Utter","applicationCategory":"UtilitiesApplication","applicationSubCategory":"Voice Input & Dictation","operatingSystem":"macOS 26+","runtimePlatform":"Apple Silicon","url":"https://utter.idevlab.dev/","downloadUrl":"https://github.com/IchenDEV/utter/releases/latest","codeRepository":"https://github.com/IchenDEV/utter","license":"https://github.com/IchenDEV/utter/blob/main/LICENSE","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Utter is a native macOS menu bar app for AI-powered voice input and dictation. Hold a hotkey, speak, and polished text appears at your cursor. WhisperKit and Apple Speech run on-device, with MLX LLM cleanup on Apple Silicon. Optional remote LLM providers.","featureList":["On-device speech recognition with WhisperKit, Apple Speech, Qwen3-ASR, or MiMo","LLM text cleanup with local MLX Qwen2.5/Qwen3 or remote providers","Screen context OCR via ScreenCaptureKit and Vision for homophone correction","Voice command mode that acts on what is on screen","Global hotkey works in any macOS app","Bilingual UI in English and Simplified Chinese","Input history, memory, and personal edit rules"],"author":{"@type":"Organization","name":"Utter","url":"https://github.com/IchenDEV/utter"}}
@@ -48,231 +48,128 @@
 </head>
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
-  <nav class="top" aria-label="Primary navigation">
-    <div class="wrap nav-wrap">
-      <a href="#hero" class="nav-logo" aria-label="Utter home">
-        <img src="assets/opentype-icon.png" alt="Utter app icon" />
-        <span>Utter</span>
-      </a>
-      <div class="nav-right">
-        <a class="btn btn-secondary" href="#features">Features</a>
-        <a class="btn btn-secondary" href="#faq">FAQ</a>
-        <a class="btn btn-secondary" href="https://github.com/IchenDEV/utter">GitHub</a>
-        <a class="btn btn-primary" href="https://github.com/IchenDEV/utter/releases/latest">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" /></svg>
-          Download
-        </a>
-      </div>
-    </div>
-  </nav>
+  <div class="terminal-window">
+    <header class="window-chrome" aria-label="Utter window">
+      <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>utter — local voice input</span>
+      <span aria-hidden="true"></span>
+    </header>
 
-  <main id="main-content">
-    <section id="hero" class="hero">
-      <div class="wrap hero-grid">
-        <div class="hero-copy">
-          <h1>Voice input that lands exactly where you <span class="accent-word">work.</span></h1>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a class="nav-brand" href="#hero" aria-label="Utter home"><img src="assets/opentype-icon.png" alt="" /><strong>Utter</strong></a>
+      <div class="nav-links"><a href="#pipeline">Pipeline</a><a href="#features">Features</a><a href="#privacy">Privacy</a><a href="#faq">FAQ</a><a href="https://github.com/IchenDEV/utter">GitHub</a></div>
+      <a class="nav-download" href="https://github.com/IchenDEV/utter/releases/latest">Download for macOS</a>
+    </nav>
+
+    <div class="page-flow">
+      <main id="main-content">
+        <section id="hero" class="hero">
+          <p class="command">$ utter --listen</p>
+          <h1>Voice input that lands <br />exactly where you work.</h1>
           <p class="hero-sub">Hold a key, speak naturally, and Utter turns messy speech into polished text in any Mac app.</p>
           <div class="hero-actions">
-            <a class="btn btn-primary btn-large" href="https://github.com/IchenDEV/utter/releases/latest">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" /></svg>
-              Download for macOS
+            <a class="btn btn-primary" href="https://github.com/IchenDEV/utter/releases/latest">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" /></svg>Download for macOS
             </a>
-            <a class="btn btn-ghost btn-large" href="https://github.com/IchenDEV/utter">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 17-5-5 5-5m8 0 5 5-5 5m-2-12-4 16" /></svg>
-              View source
+            <a class="btn" href="https://github.com/IchenDEV/utter">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 17-5-5 5-5m8 0 5 5-5 5m-2-12-4 16" /></svg>View source
             </a>
           </div>
           <p class="hero-note">macOS 26+ · Apple Silicon · MIT licensed</p>
-          <div class="capability-rail" aria-label="Key capabilities">
-            <span data-icon="wave">Local ASR</span>
-            <span data-icon="spark">LLM cleanup</span>
-            <span data-icon="scan">Screen context</span>
-            <span data-icon="cursor">Any app</span>
-          </div>
-        </div>
 
-        <div class="hero-stage">
-          <div class="menu-signal" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-          <div class="hotkey-pill" aria-hidden="true">
-            <img src="assets/opentype-icon.png" alt="" />
-            <span>Hold <kbd>fn</kbd> to speak</span>
-            <i></i>
-          </div>
           <div class="demo" role="region" aria-label="Live transcript demo">
             <div class="demo-titlebar">
-              <div class="demo-dots" aria-hidden="true"><span></span><span></span><span></span></div>
               <div class="mode-toggle" role="group" aria-label="Output mode">
                 <button type="button" data-mode="verbatim" aria-pressed="false">Verbatim</button>
                 <button type="button" data-mode="smart" aria-pressed="true">Smart Format</button>
               </div>
+              <div class="demo-controls">
+                <button class="demo-play" id="demo-play" type="button">
+                  <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 0v10l8-5z" /></svg><span id="demo-play-label">Play</span>
+                </button>
+                <div class="demo-samples" role="group" aria-label="Sample">
+                  <button type="button" data-sample="en" aria-pressed="true">EN sample</button>
+                  <button type="button" data-sample="zh" aria-pressed="false">ZH sample</button>
+                  <button type="button" data-sample="voice-cmd" aria-pressed="false">Voice cmd</button>
+                </div>
+              </div>
             </div>
+            <div class="wave-row"><span>● 00:07</span><div class="waveform" aria-hidden="true">
+              <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+              <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+              <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+              <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+            </div><span class="live">Live ●</span></div>
             <div class="demo-body">
-              <div class="waveform" aria-hidden="true">
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-                <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-              </div>
               <div class="transcript placeholder" aria-live="polite">
-                <span class="verbatim-text">Press play to see it transcribe.</span>
-                <div class="smart-result"></div>
+                <span class="demo-label">Transcript (Smart Format)</span>
+                <span class="verbatim-text">Press play to see it transcribe.</span><div class="smart-result"></div>
               </div>
-              <div class="demo-context" id="demo-context">
-                <span class="label">Screen context</span>
-                <img src="assets/email-mock.svg" alt="Fake email thumbnail showing flight confirmation" />
+              <div class="targets" aria-hidden="true">
+                <span class="demo-label">Targets</span><div>Mail <small>Insert at cursor</small></div><div>Notes <small>Insert at cursor</small></div>
               </div>
-            </div>
-            <div class="demo-controls">
-              <button class="demo-play" id="demo-play" type="button">
-                <svg width="11" height="11" viewBox="0 0 10 10" aria-hidden="true"><path fill="currentColor" d="M1 0v10l8-5z" /></svg>
-                <span id="demo-play-label">Play</span>
-              </button>
-              <div class="demo-samples" role="group" aria-label="Sample">
-                <button type="button" data-sample="en" aria-pressed="true">EN sample</button>
-                <button type="button" data-sample="zh" aria-pressed="false">ZH sample</button>
-                <button type="button" data-sample="voice-cmd" aria-pressed="false">Voice cmd</button>
-              </div>
+              <div class="demo-context" id="demo-context"><span class="label">Screen context</span><img src="assets/email-mock.svg" alt="Fake email thumbnail showing flight confirmation" /></div>
             </div>
             <audio id="demo-audio" preload="auto" aria-hidden="true"></audio>
           </div>
-          <div class="insert-targets" aria-hidden="true">
-            <div class="target-window target-mail">
-              <div class="window-bar"><span></span><span></span><span></span></div>
-              <p class="target-label">Mail</p>
-              <p>Hi team,</p>
-              <p>I wanted to give a quick update on the design work.</p>
-              <p>We are on track for launch next week.</p>
-              <p>Thanks!<b></b></p>
-            </div>
-            <div class="target-window target-note">
-              <div class="window-bar"><span></span><span></span><span></span></div>
-              <p class="target-label">Notes</p>
-              <p>Polished text appears at the cursor in any app.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+          <div class="hotkey-hud" aria-hidden="true"><kbd>fn</kbd><span>Hold to talk</span><i></i><b>▮▮▮▮▮</b></div>
+          <ul class="capability-rail" aria-label="Key capabilities"><li>Local ASR</li><li>LLM cleanup</li><li>Screen context</li><li>Any app</li></ul>
+        </section>
 
-    <section class="pipeline-section">
-      <div class="wrap">
-        <div class="section-heading split-heading">
+        <section id="pipeline" class="content-section">
+          <p class="command">$ utter pipeline --verbose</p>
           <h2>From voice to final text in one key release.</h2>
-          <p class="section-lead">Utter keeps the whole loop visible: capture, understand, clean up, and insert.</p>
-        </div>
-        <ol class="pipeline" aria-label="Utter processing pipeline">
-          <li><span class="step-number">1</span><div class="step-icon key-icon">fn</div><h3>Hold fn</h3><p>A global hotkey starts capture without leaving the current app.</p></li>
-          <li><span class="step-number">2</span><div class="mini-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><h3>Speak naturally</h3><p>Talk like you would to a person. The flow stays out of your way.</p></li>
-          <li><span class="step-number">3</span><div class="step-icon wave-icon"></div><h3>Local ASR</h3><p>Speech recognition runs locally on Apple Silicon.</p></li>
-          <li><span class="step-number">4</span><div class="step-icon spark-icon">✦</div><h3>LLM cleanup</h3><p>The cleanup model removes filler, fixes grammar, and formats for context.</p></li>
-          <li><span class="step-number">5</span><div class="step-icon cursor-icon">I</div><h3>Insert anywhere</h3><p>Accessibility insertion places text at the cursor with clipboard fallback.</p></li>
-        </ol>
-        <div class="pipeline-strip" aria-hidden="true">
-          <span>fn</span><i></i><span class="wave-mark"></span><i></i><span class="wave-dot"></span><i></i><span>✦</span><i></i><span>I</span>
-        </div>
-      </div>
-    </section>
+          <ol class="pipeline" aria-label="Utter processing pipeline">
+            <li><span>01</span><h3>Hold fn</h3><b>fn</b><p>A global hotkey starts capture without leaving the current app.</p></li>
+            <li><span>02</span><h3>Speak naturally</h3><b>··|·|··</b><p>Talk like you would to a person. Utter captures audio on your Mac.</p></li>
+            <li><span>03</span><h3>Local ASR</h3><b>&lt;/&gt;</b><p>Speech recognition can run locally on Apple Silicon.</p></li>
+            <li><span>04</span><h3>LLM cleanup</h3><b>≡</b><p>The selected model removes filler, fixes grammar, and formats for context.</p></li>
+            <li><span>05</span><h3>Insert anywhere</h3><b>↵</b><p>Accessibility insertion places the final text at the cursor.</p></li>
+          </ol>
+          <div class="transform"><div><small>Raw transcript</small><p>so basically we need to ship the update this week and test it before friday</p></div><span>⟶</span><div><small>Final text</small><p>We need to ship the update this week and test it before Friday.</p></div></div>
+        </section>
 
-    <section id="features" class="features-section">
-      <div class="wrap">
-        <div class="section-heading split-heading">
+        <section id="features" class="content-section">
+          <p class="command">$ utter features --list</p>
           <h2>The features are the pipeline.</h2>
-          <p class="section-lead">Each capability exists to make voice input feel immediate, accurate, and native to the app you are already using.</p>
-        </div>
-        <ul class="features-grid feature-rail" role="list">
-          <li class="feature-card"><span class="feature-icon scan-icon" aria-hidden="true"></span><h3>Screen context OCR</h3><p>Reads what is on your screen to understand nearby names, project terms, and homophones in real time.</p></li>
-          <li class="feature-card"><span class="feature-icon command-icon" aria-hidden="true"></span><h3>Voice command mode</h3><p>Use voice to control, edit, summarize, translate, or reply without switching apps or context.</p></li>
-          <li class="feature-card"><span class="feature-icon cube-icon" aria-hidden="true"></span><h3>Local and remote models</h3><p>Run fully on-device for privacy, or use remote LLM providers when that is the right tradeoff.</p></li>
-          <li class="feature-card"><span class="feature-icon globe-icon" aria-hidden="true"></span><h3>Bilingual UI</h3><p>Switch the interface language between English and Simplified Chinese instantly.</p></li>
-        </ul>
-      </div>
-    </section>
+          <ul class="feature-list" role="list">
+            <li><span>⌗</span><h3>Screen context OCR</h3><p>Reads nearby on-screen text to better understand names, project terms, and homophones.</p></li>
+            <li><span>⌘</span><h3>Voice command mode</h3><p>Edit, summarize, translate, or reply without switching away from the current app.</p></li>
+            <li><span>◇</span><h3>Local and remote models</h3><p>Run fully on-device, or choose a remote LLM provider when it suits your workflow.</p></li>
+            <li><span>◎</span><h3>Bilingual UI</h3><p>Switch the interface between English and Simplified Chinese.</p></li>
+          </ul>
+        </section>
 
-    <section class="trust-section">
-      <div class="wrap trust-grid">
-        <div class="privacy-copy">
-          <h2>Private by default. Local when you want it.</h2>
-          <p>WhisperKit transcribes on-device. MLX-Swift-LM can refine text locally. Remote providers are optional.</p>
-          <div class="privacy-counts" aria-label="Privacy summary">
-            <div><span>Audio upload</span><strong>0 required</strong></div>
-            <div><span>Cloud calls</span><strong>0 required</strong></div>
+        <section id="privacy" class="content-section privacy-section">
+          <p class="command">$ utter privacy --local</p>
+          <div class="privacy-grid"><div><h2>Private by default.<br />Local when you want it.</h2><p>WhisperKit transcribes on-device. MLX-Swift-LM can refine text locally. Remote providers are optional.</p></div>
+            <dl><div><dt>Audio upload</dt><dd>0 required <i></i></dd></div><div><dt>Cloud calls</dt><dd>0 required <i></i></dd></div><div><dt>Remote providers</dt><dd>optional <i></i></dd></div></dl>
           </div>
-        </div>
-        <div class="privacy-meter-panel" aria-label="Privacy meter">
-          <div class="meter-head"><strong>Privacy meter</strong><span>You stay in control</span></div>
-          <div class="meter-bar"><span></span></div>
-          <div class="meter-grid">
-            <div><h3>On your Mac</h3><p>Audio, screen context, and cleanup can stay local.</p></div>
-            <div><h3>You control it</h3><p>Choose local or remote models and change anytime.</p></div>
-            <div><h3>Optional cloud</h3><p>Remote LLM providers are used only when enabled.</p></div>
+          <p class="command stack-command">$ utter stack</p>
+          <dl class="tech-list"><div><dt>WhisperKit</dt><dd>Offline speech recognition</dd></div><div><dt>MLX-Swift-LM</dt><dd>On-device LLM inference</dd></div><div><dt>Swift 6</dt><dd>Native macOS app</dd></div><div><dt>ScreenCaptureKit</dt><dd>Screen context capture</dd></div><div><dt>AVAudioEngine</dt><dd>Low-latency mic capture</dd></div><div><dt>Vision</dt><dd>On-device OCR</dd></div></dl>
+        </section>
+
+        <section id="install" class="content-section install-section">
+          <p class="command">$ utter install</p><div class="install-head"><h2>Get Utter from GitHub Releases.</h2><div class="hero-actions"><a class="btn btn-primary" href="https://github.com/IchenDEV/utter/releases/latest">Download for macOS</a><a class="btn" href="https://github.com/IchenDEV/utter">View source</a></div></div>
+          <button class="install-code" id="install-code" type="button" aria-label="Copy Gatekeeper command"><code><span>$</span> xattr -cr /Applications/Utter.app</code><span id="copy-label">copy</span></button>
+          <p class="install-caption">Run once if macOS shows a Gatekeeper prompt.</p>
+        </section>
+
+        <section id="faq" class="content-section faq-section">
+          <p class="command">$ utter faq</p><h2>Questions, answered.</h2>
+          <div class="faq-list">
+            <details open><summary>What is Utter?</summary><p>Utter is a native macOS menu bar app that turns your voice into polished text in any app. Hold a hotkey, speak, and the result is typed directly at your cursor.</p></details>
+            <details><summary>Does Utter work offline?</summary><p>Yes. With WhisperKit or Apple Speech plus a local MLX model, Utter can transcribe and refine text entirely on-device. Remote LLM providers are optional.</p></details>
+            <details><summary>Which macOS version and hardware does Utter require?</summary><p>macOS 26 or later on Apple Silicon. Intel Macs are not supported.</p></details>
+            <details><summary>Which apps does Utter work in?</summary><p>Any macOS app that accepts text input. Utter uses the Accessibility API, with a clipboard-paste fallback.</p></details>
+            <details><summary>Is Utter free and open source?</summary><p>Yes. Utter is MIT-licensed and the full source is on GitHub.</p></details>
           </div>
-        </div>
-        <div class="stack-copy">
-          <h2>Built like a Mac utility.</h2>
-          <p>Native capture, native OCR, native insertion. No web wrapper hiding underneath.</p>
-        </div>
-        <dl class="tech-dl">
-          <dt>WhisperKit</dt><dd>Offline speech recognition</dd>
-          <dt>MLX-Swift-LM</dt><dd>On-device LLM inference</dd>
-          <dt>Swift 6</dt><dd>Native macOS app</dd>
-          <dt>ScreenCaptureKit</dt><dd>Screen context via OCR</dd>
-          <dt>AVAudioEngine</dt><dd>Low-latency mic capture</dd>
-          <dt>Vision</dt><dd>On-device OCR</dd>
-        </dl>
-      </div>
-    </section>
-
-    <section id="install" class="download-section">
-      <div class="wrap download-wrap">
-        <h2>Get Utter from GitHub Releases.</h2>
-        <div class="download-actions">
-          <a class="btn btn-primary btn-large" href="https://github.com/IchenDEV/utter/releases/latest">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" /></svg>
-            Download for macOS
-          </a>
-          <a class="btn btn-ghost btn-large" href="https://github.com/IchenDEV/utter">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 17-5-5 5-5m8 0 5 5-5 5m-2-12-4 16" /></svg>
-            View source
-          </a>
-        </div>
-        <button class="install-code" id="install-code" type="button" aria-label="Copy Gatekeeper command">
-          <code>xattr -cr /Applications/Utter.app</code>
-          <span class="copy-label" id="copy-label">copy</span>
-        </button>
-        <p class="install-caption">Run once if macOS shows a Gatekeeper prompt.</p>
-      </div>
-    </section>
-
-    <section id="faq" class="faq-section">
-      <div class="wrap faq-wrap">
-        <div class="section-heading split-heading"><h2>Questions, answered.</h2></div>
-        <div class="faq-list">
-          <details open><summary>What is Utter?</summary><p>Utter is a native macOS menu bar app that turns your voice into polished text in any app. Hold a hotkey, speak, and the transcribed, cleaned-up text is typed directly at your cursor.</p></details>
-          <details><summary>Does Utter work offline?</summary><p>Yes. With WhisperKit or Apple Speech plus a local MLX model such as Qwen3, Utter can transcribe and refine text entirely on-device. Remote LLM providers are optional.</p></details>
-          <details><summary>Which macOS version and hardware does Utter require?</summary><p>macOS 26 or later on Apple Silicon. Intel Macs are not supported.</p></details>
-          <details><summary>How is Utter different from Apple's built-in dictation?</summary><p>Utter adds LLM cleanup, screen context via OCR, voice command mode, and global hotkey insertion into any app without switching context.</p></details>
-          <details><summary>Which apps does Utter work in?</summary><p>Any macOS app that accepts text input. Utter uses the Accessibility API to insert text at your cursor, with a clipboard-paste fallback.</p></details>
-          <details><summary>Is Utter free and open source?</summary><p>Yes. Utter is MIT-licensed and the full source is on GitHub. Prebuilt binaries are published on GitHub Releases.</p></details>
-          <details><summary>Which languages does Utter support?</summary><p>Speech recognition supports many languages via WhisperKit and Apple Speech. The app UI is bilingual in English and Simplified Chinese.</p></details>
-          <details><summary>How does screen context help dictation?</summary><p>Utter can capture on-screen text with ScreenCaptureKit and Vision, then feed it to the LLM so it picks the right word based on what you are looking at.</p></details>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="wrap">
-      <a href="https://github.com/IchenDEV/utter">GitHub</a>
-      <a href="https://github.com/IchenDEV/utter/releases/latest">Latest release</a>
-      <a href="https://github.com/IchenDEV/utter/issues">Issues</a>
-      <a href="https://github.com/IchenDEV/utter/blob/main/README.md">Docs</a>
-      <a href="https://github.com/IchenDEV/utter/blob/main/LICENSE">MIT</a>
-      <span>Built for Apple Silicon</span>
+        </section>
+      </main>
     </div>
-  </footer>
 
+    <footer><nav aria-label="Footer"><a href="https://github.com/IchenDEV/utter">GitHub</a><a href="https://github.com/IchenDEV/utter/releases/latest">Latest release</a><a href="https://github.com/IchenDEV/utter/issues">Issues</a><a href="https://github.com/IchenDEV/utter/blob/main/README.md">Docs</a><a href="https://github.com/IchenDEV/utter/blob/main/LICENSE">MIT</a></nav><span>Built for Apple Silicon</span></footer>
+  </div>
   <script src="assets/demo.js" defer></script>
 </body>
 </html>
