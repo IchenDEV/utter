@@ -97,6 +97,12 @@
 
 /* ── Settings ── */
 "settings.activation" = "Activation";
+"settings.startup" = "Startup";
+"settings.launch_at_login" = "Launch at login";
+"settings.launch_at_login_help" = "Automatically start Utter when you log in to your Mac.";
+"settings.launch_at_login_requires_approval" = "Allow Utter in System Settings → General → Login Items.";
+"settings.launch_at_login_error_title" = "Login Item Could Not Be Updated";
+"settings.launch_at_login_error" = "Utter could not update its login item: %@";
 "settings.interface" = "Interface";
 "settings.recognition" = "Recognition";
 "settings.audio" = "Audio";
