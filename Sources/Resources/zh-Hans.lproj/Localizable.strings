@@ -97,6 +97,12 @@
 
 /* ── Settings ── */
 "settings.activation" = "激活方式";
+"settings.startup" = "启动";
+"settings.launch_at_login" = "登录时启动";
+"settings.launch_at_login_help" = "登录 Mac 后自动启动 Utter。";
+"settings.launch_at_login_requires_approval" = "请在“系统设置”→“通用”→“登录项”中允许 Utter。";
+"settings.launch_at_login_error_title" = "无法更新登录项";
+"settings.launch_at_login_error" = "Utter 无法更新登录项：%@";
 "settings.interface" = "界面";
 "settings.recognition" = "识别引擎";
 "settings.audio" = "音频";

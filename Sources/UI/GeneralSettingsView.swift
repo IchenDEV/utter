@@ -1,7 +1,12 @@
+import AppKit
 import SwiftUI
 
 struct GeneralSettingsView: View {
     @EnvironmentObject private var settings: AppSettings
+    @State private var launchAtLoginEnabled = false
+    @State private var launchAtLoginRequiresApproval = false
+    @State private var launchAtLoginErrorMessage = ""
+    @State private var showsLaunchAtLoginError = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -19,6 +24,15 @@ struct GeneralSettingsView: View {
             settingsForm
         }
         .settingsPageSurface()
+        .onAppear(perform: refreshLaunchAtLoginStatus)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            refreshLaunchAtLoginStatus()
+        }
+        .alert(L("settings.launch_at_login_error_title"), isPresented: $showsLaunchAtLoginError) {
+            Button(L("common.ok"), role: .cancel) {}
+        } message: {
+            Text(launchAtLoginErrorMessage)
+        }
     }
 
     private var settingsForm: some View {
@@ -135,6 +149,27 @@ struct GeneralSettingsView: View {
             }
 
             Section {
+                Toggle(isOn: Binding(
+                    get: { launchAtLoginEnabled },
+                    set: updateLaunchAtLogin
+                )) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("settings.launch_at_login"))
+                        Text(L("settings.launch_at_login_help"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                if launchAtLoginRequiresApproval {
+                    Label(L("settings.launch_at_login_requires_approval"), systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            } header: {
+                SettingsSectionHeader(title: L("settings.startup"), symbol: "power")
+            }
+
+            Section {
                 Picker(L("settings.ui_language"), selection: $settings.uiLanguage) {
                     ForEach(UILanguage.allCases, id: \.self) { language in
                         Text(language.displayName).tag(language)
@@ -201,6 +236,25 @@ struct GeneralSettingsView: View {
             .padding(.horizontal, 9)
             .padding(.vertical, 4)
             .background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+    }
+
+    private func updateLaunchAtLogin(_ enabled: Bool) {
+        do {
+            try LaunchAtLoginService.setEnabled(enabled)
+        } catch {
+            Log.error("Failed to update launch at login: \(error.localizedDescription)")
+            launchAtLoginErrorMessage = String(
+                format: L("settings.launch_at_login_error"),
+                error.localizedDescription
+            )
+            showsLaunchAtLoginError = true
+        }
+        refreshLaunchAtLoginStatus()
+    }
+
+    private func refreshLaunchAtLoginStatus() {
+        launchAtLoginEnabled = LaunchAtLoginService.isEnabled
+        launchAtLoginRequiresApproval = LaunchAtLoginService.requiresApproval
     }
 }
 
