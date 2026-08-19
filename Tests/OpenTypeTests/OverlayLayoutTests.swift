@@ -59,6 +59,48 @@ final class OverlayLayoutTests: XCTestCase {
         XCTAssertEqual(frame.minY, visibleFrame.minY + 24)
     }
 
+    func testOverlayTargetsDisplayContainingFocusedWindow() {
+        let displays = [
+            CGRect(x: 0, y: 0, width: 1_512, height: 982),
+            CGRect(x: -2_560, y: -323, width: 2_560, height: 1_440),
+        ]
+        let focusedWindow = CGRect(x: -2_200, y: -200, width: 1_000, height: 800)
+
+        let index = OverlayPanelPlacement.targetDisplayIndex(
+            for: focusedWindow,
+            in: displays
+        )
+
+        XCTAssertEqual(index, 1)
+    }
+
+    func testOverlayTargetsDisplayWithMostOfFocusedWindow() {
+        let displays = [
+            CGRect(x: -1_920, y: 0, width: 1_920, height: 1_080),
+            CGRect(x: 0, y: 0, width: 1_512, height: 982),
+        ]
+        let focusedWindow = CGRect(x: -300, y: 100, width: 1_000, height: 700)
+
+        let index = OverlayPanelPlacement.targetDisplayIndex(
+            for: focusedWindow,
+            in: displays
+        )
+
+        XCTAssertEqual(index, 1)
+    }
+
+    func testOverlayHasNoTargetForWindowOutsideConnectedDisplays() {
+        let displays = [CGRect(x: 0, y: 0, width: 1_512, height: 982)]
+        let focusedWindow = CGRect(x: 4_000, y: 100, width: 800, height: 600)
+
+        let index = OverlayPanelPlacement.targetDisplayIndex(
+            for: focusedWindow,
+            in: displays
+        )
+
+        XCTAssertNil(index)
+    }
+
     func testCancellingRecordingResetsStateWithoutProcessing() {
         let appState = AppState()
         appState.phase = .recording
