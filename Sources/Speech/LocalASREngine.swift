@@ -8,7 +8,7 @@ struct LocalASRConfiguration: Equatable {
     }
 
     static let defaultPythonPath = "python3"
-    static let qwen3DefaultModel = "mlx-community/Qwen3-ASR-1.7B-bf16"
+    static let qwen3DefaultModel = "mlx-community/Qwen3-ASR-0.6B-bf16"
     static let mimoDefaultModel = "XiaomiMiMo/MiMo-V2.5-ASR"
     static let mimoTokenizerModel = "XiaomiMiMo/MiMo-Audio-Tokenizer"
     static let mimoRepositoryURL = "https://github.com/XiaomiMiMo/MiMo-V2.5-ASR.git"

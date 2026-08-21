@@ -52,7 +52,7 @@ extension ModelCatalog {
         "mlx-community/gemma-3-12b-it-4bit": 8_068_018_787,
         "mlx-community/Llama-4-Scout-17B-16E-Instruct-4bit": 61_143_654_248,
         "mlx-community/Llama-4-Maverick-17B-128E-Instruct-4bit": 225_923_469_800,
-        LocalASRConfiguration.qwen3DefaultModel: 4_080_707_826,
+        LocalASRConfiguration.qwen3DefaultModel: 1_570_000_000,
         LocalASRConfiguration.mimoDefaultModel: 35_997_080_271,
     ]
 

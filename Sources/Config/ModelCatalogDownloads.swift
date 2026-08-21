@@ -8,6 +8,10 @@ extension ModelCatalog {
     static var whisperDownloadBase: URL { ModelStorage.huggingFaceBase }
 
     func downloadWhisper(_ id: String) async {
+        guard ProductEdition.current.capabilities.modelDownloads else {
+            updateWhisperStatus(id, status: .error(L("offline_bundle.downloads_disabled")))
+            return
+        }
         await downloadTasks.run(key: ModelDownloadKey(kind: .whisper, modelID: id)) { [weak self] in
             await self?.performWhisperDownload(id)
         }
@@ -99,6 +103,10 @@ extension ModelCatalog {
     }
 
     func downloadLLM(_ id: String) async {
+        guard ProductEdition.current.capabilities.modelDownloads else {
+            updateLLMStatus(id, status: .error(L("offline_bundle.downloads_disabled")))
+            return
+        }
         await downloadTasks.run(key: ModelDownloadKey(kind: .llm, modelID: id)) { [weak self] in
             await self?.performLLMDownload(id)
         }

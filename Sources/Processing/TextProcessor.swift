@@ -105,6 +105,11 @@ final class TextProcessor {
         let prepareElapsed = CFAbsoluteTimeGetCurrent() - prepareStarted
         Log.info("[TextProcessor] prepared LLM input \(text.count) chars to \(cleanedText.count) chars in \(String(format: "%.2f", prepareElapsed))s")
         guard !cleanedText.isEmpty else { return "" }
+        if !ProductEdition.current.capabilities.modelManagement,
+           cleanedText.count > ProductEdition.current.maximumFormattingCharacters {
+            Log.info("[TextProcessor] input exceeds offline edition formatting limit; using faithful fallback")
+            return cleanedText
+        }
 
         let useScreenImage = shouldUseScreenImage(options: options, image: screenImage)
         let systemPrompt = formattingSystemPrompt(

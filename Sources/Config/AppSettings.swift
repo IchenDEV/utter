@@ -296,6 +296,7 @@ final class AppSettings: ObservableObject {
     @Published var preloadFormattingModelOnLaunch: Bool
     @Published var modelStoragePath: String
     @Published var localWhisperModelPaths: [String: String]
+    @Published var localASRModelPaths: [String: String]
     @Published var localLLMModelPaths: [String: String]
     @Published var developerInterfaceEnabled: Bool
     @Published var developerHTTPPort: Int
@@ -319,7 +320,7 @@ final class AppSettings: ObservableObject {
         case qwenASRModel, qwenASRModelPath
         case mimoASRRepoPath, mimoASRModel, mimoASRModelPath, mimoASRTokenizerPath
         case preloadSpeechModelOnLaunch, preloadFormattingModelOnLaunch
-        case modelStoragePath, localWhisperModelPaths, localLLMModelPaths
+        case modelStoragePath, localWhisperModelPaths, localASRModelPaths, localLLMModelPaths
         case developerInterfaceEnabled, developerHTTPPort, developerHTTPToken
     }
 
@@ -399,6 +400,7 @@ final class AppSettings: ObservableObject {
         preloadFormattingModelOnLaunch = ud.object(forKey: Key.preloadFormattingModelOnLaunch.rawValue) as? Bool ?? true
         modelStoragePath = ud.string(forKey: Key.modelStoragePath.rawValue) ?? ModelStorage.defaultRoot.path
         localWhisperModelPaths = ud.dictionary(forKey: Key.localWhisperModelPaths.rawValue) as? [String: String] ?? [:]
+        localASRModelPaths = ud.dictionary(forKey: Key.localASRModelPaths.rawValue) as? [String: String] ?? [:]
         localLLMModelPaths = ud.dictionary(forKey: Key.localLLMModelPaths.rawValue) as? [String: String] ?? [:]
         developerInterfaceEnabled = ud.object(forKey: Key.developerInterfaceEnabled.rawValue) as? Bool ?? false
         developerHTTPPort = Self.validDeveloperHTTPPort(ud.integer(forKey: Key.developerHTTPPort.rawValue))
@@ -464,6 +466,7 @@ final class AppSettings: ObservableObject {
         $preloadFormattingModelOnLaunch.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.preloadFormattingModelOnLaunch.rawValue) }.store(in: &cancellables)
         $modelStoragePath.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.modelStoragePath.rawValue) }.store(in: &cancellables)
         $localWhisperModelPaths.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.localWhisperModelPaths.rawValue) }.store(in: &cancellables)
+        $localASRModelPaths.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.localASRModelPaths.rawValue) }.store(in: &cancellables)
         $localLLMModelPaths.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.localLLMModelPaths.rawValue) }.store(in: &cancellables)
         $developerInterfaceEnabled.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.developerInterfaceEnabled.rawValue) }.store(in: &cancellables)
         $developerHTTPPort.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.developerHTTPPort.rawValue) }.store(in: &cancellables)

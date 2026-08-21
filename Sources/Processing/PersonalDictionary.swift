@@ -9,6 +9,17 @@ struct EditRule: Codable, Identifiable, Sendable {
 struct PersonalDictionarySnapshot: Sendable {
     let entries: [DictionaryEntry]
     let editRules: [EditRule]
+    let industryTerms: [String]
+
+    init(
+        entries: [DictionaryEntry],
+        editRules: [EditRule],
+        industryTerms: [String] = []
+    ) {
+        self.entries = entries
+        self.editRules = editRules
+        self.industryTerms = industryTerms
+    }
 
     func applyReplacements(to text: String) -> String {
         let rules = entries.enumerated().compactMap { offset, entry -> ReplacementRule? in
@@ -70,9 +81,18 @@ struct PersonalDictionarySnapshot: Sendable {
             .joined(separator: "\n")
     }
 
+    var activeIndustryTermsDescription: String {
+        industryTerms.joined(separator: "\n")
+    }
+
+    var recognitionPhrases: [String] {
+        let personal = SpeechRecognitionContext(dictionaryEntries: entries).phrases
+        return SpeechRecognitionContext(phrases: industryTerms + personal).phrases
+    }
+
     var protectedTerms: [String] {
         var seen = Set<String>()
-        return entries.compactMap { entry in
+        let personalTerms = entries.compactMap { entry -> String? in
             guard entry.isEffective else { return nil }
             let term = entry.replacement.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !term.isEmpty,
@@ -81,6 +101,13 @@ struct PersonalDictionarySnapshot: Sendable {
             }
             return term
         }
+        let industry = industryTerms.compactMap { term -> String? in
+            let normalized = term.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !normalized.isEmpty,
+                  seen.insert(normalized.lowercased()).inserted else { return nil }
+            return normalized
+        }
+        return industry + personalTerms
     }
 
     private static func matches(
@@ -148,7 +175,11 @@ final class PersonalDictionary: ObservableObject {
     }
 
     func snapshot() -> PersonalDictionarySnapshot {
-        PersonalDictionarySnapshot(entries: entries, editRules: editRules)
+        PersonalDictionarySnapshot(
+            entries: entries,
+            editRules: editRules,
+            industryTerms: IndustryLexicon.shared.recognitionPhrases
+        )
     }
 
     @discardableResult

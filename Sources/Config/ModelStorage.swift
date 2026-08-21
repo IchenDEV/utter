@@ -55,6 +55,7 @@ enum ModelStorage {
 
     static func llmRepoDir(_ modelID: String) -> URL? {
         if let local = localLLMURL(modelID) { return local }
+        if !ProductEdition.current.capabilities.modelManagement { return nil }
         let dir = hubModelRepoDir(modelID)
         return FileManager.default.fileExists(atPath: dir.path) ? dir : nil
     }
@@ -65,12 +66,19 @@ enum ModelStorage {
     }
 
     static func asrRepoDir(_ modelID: String) -> URL? {
+        if let local = localASRURL(modelID) { return local }
+        if !ProductEdition.current.capabilities.modelManagement { return nil }
         let dir = hubModelRepoDir(modelID)
         return FileManager.default.fileExists(atPath: dir.path) ? dir : nil
     }
 
     static func localWhisperURL(_ id: String) -> URL? {
         guard let path = AppSettings.shared.localWhisperModelPaths[id] else { return nil }
+        return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
+    }
+
+    static func localASRURL(_ id: String) -> URL? {
+        guard let path = AppSettings.shared.localASRModelPaths[id] else { return nil }
         return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
     }
 
@@ -84,6 +92,17 @@ enum ModelStorage {
             resourceHasContent(dir.appendingPathComponent("\(name).mlmodelc")) ||
                 resourceHasContent(dir.appendingPathComponent("\(name).mlpackage"))
         }
+    }
+
+    static func qwenASRModelIsComplete(at dir: URL) -> Bool {
+        [
+            "config.json",
+            "model.safetensors",
+            "model.safetensors.index.json",
+            "preprocessor_config.json",
+            "tokenizer_config.json",
+            "vocab.json",
+        ].allSatisfy { fileExists(dir.appendingPathComponent($0)) }
     }
 
     static func llmRepoIsComplete(at dir: URL) -> Bool {

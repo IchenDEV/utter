@@ -5,6 +5,7 @@ import Network
 @MainActor
 extension AppDelegate {
     func observeIntegrationSettings() {
+        guard ProductEdition.current.capabilities.developerIntegrations else { return }
         let settings = AppSettings.shared
         settings.$developerInterfaceEnabled
             .combineLatest(settings.$developerHTTPPort, settings.$developerHTTPToken)
@@ -18,6 +19,10 @@ extension AppDelegate {
     }
 
     func configureIntegrationHTTPServer() {
+        guard ProductEdition.current.capabilities.developerIntegrations else {
+            stopIntegrationHTTPServer(resetService: true)
+            return
+        }
         let settings = AppSettings.shared
         guard settings.developerInterfaceEnabled else {
             stopIntegrationHTTPServer(resetService: true)
@@ -94,6 +99,10 @@ extension AppDelegate {
     }
 
     func configureIntegrationXPCServer() {
+        guard ProductEdition.current.capabilities.developerIntegrations else {
+            stopIntegrationXPCServer()
+            return
+        }
         guard AppSettings.shared.developerInterfaceEnabled else {
             stopIntegrationXPCServer()
             return

@@ -1,5 +1,16 @@
 import Foundation
 import Combine
+import AppKit
+
+struct PendingMedicalDraft {
+    let text: String
+    let rawText: String
+    let context: InputContext
+    let formatKind: TextFormatKind?
+    let targetApplication: NSRunningApplication?
+    let wasProcessed: Bool
+    let allowsCorrectionCapture: Bool
+}
 
 enum AppPhase: Equatable {
     case idle
@@ -31,6 +42,7 @@ final class AppState: ObservableObject {
     @Published var lastInsertedText: String = ""
     @Published var lastFormattingDurationSeconds: Double = 0
     @Published var pendingReplacement: DeferredReplacement?
+    @Published var pendingMedicalDraft: PendingMedicalDraft?
     @Published var activeInputMode: VoiceInputMode = .dictation
 
     let settings = AppSettings.shared
@@ -53,6 +65,7 @@ final class AppState: ObservableObject {
         statusMessage = L("status.ready")
         resetDownloadProgress()
         pendingReplacement = nil
+        pendingMedicalDraft = nil
         activeInputMode = .dictation
     }
 

@@ -44,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        ProductEdition.apply(to: AppSettings.shared)
         AppIcon.install()
         setupMenuBar()
         setupPipeline()
@@ -53,10 +54,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         observeAppIconSetting()
         observeSystemAppearanceForIcon()
         observeUILanguageForSettingsWindow()
-        observeIntegrationSettings()
-        configureIntegrationHTTPServer()
-        configureIntegrationXPCServer()
-
         if !AppSettings.shared.hasCompletedOnboarding {
             showOnboarding()
         }
@@ -82,6 +79,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 Task { @MainActor in
                     await self?.applyPendingReplacement()
                 }
+            },
+            onConfirmMedicalDraft: { [weak self] in
+                Task { @MainActor in
+                    await self?.pipeline?.confirmPendingMedicalDraft()
+                }
+            },
+            onDiscardMedicalDraft: { [weak self] in
+                self?.pipeline?.discardPendingMedicalDraft()
             },
             onQuit: { NSApp.terminate(nil) }
         )
@@ -142,7 +147,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
         savePreviousApp()
         if popover.isShown { closePopover() }
-        let mode: VoiceInputMode = action == .translation
+        let mode: VoiceInputMode = ProductEdition.current.capabilities.translation && action == .translation
             ? .translation(AppSettings.shared.translationTargetLanguage)
             : .dictation
         Task { await pipeline?.start(mode: mode, targetApp: previousApp) }
@@ -223,7 +228,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             width: SettingsWindowLayout.minimumWidth,
             height: SettingsWindowLayout.minimumHeight
         )
-        window.setFrameAutosaveName("UtterSettingsWindow")
+        window.setFrameAutosaveName("UtterMedicalOfflineSettingsWindow")
         window.center()
         window.contentView = NSHostingView(rootView: settingsView)
         window.isReleasedWhenClosed = false

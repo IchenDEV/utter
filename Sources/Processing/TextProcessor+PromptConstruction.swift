@@ -74,6 +74,10 @@ extension TextProcessor {
     ) -> String {
         let snapshot = dictionarySnapshot ?? PersonalDictionary.shared.snapshot()
         let extraSections = [
+            PromptCatalog.activeIndustryLexiconSection(
+                snapshot.activeIndustryTermsDescription,
+                inputLanguage: inputLanguage
+            ),
             PromptCatalog.activePersonalDictionarySection(
                 snapshot.activeEntriesDescription,
                 inputLanguage: inputLanguage

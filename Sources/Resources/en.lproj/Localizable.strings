@@ -16,6 +16,7 @@
 "common.cannot_undo" = "This action cannot be undone.";
 "common.recommended" = "Recommended";
 "common.custom" = "Custom";
+"common.discard" = "Discard";
 "common.retry" = "Retry";
 
 /* ── Status ── */
@@ -24,7 +25,7 @@
 "status.no_speech_detected" = "No Speech Detected";
 
 /* ── Tabs ── */
-"settings.window_title" = "Utter Settings";
+"settings.window_title" = "Utter Medical Offline Settings";
 "settings.hero.title" = "Voice input, tuned to your workflow.";
 "settings.hero.subtitle" = "Use your shortcut anywhere. Utter recognizes, refines, translates, and inserts without breaking your flow.";
 "settings.page.general.title" = "Voice Input";
@@ -190,7 +191,7 @@
 /* ── Model Management ── */
 "model.preload.title" = "Startup Preload";
 "model.preload.speech" = "Preload dictation model on launch";
-"model.preload.speech_help" = "Applies to already downloaded WhisperKit models. Use the Download button in Models first.";
+"model.preload.speech_help" = "Applies to local speech models that are already ready.";
 "model.preload.formatting" = "Preload formatting model on launch";
 "model.preload.formatting_help" = "Applies to local MLX models. Remote LLM providers are called when formatting starts.";
 "model.speech_recognition" = "Speech Recognition";
@@ -393,8 +394,8 @@
 "history.records_count" = "%d records";
 
 /* ── Onboarding ── */
-"onboarding.welcome" = "Welcome to Utter";
-"onboarding.welcome_body" = "An intelligent voice input method that runs entirely on your Mac.\nPowered by WhisperKit for speech recognition and MLX for text formatting.";
+"onboarding.welcome" = "Welcome to Utter Medical Offline";
+"onboarding.welcome_body" = "A medical voice input tool that runs entirely on your device.\nQwen speech recognition, formatting, and translation work without a network connection.";
 "onboarding.voice_input" = "Voice Input";
 "onboarding.smart_format" = "Smart Format";
 "onboarding.local" = "100% Local";
@@ -432,7 +433,7 @@
 
 /* ── About ── */
 "about.subtitle" = "Intelligent Voice Input";
-"about.body" = "On-device voice input powered by WhisperKit and MLX.\nSpeech recognition, smart formatting, and personal dictionary — all local.";
+"about.body" = "Medical voice input with bundled speech, formatting, and terminology models.\nProcessing stays on this device with no remote inference.";
 "about.feedback" = "Feedback";
 
 /* ── Errors ── */
@@ -474,7 +475,7 @@
 "local_asr.tokenizer_path" = "Audio tokenizer path";
 "qwen_asr.config_hint" = "Choose Qwen3-ASR, then click Download to fetch the local model and prepare its Python runtime.";
 "mimo_asr.config_hint" = "Choose MiMo-V2.5-ASR, then click Download to fetch the model, audio tokenizer, and runtime files.";
-"model.qwen3_asr_quality" = "Local ASR through MLX, ~4.1 GB";
+"model.qwen3_asr_quality" = "Local ASR through MLX, ~1.6 GB";
 "model.mimo_asr_quality" = "Local ASR model plus audio tokenizer ~36 GB";
 "model.asr_incomplete" = "Only part of the model or runtime was downloaded. Select Resume to finish.";
 "model.asr_preparing_runtime" = "Preparing runtime files";
@@ -486,3 +487,48 @@
 "error.llm_not_downloaded" = "The model files have not been downloaded. Open Settings → Models and confirm the data usage first.";
 "onboarding.download_notice" = "No download starts automatically. Review the size, then confirm if you want this local model.";
 "onboarding.download_size" = "Download (%@)";
+
+/* ── Medical offline edition ── */
+"edition.medical_offline.name" = "Medical Offline Edition";
+"edition.offline_badge" = "Fully offline";
+"edition.offline_summary" = "Qwen speech recognition, Qwen formatting and translation, and medical terminology run locally. Remote inference, model downloads, and developer integrations are disabled.";
+"edition.minimum_memory" = "%d GB target";
+"edition.network_disabled" = "Network features disabled";
+"tab.industry_lexicon" = "Medical Lexicon";
+"model.bundled_fixed" = "Bundled · Fixed";
+"offline_bundle.ready" = "Bundled models verified and ready";
+"offline_bundle.missing" = "Bundled models are missing from this build";
+"offline_bundle.invalid_manifest" = "The bundled model manifest is invalid";
+"offline_bundle.profile_mismatch" = "The bundled models do not match this edition";
+"offline_bundle.incomplete_speech" = "The bundled speech model is incomplete";
+"offline_bundle.incomplete_speech_runtime" = "The bundled Qwen speech runtime is incomplete";
+"offline_bundle.incomplete_formatting" = "The bundled formatting model is incomplete";
+"offline_bundle.missing_legal_notices" = "The bundled model licenses or notices are missing";
+"offline_bundle.downloads_disabled" = "Model downloads are disabled in this offline edition";
+"offline_bundle.remote_disabled" = "Remote inference is unavailable in this offline edition";
+"onboarding.offline_models" = "Offline package verification";
+"onboarding.offline_models_body" = "This edition includes fixed Qwen models, their runtime, and a medical lexicon. No model download or account setup is required.";
+"edition.qwen_text_roles" = "%@ · Formatting and translation";
+"industry.lexicon.page_title" = "Medical Terminology";
+"industry.lexicon.page_subtitle" = "Review the bundled read-only terminology and manage local personal corrections.";
+"industry.lexicon.term_count" = "%d bundled terms";
+"industry.lexicon.title" = "Bundled medical lexicon";
+"industry.lexicon.search" = "Search terminology";
+"industry.lexicon.read_only_help" = "This signed base lexicon is read-only. It guides recognition and spelling without adding diagnoses, drugs, doses, measurements, or orders that were not dictated.";
+"industry.lexicon.no_results" = "No matching terminology";
+"industry.lexicon.category.documentation" = "Clinical record";
+"industry.lexicon.category.department" = "Department";
+"industry.lexicon.category.symptom" = "Symptom";
+"industry.lexicon.category.diagnosis" = "Diagnosis";
+"industry.lexicon.category.examination" = "Examination";
+"industry.lexicon.category.vital_sign" = "Vital sign";
+"industry.lexicon.category.medication" = "Medication";
+"industry.lexicon.category.procedure" = "Procedure";
+"industry.lexicon.category.safety" = "Safety";
+"industry.lexicon.category.unit" = "Unit";
+"medical_draft.ready" = "Draft ready for clinical review";
+"medical_draft.review_title" = "Review before inserting";
+"medical_draft.confirm_insert" = "Confirm & Insert";
+"medical_draft.discarded" = "Draft discarded";
+"medical_draft.pending_before_recording" = "Review or discard the current draft before recording again";
+"medical_draft.review_mode" = "Medical draft · confirmation required";

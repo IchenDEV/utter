@@ -55,7 +55,7 @@ enum LocalASRRuntime {
     }
 
     private static func ensureQwenRuntime(preferredPath: String) async throws -> String {
-        let runtimeDir = ModelStorage.localASRRuntimeDir(for: .qwen3)
+        let runtimeDir = qwenRuntimeDir()
         let runtimePython = qwenPythonURL().path
         if isReady(for: .qwen3) { return runtimePython }
 
@@ -123,15 +123,32 @@ enum LocalASRRuntime {
     }
 
     private static func qwenPythonURL() -> URL {
-        ModelStorage.localASRRuntimeDir(for: .qwen3).appendingPathComponent("bin/python")
+        qwenRuntimeDir().appendingPathComponent("bin/python")
     }
 
     private static func qwenMarkerURL() -> URL {
-        ModelStorage.localASRRuntimeDir(for: .qwen3).appendingPathComponent(markerName)
+        qwenRuntimeDir().appendingPathComponent(markerName)
     }
 
     private static func qwenNativeMarkerURL() -> URL {
-        ModelStorage.localASRRuntimeDir(for: .qwen3).appendingPathComponent(nativeMarkerName)
+        qwenRuntimeDir().appendingPathComponent(nativeMarkerName)
+    }
+
+    private static func qwenRuntimeDir() -> URL {
+        let configured = AppSettings.shared.localASRPythonPath
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if configured.contains("/") {
+            let python = URL(
+                fileURLWithPath: NSString(string: configured).expandingTildeInPath
+            )
+            let root = python.deletingLastPathComponent().deletingLastPathComponent()
+            if FileManager.default.isExecutableFile(atPath: python.path),
+               qwenMarkerIsCurrent(at: root.appendingPathComponent(markerName)),
+               qwenMarkerIsCurrent(at: root.appendingPathComponent(nativeMarkerName)) {
+                return root
+            }
+        }
+        return ModelStorage.localASRRuntimeDir(for: .qwen3)
     }
 
     private static func prepareNativeExtensions(in runtimeDir: URL) async throws {

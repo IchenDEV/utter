@@ -181,6 +181,7 @@ actor LocalASRServer {
 
     private func serverArguments(runnerURL: URL) -> [String] {
         var args = [
+            "-I", "-B",
             runnerURL.path,
             "--provider", configuration.provider.rawValue,
             "--model", configuration.modelPath,

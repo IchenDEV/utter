@@ -8,7 +8,7 @@ struct AboutView: View {
             SettingsPageHeader(
                 kind: .about,
                 title: ProductBrand.displayName,
-                subtitle: L("settings.page.about.subtitle")
+                subtitle: ProductEdition.localizedName
             ) {
                 SettingsPageBadge(title: version, symbol: "shippingbox")
             }
@@ -37,16 +37,22 @@ struct AboutView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("© 2026 Utter · \(version)")
+                Text("© 2026 \(ProductBrand.displayName) · \(version) · \(L("edition.offline_badge"))")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
             Spacer(minLength: 12)
-            VStack(alignment: .trailing, spacing: 8) {
-                Link("GitHub", destination: URL(string: "https://github.com/IchenDEV/utter")!)
-                Link(L("about.feedback"), destination: URL(string: "https://github.com/IchenDEV/utter/issues")!)
+            if ProductEdition.current.capabilities.externalLinks {
+                VStack(alignment: .trailing, spacing: 8) {
+                    Link("GitHub", destination: URL(string: "https://github.com/IchenDEV/utter")!)
+                    Link(L("about.feedback"), destination: URL(string: "https://github.com/IchenDEV/utter/issues")!)
+                }
+                .font(.caption)
+            } else {
+                Label(L("edition.network_disabled"), systemImage: "network.slash")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .font(.caption)
         }
     }
 
@@ -87,9 +93,11 @@ struct AboutView: View {
                 Divider().padding(.horizontal, 12)
                 permRow(icon: "mic.fill", name: L("perm.microphone"),
                         hint: L("perm.microphone_hint"), granted: microphoneGranted, action: requestMicrophone)
-                Divider().padding(.horizontal, 12)
-                permRow(icon: "waveform", name: L("perm.speech"),
-                        hint: L("perm.speech_hint"), granted: speechGranted, action: requestSpeech)
+                if ProductEdition.current.capabilities.modelManagement {
+                    Divider().padding(.horizontal, 12)
+                    permRow(icon: "waveform", name: L("perm.speech"),
+                            hint: L("perm.speech_hint"), granted: speechGranted, action: requestSpeech)
+                }
                 Divider().padding(.horizontal, 12)
                 permRow(icon: "rectangle.dashed.badge.record", name: L("perm.screen"),
                         hint: L("perm.screen_hint"), granted: screenCaptureGranted, action: requestScreenCapture)

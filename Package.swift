@@ -9,7 +9,6 @@ let package = Package(
     ],
     products: [
         .executable(name: "OpenType", targets: ["OpenType"]),
-        .executable(name: "OpenTypeCLI", targets: ["OpenTypeCLI"]),
     ],
     dependencies: [
         .package(url: "https://github.com/argmaxinc/argmax-oss-swift.git", from: "1.0.0"),
@@ -41,19 +40,14 @@ let package = Package(
                 .copy("Resources/SettingsAboutIllustration.png"),
                 .copy("Resources/Scripts"),
                 .copy("Resources/Sounds"),
+                .copy("Resources/MedicalLexicon.json"),
+                .copy("Resources/OfflineModelManifest.json"),
                 .copy("Resources/AppIcon.icns"),
                 .copy("Resources/AppIconLight.icns"),
                 .copy("Resources/AppIconDark.icns"),
                 .process("Resources/en.lproj"),
                 .process("Resources/zh-Hans.lproj"),
             ],
-            swiftSettings: [
-                .swiftLanguageMode(.v5)
-            ]
-        ),
-        .executableTarget(
-            name: "OpenTypeCLI",
-            path: "SourcesCLI",
             swiftSettings: [
                 .swiftLanguageMode(.v5)
             ]

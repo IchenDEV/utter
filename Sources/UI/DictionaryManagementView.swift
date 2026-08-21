@@ -42,9 +42,11 @@ struct DictionaryManagementView: View {
                 Label(L("dictionary.title"), systemImage: "text.book.closed")
                     .font(.headline)
                 Spacer()
-                Toggle(L("dictionary.auto_learning"), isOn: $settings.enableCorrectionLearning)
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
+                if ProductEdition.current.capabilities.correctionLearning {
+                    Toggle(L("dictionary.auto_learning"), isOn: $settings.enableCorrectionLearning)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                }
             }
             Text(L("dictionary.subtitle"))
                 .font(.caption)
@@ -118,13 +120,17 @@ struct DictionaryManagementView: View {
 
     private var footer: some View {
         HStack(spacing: 10) {
-            Button(L("dictionary.import"), action: importEntries)
-            Button(L("dictionary.export"), action: exportEntries)
-                .disabled(dictionary.entries.isEmpty)
-            Button(L("dictionary.clear_learned"), role: .destructive) {
-                showClearConfirmation = true
+            if ProductEdition.current.capabilities.dictionaryTransfer {
+                Button(L("dictionary.import"), action: importEntries)
+                Button(L("dictionary.export"), action: exportEntries)
+                    .disabled(dictionary.entries.isEmpty)
             }
-            .disabled(!dictionary.entries.contains { $0.origin == .learned })
+            if ProductEdition.current.capabilities.correctionLearning {
+                Button(L("dictionary.clear_learned"), role: .destructive) {
+                    showClearConfirmation = true
+                }
+                .disabled(!dictionary.entries.contains { $0.origin == .learned })
+            }
             Spacer()
             Text(statusMessage)
                 .font(.caption)

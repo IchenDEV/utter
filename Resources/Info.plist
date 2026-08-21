@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Utter</string>
+    <string>Utter Medical Offline</string>
     <key>CFBundleDisplayName</key>
-    <string>Utter</string>
+    <string>Utter Medical Offline</string>
     <key>CFBundleIdentifier</key>
-    <string>com.opentype.voiceinput</string>
+    <string>com.opentype.voiceinput.medical-offline</string>
     <key>CFBundleExecutable</key>
-    <string>Utter</string>
+    <string>Utter Medical Offline</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIconName</key>
@@ -26,18 +26,13 @@
     <string>26.0</string>
     <key>LSUIElement</key>
     <true/>
-    <key>MachServices</key>
-    <dict>
-        <key>com.opentype.voiceinput.xpc</key>
-        <true/>
-    </dict>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Utter needs microphone access to capture voice for transcription.</string>
+    <string>Utter Medical Offline needs microphone access to capture voice for transcription.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>Utter uses speech recognition to convert voice to text.</string>
+    <string>Utter Medical Offline uses speech recognition to convert voice to text.</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>Utter needs automation access to type text into other applications.</string>
+    <string>Utter Medical Offline needs automation access to type text into other applications.</string>
     <key>NSScreenCaptureUsageDescription</key>
-    <string>Utter uses screen content for context-aware text correction.</string>
+    <string>Utter Medical Offline uses screen content for context-aware text correction.</string>
 </dict>
 </plist>

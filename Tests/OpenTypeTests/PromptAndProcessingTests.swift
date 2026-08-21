@@ -257,7 +257,7 @@ final class PromptAndProcessingTests: XCTestCase {
         }
     }
 
-    func testFormattingOptionsExpandWithLongInputAndCapAt4096() {
+    func testFormattingOptionsExpandWithLongInputAndCapAtEditionLimit() {
         withCleanSettings {
             let processor = TextProcessor()
             let longText = String(repeating: "中", count: 1_000)
@@ -273,11 +273,11 @@ final class PromptAndProcessingTests: XCTestCase {
             )
             XCTAssertEqual(
                 processor.formattingOptions(for: oversizedText, style: .professional).maxTokens,
-                4_096
+                ProductEdition.current.maximumGenerationTokens
             )
             XCTAssertEqual(
                 processor.formattingOptions(for: oversizedText, style: .casual).maxTokens,
-                4_096
+                ProductEdition.current.maximumGenerationTokens
             )
         }
     }

@@ -86,6 +86,29 @@ final class ModelCatalog: ObservableObject {
     ]
 
     private init() {
+        if !ProductEdition.current.capabilities.modelManagement {
+            let profile = ProductEdition.current
+            settings.speechEngine = .qwen3
+            settings.qwenASRModel = profile.speechModel.id
+            settings.llmModel = profile.formattingModel.id
+            whisperModels = []
+            asrModels = [ModelEntry(
+                id: profile.speechModel.id,
+                displayName: profile.speechModel.displayName,
+                hint: L("model.bundled_fixed"),
+                family: nil
+            )]
+            llmModels = [ModelEntry(
+                id: profile.formattingModel.id,
+                displayName: profile.formattingModel.displayName,
+                hint: L("model.bundled_fixed"),
+                family: .qwen,
+                tier: .recommended
+            )]
+            refreshStatus()
+            return
+        }
+
         let rec = WhisperKit.recommendedModels()
         let defaultID = rec.default
         let supported = Set(rec.supported)
@@ -218,6 +241,7 @@ final class ModelCatalog: ObservableObject {
     }
 
     func addCustomLLM(_ modelID: String) {
+        guard ProductEdition.current.capabilities.modelManagement else { return }
         guard !modelID.isEmpty, !llmModels.contains(where: { $0.id == modelID }) else { return }
         let name = modelID.components(separatedBy: "/").last ?? modelID
         llmModels.append(ModelEntry(id: modelID, displayName: name, hint: L("common.custom"), family: nil))
@@ -225,6 +249,7 @@ final class ModelCatalog: ObservableObject {
     }
 
     func addLocalWhisper(_ url: URL) {
+        guard ProductEdition.current.capabilities.modelManagement else { return }
         let existing = Set(whisperModels.map(\.id))
         let id = ModelStorage.makeLocalID(prefix: "whisper", folderName: url.lastPathComponent, existing: existing)
         var paths = settings.localWhisperModelPaths
@@ -236,6 +261,7 @@ final class ModelCatalog: ObservableObject {
     }
 
     func addLocalLLM(_ url: URL) {
+        guard ProductEdition.current.capabilities.modelManagement else { return }
         let existing = Set(llmModels.map(\.id))
         let id = ModelStorage.makeLocalID(prefix: "llm", folderName: url.lastPathComponent, existing: existing)
         var paths = settings.localLLMModelPaths

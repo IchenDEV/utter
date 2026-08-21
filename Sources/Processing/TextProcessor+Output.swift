@@ -58,7 +58,10 @@ extension TextProcessor {
         // room for punctuation and formatting without letting requests grow
         // beyond the supported generation ceiling.
         let estimatedTokens = min(characterCount, 2_048) * 2
-        let maxTokens = min(4_096, max(minimumTokens, estimatedTokens))
+        let maxTokens = min(
+            ProductEdition.current.maximumGenerationTokens,
+            max(minimumTokens, estimatedTokens)
+        )
 
         return GenerationOptions(
             maxTokens: maxTokens,

@@ -18,23 +18,29 @@ step() {
 }
 
 step "Checking Package.swift"
-swift package describe >/dev/null
+package_description="$(swift package describe)"
+if printf '%s\n' "$package_description" | grep -q 'Name: OpenTypeCLI'; then
+    fail "offline industry edition must not publish the CLI product or target"
+fi
 
 step "Linting property lists and localized strings"
 plutil -lint Resources/Info.plist
 plutil -lint Resources/OpenType.entitlements
 plutil -lint Sources/Resources/en.lproj/Localizable.strings
 plutil -lint Sources/Resources/zh-Hans.lproj/Localizable.strings
+swift -e 'import Foundation; for path in CommandLine.arguments.dropFirst() { _ = try JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: path))) }' \
+    Sources/Resources/MedicalLexicon.json \
+    Sources/Resources/OfflineModelManifest.json
 
 step "Checking brand and compatibility identifiers"
-test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' Resources/Info.plist)" = "Utter" \
-    || fail "CFBundleDisplayName must be Utter"
-test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' Resources/Info.plist)" = "Utter" \
-    || fail "CFBundleExecutable must be Utter"
-test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' Resources/Info.plist)" = "Utter" \
-    || fail "CFBundleName must be Utter"
-test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' Resources/Info.plist)" = "com.opentype.voiceinput" \
-    || fail "bundle identifier changed and would break upgrade compatibility"
+test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' Resources/Info.plist)" = "Utter Medical Offline" \
+    || fail "CFBundleDisplayName must identify the medical offline edition"
+test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' Resources/Info.plist)" = "Utter Medical Offline" \
+    || fail "CFBundleExecutable must identify the medical offline edition"
+test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' Resources/Info.plist)" = "Utter Medical Offline" \
+    || fail "CFBundleName must identify the medical offline edition"
+test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' Resources/Info.plist)" = "com.opentype.voiceinput.medical-offline" \
+    || fail "medical offline edition must use its independent bundle identifier"
 
 step "Checking localization key parity"
 en_keys="$(mktemp)"
@@ -59,6 +65,10 @@ test -s Resources/Info.plist || fail "missing Info.plist"
 test -s Resources/OpenType.entitlements || fail "missing entitlements"
 test -s Sources/Resources/AppIconLight.png || fail "missing light app icon"
 test -s Sources/Resources/AppIconDark.png || fail "missing dark app icon"
+test -s Sources/Resources/MedicalLexicon.json || fail "missing medical lexicon"
+test -s Sources/Resources/OfflineModelManifest.json || fail "missing offline model manifest"
+test -x scripts/build-industry-app.sh || fail "industry build script is not executable"
+test -x scripts/verify-offline-model-bundle.sh || fail "offline bundle verifier is not executable"
 test -s Sources/Resources/AppIcon.icon/Assets/AppIconLightForeground.png \
     || fail "missing light Icon Composer foreground"
 test -s Sources/Resources/AppIcon.icon/Assets/AppIconDarkForeground.png \

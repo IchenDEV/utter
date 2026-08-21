@@ -1,6 +1,7 @@
 import Foundation
 
 enum RemoteLLMError: LocalizedError {
+    case unavailableInOfflineEdition
     case noAPIKey
     case noBaseURL
     case requestFailed(String)
@@ -8,6 +9,7 @@ enum RemoteLLMError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
+        case .unavailableInOfflineEdition: return L("offline_bundle.remote_disabled")
         case .noAPIKey: return "API key not configured"
         case .noBaseURL: return "Base URL not configured"
         case .requestFailed(let msg): return "Request failed: \(msg)"
@@ -27,6 +29,9 @@ actor RemoteLLMClient {
         maxTokens: Int = 2048,
         temperature: Double = 0.3
     ) async throws -> String {
+        guard ProductEdition.current.capabilities.remoteInference else {
+            throw RemoteLLMError.unavailableInOfflineEdition
+        }
         guard !apiKey.isEmpty else { throw RemoteLLMError.noAPIKey }
 
         do {

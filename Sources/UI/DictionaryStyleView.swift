@@ -7,6 +7,14 @@ struct DictionaryStyleView: View {
     @State private var newRule = ""
 
     var body: some View {
+        if ProductEdition.current.capabilities.customPrompts {
+            configurableStyleView
+        } else {
+            medicalLexiconView
+        }
+    }
+
+    private var configurableStyleView: some View {
         VStack(spacing: 0) {
             SettingsPageHeader(
                 kind: .style,
@@ -25,6 +33,35 @@ struct DictionaryStyleView: View {
                     SettingsPanel { DictionaryManagementView() }
                     SettingsPanel { editRulesSection }
                     SettingsPanel { customSystemPromptSection }
+                }
+                .padding(20)
+            }
+        }
+        .settingsPageSurface()
+    }
+
+    private var medicalLexiconView: some View {
+        VStack(spacing: 0) {
+            SettingsPageHeader(
+                kind: .style,
+                title: L("industry.lexicon.page_title"),
+                subtitle: L("industry.lexicon.page_subtitle")
+            ) {
+                SettingsPageBadge(
+                    title: String(
+                        format: L("industry.lexicon.term_count"),
+                        IndustryLexicon.shared.terms.count
+                    ),
+                    symbol: "lock.shield"
+                )
+            }
+            Divider()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    SettingsPanel { OfflineEditionSummaryView() }
+                    SettingsPanel { IndustryLexiconView() }
+                    SettingsPanel { DictionaryManagementView() }
                 }
                 .padding(20)
             }

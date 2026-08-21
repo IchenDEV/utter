@@ -25,7 +25,7 @@ extension InputSessionCoordinator {
         }
         engine.configureRecognition(
             context: SpeechRecognitionContext(
-                dictionaryEntries: PersonalDictionary.shared.entries
+                phrases: PersonalDictionary.shared.snapshot().recognitionPhrases
             )
         )
 

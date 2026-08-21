@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 2,
+  "editionID": "medical-offline-cn-v1",
+  "minimumMemoryGB": 8,
+  "speech": {
+    "id": "mlx-community/Qwen3-ASR-0.6B-bf16",
+    "path": "speech"
+  },
+  "speechRuntime": {
+    "id": "qwen3-asr-mlx==0.1.1",
+    "path": "speech-runtime"
+  },
+  "formatting": {
+    "id": "mlx-community/Qwen3-0.6B-4bit",
+    "path": "formatting"
+  }
+}

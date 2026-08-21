@@ -32,7 +32,8 @@ extension VoicePipeline {
             }
 
             if !inputMode.isTranslation {
-                if await handleSpokenEditCommandIfNeeded(
+                if ProductEdition.current.capabilities.voiceCommands,
+                   await handleSpokenEditCommandIfNeeded(
                     raw: preparedRaw,
                     settings: settings,
                     targetApp: targetApp
@@ -101,7 +102,7 @@ extension VoicePipeline {
         Log.info("[VoicePipeline] ASR stage finished in \(String(format: "%.2f", elapsed))s")
 
         guard let prepared = TranscriptionSanitizer.prepare(raw, audioActivity: audioActivity) else {
-            showNoSpeechDetected(reason: "transcription has no meaningful content: \(raw)")
+            showNoSpeechDetected(reason: "transcription has no meaningful content")
             throw VoicePipelineStop.noSpeech
         }
 
@@ -252,60 +253,37 @@ extension VoicePipeline {
             return
         }
 
-        appState.processedText = finalText
-        appState.phase = .inserting
-        appState.statusMessage = L("pipeline.inserting")
-
-        Log.sensitive("[VoicePipeline] inserting \(finalText.count) chars")
-        let started = CFAbsoluteTimeGetCurrent()
-        let result = await textInserter.insert(text: finalText, targetApp: targetApp)
-        let elapsed = CFAbsoluteTimeGetCurrent() - started
-        Log.info("[VoicePipeline] insert stage finished in \(String(format: "%.2f", elapsed))s")
-
-        appState.phase = .done
-        appState.statusMessage = L("status.done")
-        hideOverlayAfterDelay()
-
-        if case .probablyFailed(let reason) = result {
-            Log.info("[VoicePipeline] insertion probably failed: \(reason)")
-            TextInserter.copyToClipboard(finalText)
-            showInsertionFailedAlert(text: finalText, reason: reason)
-            return
-        }
-
         let wasProcessed = inputMode.isTranslation
             || settings.outputMode == .processed
             || settings.outputMode == .command
-        let recordID = InputHistory.shared.addRecord(
-            rawText: raw,
-            processedText: finalText,
-            wasProcessed: wasProcessed,
-            context: output.context,
-            formatKind: output.formatKind
-        )
-        appState.lastInsertedText = finalText
-        if !inputMode.isTranslation {
-            beginCorrectionCapture(
-                recordID: recordID,
-                insertedText: finalText,
-                context: output.context
+        let allowsCorrectionCapture = !inputMode.isTranslation
+        appState.processedText = finalText
+
+        if ProductEdition.current.capabilities.requiresInsertionReview {
+            appState.pendingMedicalDraft = PendingMedicalDraft(
+                text: finalText,
+                rawText: raw,
+                context: output.context,
+                formatKind: output.formatKind,
+                targetApplication: targetApp,
+                wasProcessed: wasProcessed,
+                allowsCorrectionCapture: allowsCorrectionCapture
             )
+            appState.phase = .done
+            appState.statusMessage = L("medical_draft.ready")
+            hideOverlayAfterDelay()
+            return
         }
+
+        await commitFinalText(
+            finalText,
+            raw: raw,
+            context: output.context,
+            formatKind: output.formatKind,
+            targetApp: targetApp,
+            wasProcessed: wasProcessed,
+            allowsCorrectionCapture: allowsCorrectionCapture
+        )
     }
-}
 
-struct VoicePipelineOutput {
-    let text: String
-    let context: InputContext
-    let formatKind: TextFormatKind?
-
-    init(text: String, context: InputContext, formatKind: TextFormatKind? = nil) {
-        self.text = text
-        self.context = context
-        self.formatKind = formatKind
-    }
-}
-
-private enum VoicePipelineStop: Error {
-    case noSpeech
 }

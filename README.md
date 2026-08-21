@@ -60,17 +60,18 @@ Three output modes are available:
 
 - **OS**: macOS 26 (Tahoe) or later
 - **Chip**: Apple Silicon (M1 / M2 / M3 / M4)
-- **Disk**: ~400 MB minimum (Apple Speech + Qwen3-0.6B), up to ~4 GB with larger models
+- **Memory**: 8 GB minimum
+- **Disk**: approximately 2.2 GB
 
 ## Installation
 
 ### Download
 
-Grab the latest `.dmg` from [Releases](https://github.com/IchenDEV/utter/releases), open it, and drag **Utter.app** to Applications.
+Grab the latest `.dmg` from [Releases](https://github.com/IchenDEV/utter/releases), open it, and drag **Utter Medical Offline.app** to Applications.
 
 > **"Cannot verify the developer" on first launch?** The app is not notarized by Apple. Before first run, execute in Terminal:
 > ```bash
-> xattr -cr /Applications/Utter.app
+> xattr -cr "/Applications/Utter Medical Offline.app"
 > ```
 > Or go to System Settings → Privacy & Security and click "Open Anyway".
 
@@ -91,14 +92,14 @@ bash scripts/build-and-run.sh --verify
 open Package.swift
 ```
 
-The public app is `Utter.app`. The Swift package product remains `OpenType` so existing source integrations and upgrade paths continue to work.
+The distributable app is `Utter Medical Offline.app` with bundle identifier `com.opentype.voiceinput.medical-offline`. The internal Swift package product remains `OpenType`.
 
 ## First Run
 
-1. Launch Utter — it appears as a waveform icon in the menu bar
+1. Launch Utter Medical Offline — it appears as a waveform icon in the menu bar
 2. The onboarding wizard guides you through permissions and model setup
 3. Grant **Microphone** and **Accessibility** permissions (required)
-4. Wait for the LLM model to download (~335 MB, one-time)
+4. The bundled Qwen models are prepared locally; no model download is required
 5. Hold **Fn** to start dictating, release to stop and insert text
 
 ## Permissions

@@ -27,21 +27,27 @@ struct SettingsView: View {
 
     var body: some View {
         TabView {
-            HistoryStatsView()
-                .tabItem { Label(L("tab.history"), systemImage: "chart.line.uptrend.xyaxis") }
+            if ProductEdition.current.capabilities.activityHistory {
+                HistoryStatsView()
+                    .tabItem { Label(L("tab.history"), systemImage: "chart.line.uptrend.xyaxis") }
+            }
             GeneralSettingsView()
                 .tabItem { Label(L("tab.general"), systemImage: "slider.horizontal.3") }
-            ModelManagementView(
-                onUnloadWhisper: onUnloadWhisper,
-                onUnloadLLM: onUnloadLLM,
-                onLoadLLM: onLoadLLM,
-                onUnloadLocalASR: onUnloadLocalASR
-            )
-            .tabItem { Label(L("tab.models"), systemImage: "cpu") }
+            if ProductEdition.current.capabilities.modelManagement {
+                ModelManagementView(
+                    onUnloadWhisper: onUnloadWhisper,
+                    onUnloadLLM: onUnloadLLM,
+                    onLoadLLM: onLoadLLM,
+                    onUnloadLocalASR: onUnloadLocalASR
+                )
+                .tabItem { Label(L("tab.models"), systemImage: "cpu") }
+            }
             DictionaryStyleView()
-                .tabItem { Label(L("tab.style"), systemImage: "text.book.closed") }
-            IntegrationsSettingsView()
-                .tabItem { Label(L("settings.integrations"), systemImage: "point.3.connected.trianglepath.dotted") }
+                .tabItem { Label(L("tab.industry_lexicon"), systemImage: "cross.case") }
+            if ProductEdition.current.capabilities.developerIntegrations {
+                IntegrationsSettingsView()
+                    .tabItem { Label(L("settings.integrations"), systemImage: "point.3.connected.trianglepath.dotted") }
+            }
             AboutView()
                 .tabItem { Label(L("tab.about"), systemImage: "info.circle") }
         }

@@ -1,9 +1,8 @@
 enum ProductBrand {
-    static let displayName = "Utter"
+    static let displayName = "Utter Medical Offline"
 
-    // Compatibility identifiers intentionally retain the original product name.
     static let legacyName = "OpenType"
-    static let bundleIdentifier = "com.opentype.voiceinput"
-    static let applicationSupportDirectoryName = legacyName
+    static let bundleIdentifier = "com.opentype.voiceinput.medical-offline"
+    static let applicationSupportDirectoryName = "OpenTypeMedicalOffline"
     static let cliExecutableName = "opentype-cli"
 }

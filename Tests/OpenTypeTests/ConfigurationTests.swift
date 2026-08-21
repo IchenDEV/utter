@@ -61,7 +61,7 @@ final class ConfigurationTests: XCTestCase {
 
     func testLocalASRDefaultsMatchOnDeviceRunner() {
         XCTAssertEqual(LocalASRConfiguration.defaultPythonPath, "python3")
-        XCTAssertEqual(LocalASRConfiguration.qwen3DefaultModel, "mlx-community/Qwen3-ASR-1.7B-bf16")
+        XCTAssertEqual(LocalASRConfiguration.qwen3DefaultModel, "mlx-community/Qwen3-ASR-0.6B-bf16")
         XCTAssertEqual(LocalASRConfiguration.mimoDefaultModel, "XiaomiMiMo/MiMo-V2.5-ASR")
         XCTAssertEqual(LocalASRConfiguration.mimoTokenizerModel, "XiaomiMiMo/MiMo-Audio-Tokenizer")
     }
@@ -126,10 +126,10 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(AppIconAppearance.system.resourceName(systemIsDark: false), "AppIconLight")
     }
 
-    func testBrandRenamePreservesUpgradeIdentifiers() {
-        XCTAssertEqual(ProductBrand.displayName, "Utter")
-        XCTAssertEqual(ProductBrand.bundleIdentifier, "com.opentype.voiceinput")
-        XCTAssertEqual(ProductBrand.applicationSupportDirectoryName, "OpenType")
+    func testMedicalOfflineEditionUsesIndependentIdentity() {
+        XCTAssertEqual(ProductBrand.displayName, "Utter Medical Offline")
+        XCTAssertEqual(ProductBrand.bundleIdentifier, "com.opentype.voiceinput.medical-offline")
+        XCTAssertEqual(ProductBrand.applicationSupportDirectoryName, "OpenTypeMedicalOffline")
         XCTAssertEqual(ProductBrand.cliExecutableName, "opentype-cli")
     }
 
@@ -195,8 +195,8 @@ final class ConfigurationTests: XCTestCase {
 
     @MainActor
     func testSettingsWindowTitleFollowsUILanguage() {
-        XCTAssertEqual(SettingsWindowTitle.text(for: .english), "Utter Settings")
-        XCTAssertEqual(SettingsWindowTitle.text(for: .chinese), "Utter 设置")
+        XCTAssertEqual(SettingsWindowTitle.text(for: .english), "Utter Medical Offline Settings")
+        XCTAssertEqual(SettingsWindowTitle.text(for: .chinese), "Utter 医疗离线版设置")
     }
 
     func testSettingsWindowWidthAllowsEnglishTabLabels() {
@@ -281,14 +281,20 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(AppSettings(defaults: largeDefaults).developerHTTPPort, 38_765)
     }
 
-    func testStartupPreloadPolicyLoadsOnlyWhisperSpeechModel() {
+    func testStartupPreloadPolicyLoadsDownloadedLocalSpeechModels() {
         XCTAssertTrue(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
             enabled: true, speechEngine: .whisper, modelDownloaded: true
+        ))
+        XCTAssertTrue(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
+            enabled: true, speechEngine: .qwen3, modelDownloaded: true
+        ))
+        XCTAssertTrue(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
+            enabled: true, speechEngine: .mimo, modelDownloaded: true
         ))
         XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
             enabled: true, speechEngine: .whisper, modelDownloaded: false
         ))
-        for engine in [SpeechEngineType.apple, .volc, .qwen3, .mimo] {
+        for engine in [SpeechEngineType.apple, .volc] {
             XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
                 enabled: true, speechEngine: engine, modelDownloaded: true
             ))

@@ -1,11 +1,10 @@
 #!/usr/bin/env swift
 //
 // generate-icon.swift
-// Builds Utter PNG and .icns assets from the light/dark Icon Composer foregrounds.
+// Builds the medical offline app's Icon Composer, PNG, and ICNS assets.
 //
 // Usage:
 //   swift scripts/generate-icon.swift --refresh-assets [resources-directory]
-//   swift scripts/generate-icon.swift <output-directory> [source-png]
 
 
 import AppKit
@@ -38,15 +37,15 @@ enum IconAppearance: CaseIterable {
 
     var topColor: NSColor {
         switch self {
-        case .light: NSColor(srgbRed: 0.99, green: 1.00, blue: 1.00, alpha: 1)
-        case .dark: NSColor(srgbRed: 0.24, green: 0.25, blue: 0.27, alpha: 1)
+        case .light: NSColor(srgbRed: 0.97, green: 1.00, blue: 0.99, alpha: 1)
+        case .dark: NSColor(srgbRed: 0.10, green: 0.17, blue: 0.18, alpha: 1)
         }
     }
 
     var bottomColor: NSColor {
         switch self {
-        case .light: NSColor(srgbRed: 0.89, green: 0.91, blue: 0.95, alpha: 1)
-        case .dark: NSColor(srgbRed: 0.055, green: 0.06, blue: 0.075, alpha: 1)
+        case .light: NSColor(srgbRed: 0.83, green: 0.93, blue: 0.92, alpha: 1)
+        case .dark: NSColor(srgbRed: 0.025, green: 0.06, blue: 0.07, alpha: 1)
         }
     }
 
@@ -54,6 +53,21 @@ enum IconAppearance: CaseIterable {
         switch self {
         case .light: NSColor.white.withAlphaComponent(0.78)
         case .dark: NSColor.white.withAlphaComponent(0.18)
+        }
+    }
+
+    var shieldColors: (bottom: NSColor, top: NSColor) {
+        switch self {
+        case .light:
+            (
+                NSColor(srgbRed: 0.035, green: 0.42, blue: 0.56, alpha: 1),
+                NSColor(srgbRed: 0.12, green: 0.78, blue: 0.67, alpha: 1)
+            )
+        case .dark:
+            (
+                NSColor(srgbRed: 0.035, green: 0.48, blue: 0.62, alpha: 1),
+                NSColor(srgbRed: 0.22, green: 0.90, blue: 0.76, alpha: 1)
+            )
         }
     }
 }
@@ -92,6 +106,67 @@ func savePNG(_ image: NSImage, to url: URL, pixelSize: Int) throws {
         throw CocoaError(.fileWriteUnknown)
     }
     try data.write(to: url, options: .atomic)
+}
+
+func renderMedicalForeground(appearance: IconAppearance, size: CGFloat) -> NSImage {
+    NSImage(size: NSSize(width: size, height: size), flipped: false) { rect in
+        guard let context = NSGraphicsContext.current?.cgContext else { return false }
+        let scale = size / 1024
+        func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: x * scale, y: y * scale)
+        }
+        func roundedRect(_ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat) -> CGPath {
+            let box = CGRect(x: x * scale, y: y * scale, width: width * scale, height: height * scale)
+            return CGPath(roundedRect: box, cornerWidth: min(box.width, box.height) * 0.28,
+                          cornerHeight: min(box.width, box.height) * 0.28, transform: nil)
+        }
+
+        let shield = CGMutablePath()
+        shield.move(to: point(304, 794))
+        shield.addCurve(to: point(226, 716), control1: point(261, 794), control2: point(226, 759))
+        shield.addLine(to: point(226, 478))
+        shield.addCurve(to: point(512, 172), control1: point(226, 321), control2: point(360, 218))
+        shield.addCurve(to: point(798, 478), control1: point(664, 218), control2: point(798, 321))
+        shield.addLine(to: point(798, 716))
+        shield.addCurve(to: point(720, 794), control1: point(798, 759), control2: point(763, 794))
+        shield.closeSubpath()
+
+        context.saveGState()
+        context.setShadow(offset: CGSize(width: 0, height: -14 * scale), blur: 24 * scale,
+                          color: NSColor.black.withAlphaComponent(0.30).cgColor)
+        context.addPath(shield)
+        context.setFillColor(appearance.shieldColors.bottom.cgColor)
+        context.fillPath()
+        context.restoreGState()
+
+        context.saveGState()
+        context.addPath(shield)
+        context.clip()
+        let colors = appearance.shieldColors
+        let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                  colors: [colors.bottom.cgColor, colors.top.cgColor] as CFArray,
+                                  locations: [0, 1])!
+        context.drawLinearGradient(gradient, start: point(512, 180), end: point(512, 800), options: [])
+        context.restoreGState()
+
+        context.addPath(shield)
+        context.setStrokeColor(NSColor.white.withAlphaComponent(0.38).cgColor)
+        context.setLineWidth(8 * scale)
+        context.strokePath()
+
+        context.setFillColor(NSColor.white.cgColor)
+        context.addPath(roundedRect(474, 548, 76, 202))
+        context.addPath(roundedRect(411, 611, 202, 76))
+        context.fillPath()
+
+        let bars: [(CGFloat, CGFloat)] = [(356, 58), (416, 102), (476, 142), (536, 102), (596, 58)]
+        for (x, height) in bars {
+            context.addPath(roundedRect(x, 332, 40, height))
+        }
+        context.setFillColor(NSColor.white.withAlphaComponent(0.94).cgColor)
+        context.fillPath()
+        return true
+    }
 }
 
 func renderIcon(foreground: NSImage, appearance: IconAppearance, size: CGFloat) -> NSImage {
@@ -192,13 +267,8 @@ func refreshAssets(in resourcesURL: URL) throws {
 
     for appearance in IconAppearance.allCases {
         let sourceURL = foregroundsURL.appendingPathComponent(appearance.foregroundName)
-        guard let foreground = NSImage(contentsOf: sourceURL) else {
-            throw NSError(
-                domain: "UtterIconGeneration",
-                code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "Could not read \(sourceURL.path)"]
-            )
-        }
+        let foreground = renderMedicalForeground(appearance: appearance, size: 1024)
+        try savePNG(foreground, to: sourceURL, pixelSize: 1024)
         let image = renderIcon(foreground: foreground, appearance: appearance, size: 1024)
         rendered[appearance] = image
         try savePNG(image, to: resourcesURL.appendingPathComponent(appearance.pngName), pixelSize: 1024)
@@ -211,32 +281,15 @@ func refreshAssets(in resourcesURL: URL) throws {
 }
 
 do {
-    if CommandLine.arguments.dropFirst().first == "--refresh-assets" {
-        let resourcesURL = CommandLine.arguments.count > 2
-            ? URL(fileURLWithPath: CommandLine.arguments[2])
-            : projectDirectory().appendingPathComponent("Sources/Resources")
-        try refreshAssets(in: resourcesURL)
-        print("Utter app icon assets refreshed in \(resourcesURL.path)")
-    } else {
-        guard CommandLine.arguments.count > 1 else {
-            fputs("Usage: swift scripts/generate-icon.swift --refresh-assets [resources-directory]\n", stderr)
-            exit(1)
-        }
-        let outputURL = URL(fileURLWithPath: CommandLine.arguments[1])
-        let sourceURL = CommandLine.arguments.count > 2
-            ? URL(fileURLWithPath: CommandLine.arguments[2])
-            : projectDirectory().appendingPathComponent("Sources/Resources/AppIcon.png")
-        guard let icon = NSImage(contentsOf: sourceURL) else {
-            throw NSError(
-                domain: "UtterIconGeneration",
-                code: 2,
-                userInfo: [NSLocalizedDescriptionKey: "Could not read \(sourceURL.path)"]
-            )
-        }
-        try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
-        try writeICNS(icon, to: outputURL.appendingPathComponent("AppIcon.icns"))
-        print("AppIcon.icns -> \(outputURL.path)")
+    guard CommandLine.arguments.dropFirst().first == "--refresh-assets" else {
+        fputs("Usage: swift scripts/generate-icon.swift --refresh-assets [resources-directory]\n", stderr)
+        exit(1)
     }
+    let resourcesURL = CommandLine.arguments.count > 2
+        ? URL(fileURLWithPath: CommandLine.arguments[2])
+        : projectDirectory().appendingPathComponent("Sources/Resources")
+    try refreshAssets(in: resourcesURL)
+    print("Utter Medical Offline icon assets refreshed in \(resourcesURL.path)")
 } catch {
     fputs("Icon generation failed: \(error.localizedDescription)\n", stderr)
     exit(1)

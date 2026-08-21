@@ -10,7 +10,7 @@ extension ModelCatalog {
         [
             (
                 LocalASRConfiguration.qwen3DefaultModel,
-                "Qwen3-ASR 1.7B",
+                "Qwen3-ASR 0.6B",
                 L("model.qwen3_asr_quality"),
                 .qwen3
             ),
@@ -68,6 +68,12 @@ extension ModelCatalog {
     }
 
     func downloadASR(_ id: String, onProgress: ((DownloadProgressInfo) -> Void)? = nil) async {
+        guard ProductEdition.current.capabilities.modelDownloads else {
+            if let index = asrModels.firstIndex(where: { $0.id == id }) {
+                asrModels[index].status = .error(L("offline_bundle.downloads_disabled"))
+            }
+            return
+        }
         await downloadTasks.run(key: ModelDownloadKey(kind: .asr, modelID: id)) { [weak self] in
             await self?.performASRDownload(id, onProgress: onProgress)
         }
@@ -242,6 +248,9 @@ extension ModelCatalog {
 
     static func asrRepoContainsRequiredFiles(_ id: String, at dir: URL?) -> Bool {
         guard let dir else { return false }
+        if id == LocalASRConfiguration.qwen3DefaultModel {
+            return ModelStorage.qwenASRModelIsComplete(at: dir)
+        }
         return asrRequiredFiles(for: id).allSatisfy { relativePath in
             let file = dir.appendingPathComponent(relativePath)
             var isDirectory = ObjCBool(false)

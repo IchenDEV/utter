@@ -77,45 +77,53 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                Picker(L("settings.output_mode"), selection: $settings.outputMode) {
-                    ForEach(OutputMode.allCases, id: \.self) { Text($0.label) }
-                }
-                Toggle(isOn: $settings.enableInstantInsert) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L("settings.instant_insert"))
-                        Text(L("settings.instant_insert_help"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                if ProductEdition.current.capabilities.voiceCommands {
+                    Picker(L("settings.output_mode"), selection: $settings.outputMode) {
+                        ForEach(OutputMode.allCases, id: \.self) { Text($0.label) }
                     }
+                } else {
+                    LabeledContent(L("settings.output_mode"), value: L("medical_draft.review_mode"))
                 }
-                .disabled(settings.outputMode != .processed)
+                if !ProductEdition.current.capabilities.requiresInsertionReview {
+                    Toggle(isOn: $settings.enableInstantInsert) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L("settings.instant_insert"))
+                            Text(L("settings.instant_insert_help"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .disabled(settings.outputMode != .processed)
+                }
             } header: {
                 SettingsSectionHeader(title: L("settings.output"), symbol: "text.badge.checkmark")
             }
 
-            Section {
-                Picker(L("settings.translation_target"), selection: $settings.translationTargetLanguage) {
-                    ForEach(TranslationLanguage.allCases) { language in
-                        Text(language.label).tag(language)
-                    }
-                }
-                HStack {
-                    Text(L("settings.translation_shortcut"))
-                    Spacer()
-                    shortcutKeycap(settings.hotkeyType.rawValue)
-                    Text("+").foregroundStyle(.secondary)
-                    Picker("", selection: $settings.translationHotkeyModifier) {
-                        ForEach(HotkeyType.allCases, id: \.self) { key in
-                            Text(key.rawValue).tag(key).disabled(key == settings.hotkeyType)
+            if ProductEdition.current.capabilities.translation {
+                Section {
+                    Picker(L("settings.translation_target"), selection: $settings.translationTargetLanguage) {
+                        ForEach(TranslationLanguage.allCases) { language in
+                            Text(language.label).tag(language)
                         }
                     }
-                    .labelsHidden()
-                    .fixedSize()
+                    HStack {
+                        Text(L("settings.translation_shortcut"))
+                        Spacer()
+                        shortcutKeycap(settings.hotkeyType.rawValue)
+                        Text("+").foregroundStyle(.secondary)
+                        Picker("", selection: $settings.translationHotkeyModifier) {
+                            ForEach(HotkeyType.allCases, id: \.self) { key in
+                                Text(key.rawValue).tag(key).disabled(key == settings.hotkeyType)
+                            }
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                    }
+                } header: {
+                    SettingsSectionHeader(title: L("settings.translation"), symbol: "character.bubble")
+                } footer: {
+                    Text(L("settings.translation_shortcut_help"))
                 }
-            } header: {
-                SettingsSectionHeader(title: L("settings.translation"), symbol: "character.bubble")
-            } footer: {
-                Text(L("settings.translation_shortcut_help"))
             }
 
             Section {
@@ -134,18 +142,20 @@ struct GeneralSettingsView: View {
                 SettingsSectionHeader(title: L("settings.context_feedback"), symbol: "rectangle.and.text.magnifyingglass")
             }
 
-            Section {
-                Toggle(L("settings.enable_memory"), isOn: $settings.enableMemory)
-                Picker(L("settings.memory_window"), selection: $settings.memoryWindowMinutes) {
-                    ForEach([5, 15, 30, 60], id: \.self) { minutes in
-                        Text(String(format: L("settings.memory_minutes_fmt"), minutes)).tag(minutes)
+            if ProductEdition.current.capabilities.contextMemory {
+                Section {
+                    Toggle(L("settings.enable_memory"), isOn: $settings.enableMemory)
+                    Picker(L("settings.memory_window"), selection: $settings.memoryWindowMinutes) {
+                        ForEach([5, 15, 30, 60], id: \.self) { minutes in
+                            Text(String(format: L("settings.memory_minutes_fmt"), minutes)).tag(minutes)
+                        }
                     }
+                    .disabled(!settings.enableMemory)
+                } header: {
+                    SettingsSectionHeader(title: L("settings.memory"), symbol: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                } footer: {
+                    Text(L("settings.memory_help"))
                 }
-                .disabled(!settings.enableMemory)
-            } header: {
-                SettingsSectionHeader(title: L("settings.memory"), symbol: "clock.arrow.trianglehead.counterclockwise.rotate.90")
-            } footer: {
-                Text(L("settings.memory_help"))
             }
 
             Section {

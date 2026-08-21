@@ -33,17 +33,20 @@ struct TextProcessingOptions {
     }
 
     init(settings: AppSettings, inputLanguage: InputLanguage? = nil) {
+        let profile = ProductEdition.current
         self.inputLanguage = inputLanguage ?? settings.inputLanguage
-        self.languageStyle = settings.languageStyle
-        self.customStylePrompt = settings.customStylePrompt
-        self.llmModel = settings.llmModel
-        self.useRemoteLLM = settings.useRemoteLLM
-        self.remoteBaseURL = settings.remoteBaseURL
-        self.remoteAPIKey = settings.remoteAPIKey
-        self.remoteModel = settings.remoteModel
+        self.languageStyle = profile.capabilities.customPrompts ? settings.languageStyle : .professional
+        self.customStylePrompt = profile.capabilities.customPrompts ? settings.customStylePrompt : ""
+        self.llmModel = profile.capabilities.modelManagement
+            ? settings.llmModel
+            : profile.formattingModel.id
+        self.useRemoteLLM = profile.capabilities.remoteInference && settings.useRemoteLLM
+        self.remoteBaseURL = profile.capabilities.remoteInference ? settings.remoteBaseURL : ""
+        self.remoteAPIKey = profile.capabilities.remoteInference ? settings.remoteAPIKey : ""
+        self.remoteModel = profile.capabilities.remoteInference ? settings.remoteModel : ""
         self.remoteProvider = settings.remoteProvider
         self.screenContextMode = settings.screenContextMode
-        self.useCustomSystemPrompt = settings.useCustomSystemPrompt
-        self.customSystemPrompt = settings.customSystemPrompt
+        self.useCustomSystemPrompt = profile.capabilities.customPrompts && settings.useCustomSystemPrompt
+        self.customSystemPrompt = profile.capabilities.customPrompts ? settings.customSystemPrompt : ""
     }
 }

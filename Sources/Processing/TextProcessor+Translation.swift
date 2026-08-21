@@ -17,7 +17,10 @@ extension TextProcessor {
             text: prepared,
             targetLanguage: targetLanguage
         )
-        let maxTokens = min(max(256, prepared.count * 3), 4_096)
+        let maxTokens = min(
+            max(256, prepared.count * 3),
+            ProductEdition.current.maximumGenerationTokens
+        )
 
         do {
             let result = try await generateText(
@@ -25,7 +28,7 @@ extension TextProcessor {
                 systemPrompt: systemPrompt,
                 options: options,
                 maxTokens: maxTokens,
-                temperature: 0.1
+                temperature: 0
             )
             return cleanCommandGeneratedOutput(result, inputLanguage: options.inputLanguage)
         } catch {

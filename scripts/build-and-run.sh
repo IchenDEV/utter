@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Build, bundle, sign, and run the development Utter.app.
+# Build, bundle, sign, and run the medical offline app.
 # Usage: ./scripts/build-and-run.sh [run|--debug|--logs|--telemetry|--verify]
 
 MODE="${1:-run}"
-APP_NAME="Utter"
+APP_NAME="Utter Medical Offline"
 BUILD_PRODUCT="OpenType"
-BUNDLE_ID="com.opentype.voiceinput"
-CLI_HELPER_NAME="opentype-cli"
+BUNDLE_ID="com.opentype.voiceinput.medical-offline"
 MIN_SYSTEM_VERSION="26.0"
-SUBSYSTEM="com.opentype.voiceinput"
+SUBSYSTEM="$BUNDLE_ID"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
@@ -19,7 +18,6 @@ APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
 APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
-CLI_HELPER_BINARY="$APP_MACOS/$CLI_HELPER_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 
 export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-/tmp/clang-module-cache}"
@@ -29,19 +27,13 @@ pkill -x "$APP_NAME" >/dev/null 2>&1 || true
 
 cd "$ROOT_DIR"
 swift build --product "$BUILD_PRODUCT"
-swift build --product OpenTypeCLI
 BUILD_DIR="$(swift build --show-bin-path)"
 BUILD_BINARY="$BUILD_DIR/$BUILD_PRODUCT"
-CLI_BUILD_BINARY="$BUILD_DIR/OpenTypeCLI"
 
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_MACOS" "$APP_RESOURCES"
 cp "$BUILD_BINARY" "$APP_BINARY"
 chmod +x "$APP_BINARY"
-if [ -x "$CLI_BUILD_BINARY" ]; then
-  cp "$CLI_BUILD_BINARY" "$CLI_HELPER_BINARY"
-  chmod +x "$CLI_HELPER_BINARY"
-fi
 
 cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -61,13 +53,13 @@ cat >"$INFO_PLIST" <<PLIST
   <key>LSUIElement</key>
   <true/>
   <key>NSMicrophoneUsageDescription</key>
-  <string>Utter needs microphone access to capture voice for transcription.</string>
+  <string>$APP_NAME needs microphone access to capture voice for transcription.</string>
   <key>NSSpeechRecognitionUsageDescription</key>
-  <string>Utter uses speech recognition to convert voice to text.</string>
+  <string>$APP_NAME uses speech recognition to convert voice to text.</string>
   <key>NSAppleEventsUsageDescription</key>
-  <string>Utter needs automation access to type text into other applications.</string>
+  <string>$APP_NAME needs automation access to type text into other applications.</string>
   <key>NSScreenCaptureUsageDescription</key>
-  <string>Utter uses screen content for context-aware text correction.</string>
+  <string>$APP_NAME uses screen content for context-aware text correction.</string>
   <key>NSPrincipalClass</key>
   <string>NSApplication</string>
 </dict>

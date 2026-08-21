@@ -41,10 +41,23 @@ final class VoicePipeline {
         let catalog = ModelCatalog.shared
         catalog.refreshStatus(recheckingErrors: true)
         let llmStatus = catalog.llmModels.first(where: { $0.id == settings.llmModel })?.status
+        let speechModelDownloaded: Bool
+        switch settings.speechEngine {
+        case .whisper:
+            speechModelDownloaded = catalog.isWhisperDownloaded(settings.whisperModel)
+        case .qwen3:
+            let status = catalog.asrModels.first(where: { $0.id == settings.qwenASRModel })?.status
+            speechModelDownloaded = status == .downloaded || status == .ready
+        case .mimo:
+            let status = catalog.asrModels.first(where: { $0.id == settings.mimoASRModel })?.status
+            speechModelDownloaded = status == .downloaded || status == .ready
+        case .apple, .volc:
+            speechModelDownloaded = false
+        }
         let shouldLoadSpeech = StartupModelPreloadPolicy.shouldPreloadSpeechModel(
             enabled: settings.preloadSpeechModelOnLaunch,
             speechEngine: settings.speechEngine,
-            modelDownloaded: catalog.isWhisperDownloaded(settings.whisperModel)
+            modelDownloaded: speechModelDownloaded
         )
         let shouldLoadFormatting = StartupModelPreloadPolicy.shouldPreloadFormattingModel(
             enabled: settings.preloadFormattingModelOnLaunch,
@@ -70,6 +83,10 @@ final class VoicePipeline {
         mode: VoiceInputMode = .dictation,
         targetApp: NSRunningApplication? = nil
     ) async {
+        if appState.pendingMedicalDraft != nil {
+            showErrorHint(L("medical_draft.pending_before_recording"))
+            return
+        }
         if appState.isBusy {
             Log.info("[VoicePipeline] start: busy (\(appState.phase)), ignoring")
             showBusyHint()
@@ -121,7 +138,7 @@ final class VoicePipeline {
         let streamingEnabled = appState.settings.enableStreamingRecognitionBeta
         currentEngine?.configureRecognition(
             context: SpeechRecognitionContext(
-                dictionaryEntries: PersonalDictionary.shared.entries
+                phrases: PersonalDictionary.shared.snapshot().recognitionPhrases
             )
         )
         if streamingEnabled {
@@ -226,7 +243,14 @@ enum StartupModelPreloadPolicy {
         speechEngine: SpeechEngineType,
         modelDownloaded: Bool
     ) -> Bool {
-        enabled && speechEngine == .whisper && modelDownloaded
+        let supportsLocalPreload: Bool
+        switch speechEngine {
+        case .whisper, .qwen3, .mimo:
+            supportsLocalPreload = true
+        case .apple, .volc:
+            supportsLocalPreload = false
+        }
+        return enabled && supportsLocalPreload && modelDownloaded
     }
 
     static func shouldPreloadFormattingModel(

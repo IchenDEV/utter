@@ -5,6 +5,8 @@ struct MenuBarView: View {
     @EnvironmentObject var settings: AppSettings
     let onOpenSettings: () -> Void
     let onApplyPendingReplacement: () -> Void
+    let onConfirmMedicalDraft: () -> Void
+    let onDiscardMedicalDraft: () -> Void
     let onQuit: () -> Void
 
     var body: some View {
@@ -65,6 +67,7 @@ struct MenuBarView: View {
     private var hasVisibleContent: Bool {
         appState.isRecording || appState.isDownloading || showActiveStatus
             || appState.pendingReplacement != nil
+            || appState.pendingMedicalDraft != nil
             || !appState.lastInsertedText.isEmpty
     }
 
@@ -81,6 +84,9 @@ struct MenuBarView: View {
             }
             if let pendingReplacement = appState.pendingReplacement {
                 pendingReplacementRow(pendingReplacement)
+            }
+            if let draft = appState.pendingMedicalDraft {
+                medicalDraftRow(draft)
             }
             if !appState.lastInsertedText.isEmpty {
                 lastInsertedRow
@@ -199,6 +205,41 @@ struct MenuBarView: View {
         .padding(8)
         .background(.quaternary.opacity(0.45))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func medicalDraftRow(_ draft: PendingMedicalDraft) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Label(L("medical_draft.review_title"), systemImage: "checkmark.shield")
+                .font(.caption.weight(.semibold))
+            Text(draft.text)
+                .font(.system(size: 11))
+                .lineLimit(4)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 6) {
+                Button(L("medical_draft.confirm_insert"), action: onConfirmMedicalDraft)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .keyboardShortcut(.return, modifiers: [.command])
+                Button {
+                    TextInserter.copyToClipboard(draft.text)
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help(L("common.copy_clipboard"))
+                .accessibilityLabel(L("common.copy_clipboard"))
+                Button(L("common.discard"), role: .destructive, action: onDiscardMedicalDraft)
+                    .buttonStyle(.plain)
+                    .controlSize(.small)
+                Spacer()
+            }
+        }
+        .padding(8)
+        .background(.quaternary.opacity(0.45))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .accessibilityElement(children: .contain)
     }
 
     private var downloadSection: some View {

@@ -16,6 +16,7 @@
 "common.cannot_undo" = "此操作不可撤销。";
 "common.recommended" = "推荐";
 "common.custom" = "自定义";
+"common.discard" = "丢弃";
 "common.retry" = "重试";
 
 /* ── Status ── */
@@ -24,7 +25,7 @@
 "status.no_speech_detected" = "未检测到语音";
 
 /* ── Tabs ── */
-"settings.window_title" = "Utter 设置";
+"settings.window_title" = "Utter 医疗离线版设置";
 "settings.hero.title" = "让语音输入贴合你的工作流。";
 "settings.hero.subtitle" = "在任何地方按下快捷键，Utter 会完成识别、整理、翻译与插入，不打断当前思路。";
 "settings.page.general.title" = "语音输入";
@@ -190,7 +191,7 @@
 /* ── Model Management ── */
 "model.preload.title" = "启动预加载";
 "model.preload.speech" = "启动时预加载听写模型";
-"model.preload.speech_help" = "仅对已下载的 WhisperKit 模型生效。请先在模型页点击下载按钮。";
+"model.preload.speech_help" = "仅对已准备好的本地语音模型生效。";
 "model.preload.formatting" = "启动时预加载修稿模型";
 "model.preload.formatting_help" = "仅对本地 MLX 模型生效。远程 LLM 会在整理开始时调用。";
 "model.speech_recognition" = "语音识别";
@@ -393,8 +394,8 @@
 "history.records_count" = "%d 条记录";
 
 /* ── Onboarding ── */
-"onboarding.welcome" = "欢迎使用 Utter";
-"onboarding.welcome_body" = "完全本地运行的智能语音输入法。\n基于 WhisperKit 语音识别与 MLX 文本整理，无需联网。";
+"onboarding.welcome" = "欢迎使用 Utter 医疗离线版";
+"onboarding.welcome_body" = "完全本地运行的医疗语音输入工具。\nQwen 语音识别、文本整理与翻译均无需联网。";
 "onboarding.voice_input" = "语音输入";
 "onboarding.smart_format" = "智能整理";
 "onboarding.local" = "完全本地";
@@ -432,7 +433,7 @@
 
 /* ── About ── */
 "about.subtitle" = "智能语音输入";
-"about.body" = "基于 WhisperKit 与 MLX 的本地化语音输入方案。\n语音识别、智能整理、个人词库，全部在设备端完成。";
+"about.body" = "内置语音识别、文本整理与医疗术语模型。\n全程在本机处理，不使用远程推理。";
 "about.feedback" = "反馈";
 
 /* ── Errors ── */
@@ -474,7 +475,7 @@
 "local_asr.tokenizer_path" = "音频 tokenizer 路径";
 "qwen_asr.config_hint" = "选择 Qwen3-ASR 后，请点击下载按钮获取本地模型，并准备对应的 Python 运行环境。";
 "mimo_asr.config_hint" = "选择 MiMo-V2.5-ASR 后，请点击下载按钮获取模型、音频 tokenizer 和运行文件。";
-"model.qwen3_asr_quality" = "本地 MLX 语音识别，约 4.1 GB";
+"model.qwen3_asr_quality" = "本地 MLX 语音识别，约 1.6 GB";
 "model.mimo_asr_quality" = "本地语音识别模型 + 音频 tokenizer，约 36 GB";
 "model.asr_incomplete" = "模型或运行环境只下载了一部分。点击“继续下载”即可接着完成";
 "model.asr_preparing_runtime" = "准备运行文件";
@@ -486,3 +487,48 @@
 "error.llm_not_downloaded" = "模型文件尚未下载。请前往 设置 → 模型，确认流量后下载";
 "onboarding.download_notice" = "这里不会自动下载。请先确认体积，再决定是否下载这个本地模型。";
 "onboarding.download_size" = "下载（%@）";
+
+/* ── 医疗离线版 ── */
+"edition.medical_offline.name" = "医疗行业离线版";
+"edition.offline_badge" = "全离线";
+"edition.offline_summary" = "Qwen 语音识别、Qwen 文本整理与翻译、医疗术语均在本机运行；远程推理、模型下载和开发者集成已关闭。";
+"edition.minimum_memory" = "%d GB 内存目标";
+"edition.network_disabled" = "联网功能已关闭";
+"tab.industry_lexicon" = "医疗词库";
+"model.bundled_fixed" = "随包内置 · 固定";
+"offline_bundle.ready" = "内置模型校验通过，可以使用";
+"offline_bundle.missing" = "当前安装包缺少内置模型";
+"offline_bundle.invalid_manifest" = "内置模型清单无效";
+"offline_bundle.profile_mismatch" = "内置模型与当前行业版本不匹配";
+"offline_bundle.incomplete_speech" = "内置语音识别模型不完整";
+"offline_bundle.incomplete_speech_runtime" = "内置 Qwen 语音识别运行环境不完整";
+"offline_bundle.incomplete_formatting" = "内置文本整理模型不完整";
+"offline_bundle.missing_legal_notices" = "内置模型缺少许可证或声明文件";
+"offline_bundle.downloads_disabled" = "离线版不支持下载模型";
+"offline_bundle.remote_disabled" = "离线版不支持远程推理";
+"onboarding.offline_models" = "离线资源校验";
+"onboarding.offline_models_body" = "本版本已内置固定 Qwen 模型、运行环境和医疗词库，无需下载模型或配置账号。";
+"edition.qwen_text_roles" = "%@ · 文本整理与翻译";
+"industry.lexicon.page_title" = "医疗术语";
+"industry.lexicon.page_subtitle" = "查看随包内置的只读术语，并管理仅保存在本机的个人纠正词条。";
+"industry.lexicon.term_count" = "内置 %d 个术语";
+"industry.lexicon.title" = "内置医疗词库";
+"industry.lexicon.search" = "搜索术语";
+"industry.lexicon.read_only_help" = "签名基础词库为只读内容，仅辅助识别和规范拼写，不会补写未口述的诊断、药名、剂量、数值或医嘱。";
+"industry.lexicon.no_results" = "没有匹配的术语";
+"industry.lexicon.category.documentation" = "病历书写";
+"industry.lexicon.category.department" = "科室";
+"industry.lexicon.category.symptom" = "症状";
+"industry.lexicon.category.diagnosis" = "诊断";
+"industry.lexicon.category.examination" = "检查检验";
+"industry.lexicon.category.vital_sign" = "生命体征";
+"industry.lexicon.category.medication" = "用药";
+"industry.lexicon.category.procedure" = "操作处置";
+"industry.lexicon.category.safety" = "医疗安全";
+"industry.lexicon.category.unit" = "计量单位";
+"medical_draft.ready" = "草稿已生成，请确认后插入";
+"medical_draft.review_title" = "插入前确认";
+"medical_draft.confirm_insert" = "确认并插入";
+"medical_draft.discarded" = "已丢弃草稿";
+"medical_draft.pending_before_recording" = "请先确认或丢弃当前草稿，再开始新的录音";
+"medical_draft.review_mode" = "医疗草稿 · 确认后插入";
