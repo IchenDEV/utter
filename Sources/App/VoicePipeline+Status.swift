@@ -87,9 +87,7 @@ extension VoicePipeline {
             return error.localizedDescription
         case let error as AppleSpeechError:
             return error.localizedDescription
-        case let error as LocalASRError:
-            return error.localizedDescription
-        case let error as LocalASRRuntimeError:
+        case let error as QwenNativeASRError:
             return error.localizedDescription
         case is URLError:
             return L("error.network_request_failed")

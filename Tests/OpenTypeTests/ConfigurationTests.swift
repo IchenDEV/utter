@@ -53,17 +53,41 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(InputLanguage.cantonese.localeIdentifier, "zh-HK")
     }
 
-    func testSpeechEngineCasesIncludeLocalASRProviders() {
+    func testSpeechEngineCasesIncludeNativeLocalEngines() {
         XCTAssertEqual(SpeechEngineType.allCases.map(\.rawValue), [
             "whisper", "apple", "volc", "qwen3", "mimo",
         ])
+        XCTAssertEqual(SpeechEngineType.selectableCases.map(\.rawValue), [
+            "whisper", "apple", "volc", "qwen3",
+        ])
     }
 
-    func testLocalASRDefaultsMatchOnDeviceRunner() {
-        XCTAssertEqual(LocalASRConfiguration.defaultPythonPath, "python3")
-        XCTAssertEqual(LocalASRConfiguration.qwen3DefaultModel, "mlx-community/Qwen3-ASR-1.7B-bf16")
-        XCTAssertEqual(LocalASRConfiguration.mimoDefaultModel, "XiaomiMiMo/MiMo-V2.5-ASR")
-        XCTAssertEqual(LocalASRConfiguration.mimoTokenizerModel, "XiaomiMiMo/MiMo-Audio-Tokenizer")
+    func testQwenASRDefaultUsesNativeCompatibleModel() {
+        XCTAssertEqual(QwenASRModel.defaultID, "mlx-community/Qwen3-ASR-1.7B-bf16")
+    }
+
+    func testDisabledMiMoSelectionMigratesToAppleSpeechAndRemovesLegacyRuntimeSettings() {
+        let (defaults, suiteName) = makeIsolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set("mimo", forKey: "speechEngine")
+        defaults.set("/usr/bin/python3", forKey: "localASRPythonPath")
+        defaults.set("/tmp/mimo", forKey: "mimoASRRepoPath")
+        defaults.set("XiaomiMiMo/MiMo-V2.5-ASR", forKey: "mimoASRModel")
+        defaults.set("/tmp/mimo-model", forKey: "mimoASRModelPath")
+        defaults.set("/tmp/mimo-tokenizer", forKey: "mimoASRTokenizerPath")
+
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(settings.speechEngine, .apple)
+        XCTAssertEqual(defaults.string(forKey: "speechEngine"), SpeechEngineType.apple.rawValue)
+        for key in [
+            "localASRPythonPath",
+            "mimoASRRepoPath",
+            "mimoASRModel",
+            "mimoASRModelPath",
+            "mimoASRTokenizerPath",
+        ] {
+            XCTAssertNil(defaults.object(forKey: key))
+        }
     }
 
     @MainActor
@@ -73,23 +97,10 @@ final class ConfigurationTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: dir) }
 
         try writeTestFiles(["config.json", "tokenizer_config.json", "vocab.json"], under: dir)
-        XCTAssertFalse(ModelCatalog.asrRepoContainsRequiredFiles(LocalASRConfiguration.qwen3DefaultModel, at: dir))
+        XCTAssertFalse(ModelCatalog.asrRepoContainsRequiredFiles(QwenASRModel.defaultID, at: dir))
 
-        try writeTestFiles(ModelCatalog.asrRequiredFiles(for: LocalASRConfiguration.qwen3DefaultModel), under: dir)
-        XCTAssertTrue(ModelCatalog.asrRepoContainsRequiredFiles(LocalASRConfiguration.qwen3DefaultModel, at: dir))
-    }
-
-    @MainActor
-    func testMiMoRepositoryReadinessRequiresRunnerSource() throws {
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: dir) }
-
-        XCTAssertFalse(ModelCatalog.mimoRepositoryIsReady(at: dir))
-        let runner = dir.appendingPathComponent("src/mimo_audio/mimo_audio.py")
-        try FileManager.default.createDirectory(at: runner.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try Data("x".utf8).write(to: runner)
-        XCTAssertTrue(ModelCatalog.mimoRepositoryIsReady(at: dir))
+        try writeTestFiles(ModelCatalog.asrRequiredFiles(for: QwenASRModel.defaultID), under: dir)
+        XCTAssertTrue(ModelCatalog.asrRepoContainsRequiredFiles(QwenASRModel.defaultID, at: dir))
     }
 
     func testAudioCaptureActivityDetectsSilence() {
@@ -162,10 +173,9 @@ final class ConfigurationTests: XCTestCase {
     }
 
     @MainActor
-    func testLocalASRModelsRemainListed() {
+    func testOnlyReleasedNativeASRModelsAreListed() {
         let models = ModelCatalog.defaultASRModels
-        XCTAssertTrue(models.contains { $0.id == LocalASRConfiguration.qwen3DefaultModel && $0.provider == .qwen3 })
-        XCTAssertTrue(models.contains { $0.id == LocalASRConfiguration.mimoDefaultModel && $0.provider == .mimo })
+        XCTAssertEqual(models.map(\.id), [QwenASRModel.defaultID])
     }
 
     func testUILanguageDisplayNames() {
@@ -288,7 +298,7 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
             enabled: true, speechEngine: .whisper, modelDownloaded: false
         ))
-        for engine in [SpeechEngineType.apple, .volc, .qwen3, .mimo] {
+        for engine in [SpeechEngineType.apple, .volc, .qwen3] {
             XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
                 enabled: true, speechEngine: engine, modelDownloaded: true
             ))
@@ -331,13 +341,6 @@ final class ConfigurationTests: XCTestCase {
         ))
     }
 
-    func testLocalASRRuntimeCapabilityDoesNotTreatSystemPythonAsMiMoRuntime() {
-        XCTAssertEqual(
-            LocalASRRuntime.availability(for: .mimo),
-            .unavailable(L("model.mimo_macos_unavailable"))
-        )
-        XCTAssertFalse(LocalASRRuntime.isReady(for: .mimo))
-    }
 }
 
 private func writeTestFiles(_ paths: [String], under dir: URL) throws {

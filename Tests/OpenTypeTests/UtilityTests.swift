@@ -40,8 +40,8 @@ final class UtilityTests: XCTestCase {
     }
 
     func testModelStorageUsesHubRepoPathForASR() {
-        let suffix = ModelStorage.hubModelRepoDir("XiaomiMiMo/MiMo-V2.5-ASR").path
-        XCTAssertTrue(suffix.hasSuffix("/models/XiaomiMiMo/MiMo-V2.5-ASR"))
+        let suffix = ModelStorage.hubModelRepoDir(QwenASRModel.defaultID).path
+        XCTAssertTrue(suffix.hasSuffix("/models/mlx-community/Qwen3-ASR-1.7B-bf16"))
     }
 
     func testModelStorageRequiresWeightsBeforeLLMIsComplete() throws {
@@ -112,7 +112,7 @@ final class UtilityTests: XCTestCase {
             620_000_000
         )
         XCTAssertEqual(
-            ModelCatalog.estimatedDownloadBytes(from: "MiMo tokenizer ~1,024 MB"),
+            ModelCatalog.estimatedDownloadBytes(from: "ASR tokenizer ~1,024 MB"),
             1_024_000_000
         )
         XCTAssertEqual(
@@ -139,8 +139,8 @@ final class UtilityTests: XCTestCase {
             225_923_469_800
         )
         XCTAssertEqual(
-            ModelCatalog.defaultDownloadEstimateBytes(for: LocalASRConfiguration.mimoDefaultModel),
-            35_997_080_271
+            ModelCatalog.defaultDownloadEstimateBytes(for: QwenASRModel.defaultID),
+            4_080_707_826
         )
     }
 

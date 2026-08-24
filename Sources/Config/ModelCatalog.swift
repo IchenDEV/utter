@@ -129,10 +129,7 @@ final class ModelCatalog: ObservableObject {
             ModelEntry(id: $0.id, displayName: $0.displayName, hint: $0.hint, family: nil)
         }
         if !asrModels.contains(where: { $0.id == settings.qwenASRModel }) {
-            settings.qwenASRModel = LocalASRConfiguration.qwen3DefaultModel
-        }
-        if !asrModels.contains(where: { $0.id == settings.mimoASRModel }) {
-            settings.mimoASRModel = LocalASRConfiguration.mimoDefaultModel
+            settings.qwenASRModel = QwenASRModel.defaultID
         }
         refreshStatus()
     }

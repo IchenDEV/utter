@@ -188,10 +188,7 @@ extension ModelManagementView {
         case .llm:
             return ModelStorage.localLLMURL(model.id) == nil
         case .asr:
-            if case .supported = catalog.asrRuntimeAvailability(for: model.id) {
-                return true
-            }
-            return false
+            return true
         }
     }
 
@@ -210,14 +207,8 @@ extension ModelManagementView {
             onLoadLLM?()
         case .asr:
             onUnloadLocalASR?()
-            switch catalog.asrProvider(for: model.id) {
-            case .qwen3:
-                settings.qwenASRModel = model.id
-            case .mimo:
-                settings.mimoASRModel = model.id
-            case nil:
-                break
-            }
+            settings.qwenASRModel = model.id
+            settings.speechEngine = .qwen3
         }
     }
 

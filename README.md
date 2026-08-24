@@ -38,7 +38,7 @@ Three output modes are available:
 
 | Feature | Description |
 |---|---|
-| **Multiple Speech Engines** | Apple Speech, WhisperKit, Doubao ASR, Qwen3-ASR, or MiMo-V2.5-ASR |
+| **Multiple Speech Engines** | Apple Speech, WhisperKit, Doubao ASR, or Qwen3-ASR |
 | **Smart Text Processing** | Local MLX Qwen2.5/Qwen3 or remote LLM infers spoken intent — contextual cleanup, "scratch that" restarts, self-correction handling, spoken punctuation, technical terms, numbers/ranges/units, and structured formatting |
 | **LLM-Owned Spoken Formatting** | Spoken casing, no-space dictation, identifiers, file paths, shortcuts, emoji, Markdown tasks, dates/times, quantities, units, formulas, fractions, and digit sequences are handled by the Smart Format / Voice Command prompts instead of local hardcoded rewrite rules |
 | **Voice Edit Commands** | In Voice Command mode, an LLM classifies safe structured actions for replacing, undoing, proofreading, titling, summarizing, drafting replies, making meeting notes, extracting key points/decisions/questions/risks/deadlines/owners/action items, rewriting tone, expanding, making tables/lists, or deleting the previous Utter insertion or selected text |
@@ -131,10 +131,9 @@ Utter supports both **OpenAI-compatible** and **Anthropic** API formats:
 
 | Provider | Local runtime | Default model |
 |---|---|---|
-| Qwen3-ASR | `qwen3-asr-mlx` + MLX on Apple Silicon | `mlx-community/Qwen3-ASR-1.7B-bf16` |
-| MiMo-V2.5-ASR | Xiaomi's local Python runtime files + local model folders | `XiaomiMiMo/MiMo-V2.5-ASR` + `XiaomiMiMo/MiMo-Audio-Tokenizer` |
+| Qwen3-ASR | Native Swift + MLX on Apple Silicon | `mlx-community/Qwen3-ASR-1.7B-bf16` |
 
-These engines do not call hosted ASR APIs. The app downloads the selected model into the same model storage used by WhisperKit/MLX, prepares the Qwen Python runtime in an app-managed virtual environment, downloads MiMo runtime files when needed, finds an available Python 3 executable, then invokes the bundled local runner script.
+Qwen3-ASR does not call a hosted ASR API. The app downloads the selected model into the same model storage used by WhisperKit and runs inference locally through native Swift and MLX.
 
 ## Project Structure
 

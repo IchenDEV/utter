@@ -5,8 +5,7 @@ final class SpeechEngineProvider {
     private var whisperEngine: WhisperEngine?
     private var appleSpeechEngine: AppleSpeechEngine?
     private var volcSpeechEngine: VolcSpeechEngine?
-    private var qwenSpeechEngine: LocalASREngine?
-    private var mimoSpeechEngine: LocalASREngine?
+    private var qwenSpeechEngine: QwenNativeASREngine?
 
     func engine(settings: AppSettings, requestPermission: Bool = true) async -> (any SpeechEngine)? {
         await ensureEngineLoaded(settings: settings, requestPermission: requestPermission)
@@ -19,7 +18,7 @@ final class SpeechEngineProvider {
         case .apple: return appleSpeechEngine
         case .volc: return volcSpeechEngine
         case .qwen3: return qwenSpeechEngine
-        case .mimo: return mimoSpeechEngine
+        case .mimo: return nil
         }
     }
 
@@ -48,26 +47,12 @@ final class SpeechEngineProvider {
                 Log.info("[SpeechEngineProvider] Qwen ASR model requires manual download: \(settings.qwenASRModel)")
                 return
             }
-            qwenSpeechEngine = LocalASREngine(configuration: LocalASRConfiguration(
-                provider: .qwen3,
-                pythonPath: settings.localASRPythonPath,
-                modelPath: ModelCatalog.shared.asrModelPath(for: settings.qwenASRModel),
-                tokenizerPath: "",
-                repoPath: ""
-            ))
+            let modelPath = ModelCatalog.shared.asrModelPath(for: settings.qwenASRModel)
+            if qwenSpeechEngine?.usesModel(at: modelPath) == true { return }
+            qwenSpeechEngine = QwenNativeASREngine(modelPath: modelPath)
         case .mimo:
-            guard localASRIsAvailable(settings.mimoASRModel) else {
-                mimoSpeechEngine = nil
-                Log.info("[SpeechEngineProvider] MiMo ASR model requires manual download: \(settings.mimoASRModel)")
-                return
-            }
-            mimoSpeechEngine = LocalASREngine(configuration: LocalASRConfiguration(
-                provider: .mimo,
-                pythonPath: settings.localASRPythonPath,
-                modelPath: ModelCatalog.shared.asrModelPath(for: settings.mimoASRModel),
-                tokenizerPath: ModelCatalog.shared.mimoTokenizerPath(),
-                repoPath: ModelCatalog.shared.mimoRepositoryPath()
-            ))
+            settings.speechEngine = .apple
+            await ensureEngineLoaded(settings: settings, requestPermission: requestPermission)
         }
     }
 

@@ -19,7 +19,7 @@ extension ModelManagementView {
 
     private var speechEnginePicker: some View {
         HStack(spacing: 0) {
-            ForEach(SpeechEngineType.allCases, id: \.self) { engine in
+            ForEach(SpeechEngineType.selectableCases, id: \.self) { engine in
                 speechEngineButton(engine)
             }
         }

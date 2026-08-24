@@ -93,22 +93,10 @@ final class QualityProbeTests: XCTestCase {
         XCTAssertEqual(cleaned, "let a = 1")
     }
 
-    // MARK: - D. Local ASR runner output parsing
-
-    func testProbe_localASR_responseLinesNeverConcatenate() {
-        // Regression guard: the old multi-line joiner produced
-        // "可能会有两可能会有这种意外的泄露" by gluing partial lines together.
-        // The serve protocol parses each line independently.
-        let first = LocalASRServerResponse.parse(line: #"{"text": "可能会有两"}"#)
-        let second = LocalASRServerResponse.parse(line: #"{"text": "可能会有这种意外的泄露"}"#)
-        XCTAssertEqual(first, .text("可能会有两"))
-        XCTAssertEqual(second, .text("可能会有这种意外的泄露"))
-    }
-
-    // MARK: - E. Direct-mode whitespace handling
+    // MARK: - D. Direct-mode whitespace handling
     // (see testProbe_basicClean_preservesNewlines below)
 
-    // MARK: - F. Prompt text block must embed user content verbatim
+    // MARK: - E. Prompt text block must embed user content verbatim
 
     func testProbe_promptBlock_keepsDictatedDelimiters() {
         let block = PromptTextBlock.block("代码里写的是 <<<EOF 和 >>> 结束符")
