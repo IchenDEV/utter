@@ -485,3 +485,14 @@
 "error.llm_not_downloaded" = "The model files have not been downloaded. Open Settings → Models and confirm the data usage first.";
 "onboarding.download_notice" = "No download starts automatically. Review the size, then confirm if you want this local model.";
 "onboarding.download_size" = "Download (%@)";
+
+/* ── Device Capability ── */
+"device.title" = "This Mac";
+"device.chip" = "Chip";
+"device.ram" = "Memory";
+"device.disk_available" = "Disk Available";
+"device.insufficient_disk" = "Not enough free disk space to download this model. Free up storage or choose a smaller model.";
+"device.insufficient_ram" = "This Mac does not have enough memory to run this model. Choose a smaller model or use a remote LLM.";
+"device.marginal_ram" = "This model may run slowly on this Mac due to limited memory. A smaller model is recommended for better performance.";
+"device.badge_marginal" = "May Be Slow";
+"device.badge_incompatible" = "Too Large";

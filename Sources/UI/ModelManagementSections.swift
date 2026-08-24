@@ -2,6 +2,55 @@ import AppKit
 import SwiftUI
 
 extension ModelManagementView {
+    var deviceInfoSection: some View {
+        let info = DeviceCapability.current
+        return VStack(alignment: .leading, spacing: 10) {
+            Label(L("device.title"), systemImage: "cpu")
+                .font(.headline)
+
+            HStack(spacing: 16) {
+                deviceInfoItem(
+                    icon: "memorychip",
+                    label: L("device.chip"),
+                    value: info.chipDisplayName
+                )
+                Divider().frame(height: 28)
+                deviceInfoItem(
+                    icon: "memorychip.fill",
+                    label: L("device.ram"),
+                    value: info.ramDisplayText
+                )
+                Divider().frame(height: 28)
+                deviceInfoItem(
+                    icon: "gpu",
+                    label: "GPU",
+                    value: info.gpuDisplayText
+                )
+                Divider().frame(height: 28)
+                deviceInfoItem(
+                    icon: "internaldrive",
+                    label: L("device.disk_available"),
+                    value: info.diskAvailableText
+                )
+            }
+        }
+    }
+
+    private func deviceInfoItem(icon: String, label: String, value: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label)
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                Text(value)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+            }
+        }
+    }
+
     var storageSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(L("model.storage.title"), systemImage: "externaldrive")
