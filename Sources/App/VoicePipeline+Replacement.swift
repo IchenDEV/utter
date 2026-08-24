@@ -39,7 +39,7 @@ extension VoicePipeline {
         targetApp: NSRunningApplication?
     ) async {
         let processingOptions = TextProcessingOptions(settings: settings)
-        let dictionarySnapshot = PersonalDictionary.shared.snapshot()
+        let dictionarySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
         let enableMemory = settings.enableMemory
         let memoryWindowMinutes = settings.memoryWindowMinutes
         let quickText = immediateInsertText(

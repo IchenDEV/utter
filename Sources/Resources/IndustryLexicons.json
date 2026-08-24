@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 1,
+  "version": "2026.08.24-v1",
+  "updatedAt": "2026-08-24",
+  "rights": "Utter-curated seed lists of short public terminology; no external code set or source corpus is redistributed.",
+  "sources": [
+    {
+      "id": "nhc-standards",
+      "title": "National Health Commission health standards",
+      "url": "http://wsbz.nhc.gov.cn/wsbzw/",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "who-icd11",
+      "title": "World Health Organization ICD-11",
+      "url": "https://icd.who.int/en",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "china-civil-code",
+      "title": "Civil Code of the People's Republic of China",
+      "url": "https://www.gov.cn/xinwen/2020-06/01/content_5516649.htm",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "china-criminal-law",
+      "title": "Criminal Law of the People's Republic of China",
+      "url": "https://www.npc.gov.cn/zgrdw/npc/lfzt/rlys/2008-08/21/content_1882895.htm",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "china-criminal-procedure",
+      "title": "Criminal Procedure Law of the People's Republic of China",
+      "url": "https://www.npc.gov.cn/npc/c2/c12435/201905/t20190521_276591.html",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "china-civil-procedure",
+      "title": "Civil Procedure Law of the People's Republic of China",
+      "url": "https://www.npc.gov.cn/c2/c12435/201905/t20190522_88402.html",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "china-administrative-reconsideration",
+      "title": "Administrative Reconsideration Law of the People's Republic of China",
+      "url": "https://www.samr.gov.cn/zw/zfxxgk/fdzdgknr/fgs/art/2023/art_70518816df484be18f6b38fa295750bb.html",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "china-administrative-litigation",
+      "title": "Administrative Litigation Law of the People's Republic of China",
+      "url": "https://www.npc.gov.cn/c2/c30834/201905/t20190521_278106.html",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "china-arbitration-law",
+      "title": "Arbitration Law of the People's Republic of China",
+      "url": "https://gongbao.court.gov.cn/Details/bf9acfc77d43545588ae53c4009d07.html",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "mof-accounting-standard-22",
+      "title": "Accounting Standard for Business Enterprises No. 22",
+      "url": "https://kjs.mof.gov.cn/zhengcefabu/201704/t20170406_2575699.htm",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "mof-accounting-standard-37",
+      "title": "Accounting Standard for Business Enterprises No. 37",
+      "url": "https://kjs.mof.gov.cn/zhengcefabu/201705/t20170515_2600144.htm",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "mof-accounting-standard-39",
+      "title": "Accounting Standard for Business Enterprises No. 39",
+      "url": "https://kjs.mof.gov.cn/zt/kjzzss/kuaijizhunzeshishi/201512/t20151208_1602631.htm",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "cncf-glossary",
+      "title": "Cloud Native Glossary",
+      "url": "https://glossary.cncf.io/",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "nist-zero-trust",
+      "title": "NIST SP 800-207 Zero Trust Architecture",
+      "url": "https://csrc.nist.gov/pubs/sp/800/207/final",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    },
+    {
+      "id": "spdx-spec",
+      "title": "SPDX Specification",
+      "url": "https://spdx.github.io/spdx-spec/v3.0/",
+      "usage": "reference-only",
+      "redistribution": "not-redistributed"
+    }
+  ],
+  "packs": [
+    {
+      "id": "medical",
+      "version": "medical-zh-v1",
+      "locale": "zh-CN",
+      "reviewStatus": "project-seed-needs-domain-review",
+      "sourceIDs": ["nhc-standards", "who-icd11"],
+      "terms": [
+        {"id":"medical-chief-complaint","term":"主诉","aliases":[],"corrections":["主愫"],"category":"documentation"},
+        {"id":"medical-present-illness","term":"现病史","aliases":[],"corrections":["现病时"],"category":"documentation"},
+        {"id":"medical-past-history","term":"既往史","aliases":[],"corrections":["既往式"],"category":"documentation"},
+        {"id":"medical-allergy-history","term":"过敏史","aliases":[],"corrections":["过敏时"],"category":"documentation"},
+        {"id":"medical-family-history","term":"家族史","aliases":[],"corrections":[],"category":"documentation"},
+        {"id":"medical-physical-exam","term":"体格检查","aliases":[],"corrections":["体格捡查"],"category":"documentation"},
+        {"id":"medical-differential","term":"鉴别诊断","aliases":[],"corrections":["鉴别珍断"],"category":"documentation"},
+        {"id":"medical-critical-care","term":"呼吸与危重症医学科","aliases":[],"corrections":[],"category":"department"},
+        {"id":"medical-palpitations","term":"心悸","aliases":[],"corrections":["心季"],"category":"symptom"},
+        {"id":"medical-dyspnea","term":"呼吸困难","aliases":[],"corrections":[],"category":"symptom"},
+        {"id":"medical-hemoptysis","term":"咯血","aliases":[],"corrections":[],"category":"symptom"},
+        {"id":"medical-syncope","term":"晕厥","aliases":[],"corrections":[],"category":"symptom"},
+        {"id":"medical-hypertension","term":"高血压","aliases":[],"corrections":[],"category":"diagnosis"},
+        {"id":"medical-t2dm","term":"2型糖尿病","aliases":["T2DM"],"corrections":[],"category":"diagnosis"},
+        {"id":"medical-copd","term":"慢性阻塞性肺疾病","aliases":["COPD"],"corrections":[],"category":"diagnosis"},
+        {"id":"medical-chd","term":"冠状动脉粥样硬化性心脏病","aliases":["冠心病"],"corrections":[],"category":"diagnosis"},
+        {"id":"medical-af","term":"心房颤动","aliases":["房颤"],"corrections":["心房禅动"],"category":"diagnosis"},
+        {"id":"medical-heart-failure","term":"心力衰竭","aliases":["心衰"],"corrections":["心力衰揭"],"category":"diagnosis"},
+        {"id":"medical-ckd","term":"慢性肾脏病","aliases":["CKD"],"corrections":["慢性肾张病"],"category":"diagnosis"},
+        {"id":"medical-cbc","term":"血常规","aliases":["CBC"],"corrections":[],"category":"examination"},
+        {"id":"medical-hba1c","term":"糖化血红蛋白","aliases":["HbA1c"],"corrections":["糖化血红旦白"],"category":"examination"},
+        {"id":"medical-egfr","term":"估算肾小球滤过率","aliases":["eGFR"],"corrections":["估算肾小球虑过率"],"category":"examination"},
+        {"id":"medical-crp","term":"C反应蛋白","aliases":["CRP"],"corrections":["C反映蛋白"],"category":"examination"},
+        {"id":"medical-ecg","term":"心电图","aliases":["ECG"],"corrections":[],"category":"examination"},
+        {"id":"medical-mri","term":"磁共振成像","aliases":["MRI"],"corrections":[],"category":"examination"},
+        {"id":"medical-spo2","term":"血氧饱和度","aliases":["SpO2"],"corrections":["血氧包和度"],"category":"vital-sign"},
+        {"id":"medical-infusion","term":"静脉滴注","aliases":[],"corrections":["静脉低注"],"category":"medication"},
+        {"id":"medical-im","term":"肌内注射","aliases":[],"corrections":["肌内住射"],"category":"medication"},
+        {"id":"medical-cpr","term":"心肺复苏","aliases":["CPR"],"corrections":["心肺腹苏"],"category":"procedure"},
+        {"id":"medical-contraindication","term":"禁忌证","aliases":[],"corrections":["禁忌症"],"category":"safety"}
+      ]
+    },
+    {
+      "id": "legal",
+      "version": "legal-zh-v1",
+      "locale": "zh-CN",
+      "reviewStatus": "project-seed-needs-domain-review",
+      "sourceIDs": [
+        "china-civil-code",
+        "china-criminal-law",
+        "china-criminal-procedure",
+        "china-civil-procedure",
+        "china-administrative-reconsideration",
+        "china-administrative-litigation",
+        "china-arbitration-law"
+      ],
+      "terms": [
+        {"id":"legal-civil-act","term":"民事法律行为","aliases":[],"corrections":[],"category":"civil-law"},
+        {"id":"legal-expression-intent","term":"意思表示","aliases":[],"corrections":["意思表式"],"category":"civil-law"},
+        {"id":"legal-limitation","term":"诉讼时效","aliases":[],"corrections":["诉讼实效"],"category":"procedure"},
+        {"id":"legal-burden-proof","term":"举证责任","aliases":[],"corrections":["举证责认"],"category":"procedure"},
+        {"id":"legal-contract-performance","term":"合同履行","aliases":[],"corrections":[],"category":"contract"},
+        {"id":"legal-standard-terms","term":"格式条款","aliases":[],"corrections":["格式条宽"],"category":"contract"},
+        {"id":"legal-force-majeure","term":"不可抗力","aliases":[],"corrections":["不可抗利"],"category":"contract"},
+        {"id":"legal-breach","term":"违约责任","aliases":[],"corrections":["违约责认"],"category":"contract"},
+        {"id":"legal-culpa","term":"缔约过失责任","aliases":[],"corrections":["缔约过时责任"],"category":"contract"},
+        {"id":"legal-simultaneous-defense","term":"同时履行抗辩权","aliases":[],"corrections":[],"category":"contract"},
+        {"id":"legal-insecurity-defense","term":"不安抗辩权","aliases":[],"corrections":["不安抗辨权"],"category":"contract"},
+        {"id":"legal-subrogation","term":"代位权","aliases":[],"corrections":["代为权"],"category":"contract"},
+        {"id":"legal-revocation","term":"撤销权","aliases":[],"corrections":[],"category":"contract"},
+        {"id":"legal-good-faith","term":"善意取得","aliases":[],"corrections":["善意取的"],"category":"property"},
+        {"id":"legal-unjust-enrichment","term":"不当得利","aliases":[],"corrections":["不当的利"],"category":"obligation"},
+        {"id":"legal-negotiorum","term":"无因管理","aliases":[],"corrections":["无音管理"],"category":"obligation"},
+        {"id":"legal-tort","term":"侵权责任","aliases":[],"corrections":[],"category":"tort"},
+        {"id":"legal-presumed-fault","term":"过错推定","aliases":[],"corrections":[],"category":"tort"},
+        {"id":"legal-joint-liability","term":"连带责任","aliases":[],"corrections":["连带责认"],"category":"liability"},
+        {"id":"legal-self-defense","term":"正当防卫","aliases":[],"corrections":["正当防位"],"category":"criminal-law"},
+        {"id":"legal-emergency","term":"紧急避险","aliases":[],"corrections":[],"category":"criminal-law"},
+        {"id":"legal-bail","term":"取保候审","aliases":[],"corrections":["取保后审"],"category":"criminal-procedure"},
+        {"id":"legal-plea","term":"认罪认罚","aliases":[],"corrections":[],"category":"criminal-procedure"},
+        {"id":"legal-reconsideration","term":"行政复议","aliases":[],"corrections":["行政富议"],"category":"administrative-law"},
+        {"id":"legal-administrative-litigation","term":"行政诉讼","aliases":[],"corrections":[],"category":"administrative-law"},
+        {"id":"legal-arbitration-clause","term":"仲裁条款","aliases":[],"corrections":["仲裁条宽"],"category":"dispute-resolution"},
+        {"id":"legal-jurisdiction-objection","term":"管辖权异议","aliases":[],"corrections":["管辖权意议"],"category":"procedure"},
+        {"id":"legal-evidence-preservation","term":"证据保全","aliases":[],"corrections":[],"category":"procedure"},
+        {"id":"legal-property-preservation","term":"财产保全","aliases":[],"corrections":[],"category":"procedure"},
+        {"id":"legal-enforcement","term":"强制执行","aliases":[],"corrections":[],"category":"procedure"}
+      ]
+    },
+    {
+      "id": "finance",
+      "version": "finance-zh-v1",
+      "locale": "zh-CN",
+      "reviewStatus": "project-seed-needs-domain-review",
+      "sourceIDs": [
+        "mof-accounting-standard-22",
+        "mof-accounting-standard-37",
+        "mof-accounting-standard-39"
+      ],
+      "terms": [
+        {"id":"finance-balance-sheet","term":"资产负债表","aliases":[],"corrections":["资产付债表"],"category":"accounting"},
+        {"id":"finance-income-statement","term":"利润表","aliases":[],"corrections":[],"category":"accounting"},
+        {"id":"finance-cash-flow","term":"现金流量表","aliases":[],"corrections":["现金刘量表"],"category":"accounting"},
+        {"id":"finance-equity","term":"所有者权益","aliases":[],"corrections":[],"category":"accounting"},
+        {"id":"finance-receivables","term":"应收账款","aliases":[],"corrections":["应收帐款"],"category":"accounting"},
+        {"id":"finance-bad-debt","term":"坏账准备","aliases":[],"corrections":["怀账准备"],"category":"accounting"},
+        {"id":"finance-fair-value","term":"公允价值","aliases":[],"corrections":["公允许价"],"category":"valuation"},
+        {"id":"finance-amortized-cost","term":"摊余成本","aliases":[],"corrections":["滩余成本"],"category":"valuation"},
+        {"id":"finance-effective-interest","term":"实际利率法","aliases":[],"corrections":[],"category":"accounting"},
+        {"id":"finance-impairment","term":"资产减值","aliases":[],"corrections":[],"category":"accounting"},
+        {"id":"finance-deferred-tax","term":"递延所得税","aliases":[],"corrections":["递延所的税"],"category":"tax"},
+        {"id":"finance-wacc","term":"加权平均资本成本","aliases":["WACC"],"corrections":["加权平军资本成本"],"category":"corporate-finance"},
+        {"id":"finance-irr","term":"内部收益率","aliases":["IRR"],"corrections":["内部收意率"],"category":"corporate-finance"},
+        {"id":"finance-npv","term":"净现值","aliases":["NPV"],"corrections":[],"category":"corporate-finance"},
+        {"id":"finance-pe","term":"市盈率","aliases":["P/E"],"corrections":[],"category":"valuation"},
+        {"id":"finance-pb","term":"市净率","aliases":["P/B"],"corrections":[],"category":"valuation"},
+        {"id":"finance-capital-adequacy","term":"资本充足率","aliases":[],"corrections":[],"category":"banking"},
+        {"id":"finance-npl","term":"不良贷款率","aliases":[],"corrections":[],"category":"banking"},
+        {"id":"finance-lcr","term":"流动性覆盖率","aliases":["LCR"],"corrections":["流动性复盖率"],"category":"banking"},
+        {"id":"finance-leverage","term":"杠杆率","aliases":[],"corrections":[],"category":"risk"},
+        {"id":"finance-qe","term":"量化宽松","aliases":[],"corrections":[],"category":"monetary-policy"},
+        {"id":"finance-open-market","term":"公开市场操作","aliases":[],"corrections":[],"category":"monetary-policy"},
+        {"id":"finance-reverse-repo","term":"逆回购","aliases":[],"corrections":["逆回够"],"category":"money-market"},
+        {"id":"finance-repo","term":"回购协议","aliases":[],"corrections":[],"category":"money-market"},
+        {"id":"finance-credit-spread","term":"信用利差","aliases":[],"corrections":["信用力差"],"category":"fixed-income"},
+        {"id":"finance-duration","term":"久期","aliases":[],"corrections":[],"category":"fixed-income"},
+        {"id":"finance-convexity","term":"凸性","aliases":[],"corrections":[],"category":"fixed-income"},
+        {"id":"finance-hedging","term":"套期保值","aliases":[],"corrections":["套期保直"],"category":"risk"},
+        {"id":"finance-fv-change","term":"公允价值变动损益","aliases":[],"corrections":[],"category":"accounting"},
+        {"id":"finance-oci","term":"其他综合收益","aliases":[],"corrections":[],"category":"accounting"}
+      ]
+    },
+    {
+      "id": "technology",
+      "version": "technology-zh-v1",
+      "locale": "zh-CN",
+      "reviewStatus": "project-seed-needs-domain-review",
+      "sourceIDs": ["cncf-glossary", "nist-zero-trust", "spdx-spec"],
+      "terms": [
+        {"id":"technology-cloud-native","term":"云原生","aliases":[],"corrections":["云原声"],"category":"cloud"},
+        {"id":"technology-orchestration","term":"容器编排","aliases":[],"corrections":[],"category":"cloud"},
+        {"id":"technology-microservices","term":"微服务","aliases":[],"corrections":[],"category":"architecture"},
+        {"id":"technology-service-mesh","term":"服务网格","aliases":[],"corrections":["服务网各"],"category":"cloud"},
+        {"id":"technology-ci","term":"持续集成","aliases":["CI"],"corrections":["持续急成"],"category":"delivery"},
+        {"id":"technology-cd","term":"持续交付","aliases":["CD"],"corrections":[],"category":"delivery"},
+        {"id":"technology-iac","term":"基础设施即代码","aliases":["IaC"],"corrections":["基础设施即代马"],"category":"delivery"},
+        {"id":"technology-observability","term":"可观测性","aliases":[],"corrections":["可观测行"],"category":"operations"},
+        {"id":"technology-tracing","term":"分布式追踪","aliases":[],"corrections":["分布式追棕"],"category":"operations"},
+        {"id":"technology-load-balancing","term":"负载均衡","aliases":[],"corrections":[],"category":"operations"},
+        {"id":"technology-failover","term":"故障转移","aliases":[],"corrections":[],"category":"reliability"},
+        {"id":"technology-idempotency","term":"幂等性","aliases":[],"corrections":["幂等幸"],"category":"distributed-systems"},
+        {"id":"technology-eventual-consistency","term":"最终一致性","aliases":[],"corrections":["最终一至性"],"category":"distributed-systems"},
+        {"id":"technology-strong-consistency","term":"强一致性","aliases":[],"corrections":[],"category":"distributed-systems"},
+        {"id":"technology-event-driven","term":"事件驱动","aliases":[],"corrections":["事件区动"],"category":"architecture"},
+        {"id":"technology-message-queue","term":"消息队列","aliases":[],"corrections":[],"category":"architecture"},
+        {"id":"technology-ddd","term":"领域驱动设计","aliases":["DDD"],"corrections":[],"category":"architecture"},
+        {"id":"technology-rag","term":"检索增强生成","aliases":["RAG"],"corrections":["检索增强生城"],"category":"ai"},
+        {"id":"technology-llm","term":"大语言模型","aliases":["LLM"],"corrections":[],"category":"ai"},
+        {"id":"technology-vector-database","term":"向量数据库","aliases":[],"corrections":["向量数聚库"],"category":"ai"},
+        {"id":"technology-semantic-search","term":"语义检索","aliases":[],"corrections":[],"category":"ai"},
+        {"id":"technology-prompt-injection","term":"提示词注入","aliases":[],"corrections":["提示词注人"],"category":"security"},
+        {"id":"technology-zero-trust","term":"零信任","aliases":[],"corrections":["零性任"],"category":"security"},
+        {"id":"technology-sbom","term":"软件物料清单","aliases":["SBOM"],"corrections":["软件物料青单"],"category":"security"},
+        {"id":"technology-supply-chain","term":"供应链安全","aliases":[],"corrections":[],"category":"security"},
+        {"id":"technology-dependency-injection","term":"依赖注入","aliases":[],"corrections":[],"category":"software"},
+        {"id":"technology-reverse-proxy","term":"反向代理","aliases":[],"corrections":[],"category":"networking"},
+        {"id":"technology-garbage-collection","term":"垃圾回收","aliases":[],"corrections":[],"category":"runtime"},
+        {"id":"technology-concurrency-control","term":"并发控制","aliases":[],"corrections":[],"category":"distributed-systems"},
+        {"id":"technology-version-control","term":"版本控制","aliases":[],"corrections":[],"category":"software"}
+      ]
+    }
+  ]
+}

@@ -42,6 +42,7 @@ let package = Package(
                 .copy("Resources/SettingsStyleIllustration.png"),
                 .copy("Resources/SettingsIntegrationsIllustration.png"),
                 .copy("Resources/SettingsAboutIllustration.png"),
+                .copy("Resources/IndustryLexicons.json"),
                 .copy("Resources/Sounds"),
                 .copy("Resources/AppIcon.icns"),
                 .copy("Resources/AppIconLight.icns"),

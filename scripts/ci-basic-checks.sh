@@ -52,6 +52,9 @@ if ! diff -u "$en_keys" "$zh_keys"; then
     fail "localized string keys differ between en and zh-Hans"
 fi
 
+step "Checking industry vocabulary"
+./scripts/test-industry-lexicons.sh
+
 step "Checking required app resources"
 test -f Sources/Resources/Sounds/start.caf || fail "missing start sound"
 test -f Sources/Resources/Sounds/stop.caf || fail "missing stop sound"
