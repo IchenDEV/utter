@@ -35,6 +35,10 @@ enum SpeechEngineType: String, Codable, CaseIterable {
     case qwen3 = "qwen3"
     case mimo = "mimo"
 
+    static var selectableCases: [SpeechEngineType] {
+        allCases.filter { $0 != .mimo }
+    }
+
     var label: String {
         switch self {
         case .whisper: return "WhisperKit"
@@ -288,10 +292,7 @@ final class AppSettings: ObservableObject {
     @Published var volcAppKey: String
     @Published var volcAccessKey: String
     @Published var volcResourceId: String
-    @Published var localASRPythonPath: String
     @Published var qwenASRModel: String
-    @Published var mimoASRRepoPath: String
-    @Published var mimoASRModel: String
     @Published var preloadSpeechModelOnLaunch: Bool
     @Published var preloadFormattingModelOnLaunch: Bool
     @Published var modelStoragePath: String
@@ -315,9 +316,7 @@ final class AppSettings: ObservableObject {
         case useRemoteLLM, remoteProvider, remoteAPIKey, remoteBaseURL, remoteModel
         case menuBarIcon, appIconAppearance
         case volcAppKey, volcAccessKey, volcResourceId
-        case localASRPythonPath
         case qwenASRModel, qwenASRModelPath
-        case mimoASRRepoPath, mimoASRModel, mimoASRModelPath, mimoASRTokenizerPath
         case preloadSpeechModelOnLaunch, preloadFormattingModelOnLaunch
         case modelStoragePath, localWhisperModelPaths, localLLMModelPaths
         case developerInterfaceEnabled, developerHTTPPort, developerHTTPToken
@@ -342,9 +341,20 @@ final class AppSettings: ObservableObject {
             ?? .longPress
         tapInterval = ud.double(forKey: Key.tapInterval.rawValue).nonZero ?? 0.4
         let savedEngine = ud.string(forKey: Key.speechEngine.rawValue) ?? ""
-        speechEngine = SpeechEngineType(rawValue: savedEngine)
+        let loadedSpeechEngine = SpeechEngineType(rawValue: savedEngine)
             ?? (savedEngine.contains("Whisper") || savedEngine.contains("whisper") ? .whisper : nil)
             ?? .apple
+        speechEngine = loadedSpeechEngine == .mimo ? .apple : loadedSpeechEngine
+        if loadedSpeechEngine == .mimo {
+            ud.set(SpeechEngineType.apple.rawValue, forKey: Key.speechEngine.rawValue)
+        }
+        [
+            "localASRPythonPath",
+            "mimoASRRepoPath",
+            "mimoASRModel",
+            "mimoASRModelPath",
+            "mimoASRTokenizerPath",
+        ].forEach(ud.removeObject(forKey:))
         whisperModel = ud.string(forKey: Key.whisperModel.rawValue) ?? "large-v3"
         llmModel = ud.string(forKey: Key.llmModel.rawValue) ?? Self.defaultLLMModelID
         microphoneID = ud.string(forKey: Key.microphoneID.rawValue)
@@ -387,14 +397,9 @@ final class AppSettings: ObservableObject {
         volcAppKey = ud.string(forKey: Key.volcAppKey.rawValue) ?? ""
         volcAccessKey = ud.string(forKey: Key.volcAccessKey.rawValue) ?? ""
         volcResourceId = ud.string(forKey: Key.volcResourceId.rawValue) ?? VolcASRModel.recommended.rawValue
-        localASRPythonPath = ud.string(forKey: Key.localASRPythonPath.rawValue) ?? LocalASRConfiguration.defaultPythonPath
         qwenASRModel = ud.string(forKey: Key.qwenASRModel.rawValue)
             ?? ud.string(forKey: Key.qwenASRModelPath.rawValue)
-            ?? LocalASRConfiguration.qwen3DefaultModel
-        mimoASRRepoPath = ud.string(forKey: Key.mimoASRRepoPath.rawValue) ?? ""
-        mimoASRModel = ud.string(forKey: Key.mimoASRModel.rawValue)
-            ?? ud.string(forKey: Key.mimoASRModelPath.rawValue)
-            ?? LocalASRConfiguration.mimoDefaultModel
+            ?? QwenASRModel.defaultID
         preloadSpeechModelOnLaunch = ud.object(forKey: Key.preloadSpeechModelOnLaunch.rawValue) as? Bool ?? true
         preloadFormattingModelOnLaunch = ud.object(forKey: Key.preloadFormattingModelOnLaunch.rawValue) as? Bool ?? true
         modelStoragePath = ud.string(forKey: Key.modelStoragePath.rawValue) ?? ModelStorage.defaultRoot.path
@@ -456,10 +461,7 @@ final class AppSettings: ObservableObject {
         $volcAppKey.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.volcAppKey.rawValue) }.store(in: &cancellables)
         $volcAccessKey.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.volcAccessKey.rawValue) }.store(in: &cancellables)
         $volcResourceId.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.volcResourceId.rawValue) }.store(in: &cancellables)
-        $localASRPythonPath.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.localASRPythonPath.rawValue) }.store(in: &cancellables)
         $qwenASRModel.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.qwenASRModel.rawValue) }.store(in: &cancellables)
-        $mimoASRRepoPath.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.mimoASRRepoPath.rawValue) }.store(in: &cancellables)
-        $mimoASRModel.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.mimoASRModel.rawValue) }.store(in: &cancellables)
         $preloadSpeechModelOnLaunch.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.preloadSpeechModelOnLaunch.rawValue) }.store(in: &cancellables)
         $preloadFormattingModelOnLaunch.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.preloadFormattingModelOnLaunch.rawValue) }.store(in: &cancellables)
         $modelStoragePath.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.modelStoragePath.rawValue) }.store(in: &cancellables)

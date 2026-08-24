@@ -13,14 +13,17 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/argmaxinc/argmax-oss-swift.git", from: "1.0.0"),
+        .package(url: "https://github.com/Blaizzy/mlx-audio-swift.git", exact: "0.1.3"),
         .package(url: "https://github.com/huggingface/swift-transformers", from: "1.3.3"),
-        .package(url: "https://github.com/ml-explore/mlx-swift-lm", branch: "main"),
+        .package(url: "https://github.com/ml-explore/mlx-swift-lm", exact: "3.31.4"),
     ],
     targets: [
         .executableTarget(
             name: "OpenType",
             dependencies: [
                 .product(name: "WhisperKit", package: "argmax-oss-swift"),
+                .product(name: "MLXAudioCore", package: "mlx-audio-swift"),
+                .product(name: "MLXAudioSTT", package: "mlx-audio-swift"),
                 .product(name: "Hub", package: "swift-transformers"),
                 .product(name: "Tokenizers", package: "swift-transformers"),
                 .product(name: "MLXLLM", package: "mlx-swift-lm"),
@@ -39,7 +42,6 @@ let package = Package(
                 .copy("Resources/SettingsStyleIllustration.png"),
                 .copy("Resources/SettingsIntegrationsIllustration.png"),
                 .copy("Resources/SettingsAboutIllustration.png"),
-                .copy("Resources/Scripts"),
                 .copy("Resources/Sounds"),
                 .copy("Resources/AppIcon.icns"),
                 .copy("Resources/AppIconLight.icns"),

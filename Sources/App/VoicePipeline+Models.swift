@@ -25,7 +25,6 @@ extension VoicePipeline {
 
     func unloadLocalASR() {
         qwenSpeechEngine = nil
-        mimoSpeechEngine = nil
     }
 
     func loadLLM() {
@@ -99,32 +98,14 @@ extension VoicePipeline {
                 markSpeechModelDownloadRequired(showInStatus: requestPermission)
                 return
             }
-            let engine = LocalASREngine(configuration: LocalASRConfiguration(
-                provider: .qwen3,
-                pythonPath: settings.localASRPythonPath,
-                modelPath: catalog.asrModelPath(for: settings.qwenASRModel),
-                tokenizerPath: "",
-                repoPath: ""
-            ))
+            let modelPath = catalog.asrModelPath(for: settings.qwenASRModel)
+            if qwenSpeechEngine?.usesModel(at: modelPath) == true { return }
+            let engine = QwenNativeASREngine(modelPath: modelPath)
             qwenSpeechEngine = engine
             Task { await engine.prepare() }
         case .mimo:
-            let settings = appState.settings
-            let catalog = ModelCatalog.shared
-            guard localASRIsAvailable(settings.mimoASRModel) else {
-                mimoSpeechEngine = nil
-                markSpeechModelDownloadRequired(showInStatus: requestPermission)
-                return
-            }
-            let engine = LocalASREngine(configuration: LocalASRConfiguration(
-                provider: .mimo,
-                pythonPath: settings.localASRPythonPath,
-                modelPath: catalog.asrModelPath(for: settings.mimoASRModel),
-                tokenizerPath: catalog.mimoTokenizerPath(),
-                repoPath: catalog.mimoRepositoryPath()
-            ))
-            mimoSpeechEngine = engine
-            Task { await engine.prepare() }
+            appState.settings.speechEngine = .apple
+            await ensureEngineLoaded(requestPermission: requestPermission)
         }
     }
 

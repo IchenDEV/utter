@@ -161,16 +161,12 @@ extension ModelManagementView {
         let estimate = estimatedDownloadBytes(for: action.model, type: action.type)
         let remaining = estimate.map { max($0 - action.model.cacheSize, 0) }
         let sizeText = remaining.map(ModelCatalog.formatBytes) ?? L("download.unknown")
-        var message = String(
+        return String(
             format: L("model.download_confirm_message"),
             action.model.displayName,
             sizeText,
             ModelStorage.root.path
         )
-        if action.type == .asr {
-            message += "\n\n" + L("model.download_runtime_note")
-        }
-        return message
     }
 
     private func estimatedDownloadBytes(

@@ -94,20 +94,6 @@ extension ModelManagementView {
         }
     }
 
-    var mimoASRSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(L("mimo_asr.config_hint"))
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-
-            modelList(
-                catalog.asrModels(for: .mimo),
-                activeID: settings.mimoASRModel,
-                type: .asr
-            )
-        }
-    }
-
     var llmSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label(L("model.text_formatting"), systemImage: "brain")
