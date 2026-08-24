@@ -49,6 +49,7 @@ Three output modes are available:
 | **Screen Context OCR** | Captures on-screen text via ScreenCaptureKit + Vision to help the LLM correct homophones |
 | **Voice Command Mode** | Screen-aware voice assistant — summarize, reply, translate based on what's on screen |
 | **Input Memory** | Recent input history injected as LLM context for better continuity |
+| **Industry Vocabulary** | Choose Medical, Legal, Finance & Accounting, or Software Technology terms for Apple Speech / Whisper biasing and output normalization; personal terms take priority |
 | **Edit Rules** | Personal text replacement rules applied on every output |
 | **Language Style Presets** | Concise / Formal / Casual / Custom prompt per language |
 | **Input History & Stats** | Full history with raw vs. processed comparison, word count stats, configurable retention |
@@ -145,7 +146,7 @@ Sources/
 ├── Hotkey/       # Global hotkey via CGEvent tap
 ├── LLM/          # LLMEngine (MLX), RemoteLLMClient (OpenAI/Anthropic)
 ├── Output/       # Text injection (Accessibility API + clipboard paste)
-├── Processing/   # TextProcessor, InputHistory, MemoryStore, PersonalDictionary
+├── Processing/   # TextProcessor, InputHistory, MemoryStore, personal and industry vocabulary
 ├── Prompts/      # PromptBuilder, prompt catalogs, style prompt presets
 ├── Screen/       # Screen OCR (ScreenCaptureKit + Vision)
 ├── Speech/       # SpeechEngine protocol, WhisperKit, Apple Speech, Doubao ASR, local ASR engines
@@ -157,6 +158,7 @@ scripts/
 ├── ci-basic-checks.sh      # CI guardrails for linked files and resources
 ├── create-signing-cert.sh  # Generate self-signed code signing certificate
 ├── generate-icon.swift     # Generate AppIcon.icns from source PNG
+├── test-industry-lexicons.sh # Validate vocabulary recall and non-target preservation
 ├── unit-test-coverage.sh   # Run unit tests with coverage thresholds
 └── validate-volc-asr.swift # Validate Volcengine ASR configuration manually
 ```

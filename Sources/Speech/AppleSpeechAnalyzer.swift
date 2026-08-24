@@ -28,7 +28,8 @@ enum AppleSpeechAnalyzer {
                 try await ensureModel(for: transcriber)
                 return try await transcribe(
                     file: AVAudioFile(forReading: audioURL),
-                    with: transcriber
+                    with: transcriber,
+                    context: context
                 )
             } catch {
                 Log.info(
@@ -58,12 +59,14 @@ enum AppleSpeechAnalyzer {
 
     private static func transcribe(
         file: AVAudioFile,
-        with transcriber: SpeechTranscriber
+        with transcriber: SpeechTranscriber,
+        context: SpeechRecognitionContext
     ) async throws -> String {
         let analyzer = SpeechAnalyzer(
             modules: [transcriber],
             options: .init(priority: .userInitiated, modelRetention: .lingering)
         )
+        try await apply(context, to: analyzer)
         let resultTask = Task<String, Error> {
             var transcript = ""
             for try await result in transcriber.results where result.isFinal {
@@ -83,11 +86,7 @@ enum AppleSpeechAnalyzer {
             modules: [transcriber],
             options: .init(priority: .userInitiated, modelRetention: .lingering)
         )
-        if !context.phrases.isEmpty {
-            let analysisContext = AnalysisContext()
-            analysisContext.contextualStrings[.general] = context.phrases
-            try await analyzer.setContext(analysisContext)
-        }
+        try await apply(context, to: analyzer)
         let resultTask = Task<String, Error> {
             var transcript = ""
             for try await result in transcriber.results where result.isFinal {
@@ -96,6 +95,16 @@ enum AppleSpeechAnalyzer {
             return transcript
         }
         return try await analyze(file: file, with: analyzer, resultTask: resultTask)
+    }
+
+    private static func apply(
+        _ context: SpeechRecognitionContext,
+        to analyzer: SpeechAnalyzer
+    ) async throws {
+        guard !context.phrases.isEmpty else { return }
+        let analysisContext = AnalysisContext()
+        analysisContext.contextualStrings[.general] = context.phrases
+        try await analyzer.setContext(analysisContext)
     }
 
     private static func analyze(

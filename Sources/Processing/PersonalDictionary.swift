@@ -9,45 +9,44 @@ struct EditRule: Codable, Identifiable, Sendable {
 struct PersonalDictionarySnapshot: Sendable {
     let entries: [DictionaryEntry]
     let editRules: [EditRule]
+    let industryLexicon: IndustryLexiconSnapshot
+
+    init(
+        entries: [DictionaryEntry],
+        editRules: [EditRule],
+        industryLexicon: IndustryLexiconSnapshot = .empty
+    ) {
+        self.entries = entries
+        self.editRules = editRules
+        self.industryLexicon = industryLexicon
+    }
 
     func applyReplacements(to text: String) -> String {
-        let rules = entries.enumerated().compactMap { offset, entry -> ReplacementRule? in
+        let personalRules = entries.enumerated().compactMap { offset, entry -> VocabularyReplacementRule? in
             let original = entry.original
             let replacement = entry.replacement
             guard entry.isEffective,
                   !original.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 return nil
             }
-            return ReplacementRule(
+            return VocabularyReplacementRule(
                 original: original,
                 replacement: replacement,
+                sourcePriority: 0,
                 insertionOrder: offset
             )
         }
-        .sorted {
-            if $0.original.count != $1.original.count {
-                return $0.original.count > $1.original.count
-            }
-            return $0.insertionOrder < $1.insertionOrder
+
+        let industryRules = industryLexicon.corrections.enumerated().map { offset, correction in
+            VocabularyReplacementRule(
+                original: correction.recognized,
+                replacement: correction.preferred,
+                sourcePriority: 1,
+                insertionOrder: offset
+            )
         }
 
-        guard !rules.isEmpty, !text.isEmpty else { return text }
-
-        var result = ""
-        result.reserveCapacity(text.count)
-        var cursor = text.startIndex
-        while cursor < text.endIndex {
-            if let match = rules.first(where: {
-                Self.matches($0.original, in: text, at: cursor)
-            }) {
-                result += match.replacement
-                cursor = text.index(cursor, offsetBy: match.original.count)
-            } else {
-                result.append(text[cursor])
-                cursor = text.index(after: cursor)
-            }
-        }
-        return result
+        return VocabularyReplacementEngine.apply(personalRules + industryRules, to: text)
     }
 
     var activeEntriesDescription: String {
@@ -70,9 +69,20 @@ struct PersonalDictionarySnapshot: Sendable {
             .joined(separator: "\n")
     }
 
+    var activeIndustryTermsDescription: String {
+        industryLexicon.promptDescription
+    }
+
+    var recognitionPhrases: [String] {
+        let personal = SpeechRecognitionContext(dictionaryEntries: entries).phrases
+        return SpeechRecognitionContext(
+            phrases: personal + industryLexicon.recognitionPhrases
+        ).phrases
+    }
+
     var protectedTerms: [String] {
         var seen = Set<String>()
-        return entries.compactMap { entry in
+        let personalTerms = entries.compactMap { entry -> String? in
             guard entry.isEffective else { return nil }
             let term = entry.replacement.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !term.isEmpty,
@@ -81,37 +91,13 @@ struct PersonalDictionarySnapshot: Sendable {
             }
             return term
         }
+        let industryTerms = industryLexicon.protectedTerms.compactMap { term -> String? in
+            guard seen.insert(term.lowercased()).inserted else { return nil }
+            return term
+        }
+        return industryTerms + personalTerms
     }
 
-    private static func matches(
-        _ original: String,
-        in text: String,
-        at start: String.Index
-    ) -> Bool {
-        guard let end = text.index(start, offsetBy: original.count, limitedBy: text.endIndex),
-              String(text[start..<end]).compare(
-                  original,
-                  options: .caseInsensitive
-              ) == .orderedSame else {
-            return false
-        }
-
-        if let first = original.first, isASCIIWordCharacter(first),
-           start > text.startIndex,
-           isASCIIWordCharacter(text[text.index(before: start)]) {
-            return false
-        }
-        if let last = original.last, isASCIIWordCharacter(last),
-           end < text.endIndex,
-           isASCIIWordCharacter(text[end]) {
-            return false
-        }
-        return true
-    }
-
-    private static func isASCIIWordCharacter(_ character: Character) -> Bool {
-        character.isASCIIWord
-    }
 }
 
 final class PersonalDictionary: ObservableObject {
@@ -147,8 +133,20 @@ final class PersonalDictionary: ObservableObject {
         snapshot().activeRulesDescription
     }
 
-    func snapshot() -> PersonalDictionarySnapshot {
-        PersonalDictionarySnapshot(entries: entries, editRules: editRules)
+    func snapshot(industryLexicon: IndustryLexiconSnapshot = .empty) -> PersonalDictionarySnapshot {
+        PersonalDictionarySnapshot(
+            entries: entries,
+            editRules: editRules,
+            industryLexicon: industryLexicon
+        )
+    }
+
+    func snapshot(settings: AppSettings) -> PersonalDictionarySnapshot {
+        snapshot(
+            industryLexicon: IndustryLexiconCatalog.shared.snapshot(
+                for: settings.industryLexicon
+            )
+        )
     }
 
     @discardableResult
@@ -256,10 +254,4 @@ final class PersonalDictionary: ObservableObject {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-}
-
-private struct ReplacementRule {
-    let original: String
-    let replacement: String
-    let insertionOrder: Int
 }

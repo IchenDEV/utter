@@ -118,10 +118,11 @@ final class VoicePipeline {
         let micID = appState.settings.microphoneID
         let language = appState.settings.inputLanguage.whisperCode
         let streamingEnabled = appState.settings.enableStreamingRecognitionBeta
+        let vocabularySnapshot = PersonalDictionary.shared.snapshot(
+            settings: appState.settings
+        )
         currentEngine?.configureRecognition(
-            context: SpeechRecognitionContext(
-                dictionaryEntries: PersonalDictionary.shared.entries
-            )
+            context: SpeechRecognitionContext(phrases: vocabularySnapshot.recognitionPhrases)
         )
         if streamingEnabled {
             currentEngine?.startListening(language: language) { [weak self] partialText in

@@ -131,6 +131,7 @@ extension VoicePipeline {
             return await processCommand(raw, settings: settings, targetApp: targetApp)
         case .direct:
             cancelScreenContextCapture()
+            let dictionarySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
             let context = InputContext.capture(
                 targetApp: targetApp,
                 screenContext: "",
@@ -139,7 +140,11 @@ extension VoicePipeline {
                 source: .menuBar
             )
             return VoicePipelineOutput(
-                text: textProcessor.basicClean(text: raw, inputLanguage: settings.inputLanguage),
+                text: textProcessor.basicClean(
+                    text: raw,
+                    inputLanguage: settings.inputLanguage,
+                    dictionarySnapshot: dictionarySnapshot
+                ),
                 context: context
             )
         }
@@ -155,7 +160,7 @@ extension VoicePipeline {
 
         let started = CFAbsoluteTimeGetCurrent()
         let processingOptions = TextProcessingOptions(settings: settings)
-        let dictionarySnapshot = PersonalDictionary.shared.snapshot()
+        let dictionarySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
         let enableMemory = settings.enableMemory
         let memoryWindowMinutes = settings.memoryWindowMinutes
         let screenContext = await finishScreenContextCapture()
@@ -200,7 +205,7 @@ extension VoicePipeline {
 
         let started = CFAbsoluteTimeGetCurrent()
         let processingOptions = TextProcessingOptions(settings: settings)
-        let dictionarySnapshot = PersonalDictionary.shared.snapshot()
+        let dictionarySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
         let enableMemory = settings.enableMemory
         let memoryWindowMinutes = settings.memoryWindowMinutes
         let screenContext = await finishScreenContextCapture()

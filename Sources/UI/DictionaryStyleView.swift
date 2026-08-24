@@ -22,6 +22,7 @@ struct DictionaryStyleView: View {
                     if !settings.useCustomSystemPrompt {
                         SettingsPanel { styleSection }
                     }
+                    SettingsPanel { IndustryLexiconView() }
                     SettingsPanel { DictionaryManagementView() }
                     SettingsPanel { editRulesSection }
                     SettingsPanel { customSystemPromptSection }
