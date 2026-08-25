@@ -13,6 +13,7 @@
 # Requirements:
 #   - macOS with Xcode (full install, not just CLI tools)
 #   - Swift 6.0+
+#   - Python 3.10+ (DMG packaging only; pinned tools are cached under .build)
 #
 
 set -euo pipefail
@@ -65,6 +66,7 @@ done
 
 APP_BUNDLE="${DIST_DIR}/${APP_NAME}.app"
 DMG_PATH="${DIST_DIR}/${APP_NAME}-${VERSION}.dmg"
+DMG_VOLUME_NAME="${APP_NAME} ${VERSION}"
 
 # ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -201,21 +203,38 @@ step "Creating DMG…"
 
 rm -f "${DMG_PATH}"
 
-DMG_TMP="${DIST_DIR}/.dmg-staging"
-rm -rf "${DMG_TMP}"
-mkdir -p "${DMG_TMP}"
+DMG_BACKGROUND_DIR="${DERIVED_DATA}/dmg-background"
+DMG_TOOLS_DIR="${DERIVED_DATA}/dmg-tools"
+DMG_TOOLS_STAMP="${DMG_TOOLS_DIR}/.utter-dmg-tools-1.6.7"
 
-cp -R "${APP_BUNDLE}" "${DMG_TMP}/"
-ln -s /Applications "${DMG_TMP}/Applications"
+rm -rf "${DMG_BACKGROUND_DIR}"
+mkdir -p "${DMG_BACKGROUND_DIR}"
+swift "${SCRIPT_DIR}/generate-dmg-background.swift" \
+    "${DMG_BACKGROUND_DIR}/installer-background.png" 1
+swift "${SCRIPT_DIR}/generate-dmg-background.swift" \
+    "${DMG_BACKGROUND_DIR}/installer-background@2x.png" 2
 
-hdiutil create \
-    -volname "${APP_NAME}" \
-    -srcfolder "${DMG_TMP}" \
-    -ov -format UDZO \
-    "${DMG_PATH}" \
-    -quiet
+if [ ! -f "${DMG_TOOLS_STAMP}" ]; then
+    rm -rf "${DMG_TOOLS_DIR}"
+    mkdir -p "${DMG_TOOLS_DIR}"
+    python3 -m pip install \
+        --disable-pip-version-check \
+        --no-deps \
+        --only-binary=:all: \
+        --require-hashes \
+        --target "${DMG_TOOLS_DIR}" \
+        -r "${SCRIPT_DIR}/dmg-requirements.txt" \
+        -q
+    touch "${DMG_TOOLS_STAMP}"
+fi
 
-rm -rf "${DMG_TMP}"
+PYTHONPATH="${DMG_TOOLS_DIR}" python3 -m dmgbuild \
+    -s "${SCRIPT_DIR}/dmg-settings.py" \
+    -D application="${APP_BUNDLE}" \
+    -D background="${DMG_BACKGROUND_DIR}/installer-background.png" \
+    -D volume_icon="${APP_BUNDLE}/Contents/Resources/AppIcon.icns" \
+    "${DMG_VOLUME_NAME}" \
+    "${DMG_PATH}"
 
 done_msg "DMG created"
 
