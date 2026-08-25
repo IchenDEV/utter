@@ -1,0 +1,58 @@
+name: Product or engineering intent
+description: Propose an observable outcome before implementation starts.
+title: "[Intent]: "
+labels:
+  - intent
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is happening now, and what evidence shows it is a problem?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe the user or system result, not the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: affected
+    attributes:
+      label: Affected users and systems
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints and non-goals
+      description: Include privacy, permissions, compatibility, cost, schedule, and explicit exclusions.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use observable, testable criteria.
+      placeholder: "- When ..., then ..."
+    validations:
+      required: true
+  - type: textarea
+    id: open_questions
+    attributes:
+      label: Open questions
+      description: Record unresolved decisions or write None.
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Initial risk
+      options:
+        - Low — isolated and reversible
+        - Medium — user-visible, dependency, model, UI, or automation change
+        - High — privacy, permission, security, release, destructive, or public API change
+    validations:
+      required: true

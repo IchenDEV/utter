@@ -6,32 +6,70 @@ on:
       - "v*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build:
-    name: Build & Release
+  validate:
+    name: Release Candidate Tests
     runs-on: macos-26
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require a SemVer tag on main
+        run: |
+          ./scripts/release-version.sh "$GITHUB_REF_NAME" >/dev/null
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Release commit $GITHUB_SHA is not on origin/main"
+            exit 1
+          fi
+
+      - name: Run repository checks
+        run: bash ./scripts/ci-basic-checks.sh
+
+      - name: Ensure Metal toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
+
+      - name: Run unit tests
+        run: swift test
+
+  release:
+    name: Sign, Verify & Publish
+    needs: validate
+    runs-on: macos-26
+    timeout-minutes: 75
+    environment: production
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Resolve version from tag
         id: version
-        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: echo "value=$(./scripts/release-version.sh "$GITHUB_REF_NAME")" >> "$GITHUB_OUTPUT"
 
-      - name: Check secrets availability
-        id: secrets-check
+      - name: Require release credentials
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
-          if [ "${{ secrets.APPLE_CERTIFICATE_P12 }}" != '' ]; then
-            echo "has-cert=true" >> "$GITHUB_OUTPUT"
-          fi
-          if [ "${{ secrets.APPLE_ID }}" != '' ] && [ "${{ secrets.APPLE_TEAM_ID }}" != '' ]; then
-            echo "has-notarize=true" >> "$GITHUB_OUTPUT"
+          missing=()
+          for name in APPLE_CERTIFICATE_P12 APPLE_CERTIFICATE_PASSWORD; do
+            if [ -z "${!name:-}" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ ${#missing[@]} -ne 0 ]; then
+            echo "Missing protected release secrets: ${missing[*]}"
+            exit 1
           fi
 
-      # ── Import signing certificate ──────────────────────────────
-      - name: Import code-signing certificate
-        if: steps.secrets-check.outputs.has-cert == 'true'
+      - name: Import signing certificate
         env:
           APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -41,7 +79,6 @@ jobs:
           KEYCHAIN_PASS="$(openssl rand -hex 16)"
 
           echo "$APPLE_CERTIFICATE_P12" | base64 --decode > "$CERT_PATH"
-
           security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
@@ -50,52 +87,82 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: \
             -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
 
-          # For self-signed certs: extract PEM and add to trust store
-          CERT_PEM="$RUNNER_TEMP/cert.pem"
+          CERT_PEM="$RUNNER_TEMP/certificate.pem"
           openssl pkcs12 -in "$CERT_PATH" -clcerts -nokeys \
-            -passin "pass:${APPLE_CERTIFICATE_PASSWORD}" -out "$CERT_PEM" 2>/dev/null || true
-          if [ -f "$CERT_PEM" ]; then
+            -passin "pass:${APPLE_CERTIFICATE_PASSWORD}" -out "$CERT_PEM"
+          SIGN_CERT_SHA256="$(openssl x509 -in "$CERT_PEM" -noout \
+            -fingerprint -sha256 | cut -d= -f2 | tr -d ':')"
+          IDENTITY="$(security find-identity -p codesigning "$KEYCHAIN_PATH" \
+            | sed -n 's/.*"\(.*\)".*/\1/p' \
+            | head -1)"
+          if [ -z "$IDENTITY" ]; then
+            echo "No code-signing identity found in the release certificate"
+            exit 1
+          fi
+          if [[ "$IDENTITY" != "Developer ID Application:"* ]]; then
             sudo security add-trusted-cert -d -r trustRoot \
-              -k "$KEYCHAIN_PATH" "$CERT_PEM" 2>/dev/null || true
-            rm -f "$CERT_PEM"
+              -k "$KEYCHAIN_PATH" "$CERT_PEM"
           fi
-
           security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
-          rm -f "$CERT_PATH"
+          rm -f "$CERT_PATH" "$CERT_PEM"
+          echo "SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "SIGN_CERT_SHA256=$SIGN_CERT_SHA256" >> "$GITHUB_ENV"
+          echo "Signing identity imported: $IDENTITY"
 
-          # Detect the imported identity (without -v so self-signed certs are included)
-          IDENTITY=$(security find-identity -p codesigning "$KEYCHAIN_PATH" \
-            | grep '"' | head -1 | sed 's/.*"\(.*\)".*/\1/')
+      - name: Ensure Metal toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
 
-          if [ -n "$IDENTITY" ]; then
-            echo "SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
-            echo "✓ Signing identity: $IDENTITY"
+      - name: Build signed app and DMG
+        run: |
+          ./scripts/build-app.sh \
+            --version="${{ steps.version.outputs.value }}" \
+            --sign="$SIGN_IDENTITY"
+
+      - name: Classify and verify signed artifact
+        run: |
+          SIGNATURE="$(codesign -dvvv dist/Utter.app 2>&1)"
+          if ! grep -Fqx "Authority=$SIGN_IDENTITY" <<<"$SIGNATURE"; then
+            echo "Built app authority does not match imported identity: $SIGN_IDENTITY"
+            exit 1
+          fi
+
+          VERIFY_ARGS=(
+            --app dist/Utter.app
+            --dmg "dist/Utter-${{ steps.version.outputs.value }}.dmg"
+            --version "${{ steps.version.outputs.value }}"
+            --expected-cert-sha256 "$SIGN_CERT_SHA256"
+          )
+          if grep -q '^Authority=Developer ID Application:' <<<"$SIGNATURE"; then
+            SIGNING_MODE=developer-id
+            VERIFY_ARGS+=(--require-developer-id)
+          elif grep -q '^TeamIdentifier=not set$' <<<"$SIGNATURE"; then
+            SIGNING_MODE=self-signed
+            VERIFY_ARGS+=(--require-self-signed)
           else
-            echo "⚠ No codesigning identity found after import, will use ad-hoc"
+            echo "Unsupported non-Developer-ID signing identity"
+            exit 1
           fi
+          echo "SIGNING_MODE=$SIGNING_MODE" >> "$GITHUB_ENV"
+          echo "Signing mode: $SIGNING_MODE" | tee -a "$GITHUB_STEP_SUMMARY"
+          ./scripts/verify-release-artifact.sh "${VERIFY_ARGS[@]}"
 
-      # ── Build ───────────────────────────────────────────────────
-      - name: Build .app and .dmg
-        run: |
-          ARGS=(--version="${{ steps.version.outputs.value }}")
-          if [ -n "${SIGN_IDENTITY:-}" ]; then
-            ARGS+=(--sign="${SIGN_IDENTITY}")
-          fi
-          ./scripts/build-app.sh "${ARGS[@]}"
-
-      - name: Verify artifacts
-        run: |
-          ls -lh dist/
-          codesign -dvv dist/Utter.app
-
-      # ── Notarize (Developer ID only) ───────────────────────────
-      - name: Notarize DMG
-        if: steps.secrets-check.outputs.has-notarize == 'true'
+      - name: Notarize and staple DMG
+        if: env.SIGNING_MODE == 'developer-id'
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
+          missing=()
+          for name in APPLE_ID APPLE_TEAM_ID APPLE_APP_PASSWORD; do
+            if [ -z "${!name:-}" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ ${#missing[@]} -ne 0 ]; then
+            echo "Developer ID release is missing notarization secrets: ${missing[*]}"
+            exit 1
+          fi
           DMG="dist/Utter-${{ steps.version.outputs.value }}.dmg"
           xcrun notarytool submit "$DMG" \
             --apple-id "$APPLE_ID" \
@@ -104,31 +171,61 @@ jobs:
             --wait --timeout 30m
           xcrun stapler staple "$DMG"
 
-      # ── Release ─────────────────────────────────────────────────
+      - name: Verify distribution and checksum
+        run: |
+          DMG="dist/Utter-${{ steps.version.outputs.value }}.dmg"
+          VERIFY_ARGS=(
+            --app dist/Utter.app
+            --dmg "$DMG"
+            --version "${{ steps.version.outputs.value }}"
+            --expected-cert-sha256 "$SIGN_CERT_SHA256"
+          )
+          if [ "$SIGNING_MODE" = "developer-id" ]; then
+            VERIFY_ARGS+=(--require-developer-id --require-notarization)
+          else
+            VERIFY_ARGS+=(--require-self-signed)
+          fi
+          ./scripts/verify-release-artifact.sh "${VERIFY_ARGS[@]}"
+          (
+            cd dist
+            shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256"
+            shasum -c "$(basename "$DMG").sha256"
+          )
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          shopt -s nullglob
-
-          TAG="${GITHUB_REF_NAME}"
-          TITLE="Utter ${TAG}"
-          FILES=(dist/Utter-*.dmg)
-
-          if [ ${#FILES[@]} -eq 0 ]; then
-            echo "No DMG artifacts found in dist/"
+          TAG="$GITHUB_REF_NAME"
+          DMG="dist/Utter-${{ steps.version.outputs.value }}.dmg"
+          CHECKSUM="$DMG.sha256"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; refusing to replace immutable assets"
             exit 1
           fi
-
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists, uploading assets..."
+          if [ "$SIGNING_MODE" = "self-signed" ]; then
+            RELEASE_NOTE=$'> [!WARNING]\n> This release is signed with the project self-signed certificate and is not Apple-notarized. macOS may require manual approval before opening it.'
           else
-            echo "Creating release $TAG..."
-            gh release create "$TAG" \
-              --title "$TITLE" \
-              --generate-notes \
-              --verify-tag
+            RELEASE_NOTE=$'> [!NOTE]\n> This release is signed with Apple Developer ID and notarized by Apple.'
           fi
+          gh release create "$TAG" \
+            --draft \
+            --title "Utter $TAG" \
+            --generate-notes \
+            --notes "$RELEASE_NOTE" \
+            --verify-tag
+          gh release upload "$TAG" "$DMG" "$CHECKSUM"
 
-          gh release upload "$TAG" "${FILES[@]}" --clobber
+          DOWNLOAD_DIR="$(mktemp -d)"
+          trap 'rm -r "$DOWNLOAD_DIR"' EXIT
+          gh release download "$TAG" \
+            --pattern "$(basename "$DMG")" \
+            --pattern "$(basename "$CHECKSUM")" \
+            --dir "$DOWNLOAD_DIR"
+          (
+            cd "$DOWNLOAD_DIR"
+            shasum -c "$(basename "$CHECKSUM")"
+          )
+          cmp "$DMG" "$DOWNLOAD_DIR/$(basename "$DMG")"
+          gh release edit "$TAG" --draft=false --latest

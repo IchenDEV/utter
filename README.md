@@ -92,6 +92,15 @@ bash scripts/build-and-run.sh --verify
 open Package.swift
 ```
 
+Material changes follow the artifact-driven workflow in
+[`docs/sdlc/README.md`](docs/sdlc/README.md). Before opening a pull request, run:
+
+```bash
+python3 scripts/sdlc.py validate --worktree
+bash scripts/ci-basic-checks.sh
+swift test
+```
+
 The public app is `Utter.app`. The Swift package product remains `OpenType` so existing source integrations and upgrade paths continue to work.
 
 ## First Run
