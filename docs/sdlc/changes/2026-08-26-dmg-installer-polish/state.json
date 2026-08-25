@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-26-dmg-installer-polish",
+  "title": "Polish and harden the Utter DMG installer",
+  "risk": "high",
+  "status": "verified",
+  "owners": [
+    "repository maintainer"
+  ],
+  "acceptanceCriteria": [
+    "Opening the DMG presents a compact branded Finder window with readable labels and an unambiguous drag-to-Applications flow.",
+    "The DMG layout is generated without depending on interactive Finder state and uses hash-pinned packaging tools.",
+    "The mounted app preserves its strict code-signature validity and the release artifact verifier accepts the generated DMG.",
+    "Generated build products, downloaded tools, and visual QA screenshots remain outside the committed change."
+  ],
+  "governedPaths": [
+    "scripts/build-app.sh",
+    "scripts/dmg-requirements.txt",
+    "scripts/dmg-settings.py",
+    "scripts/generate-dmg-background.swift"
+  ],
+  "artifacts": {
+    "intent": "intent.md",
+    "spec": "spec.md",
+    "plan": "plan.md",
+    "verification": "verification.md"
+  }
+}
