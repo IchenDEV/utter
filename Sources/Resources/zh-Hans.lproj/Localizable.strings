@@ -485,3 +485,14 @@
 "error.llm_not_downloaded" = "模型文件尚未下载。请前往 设置 → 模型，确认流量后下载";
 "onboarding.download_notice" = "这里不会自动下载。请先确认体积，再决定是否下载这个本地模型。";
 "onboarding.download_size" = "下载（%@）";
+
+/* ── 设备性能检查 ── */
+"device.title" = "本机信息";
+"device.chip" = "芯片";
+"device.ram" = "内存";
+"device.disk_available" = "可用磁盘";
+"device.insufficient_disk" = "磁盘空间不足，无法下载此模型。请清理空间或选择更小的模型。";
+"device.insufficient_ram" = "本机内存不足以运行此模型。请选择更小的模型，或使用远程 LLM。";
+"device.marginal_ram" = "本机内存有限，运行此模型可能较慢。建议选择更小的模型以获得更好的性能。";
+"device.badge_marginal" = "可能较慢";
+"device.badge_incompatible" = "超出配置";

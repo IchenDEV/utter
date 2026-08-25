@@ -53,6 +53,7 @@ extension ModelManagementView {
                                 .foregroundStyle(Color.accentColor)
                                 .clipShape(Capsule())
                         }
+                        compatibilityBadge(model.compatibility)
                     }
                     HStack(spacing: 6) {
                         Text(secondaryText(for: model))
@@ -90,6 +91,32 @@ extension ModelManagementView {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(isActive ? Color.accentColor.opacity(0.04) : .clear)
+    }
+
+    @ViewBuilder
+    func compatibilityBadge(_ compat: DeviceCapability.Compatibility) -> some View {
+        switch compat {
+        case .compatible:
+            EmptyView()
+        case .marginal(let msg):
+            Text(L("device.badge_marginal"))
+                .font(.system(size: 9, weight: .medium))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1)
+                .background(Color.orange.opacity(0.15))
+                .foregroundStyle(.orange)
+                .clipShape(Capsule())
+                .help(msg)
+        case .incompatible(let msg):
+            Text(L("device.badge_incompatible"))
+                .font(.system(size: 9, weight: .medium))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1)
+                .background(Color.red.opacity(0.15))
+                .foregroundStyle(.red)
+                .clipShape(Capsule())
+                .help(msg)
+        }
     }
 
     @ViewBuilder

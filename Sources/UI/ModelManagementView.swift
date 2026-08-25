@@ -36,6 +36,8 @@ struct ModelManagementView: View {
                         SettingsPanel { activeDownloadsSection }
                     }
 
+                    SettingsPanel { deviceInfoSection }
+
                     SettingsPanel {
                         enginePickerSection
                         Divider().padding(.vertical, 4)

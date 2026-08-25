@@ -54,6 +54,7 @@ final class ModelCatalog: ObservableObject {
         var downloadDetail: String = ""
         var benchmarkTPS: Double?
         var isBenchmarking: Bool = false
+        var compatibility: DeviceCapability.Compatibility = .compatible
 
         static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.id == rhs.id && lhs.status == rhs.status &&
@@ -210,6 +211,10 @@ final class ModelCatalog: ObservableObject {
                         : (size > 0 ? .error(L("model.download_incomplete")) : .notDownloaded)
                 }
             }
+            llmModels[i].compatibility = DeviceCapability.check(
+                modelID: id,
+                downloadSizeBytes: Self.defaultDownloadEstimateBytes(for: id)
+            )
         }
         refreshASRStatus(recheckingErrors: recheckingErrors)
     }
