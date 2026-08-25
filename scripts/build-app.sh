@@ -24,13 +24,14 @@ BUILD_PRODUCT="OpenType"
 SCHEME_NAME="OpenType"
 BUNDLE_ID="com.opentype.voiceinput"
 CLI_HELPER_NAME="opentype-cli"
-# Default: use latest git tag (strip leading "v"), fallback to 0.0.0-dev
-if [ -z "${VERSION:-}" ]; then
-    VERSION="$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.0.0-dev")"
-fi
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Shallow/tagless development checkouts use 0.0.0. Public release tags are
+# validated separately by release-version.sh and passed explicitly.
+if [ -z "${VERSION:-}" ]; then
+    VERSION="$("${SCRIPT_DIR}/build-version.sh" "${PROJECT_DIR}")"
+fi
 
 DERIVED_DATA="${PROJECT_DIR}/.build/xcode"
 BUILD_DIR="${DERIVED_DATA}/Build/Products/Release"
@@ -186,6 +187,9 @@ fi
 # ─── Step 5: Create DMG ────────────────────────────────────────────────────────
 
 if [ "$APP_ONLY" = true ]; then
+    "${SCRIPT_DIR}/verify-release-artifact.sh" \
+        --app "${APP_BUNDLE}" \
+        --version "${VERSION}"
     echo ""
     echo "═══════════════════════════════════════════════════"
     echo "  Done!  ${APP_BUNDLE}"
@@ -214,6 +218,11 @@ hdiutil create \
 rm -rf "${DMG_TMP}"
 
 done_msg "DMG created"
+
+"${SCRIPT_DIR}/verify-release-artifact.sh" \
+    --app "${APP_BUNDLE}" \
+    --dmg "${DMG_PATH}" \
+    --version "${VERSION}"
 
 # ─── Summary ────────────────────────────────────────────────────────────────────
 

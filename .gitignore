@@ -55,6 +55,8 @@ dist/
 *.o
 *.d
 *.hmap
+__pycache__/
+*.pyc
 *.ipa
 *.dSYM
 *.dSYM.zip
@@ -90,7 +92,6 @@ playground.xcworkspace
 # ===========================
 # AI Tool Config
 # ===========================
-CLAUDE.md
 .worktrees/
 
 # ===========================

@@ -1,0 +1,12 @@
+# Sensitive SDLC, dependency, permission, signing, and release controls.
+/.github/workflows/ @IchenDEV
+/Resources/OpenType.entitlements @IchenDEV
+/Package.swift @IchenDEV
+/Package.resolved @IchenDEV
+/scripts/build-app.sh @IchenDEV
+/scripts/create-signing-cert.sh @IchenDEV
+/scripts/verify-release-artifact.sh @IchenDEV
+/scripts/sdlc.py @IchenDEV
+/docs/sdlc/ @IchenDEV
+/AGENTS.md @IchenDEV
+/CLAUDE.md @IchenDEV

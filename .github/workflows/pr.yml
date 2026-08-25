@@ -11,22 +11,52 @@ permissions:
   contents: read
 
 concurrency:
-  group: pr-${{ github.ref }}
+  group: pr-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  basic-checks:
-    name: Basic linked rules
+  quality:
+    name: Contract & Tests
     runs-on: macos-26
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Run basic linked rules
+      - name: Validate changed SDLC artifacts
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            python3 scripts/sdlc.py validate --base "origin/$BASE_REF"
+          elif [ "$EVENT_NAME" = "push" ]; then
+            if [ -z "$BEFORE_SHA" ] || [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+              echo "Push event has no usable previous SHA; refusing schema-only validation"
+              exit 1
+            fi
+            git fetch --no-tags origin "$BEFORE_SHA"
+            git cat-file -e "$BEFORE_SHA^{commit}"
+            python3 scripts/sdlc.py validate --push-base "$BEFORE_SHA"
+          else
+            python3 scripts/sdlc.py validate
+          fi
+
+      - name: Run linked repository checks
         run: bash ./scripts/ci-basic-checks.sh
 
+      - name: Ensure Metal toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
+
+      - name: Run unit tests
+        run: swift test
+
   build:
-    name: Build Utter
+    name: Release-style App Build
     runs-on: macos-26
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -36,5 +66,22 @@ jobs:
       - name: Ensure Metal toolchain
         run: xcodebuild -downloadComponent MetalToolchain
 
-      - name: Build app bundle
+      - name: Build and verify app bundle
         run: ./scripts/build-app.sh --app-only --sign=-
+
+  gate:
+    name: SDLC Gate
+    if: ${{ always() }}
+    needs: [quality, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every SDLC job
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          if [ "$QUALITY_RESULT" != "success" ] || [ "$BUILD_RESULT" != "success" ]; then
+            echo "Contract/tests: $QUALITY_RESULT"
+            echo "App build: $BUILD_RESULT"
+            exit 1
+          fi

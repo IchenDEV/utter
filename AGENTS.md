@@ -41,8 +41,20 @@ Utter is a macOS menu bar voice input app built with Swift 6 / SwiftUI / AppKit.
 
 - **Dev build**: `swift build`, `bash scripts/build-and-run.sh --verify`, or open `Package.swift` in Xcode
 - **Release build**: `bash scripts/build-app.sh` — uses `xcodebuild` (required for Metal shader bundling), then assembles .app and .dmg
-- **CI**: `.github/workflows/release.yml` — builds on macOS, signs, optionally notarizes, publishes to GitHub Releases
+- **PR CI**: `.github/workflows/pr.yml` — validates SDLC artifacts, runs linked checks and unit tests, builds a release-style app, and exposes the stable `SDLC Gate` check
+- **Release CI**: `.github/workflows/release.yml` — accepts a SemVer tag on `main`, verifies either the existing self-signed identity or Developer ID, requires Apple notarization for Developer ID, and publishes the mounted-DMG-verified artifact with a checksum
 - **Icon**: `scripts/generate-icon.swift` programmatically renders the icon and generates `.icns`; `Sources/App/AppIcon.swift` renders the same icon at runtime for the Dock
+
+## SDLC Operating Contract
+
+- Read `docs/sdlc/README.md` before non-trivial implementation, automation, test, UI, dependency, permission, or release changes.
+- Create or update `docs/sdlc/changes/<yyyy-mm-dd-slug>/`. Low risk requires intent, plan, and verification; medium/high risk also requires a spec.
+- Keep `state.json` honest. An agent may advance work to `verified` with current evidence, but may not record its own work as human approval.
+- Begin implementation only after intent has observable acceptance criteria and medium/high-risk design choices have been reviewed.
+- Always run `python3 scripts/sdlc.py validate --worktree`, `bash scripts/ci-basic-checks.sh`, and `swift test`. Add release-style build, real-window visual QA, permission/privacy paths, or clean-machine checks in proportion to risk.
+- High-risk changes require an independent verifier, explicit rollback, PR approval, and protected production approval.
+- A production incident must link a corrective intent and add a regression test, deterministic guardrail, eval case, or explicit reason automation is impossible.
+- Never fall back to ad-hoc signing when configured signing fails. A self-signed release must use the configured identity, pass the same artifact/checksum checks, and be labeled as not Apple-notarized.
 
 ## Coding Conventions
 

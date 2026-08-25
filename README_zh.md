@@ -92,6 +92,15 @@ bash scripts/build-and-run.sh --verify
 open Package.swift
 ```
 
+实质性改动遵循 [`docs/sdlc/README.md`](docs/sdlc/README.md) 中的 Artifact 驱动流程。
+提交 Pull Request 前请运行：
+
+```bash
+python3 scripts/sdlc.py validate --worktree
+bash scripts/ci-basic-checks.sh
+swift test
+```
+
 对外应用名为 `Utter.app`；Swift 包产物暂时保留 `OpenType`，以兼容现有源码集成和升级路径。
 
 ## 首次使用

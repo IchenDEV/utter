@@ -20,6 +20,12 @@ step() {
 step "Checking Package.swift"
 swift package describe >/dev/null
 
+step "Checking SDLC artifacts and harness regression tests"
+python3 scripts/sdlc.py validate
+python3 scripts/tests/test_sdlc.py
+bash scripts/tests/test_build_version.sh
+bash scripts/tests/test_release_version.sh
+
 step "Linting property lists and localized strings"
 plutil -lint Resources/Info.plist
 plutil -lint Resources/OpenType.entitlements
@@ -100,6 +106,21 @@ fi
 if [ -n "$conflict_markers" ]; then
     echo "$conflict_markers"
     fail "found unresolved conflict markers"
+fi
+
+step "Checking tracked secret-bearing file types"
+sensitive_tracked="$(git ls-files | grep -E '(^|/)(\.env($|\.)|[^/]+\.(p12|pem|key|mobileprovision|provisionprofile))$' || true)"
+if [ -n "$sensitive_tracked" ]; then
+    echo "$sensitive_tracked"
+    fail "found tracked files that may contain credentials"
+fi
+
+private_key_marker="-----BEGIN PRIVATE"$' '"KEY-----"
+private_key_hits="$(git grep -n -F -- "$private_key_marker" -- . \
+    ':(exclude)scripts/ci-basic-checks.sh' || true)"
+if [ -n "$private_key_hits" ]; then
+    echo "$private_key_hits"
+    fail "found a committed private key marker"
 fi
 
 step "Checking for broken symlinks"
