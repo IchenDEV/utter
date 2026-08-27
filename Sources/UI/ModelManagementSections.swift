@@ -133,6 +133,8 @@ extension ModelManagementView {
 
             if settings.useRemoteLLM {
                 RemoteLLMConfigView()
+            } else if settings.localLLMBackend == .espresso {
+                espressoLLMSection
             } else {
                 localLLMModelsSection
             }
@@ -176,8 +178,38 @@ extension ModelManagementView {
         .controlSize(.small)
     }
 
+    var espressoLLMSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Espresso", systemImage: "neural.engine")
+                .font(.system(size: 12, weight: .semibold))
+
+            Text(L("model.espresso.description"))
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                Text(settings.espressoModelPath.isEmpty
+                    ? L("model.espresso.no_bundle")
+                    : settings.espressoModelPath)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(settings.espressoModelPath.isEmpty ? .secondary : .primary)
+                    .lineLimit(2)
+                    .textSelection(.enabled)
+                Spacer()
+                Button(L("model.espresso.choose")) {
+                    chooseEspressoBundle()
+                }
+                .controlSize(.small)
+            }
+
+            Label(L("model.espresso.private_api_warning"), systemImage: "exclamationmark.triangle.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(.orange)
+        }
+    }
+
     func syncSelectedFamilyFromActiveModel() {
-        guard !settings.useRemoteLLM else { return }
+        guard !settings.useRemoteLLM, settings.localLLMBackend == .mlx else { return }
         if let family = catalog.llmModels.first(where: { $0.id == settings.llmModel })?.family {
             selectedModelFamily = family
         }

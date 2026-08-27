@@ -253,6 +253,37 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertFalse(settings.developerInterfaceEnabled)
     }
 
+    func testLocalLLMBackendDefaultsToMLXAndPersistsEspressoSelection() {
+        let (defaults, suiteName) = makeIsolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(settings.localLLMBackend, .mlx)
+        XCTAssertTrue(settings.espressoModelPath.isEmpty)
+
+        settings.localLLMBackend = .espresso
+        settings.espressoModelPath = "/tmp/qwen.esp"
+
+        let reloaded = AppSettings(defaults: defaults)
+        XCTAssertEqual(reloaded.localLLMBackend, .espresso)
+        XCTAssertEqual(reloaded.espressoModelPath, "/tmp/qwen.esp")
+    }
+
+    func testEspressoPromptUsesQwenChatTemplate() {
+        let prompt = EspressoLLMEngine.formatPrompt(
+            user: "整理这句话",
+            system: "只输出结果",
+            modelName: "Qwen2.5-0.5B-Instruct"
+        )
+
+        XCTAssertEqual(
+            prompt,
+            "<|im_start|>system\n只输出结果<|im_end|>\n"
+                + "<|im_start|>user\n整理这句话<|im_end|>\n"
+                + "<|im_start|>assistant\n"
+        )
+    }
+
     func testDeveloperHTTPTokenCanBeReset() {
         let (defaults, suiteName) = makeIsolatedDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

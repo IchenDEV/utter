@@ -192,7 +192,7 @@
 "model.preload.speech" = "启动时预加载听写模型";
 "model.preload.speech_help" = "仅对已下载的 WhisperKit 模型生效。请先在模型页点击下载按钮。";
 "model.preload.formatting" = "启动时预加载修稿模型";
-"model.preload.formatting_help" = "仅对本地 MLX 模型生效。远程 LLM 会在整理开始时调用。";
+"model.preload.formatting_help" = "对本地 MLX 和 Espresso 模型生效。远程 LLM 会在整理开始时调用。";
 "model.speech_recognition" = "语音识别";
 "model.apple_managed_by_system" = "Apple 语音使用由 macOS 管理的语言与识别服务。";
 "model.text_formatting" = "文本整理 (LLM)";
@@ -201,6 +201,10 @@
 "model.family.gemma" = "Google Gemma - 轻量";
 "model.family.llama" = "Meta Llama - 通用";
 "model.family.remote" = "远程";
+"model.espresso.description" = "使用 Espresso 的 Apple 神经网络引擎后端运行兼容的 .esp 模型包。";
+"model.espresso.no_bundle" = "尚未选择 .esp 模型包";
+"model.espresso.choose" = "选择 .esp 模型包…";
+"model.espresso.private_api_warning" = "Espresso 使用 Apple 神经网络引擎私有 API，可能在 macOS 更新后失效，也无法通过 Mac App Store 审核。";
 "model.custom_id_placeholder" = "自定义模型 ID（如 mlx-community/…）";
 "model.active" = "当前";
 "model.use" = "启用";
@@ -484,5 +488,7 @@
 "model.asr_runtime_incomplete" = "运行文件不完整";
 "error.llm_not_loaded" = "模型文件已在本地，但当前尚未加载到内存。请重新执行；Utter 会再次尝试加载";
 "error.llm_not_downloaded" = "模型文件尚未下载。请前往 设置 → 模型，确认流量后下载";
+"error.espresso_not_loaded" = "Espresso 模型包尚未加载。请在 设置 → 模型 中选择有效的 .esp 模型包。";
+"error.espresso_ane_unavailable" = "这个 Espresso 模型包无法在此 Mac 上使用 Apple 神经网络引擎后端。";
 "onboarding.download_notice" = "这里不会自动下载。请先确认体积，再决定是否下载这个本地模型。";
 "onboarding.download_size" = "下载（%@）";

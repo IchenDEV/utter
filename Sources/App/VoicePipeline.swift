@@ -41,6 +41,12 @@ final class VoicePipeline {
         let catalog = ModelCatalog.shared
         catalog.refreshStatus(recheckingErrors: true)
         let llmStatus = catalog.llmModels.first(where: { $0.id == settings.llmModel })?.status
+        let formattingModelID = settings.localLLMBackend == .espresso
+            ? settings.espressoModelPath
+            : settings.llmModel
+        let formattingModelAvailable = settings.localLLMBackend == .espresso
+            ? FileManager.default.fileExists(atPath: NSString(string: settings.espressoModelPath).expandingTildeInPath)
+            : (llmStatus == .downloaded || llmStatus == .ready)
         let shouldLoadSpeech = StartupModelPreloadPolicy.shouldPreloadSpeechModel(
             enabled: settings.preloadSpeechModelOnLaunch,
             speechEngine: settings.speechEngine,
@@ -49,8 +55,8 @@ final class VoicePipeline {
         let shouldLoadFormatting = StartupModelPreloadPolicy.shouldPreloadFormattingModel(
             enabled: settings.preloadFormattingModelOnLaunch,
             useRemoteLLM: settings.useRemoteLLM,
-            modelID: settings.llmModel,
-            modelDownloaded: llmStatus == .downloaded || llmStatus == .ready
+            modelID: formattingModelID,
+            modelDownloaded: formattingModelAvailable
         )
 
         if shouldLoadSpeech {

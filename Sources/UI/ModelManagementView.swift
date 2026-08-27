@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import ESPRuntime
 
 struct ModelManagementView: View {
     @EnvironmentObject var settings: AppSettings
@@ -55,6 +56,7 @@ struct ModelManagementView: View {
             syncSelectedFamilyFromActiveModel()
         }
         .onChange(of: settings.llmModel) { _, _ in syncSelectedFamilyFromActiveModel() }
+        .onChange(of: settings.localLLMBackend) { _, _ in syncSelectedFamilyFromActiveModel() }
         .onChange(of: settings.localASRPythonPath) { _, _ in onUnloadLocalASR?() }
         .onChange(of: settings.mimoASRRepoPath) { _, _ in onUnloadLocalASR?() }
         .onChange(of: settings.qwenASRModel) { _, _ in onUnloadLocalASR?() }
@@ -160,6 +162,28 @@ extension ModelManagementView {
             }
             onUnloadLLM?()
             catalog.addLocalLLM(url)
+        }
+    }
+
+    func chooseEspressoBundle() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = false
+        panel.message = L("model.espresso.choose")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            _ = try ESPRuntimeBundle.open(at: url)
+            onUnloadLLM?()
+            settings.espressoModelPath = url.path
+            settings.localLLMBackend = .espresso
+            settings.useRemoteLLM = false
+            onLoadLLM?()
+        } catch {
+            importErrorMessage = error.localizedDescription
+            showImportError = true
         }
     }
 

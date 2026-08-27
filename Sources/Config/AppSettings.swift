@@ -46,6 +46,11 @@ enum SpeechEngineType: String, Codable, CaseIterable {
     }
 }
 
+enum LocalLLMBackend: String, Codable, CaseIterable {
+    case mlx
+    case espresso
+}
+
 enum LanguageStyle: String, Codable, CaseIterable {
     case casual = "casual"
     case professional = "professional"
@@ -279,6 +284,8 @@ final class AppSettings: ObservableObject {
     @Published var useCustomSystemPrompt: Bool
     @Published var customSystemPrompt: String
     @Published var useRemoteLLM: Bool
+    @Published var localLLMBackend: LocalLLMBackend
+    @Published var espressoModelPath: String
     @Published var remoteProvider: RemoteProvider
     @Published var remoteAPIKey: String
     @Published var remoteBaseURL: String
@@ -312,7 +319,8 @@ final class AppSettings: ObservableObject {
         case useScreenContext, screenContextMode, enableInstantInsert, hasCompletedOnboarding, uiLanguage, historyRetention
         case enableMemory, memoryWindowMinutes, enableCorrectionLearning
         case useCustomSystemPrompt, customSystemPrompt
-        case useRemoteLLM, remoteProvider, remoteAPIKey, remoteBaseURL, remoteModel
+        case useRemoteLLM, localLLMBackend, espressoModelPath
+        case remoteProvider, remoteAPIKey, remoteBaseURL, remoteModel
         case menuBarIcon, appIconAppearance
         case volcAppKey, volcAccessKey, volcResourceId
         case localASRPythonPath
@@ -378,6 +386,10 @@ final class AppSettings: ObservableObject {
         useCustomSystemPrompt = ud.bool(forKey: Key.useCustomSystemPrompt.rawValue)
         customSystemPrompt = ud.string(forKey: Key.customSystemPrompt.rawValue) ?? ""
         useRemoteLLM = ud.bool(forKey: Key.useRemoteLLM.rawValue)
+        localLLMBackend = LocalLLMBackend(
+            rawValue: ud.string(forKey: Key.localLLMBackend.rawValue) ?? ""
+        ) ?? .mlx
+        espressoModelPath = ud.string(forKey: Key.espressoModelPath.rawValue) ?? ""
         remoteProvider = RemoteProvider(rawValue: ud.string(forKey: Key.remoteProvider.rawValue) ?? "") ?? .custom
         remoteAPIKey = ud.string(forKey: Key.remoteAPIKey.rawValue) ?? ""
         remoteBaseURL = ud.string(forKey: Key.remoteBaseURL.rawValue) ?? ""
@@ -447,6 +459,12 @@ final class AppSettings: ObservableObject {
         $useCustomSystemPrompt.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.useCustomSystemPrompt.rawValue) }.store(in: &cancellables)
         $customSystemPrompt.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.customSystemPrompt.rawValue) }.store(in: &cancellables)
         $useRemoteLLM.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.useRemoteLLM.rawValue) }.store(in: &cancellables)
+        $localLLMBackend.dropFirst().sink {
+            [defaults] in defaults.set($0.rawValue, forKey: Key.localLLMBackend.rawValue)
+        }.store(in: &cancellables)
+        $espressoModelPath.dropFirst().sink {
+            [defaults] in defaults.set($0, forKey: Key.espressoModelPath.rawValue)
+        }.store(in: &cancellables)
         $remoteProvider.dropFirst().sink { [defaults] in defaults.set($0.rawValue, forKey: Key.remoteProvider.rawValue) }.store(in: &cancellables)
         $remoteAPIKey.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.remoteAPIKey.rawValue) }.store(in: &cancellables)
         $remoteBaseURL.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.remoteBaseURL.rawValue) }.store(in: &cancellables)

@@ -22,13 +22,24 @@ extension TextProcessor {
             )
         }
 
-        await ensureModelLoaded(options.llmModel)
-        return try await llm.generate(
-            prompt: prompt,
-            systemPrompt: systemPrompt,
-            maxTokens: maxTokens,
-            temperature: temperature
-        )
+        switch options.localLLMBackend {
+        case .mlx:
+            await ensureModelLoaded(options.llmModel)
+            return try await llm.generate(
+                prompt: prompt,
+                systemPrompt: systemPrompt,
+                maxTokens: maxTokens,
+                temperature: temperature
+            )
+        case .espresso:
+            try await espressoLLM.loadModel(path: options.espressoModelPath)
+            return try await espressoLLM.generate(
+                prompt: prompt,
+                systemPrompt: systemPrompt,
+                maxTokens: maxTokens,
+                temperature: temperature
+            )
+        }
     }
 
     func generateWithScreenImage(
@@ -51,7 +62,9 @@ extension TextProcessor {
 
     func shouldUseScreenImage(options: TextProcessingOptions, image: CGImage?) -> Bool {
         guard image != nil else { return false }
-        guard options.screenContextMode == .multimodal, !options.useRemoteLLM else { return false }
+        guard options.screenContextMode == .multimodal,
+              !options.useRemoteLLM,
+              options.localLLMBackend == .mlx else { return false }
         return ScreenContextMode.supportsScreenImageContext(modelID: options.llmModel)
     }
 

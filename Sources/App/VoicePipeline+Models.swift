@@ -40,32 +40,56 @@ extension VoicePipeline {
             return
         }
 
-        let model = appState.settings.llmModel.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !model.isEmpty else { return }
+        let settings = appState.settings
+        let backend = settings.localLLMBackend
+        let model = settings.llmModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        let espressoPath = settings.espressoModelPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        let selectedModel = backend == .espresso ? espressoPath : model
+        guard !selectedModel.isEmpty else { return }
 
         let catalog = ModelCatalog.shared
-        catalog.refreshStatus()
-        let modelStatus = catalog.llmModels.first(where: { $0.id == model })?.status
-        guard modelStatus == .downloaded || modelStatus == .ready else {
+        let modelIsAvailable: Bool
+        if backend == .espresso {
+            modelIsAvailable = FileManager.default.fileExists(
+                atPath: NSString(string: espressoPath).expandingTildeInPath
+            )
+        } else {
+            catalog.refreshStatus()
+            let status = catalog.llmModels.first(where: { $0.id == model })?.status
+            modelIsAvailable = status == .downloaded || status == .ready
+        }
+        guard modelIsAvailable else {
             let message = L("model.download_required")
-            catalog.updateLLMStatus(model, status: .error(message))
+            if backend == .mlx {
+                catalog.updateLLMStatus(model, status: .error(message))
+            }
             appState.statusMessage = showFailureInStatus ? message : L("status.ready")
             return
         }
 
         appState.statusMessage = L("pipeline.loading_llm")
-        catalog.updateLLMStatus(model, status: .loading, detail: L("model.loading"))
+        if backend == .mlx {
+            catalog.updateLLMStatus(model, status: .loading, detail: L("model.loading"))
+        }
 
-        let loaded = await textProcessor.warmUpLLM(model: model)
+        let loaded = await textProcessor.warmUpLLM(
+            model: model,
+            backend: backend,
+            espressoModelPath: espressoPath
+        )
         let ready = await textProcessor.isLLMReady
         appState.llmModelReady = loaded && ready
 
         if appState.llmModelReady {
-            catalog.updateLLMStatus(model, status: .ready)
+            if backend == .mlx {
+                catalog.updateLLMStatus(model, status: .ready)
+            }
             Log.info("[VoicePipeline] LLM model loaded into memory, ready for instant inference")
             appState.statusMessage = L("status.ready")
         } else {
-            catalog.updateLLMStatus(model, status: .error(L("pipeline.model_load_failed")))
+            if backend == .mlx {
+                catalog.updateLLMStatus(model, status: .error(L("pipeline.model_load_failed")))
+            }
             Log.info("[VoicePipeline] LLM warmup failed, will retry on demand")
             appState.statusMessage = showFailureInStatus ? L("pipeline.model_load_failed") : L("status.ready")
         }

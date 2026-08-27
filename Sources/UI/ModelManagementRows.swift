@@ -203,6 +203,7 @@ extension ModelManagementView {
         case .llm:
             onUnloadLLM?()
             settings.useRemoteLLM = false
+            settings.localLLMBackend = .mlx
             settings.llmModel = model.id
             if let family = model.family {
                 selectedModelFamily = family

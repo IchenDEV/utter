@@ -5,26 +5,36 @@ final class TextProcessor {
     static let defaultAllowsPreparedFallback = false
 
     let llm = LLMEngine()
+    let espressoLLM = EspressoLLMEngine()
     let vlm = VLMEngine()
     let remoteLLMClient = RemoteLLMClient()
     private let dictionary = PersonalDictionary.shared
     var isLLMReady: Bool {
         get async {
             if AppSettings.shared.useRemoteLLM { return true }
-            return await llm.isLoaded
+            switch AppSettings.shared.localLLMBackend {
+            case .mlx: return await llm.isLoaded
+            case .espresso: return await espressoLLM.isLoaded
+            }
         }
     }
 
     func unloadLLM() async {
         await llm.unload()
+        await espressoLLM.unload()
         await vlm.unload()
     }
 
     @discardableResult
-    func warmUpLLM(model: String) async -> Bool {
+    func warmUpLLM(model: String, backend: LocalLLMBackend, espressoModelPath: String) async -> Bool {
         if AppSettings.shared.useRemoteLLM { return true }
         do {
-            try await llm.loadModel(id: model)
+            switch backend {
+            case .mlx:
+                try await llm.loadModel(id: model)
+            case .espresso:
+                try await espressoLLM.loadModel(path: espressoModelPath)
+            }
             return true
         } catch {
             Log.error("[TextProcessor] LLM warmup failed: \(error.localizedDescription)")

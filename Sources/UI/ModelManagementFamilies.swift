@@ -6,6 +6,7 @@ extension ModelManagementView {
             ForEach(ModelCatalog.ModelFamily.allCases, id: \.self) { family in
                 familyButton(family)
             }
+            espressoFamilyButton
             remoteFamilyButton
         }
         .background(Color(nsColor: .controlBackgroundColor))
@@ -17,7 +18,9 @@ extension ModelManagementView {
     }
 
     func familyButton(_ family: ModelCatalog.ModelFamily) -> some View {
-        let isSelected = !settings.useRemoteLLM && selectedModelFamily == family
+        let isSelected = !settings.useRemoteLLM
+            && settings.localLLMBackend == .mlx
+            && selectedModelFamily == family
 
         return Button(action: { selectLocalFamily(family) }) {
             VStack(spacing: 2) {
@@ -40,6 +43,23 @@ extension ModelManagementView {
                 ? Color.accentColor
                 : Color.primary
         )
+    }
+
+    var espressoFamilyButton: some View {
+        let isSelected = !settings.useRemoteLLM && settings.localLLMBackend == .espresso
+        return Button(action: selectEspressoLLM) {
+            VStack(spacing: 2) {
+                Image(systemName: "neural.engine")
+                    .font(.system(size: 14))
+                Text("ANE")
+                    .font(.system(size: 10, weight: isSelected ? .semibold : .medium))
+            }
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
+        .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
     }
 
     var remoteFamilyButton: some View {
@@ -68,11 +88,25 @@ extension ModelManagementView {
 
     func selectLocalFamily(_ family: ModelCatalog.ModelFamily) {
         selectedModelFamily = family
-        if settings.useRemoteLLM {
+        let changedBackend = settings.useRemoteLLM || settings.localLLMBackend != .mlx
+        if changedBackend {
+            onUnloadLLM?()
             settings.useRemoteLLM = false
-            if catalog.llmModels.first(where: { $0.id == settings.llmModel })?.family == family {
-                onLoadLLM?()
-            }
+            settings.localLLMBackend = .mlx
+        }
+        if changedBackend,
+           catalog.llmModels.first(where: { $0.id == settings.llmModel })?.family == family {
+            onLoadLLM?()
+        }
+    }
+
+    func selectEspressoLLM() {
+        guard settings.useRemoteLLM || settings.localLLMBackend != .espresso else { return }
+        onUnloadLLM?()
+        settings.useRemoteLLM = false
+        settings.localLLMBackend = .espresso
+        if !settings.espressoModelPath.isEmpty {
+            onLoadLLM?()
         }
     }
 
