@@ -250,7 +250,6 @@
 "model.downloads_active" = "%d 个下载任务";
 "model.download_confirm_title" = "开始下载模型？";
 "model.download_confirm_message" = "%@ 预计需要约 %@ 网络流量，文件将保存到 %@。下载可能产生流量费用；只有确认后才会开始，并且可以取消。";
-"model.download_runtime_note" = "对应模型的专用运行环境也可能下载到 Utter 的统一模型目录。";
 "model.delete_confirm_title" = "删除本地模型文件？";
 "model.delete_confirm_message" = "删除 %@ 并释放 %@ 空间？之后仍可重新下载。";
 "model.remove_reference_confirm_title" = "移除导入的模型？";
@@ -265,7 +264,6 @@
 "model.download_failed_permission" = "无法写入模型目录。请检查目录权限，或在模型页更换存储位置";
 "model.download_failed_retry" = "下载未完成。请点击“继续下载”；若进度仍不变化，可先取消再重试";
 "model.resume" = "继续";
-"model.mimo_macos_unavailable" = "macOS 暂不可用：小米官方运行时目前依赖 Linux、CUDA 和 flash-attn";
 "download.elapsed_format" = "已用 %@";
 "download.progress_format" = "进度 %@";
 "download.remaining_format" = "剩余 %@";
@@ -320,6 +318,23 @@
 "rules.subtitle" = "LLM 整理文本时遵循的额外指令";
 "rules.placeholder" = "如：所有数字用阿拉伯数字";
 "rules.empty" = "暂无规则";
+"industry.lexicon.title" = "行业词库";
+"industry.lexicon.subtitle" = "选择当前领域，为语音识别和智能整理提供优先术语；个人词条仍具有更高优先级。";
+"industry.lexicon.selection" = "行业";
+"industry.lexicon.general" = "通用";
+"industry.lexicon.medical" = "医疗";
+"industry.lexicon.legal" = "法律";
+"industry.lexicon.finance" = "金融财会";
+"industry.lexicon.technology" = "软件技术";
+"industry.lexicon.medical.description" = "覆盖病历、常见诊断、检查、给药和处置术语。";
+"industry.lexicon.legal.description" = "覆盖民商事、诉讼、行政与常用争议解决术语。";
+"industry.lexicon.finance.description" = "覆盖财务报表、估值、银行风控与固定收益术语。";
+"industry.lexicon.technology.description" = "覆盖云原生、分布式系统、AI 与软件安全术语。";
+"industry.lexicon.term_count_fmt" = "%d 个内置术语";
+"industry.lexicon.preview" = "查看词库";
+"industry.lexicon.search" = "搜索术语";
+"industry.lexicon.no_results" = "没有匹配的术语";
+"industry.lexicon.inactive" = "当前使用通用识别，不添加行业术语。";
 "dictionary.title" = "个人词库";
 "dictionary.subtitle" = "手动词条立即生效；开启学习后，只有 Utter 刚插入文本里的局部修改才会成为候选。";
 "dictionary.auto_learning" = "学习纠正";
@@ -456,11 +471,6 @@
 "error.volc_timeout" = "语音识别请求超时";
 "error.volc_handshake_rejected" = "豆包语音识别连接被服务端拒绝。请检查 App Key、Access Token、Resource ID，以及账号是否已开通流式语音识别。";
 "error.local_asr_not_configured" = "本地语音识别未配置 — 请在 设置 → 模型 中下载模型";
-"error.local_asr_runner_missing" = "本地语音识别脚本未包含在应用包中";
-"error.local_asr_python_missing" = "本地语音识别需要 Python 3，请安装后重试。";
-"error.local_asr_runtime_failed" = "本地语音识别运行环境准备失败";
-"error.local_asr_process_failed" = "本地语音识别失败：%@";
-"error.local_asr_invalid_response" = "本地语音识别返回结果格式异常";
 
 /* ── 豆包语音识别 ── */
 "volc.config_hint" = "填写火山引擎豆包语音识别凭据，可从火山引擎控制台获取。";
@@ -472,23 +482,23 @@
 "volc.resource_id" = "Resource ID（资源 ID）";
 
 /* ── 本地语音识别 ── */
-"local_asr.python" = "Python 可执行文件";
-"local_asr.model_path" = "模型路径或 Hugging Face ID";
-"local_asr.repo_path" = "MiMo 仓库路径";
-"local_asr.tokenizer_path" = "音频 tokenizer 路径";
-"qwen_asr.config_hint" = "选择 Qwen3-ASR 后，请点击下载按钮获取本地模型，并准备对应的 Python 运行环境。";
-"mimo_asr.config_hint" = "选择 MiMo-V2.5-ASR 后，请点击下载按钮获取模型、音频 tokenizer 和运行文件。";
+"qwen_asr.config_hint" = "Qwen3-ASR 使用原生 Swift 和 MLX 在本机运行。模型下载一次后即可离线识别。";
 "model.qwen3_asr_quality" = "本地 MLX 语音识别，约 4.1 GB";
-"model.mimo_asr_quality" = "本地语音识别模型 + 音频 tokenizer，约 36 GB";
-"model.asr_incomplete" = "模型或运行环境只下载了一部分。点击“继续下载”即可接着完成";
-"model.asr_preparing_runtime" = "准备运行文件";
-"model.asr_installing_runtime" = "安装本地运行环境";
-"model.asr_runtime_missing" = "模型文件已下载，但运行环境尚未安装。请点击“继续下载”完成安装";
-"model.asr_runtime_download_failed" = "运行文件下载失败";
-"model.asr_runtime_incomplete" = "运行文件不完整";
+"model.asr_incomplete" = "模型只下载了一部分。点击“继续下载”即可接着完成";
 "error.llm_not_loaded" = "模型文件已在本地，但当前尚未加载到内存。请重新执行；Utter 会再次尝试加载";
 "error.llm_not_downloaded" = "模型文件尚未下载。请前往 设置 → 模型，确认流量后下载";
 "error.espresso_not_loaded" = "Espresso 模型包尚未加载。请在 设置 → 模型 中选择有效的 .esp 模型包。";
 "error.espresso_ane_unavailable" = "这个 Espresso 模型包无法在此 Mac 上使用 Apple 神经网络引擎后端。";
 "onboarding.download_notice" = "这里不会自动下载。请先确认体积，再决定是否下载这个本地模型。";
 "onboarding.download_size" = "下载（%@）";
+
+/* ── 设备性能检查 ── */
+"device.title" = "本机信息";
+"device.chip" = "芯片";
+"device.ram" = "内存";
+"device.disk_available" = "可用磁盘";
+"device.insufficient_disk" = "磁盘空间不足，无法下载此模型。请清理空间或选择更小的模型。";
+"device.insufficient_ram" = "本机内存不足以运行此模型。请选择更小的模型，或使用远程 LLM。";
+"device.marginal_ram" = "本机内存有限，运行此模型可能较慢。建议选择更小的模型以获得更好的性能。";
+"device.badge_marginal" = "可能较慢";
+"device.badge_incompatible" = "超出配置";

@@ -53,6 +53,7 @@ extension ModelManagementView {
                                 .foregroundStyle(Color.accentColor)
                                 .clipShape(Capsule())
                         }
+                        compatibilityBadge(model.compatibility)
                     }
                     HStack(spacing: 6) {
                         Text(secondaryText(for: model))
@@ -90,6 +91,32 @@ extension ModelManagementView {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(isActive ? Color.accentColor.opacity(0.04) : .clear)
+    }
+
+    @ViewBuilder
+    func compatibilityBadge(_ compat: DeviceCapability.Compatibility) -> some View {
+        switch compat {
+        case .compatible:
+            EmptyView()
+        case .marginal(let msg):
+            Text(L("device.badge_marginal"))
+                .font(.system(size: 9, weight: .medium))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1)
+                .background(Color.orange.opacity(0.15))
+                .foregroundStyle(.orange)
+                .clipShape(Capsule())
+                .help(msg)
+        case .incompatible(let msg):
+            Text(L("device.badge_incompatible"))
+                .font(.system(size: 9, weight: .medium))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1)
+                .background(Color.red.opacity(0.15))
+                .foregroundStyle(.red)
+                .clipShape(Capsule())
+                .help(msg)
+        }
     }
 
     @ViewBuilder
@@ -188,10 +215,7 @@ extension ModelManagementView {
         case .llm:
             return ModelStorage.localLLMURL(model.id) == nil
         case .asr:
-            if case .supported = catalog.asrRuntimeAvailability(for: model.id) {
-                return true
-            }
-            return false
+            return true
         }
     }
 
@@ -211,14 +235,8 @@ extension ModelManagementView {
             onLoadLLM?()
         case .asr:
             onUnloadLocalASR?()
-            switch catalog.asrProvider(for: model.id) {
-            case .qwen3:
-                settings.qwenASRModel = model.id
-            case .mimo:
-                settings.mimoASRModel = model.id
-            case nil:
-                break
-            }
+            settings.qwenASRModel = model.id
+            settings.speechEngine = .qwen3
         }
     }
 

@@ -23,10 +23,9 @@ extension InputSessionCoordinator {
         guard let engine = await engineProvider.engine(settings: settings), engine.isReady else {
             throw IntegrationError.modelNotReady
         }
+        let vocabularySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
         engine.configureRecognition(
-            context: SpeechRecognitionContext(
-                dictionaryEntries: PersonalDictionary.shared.entries
-            )
+            context: SpeechRecognitionContext(phrases: vocabularySnapshot.recognitionPhrases)
         )
 
         do {

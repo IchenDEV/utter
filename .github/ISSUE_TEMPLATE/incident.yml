@@ -1,0 +1,58 @@
+name: Production incident
+description: Record impact, containment, and the corrective feedback loop.
+title: "[Incident]: "
+labels:
+  - incident
+body:
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - SEV-1 — widespread or critical safety/security impact
+        - SEV-2 — major feature unavailable or serious degradation
+        - SEV-3 — limited degradation with a workaround
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Include affected users/systems, duration, and known data or privacy impact.
+    validations:
+      required: true
+  - type: textarea
+    id: detection
+    attributes:
+      label: Detection signal and timeline
+      description: State the deterministic signal when available and list key events with times.
+    validations:
+      required: true
+  - type: textarea
+    id: containment
+    attributes:
+      label: Containment and current state
+      description: Record actions, approval boundaries, and whether the incident is still active.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Cause evidence and unknowns
+      description: Separate confirmed facts from hypotheses and unknowns.
+    validations:
+      required: true
+  - type: textarea
+    id: corrective_intent
+    attributes:
+      label: Corrective intent
+      description: Link the follow-up intent or change bundle and name its owner.
+    validations:
+      required: true
+  - type: textarea
+    id: regression_control
+    attributes:
+      label: Regression control
+      description: Name the new test, guardrail, eval case, or why automation is not possible.
+    validations:
+      required: true

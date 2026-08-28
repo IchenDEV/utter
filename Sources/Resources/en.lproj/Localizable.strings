@@ -250,7 +250,6 @@
 "model.downloads_active" = "%d Active Download(s)";
 "model.download_confirm_title" = "Start model download?";
 "model.download_confirm_message" = "%@ needs about %@ of network data. Files will be saved to %@. This may incur data charges; the download starts only after you confirm and can be cancelled.";
-"model.download_runtime_note" = "A provider-specific runtime may also be downloaded into Utter's managed storage.";
 "model.delete_confirm_title" = "Delete local model files?";
 "model.delete_confirm_message" = "Delete %@ and reclaim %@? The model can be downloaded again later.";
 "model.remove_reference_confirm_title" = "Remove imported model?";
@@ -265,7 +264,6 @@
 "model.download_failed_permission" = "Utter cannot write to the model folder. Check its permissions or choose another storage location.";
 "model.download_failed_retry" = "The download did not finish. Select Resume; if progress still does not change, cancel and try again.";
 "model.resume" = "Resume";
-"model.mimo_macos_unavailable" = "Unavailable on macOS: Xiaomi's official runtime currently requires Linux, CUDA, and flash-attn";
 "download.elapsed_format" = "Time %@";
 "download.progress_format" = "Progress %@";
 "download.remaining_format" = "Left %@";
@@ -320,6 +318,23 @@
 "rules.subtitle" = "Additional instructions for the LLM when formatting text";
 "rules.placeholder" = "e.g. Use Arabic numerals for all numbers";
 "rules.empty" = "No rules yet";
+"industry.lexicon.title" = "Industry Vocabulary";
+"industry.lexicon.subtitle" = "Choose the current field to prioritize its terms in speech recognition and smart formatting. Personal terms keep higher priority.";
+"industry.lexicon.selection" = "Industry";
+"industry.lexicon.general" = "General";
+"industry.lexicon.medical" = "Medical";
+"industry.lexicon.legal" = "Legal";
+"industry.lexicon.finance" = "Finance & Accounting";
+"industry.lexicon.technology" = "Software Technology";
+"industry.lexicon.medical.description" = "Medical records, common diagnoses, examinations, medication, and procedures.";
+"industry.lexicon.legal.description" = "Civil and commercial law, litigation, administrative law, and dispute resolution.";
+"industry.lexicon.finance.description" = "Financial statements, valuation, banking risk, and fixed income.";
+"industry.lexicon.technology.description" = "Cloud native, distributed systems, AI, and software security.";
+"industry.lexicon.term_count_fmt" = "%d built-in terms";
+"industry.lexicon.preview" = "View vocabulary";
+"industry.lexicon.search" = "Search terms";
+"industry.lexicon.no_results" = "No matching terms";
+"industry.lexicon.inactive" = "General recognition is active; no industry terms are added.";
 "dictionary.title" = "Personal Dictionary";
 "dictionary.subtitle" = "Manual terms work immediately. With learning enabled, only local edits to the text Utter just inserted can become candidates.";
 "dictionary.auto_learning" = "Learn corrections";
@@ -456,11 +471,6 @@
 "error.volc_timeout" = "ASR request timed out";
 "error.volc_handshake_rejected" = "Doubao ASR connection was rejected by the server. Check App Key, Access Token, Resource ID, and whether streaming ASR is enabled for this account.";
 "error.local_asr_not_configured" = "Local ASR is not configured — download the model in Settings → Models";
-"error.local_asr_runner_missing" = "Local ASR runner script is missing from the app bundle";
-"error.local_asr_python_missing" = "Local ASR needs Python 3. Install Python, then try again.";
-"error.local_asr_runtime_failed" = "Local ASR runtime setup failed";
-"error.local_asr_process_failed" = "Local ASR failed: %@";
-"error.local_asr_invalid_response" = "Local ASR returned an invalid response";
 
 /* ── Volc ASR ── */
 "volc.config_hint" = "Enter your Volcengine Doubao ASR credentials. Get them from the Volcengine console.";
@@ -472,23 +482,23 @@
 "volc.resource_id" = "Resource ID";
 
 /* ── Local ASR ── */
-"local_asr.python" = "Python executable";
-"local_asr.model_path" = "Model path or Hugging Face ID";
-"local_asr.repo_path" = "MiMo repo path";
-"local_asr.tokenizer_path" = "Audio tokenizer path";
-"qwen_asr.config_hint" = "Choose Qwen3-ASR, then click Download to fetch the local model and prepare its Python runtime.";
-"mimo_asr.config_hint" = "Choose MiMo-V2.5-ASR, then click Download to fetch the model, audio tokenizer, and runtime files.";
+"qwen_asr.config_hint" = "Qwen3-ASR runs locally with native Swift and MLX. Download the model once, then recognition works offline.";
 "model.qwen3_asr_quality" = "Local ASR through MLX, ~4.1 GB";
-"model.mimo_asr_quality" = "Local ASR model plus audio tokenizer ~36 GB";
-"model.asr_incomplete" = "Only part of the model or runtime was downloaded. Select Resume to finish.";
-"model.asr_preparing_runtime" = "Preparing runtime files";
-"model.asr_installing_runtime" = "Installing local runtime";
-"model.asr_runtime_missing" = "The model files are present, but the runtime is not installed. Select Resume to finish setup.";
-"model.asr_runtime_download_failed" = "Runtime files download failed";
-"model.asr_runtime_incomplete" = "Runtime files are incomplete";
+"model.asr_incomplete" = "Only part of the model was downloaded. Select Resume to finish.";
 "error.llm_not_loaded" = "The model is stored locally but is not loaded into memory. Run the action again and Utter will retry.";
 "error.llm_not_downloaded" = "The model files have not been downloaded. Open Settings → Models and confirm the data usage first.";
 "error.espresso_not_loaded" = "The Espresso model bundle is not loaded. Select a valid .esp bundle in Settings → Models.";
 "error.espresso_ane_unavailable" = "This Espresso bundle does not provide an Apple Neural Engine backend on this Mac.";
 "onboarding.download_notice" = "No download starts automatically. Review the size, then confirm if you want this local model.";
 "onboarding.download_size" = "Download (%@)";
+
+/* ── Device Capability ── */
+"device.title" = "This Mac";
+"device.chip" = "Chip";
+"device.ram" = "Memory";
+"device.disk_available" = "Disk Available";
+"device.insufficient_disk" = "Not enough free disk space to download this model. Free up storage or choose a smaller model.";
+"device.insufficient_ram" = "This Mac does not have enough memory to run this model. Choose a smaller model or use a remote LLM.";
+"device.marginal_ram" = "This model may run slowly on this Mac due to limited memory. A smaller model is recommended for better performance.";
+"device.badge_marginal" = "May Be Slow";
+"device.badge_incompatible" = "Too Large";

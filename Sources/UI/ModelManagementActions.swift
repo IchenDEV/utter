@@ -167,8 +167,8 @@ extension ModelManagementView {
             sizeText,
             ModelStorage.root.path
         )
-        if action.type == .asr {
-            message += "\n\n" + L("model.download_runtime_note")
+        if let warning = action.model.compatibility.message {
+            message += "\n\n⚠️ " + warning
         }
         return message
     }

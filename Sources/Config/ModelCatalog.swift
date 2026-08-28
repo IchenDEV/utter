@@ -54,6 +54,7 @@ final class ModelCatalog: ObservableObject {
         var downloadDetail: String = ""
         var benchmarkTPS: Double?
         var isBenchmarking: Bool = false
+        var compatibility: DeviceCapability.Compatibility = .compatible
 
         static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.id == rhs.id && lhs.status == rhs.status &&
@@ -129,10 +130,7 @@ final class ModelCatalog: ObservableObject {
             ModelEntry(id: $0.id, displayName: $0.displayName, hint: $0.hint, family: nil)
         }
         if !asrModels.contains(where: { $0.id == settings.qwenASRModel }) {
-            settings.qwenASRModel = LocalASRConfiguration.qwen3DefaultModel
-        }
-        if !asrModels.contains(where: { $0.id == settings.mimoASRModel }) {
-            settings.mimoASRModel = LocalASRConfiguration.mimoDefaultModel
+            settings.qwenASRModel = QwenASRModel.defaultID
         }
         refreshStatus()
     }
@@ -213,6 +211,10 @@ final class ModelCatalog: ObservableObject {
                         : (size > 0 ? .error(L("model.download_incomplete")) : .notDownloaded)
                 }
             }
+            llmModels[i].compatibility = DeviceCapability.check(
+                modelID: id,
+                downloadSizeBytes: Self.defaultDownloadEstimateBytes(for: id)
+            )
         }
         refreshASRStatus(recheckingErrors: recheckingErrors)
     }

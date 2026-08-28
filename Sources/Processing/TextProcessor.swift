@@ -47,7 +47,7 @@ final class TextProcessor {
         inputLanguage: InputLanguage = .auto,
         dictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) -> String {
-        let snapshot = dictionarySnapshot ?? dictionary.snapshot()
+        let snapshot = dictionarySnapshot ?? dictionary.snapshot(settings: .shared)
         var result = snapshot.applyReplacements(to: text)
         result = normalizeWhitespace(result)
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -58,7 +58,7 @@ final class TextProcessor {
         inputLanguage: InputLanguage,
         dictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) -> String {
-        let snapshot = dictionarySnapshot ?? dictionary.snapshot()
+        let snapshot = dictionarySnapshot ?? dictionary.snapshot(settings: .shared)
         var result = snapshot.applyReplacements(to: text)
         result = TranscriptionSanitizer.normalizeInput(result)
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -106,7 +106,7 @@ final class TextProcessor {
         dictionarySnapshot requestedDictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
         let prepareStarted = CFAbsoluteTimeGetCurrent()
-        let dictionarySnapshot = requestedDictionarySnapshot ?? dictionary.snapshot()
+        let dictionarySnapshot = requestedDictionarySnapshot ?? dictionary.snapshot(settings: .shared)
         let cleanedText = prepareForFormatting(
             text: text,
             inputLanguage: options.inputLanguage,
@@ -238,7 +238,7 @@ final class TextProcessor {
         inputContext: InputContext? = nil,
         dictionarySnapshot requestedDictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
-        let dictionarySnapshot = requestedDictionarySnapshot ?? dictionary.snapshot()
+        let dictionarySnapshot = requestedDictionarySnapshot ?? dictionary.snapshot(settings: .shared)
         let useScreenImage = shouldUseScreenImage(options: options, image: screenImage)
         let systemPrompt = commandSystemPrompt(
             options: options,

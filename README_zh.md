@@ -49,6 +49,7 @@
 | **屏幕上下文 OCR** | 通过 ScreenCaptureKit + Vision 截取屏幕文字，辅助 LLM 纠正同音字 |
 | **语音指令模式** | 屏幕感知的语音助手 — 总结、回复、翻译屏幕内容 |
 | **输入记忆** | 近期输入历史作为 LLM 上下文，提升连续输入准确度 |
+| **行业词库** | 可选医疗、法律、金融财会或软件技术词库，为 Apple Speech / Whisper 提供优先术语并辅助输出规范化；个人词条优先 |
 | **编辑规则** | 自定义文本替换规则，每次输出自动应用 |
 | **语言风格预设** | 简洁精炼 / 正式书面 / 日常口语 / 自定义提示词 |
 | **输入历史与统计** | 完整历史记录，原始文本与润色结果对比，字数统计，可配置保留时长 |
@@ -89,6 +90,15 @@ bash scripts/build-and-run.sh --verify
 
 # 或在 Xcode 中打开
 open Package.swift
+```
+
+实质性改动遵循 [`docs/sdlc/README.md`](docs/sdlc/README.md) 中的 Artifact 驱动流程。
+提交 Pull Request 前请运行：
+
+```bash
+python3 scripts/sdlc.py validate --worktree
+bash scripts/ci-basic-checks.sh
+swift test
 ```
 
 对外应用名为 `Utter.app`；Swift 包产物暂时保留 `OpenType`，以兼容现有源码集成和升级路径。
@@ -146,7 +156,7 @@ Sources/
 ├── Hotkey/       # 全局快捷键（CGEvent tap）
 ├── LLM/          # 本地推理引擎（MLX）、远程客户端（OpenAI/Anthropic）
 ├── Output/       # 文本注入（Accessibility API + 剪贴板粘贴）
-├── Processing/   # 文本处理器、输入历史、记忆系统、个人词库
+├── Processing/   # 文本处理器、输入历史、记忆系统、个人与行业词库
 ├── Prompts/      # 提示词构建、固定提示词目录、风格提示词预设
 ├── Screen/       # 屏幕 OCR（ScreenCaptureKit + Vision）
 ├── Speech/       # 语音识别协议、WhisperKit 引擎、Apple Speech 引擎、豆包语音识别引擎、本地语音识别引擎
@@ -158,6 +168,7 @@ scripts/
 ├── ci-basic-checks.sh      # CI 文件关联和资源检查
 ├── create-signing-cert.sh  # 生成自签名代码签名证书
 ├── generate-icon.swift     # 从源 PNG 生成 AppIcon.icns
+├── test-industry-lexicons.sh # 验证行业词库、术语召回和非目标文本保真
 ├── unit-test-coverage.sh   # 运行单元测试并检查覆盖率
 └── validate-volc-asr.swift # 手动验证火山引擎 ASR 配置
 ```

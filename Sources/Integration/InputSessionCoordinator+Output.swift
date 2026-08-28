@@ -4,7 +4,7 @@ import Foundation
 extension InputSessionCoordinator {
     func outputText(for raw: String, active: ActiveSession) async throws -> String {
         let options = TextProcessingOptions(settings: settings, inputLanguage: active.inputLanguage)
-        let dictionarySnapshot = PersonalDictionary.shared.snapshot()
+        let dictionarySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
         let enableMemory = settings.enableMemory
         let memoryWindowMinutes = settings.memoryWindowMinutes
         let text: String

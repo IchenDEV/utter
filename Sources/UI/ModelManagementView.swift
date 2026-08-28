@@ -37,6 +37,8 @@ struct ModelManagementView: View {
                         SettingsPanel { activeDownloadsSection }
                     }
 
+                    SettingsPanel { deviceInfoSection }
+
                     SettingsPanel {
                         enginePickerSection
                         Divider().padding(.vertical, 4)
@@ -57,10 +59,7 @@ struct ModelManagementView: View {
         }
         .onChange(of: settings.llmModel) { _, _ in syncSelectedFamilyFromActiveModel() }
         .onChange(of: settings.localLLMBackend) { _, _ in syncSelectedFamilyFromActiveModel() }
-        .onChange(of: settings.localASRPythonPath) { _, _ in onUnloadLocalASR?() }
-        .onChange(of: settings.mimoASRRepoPath) { _, _ in onUnloadLocalASR?() }
         .onChange(of: settings.qwenASRModel) { _, _ in onUnloadLocalASR?() }
-        .onChange(of: settings.mimoASRModel) { _, _ in onUnloadLocalASR?() }
         .alert(item: $pendingModelAction, content: modelActionAlert)
     }
 
@@ -74,7 +73,9 @@ struct ModelManagementView: View {
         case .qwen3:
             qwenASRSection
         case .mimo:
-            mimoASRSection
+            Text(L("model.apple_managed_by_system"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
         case .apple:
             Text(L("model.apple_managed_by_system"))
                 .font(.caption)
