@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-29-espresso-ane",
+  "title": "Add a selectable Espresso ANE inference backend",
+  "risk": "high",
+  "status": "verified",
+  "owners": [
+    "repository maintainer"
+  ],
+  "acceptanceCriteria": [
+    "Users can select MLX or Espresso for local LLM processing and the selection persists.",
+    "Users can select a valid Espresso bundle and invalid bundles are rejected before loading.",
+    "When Espresso is selected, local text generation and model warmup use its ANE runtime.",
+    "The existing MLX and remote LLM paths continue to pass the automated test suite.",
+    "A real Espresso bundle can generate text on a supported Apple Silicon and macOS combination."
+  ],
+  "governedPaths": [
+    "Package.swift",
+    "Package.resolved",
+    "Sources/",
+    "Tests/"
+  ],
+  "artifacts": {
+    "intent": "intent.md",
+    "spec": "spec.md",
+    "plan": "plan.md",
+    "verification": "verification.md"
+  }
+}

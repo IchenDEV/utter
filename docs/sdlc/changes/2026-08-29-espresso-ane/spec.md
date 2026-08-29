@@ -1,0 +1,49 @@
+# Spec: Add a selectable Espresso ANE inference backend
+
+## Context
+
+`AppSettings` owns persisted model choices, `ModelManagementView` owns model
+selection, and `TextProcessor` owns LLM dispatch. Existing local generation uses
+`LLMEngine` and MLX; remote generation remains independent. Espresso packages
+models and tokenizers as `.esp` directories consumed by `ESPRuntime` and
+`RealModelInference`.
+
+## Design
+
+Add a persisted `LocalLLMBackend` choice with MLX as the default and a persisted
+Espresso bundle path. The models UI validates a selected directory with
+`ESPRuntimeBundle.open`, displays the private-API warning, and requests warmup.
+
+`TextProcessor` owns one `EspressoLLMEngine` actor alongside the MLX engine and
+dispatches warmup, readiness, unloading, and generation according to the
+captured processing options. The actor retains Espresso's move-only inference
+engine, verifies that the bundle resolves to the private ANE backend, applies a
+Qwen chat template when appropriate, and returns generated text through the
+existing processing pipeline. Remote LLM behavior is unchanged.
+
+## Safety and failure modes
+
+The model and prompt remain on-device. Espresso depends on private ANE APIs, so
+OS or hardware changes can reject generated ANE programs even when bundle
+metadata is valid. Such failures propagate through the existing model-load or
+generation error path; MLX remains available as the default and rollback.
+Selecting a missing or malformed bundle does not replace the current setting.
+
+The UI warning explicitly states the private-API and App Store limitation. No
+attempt is made to silently fall back from Espresso to MLX because that would
+misrepresent the selected execution backend.
+
+## Test strategy
+
+Persistence and prompt formatting have focused unit tests. The complete Swift
+suite and repository checks cover existing paths and package integration. A
+release-style app build checks dependency and Metal/resource packaging. Real
+inference is exercised with a prepared GPT-2 `.esp` bundle and recorded even if
+the host's private ANE compiler rejects it.
+
+## Rollout and rollback
+
+Ship behind an explicit non-default setting. Stop rollout if Espresso cannot
+compile a real bundle on the supported release environment. Users can return to
+MLX immediately; repository rollback removes the Espresso dependency, engine,
+settings fields, and settings UI without migrating stored user data.
