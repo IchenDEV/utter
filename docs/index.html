@@ -28,19 +28,19 @@
   <meta name="twitter:description" content="Hold a key, speak naturally, and Utter turns messy speech into polished text in any Mac app." />
   <meta name="twitter:image" content="https://utter.idevlab.dev/assets/social-card.png" />
   <meta name="twitter:image:alt" content="Utter - Local AI voice input for macOS" />
-  <meta name="theme-color" content="#f7f7f4" />
-  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2ee" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#101211" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="icon" type="image/png" href="favicon.png" />
-  <link rel="apple-touch-icon" href="assets/opentype-icon.png" />
+  <link rel="apple-touch-icon" href="assets/AppIconLight.png" />
   <link rel="preconnect" href="https://github.com" crossorigin />
-  <link rel="stylesheet" href="assets/styles.css?v=20260819-terminal" />
+  <link rel="stylesheet" href="assets/styles.css?v=20260831-native" />
 
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Utter","applicationCategory":"UtilitiesApplication","applicationSubCategory":"Voice Input & Dictation","operatingSystem":"macOS 26+","runtimePlatform":"Apple Silicon","url":"https://utter.idevlab.dev/","downloadUrl":"https://github.com/IchenDEV/utter/releases/latest","codeRepository":"https://github.com/IchenDEV/utter","license":"https://github.com/IchenDEV/utter/blob/main/LICENSE","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Utter is a native macOS menu bar app for AI-powered voice input and dictation. Hold a hotkey, speak, and polished text appears at your cursor. WhisperKit and Apple Speech run on-device, with MLX LLM cleanup on Apple Silicon. Optional remote LLM providers.","featureList":["On-device speech recognition with WhisperKit, Apple Speech, or Qwen3-ASR","LLM text cleanup with local MLX Qwen2.5/Qwen3 or remote providers","Screen context OCR via ScreenCaptureKit and Vision for homophone correction","Voice command mode that acts on what is on screen","Global hotkey works in any macOS app","Bilingual UI in English and Simplified Chinese","Input history, memory, and personal edit rules","Device performance check with model compatibility recommendations"],"author":{"@type":"Organization","name":"Utter","url":"https://github.com/IchenDEV/utter"}}
+  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Utter","applicationCategory":"UtilitiesApplication","applicationSubCategory":"Voice Input & Dictation","operatingSystem":"macOS 26+","runtimePlatform":"Apple Silicon","url":"https://utter.idevlab.dev/","downloadUrl":"https://github.com/IchenDEV/utter/releases/latest","codeRepository":"https://github.com/IchenDEV/utter","license":"https://github.com/IchenDEV/utter/blob/main/LICENSE","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Utter is a native macOS menu bar app for AI-powered voice input and dictation. Hold a hotkey, speak, and polished text appears at your cursor. WhisperKit, Apple Speech, and Qwen3-ASR run on-device, with MLX LLM cleanup on Apple Silicon. Optional remote LLM providers.","featureList":["On-device speech recognition with WhisperKit, Apple Speech, or Qwen3-ASR","Streaming recognition (beta) and Volc streaming ASR","LLM text cleanup with local MLX Qwen, Gemma, or Llama models, or remote providers","One-key translation with a dedicated hotkey","Voice command mode with screen context via ScreenCaptureKit and Vision","Global hotkey insertion works in any macOS app","Input history, memory, correction learning, and personal dictionary","Bilingual UI in English and Simplified Chinese","Device performance check with model compatibility recommendations"],"author":{"@type":"Organization","name":"Utter","url":"https://github.com/IchenDEV/utter"}}
   </script>
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Utter?","acceptedAnswer":{"@type":"Answer","text":"Utter is a native macOS menu bar app that turns your voice into polished text in any app. Hold a hotkey, speak, and the transcribed, cleaned-up text is typed directly at your cursor."}},{"@type":"Question","name":"Does Utter work offline?","acceptedAnswer":{"@type":"Answer","text":"Yes. With the WhisperKit or Apple Speech engine plus a local MLX model, Utter can transcribe and refine text entirely on-device. Remote LLM providers are optional."}},{"@type":"Question","name":"Which macOS version and hardware does Utter require?","acceptedAnswer":{"@type":"Answer","text":"macOS 26 or later on Apple Silicon. Intel Macs are not supported. Utter checks your chip, RAM, GPU, and disk space and shows which models are compatible with your Mac."}},{"@type":"Question","name":"How does Utter decide which models I can run?","acceptedAnswer":{"@type":"Answer","text":"Utter reads your Mac's chip type, unified memory, GPU core count, and available disk space. Models that exceed your hardware are flagged with a warning badge. Smaller models are recommended for Macs with 8 GB of RAM, while larger MoE models require 16 GB or more."}},{"@type":"Question","name":"How is Utter different from Apple's built-in dictation?","acceptedAnswer":{"@type":"Answer","text":"Utter adds LLM cleanup, screen context via OCR, voice command mode, and global hotkey insertion into any app."}},{"@type":"Question","name":"Which apps does Utter work in?","acceptedAnswer":{"@type":"Answer","text":"Any macOS app that accepts text input. Utter uses the Accessibility API to insert text at your cursor, with a clipboard-paste fallback."}},{"@type":"Question","name":"Is Utter free and open source?","acceptedAnswer":{"@type":"Answer","text":"Yes. Utter is MIT-licensed and the full source is on GitHub."}},{"@type":"Question","name":"Which languages does Utter support?","acceptedAnswer":{"@type":"Answer","text":"Speech recognition supports many languages via WhisperKit and Apple Speech. The app UI is bilingual in English and Simplified Chinese."}}]}
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Utter?","acceptedAnswer":{"@type":"Answer","text":"A native macOS menu bar app that turns your voice into polished text in any app. Hold a hotkey, speak, and the result is typed directly at your cursor."}},{"@type":"Question","name":"How is Utter different from Apple's built-in dictation?","acceptedAnswer":{"@type":"Answer","text":"Utter adds LLM cleanup, screen context via OCR, one-key translation, voice command mode, and global hotkey insertion into any app — all with local models by default."}},{"@type":"Question","name":"Does Utter work offline?","acceptedAnswer":{"@type":"Answer","text":"Yes. With WhisperKit, Apple Speech, or local Qwen3-ASR plus a local MLX model, Utter transcribes and refines text entirely on-device. Remote providers are optional."}},{"@type":"Question","name":"Which macOS version and hardware does Utter require?","acceptedAnswer":{"@type":"Answer","text":"macOS 26 or later on Apple Silicon. Intel Macs are not supported. Utter checks your chip, RAM, GPU, and disk space and shows which models are compatible."}},{"@type":"Question","name":"Which apps does Utter work in?","acceptedAnswer":{"@type":"Answer","text":"Any macOS app that accepts text input. Utter uses the Accessibility API, with a clipboard-paste fallback."}},{"@type":"Question","name":"Which languages does Utter support?","acceptedAnswer":{"@type":"Answer","text":"Speech recognition supports many languages via WhisperKit, Apple Speech, and Qwen3-ASR. The app UI is bilingual in English and Simplified Chinese."}},{"@type":"Question","name":"Is Utter free and open source?","acceptedAnswer":{"@type":"Answer","text":"Yes. Utter is MIT-licensed and the full source is on GitHub."}}]}
   </script>
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"HowTo","name":"Dictate text with Utter","description":"Hold a key, speak, and release to insert polished text at your cursor in any macOS app.","totalTime":"PT5S","step":[{"@type":"HowToStep","position":1,"name":"Hold your hotkey","text":"Press and hold your configured key. Recording starts instantly."},{"@type":"HowToStep","position":2,"name":"Speak naturally","text":"Talk the way you normally would. Audio is captured on your Mac."},{"@type":"HowToStep","position":3,"name":"Release to insert","text":"Release the key. Utter transcribes, cleans up the text with the LLM, and types the result at your cursor."}]}
@@ -51,142 +51,228 @@
   <div class="terminal-window">
     <header class="window-chrome" aria-label="Utter window">
       <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span>utter — local voice input</span>
-      <span aria-hidden="true"></span>
+      <span class="title" data-en="utter — local voice input" data-zh="utter — 本地语音输入">utter — local voice input</span>
+      <span class="spacer" aria-hidden="true"></span>
     </header>
 
-    <nav class="site-nav" aria-label="Primary navigation">
-      <a class="nav-brand" href="#hero" aria-label="Utter home"><img src="assets/opentype-icon.png" alt="" /><strong>Utter</strong></a>
-      <div class="nav-links"><a href="#pipeline">Pipeline</a><a href="#features">Features</a><a href="#hardware">Hardware</a><a href="#privacy">Privacy</a><a href="#faq">FAQ</a><a href="https://github.com/IchenDEV/utter">GitHub</a></div>
-      <a class="nav-download" href="https://github.com/IchenDEV/utter/releases/latest">Download for macOS</a>
+    <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+      <a class="nav-brand" href="#main-content" aria-label="Utter home">
+        <img class="main-icon" src="assets/AppIconLight.png" alt="" />
+        <img class="alt-icon" src="assets/AppIconDark.png" alt="" /><strong>Utter</strong>
+      </a>
+      <div class="nav-links">
+        <a href="#pipeline" data-en="pipeline" data-zh="流程">pipeline</a>
+        <a href="#features" data-en="features" data-zh="功能">features</a>
+        <a href="#models" data-en="models" data-zh="模型">models</a>
+        <a href="#privacy" data-en="privacy" data-zh="隐私">privacy</a>
+        <a href="#faq" data-en="faq" data-zh="问答">faq</a>
+        <a href="https://github.com/IchenDEV/utter">github</a>
+      </div>
+      <button class="nav-toggle" id="theme-toggle" type="button" title="Toggle light / dark theme" aria-label="Toggle color theme">◐</button>
+      <button class="nav-toggle" id="lang-toggle" type="button" aria-label="Switch language">中文</button>
+      <a class="nav-download" href="https://github.com/IchenDEV/utter/releases/latest" data-en="Download" data-zh="下载">Download</a>
     </nav>
 
-    <div class="page-flow">
-      <main id="main-content">
-        <section id="hero" class="hero">
-          <p class="command">$ utter --listen</p>
-          <h1>Voice input that lands <br />exactly where you work.</h1>
-          <p class="hero-sub">Hold a key, speak naturally, and Utter turns messy speech into polished text in any Mac app.</p>
+    <main id="main-content">
+      <section id="hero" class="hero">
+        <div class="wrap">
+          <p class="kicker">$ utter --listen</p>
+          <h1 data-en="Say it out loud.<br />Utter does the <em>typing</em>."
+              data-zh="开口说，<br />Utter 替你<em>写</em>。">Say it out loud.<br />Utter does the <em>typing</em>.</h1>
+          <p class="hero-sub" data-en="Hold a key, speak naturally, and polished text appears at your cursor — in any Mac app. WhisperKit, Qwen3-ASR and MLX run locally, so your voice never leaves the machine."
+              data-zh="按住一个键，自然地说话，润色好的文字就落在光标处——在任何 Mac 应用里。WhisperKit、Qwen3-ASR 与 MLX 全程本地运行，你的声音不会离开这台机器。">Hold a key, speak naturally, and polished text appears at your cursor — in any Mac app. WhisperKit, Qwen3-ASR and MLX run locally, so your voice never leaves the machine.</p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="https://github.com/IchenDEV/utter/releases/latest">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" /></svg>Download for macOS
-            </a>
-            <a class="btn" href="https://github.com/IchenDEV/utter">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 17-5-5 5-5m8 0 5 5-5 5m-2-12-4 16" /></svg>View source
-            </a>
+            <a class="btn btn-primary" href="https://github.com/IchenDEV/utter/releases/latest" data-en="Download for macOS" data-zh="下载 macOS 版">Download for macOS</a>
+            <a class="btn" href="https://github.com/IchenDEV/utter" data-en="View source" data-zh="查看源码">View source</a>
           </div>
-          <p class="hero-note">macOS 26+ · Apple Silicon · MIT licensed</p>
+          <p class="hero-note" data-en="Free &amp; open source · macOS 26+ · Apple Silicon · MIT"
+              data-zh="免费开源 · macOS 26 及以上 · Apple Silicon · MIT">Free &amp; open source · macOS 26+ · Apple Silicon · MIT</p>
 
-          <div class="demo" role="region" aria-label="Live transcript demo">
-            <div class="demo-titlebar">
-              <div class="mode-toggle" role="group" aria-label="Output mode">
-                <button type="button" data-mode="verbatim" aria-pressed="false">Verbatim</button>
-                <button type="button" data-mode="smart" aria-pressed="true">Smart Format</button>
+          <div class="mock" role="img" aria-label="Utter listening and inserting polished text">
+            <div class="chrome"><span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span><span data-en="utter — local voice input" data-zh="utter — 本地语音输入">utter — local voice input</span></div>
+            <div class="waverow"><span>● 00:07</span>
+              <div class="waveform" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <span class="live" data-en="Live ●" data-zh="聆听中 ●">Live ●</span></div>
+            <div class="body">
+              <div>
+                <span class="label" data-en="Transcript — Smart Format" data-zh="转写 — 智能格式">Transcript — Smart Format</span>
+                <p class="verbatim" data-en="um so basically can you send the report to sarah by friday and um tell her i'll be on the flight to tokyo"
+                   data-zh="那个那个帮我周五之前把报告发给 Sarah 对了还有告诉她我到时候在去东京的飞机上">um so basically can you send the report to sarah by friday and um tell her i'll be on the flight to tokyo</p>
+                <p class="final" data-en="Send the report to Sarah by Friday, and let her know I'll be on my flight to Tokyo."
+                   data-zh="请在周五前把报告发给 Sarah，并告知她我会在去东京的航班上。">Send the report to Sarah by Friday, and let her know I'll be on my flight to Tokyo.</p>
               </div>
-              <div class="demo-controls">
-                <button class="demo-play" id="demo-play" type="button">
-                  <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 0v10l8-5z" /></svg><span id="demo-play-label">Play</span>
-                </button>
-                <div class="demo-samples" role="group" aria-label="Sample">
-                  <button type="button" data-sample="en" aria-pressed="true">EN sample</button>
-                  <button type="button" data-sample="zh" aria-pressed="false">ZH sample</button>
-                  <button type="button" data-sample="voice-cmd" aria-pressed="false">Voice cmd</button>
-                </div>
+              <div class="targets">
+                <span class="label" data-en="Targets" data-zh="插入目标">Targets</span>
+                <div>Mail<small data-en="Insert at cursor" data-zh="插入到光标处">Insert at cursor</small></div>
+                <div>Notes<small data-en="Insert at cursor" data-zh="插入到光标处">Insert at cursor</small></div>
               </div>
             </div>
-            <div class="wave-row"><span>● 00:07</span><div class="waveform" aria-hidden="true">
-              <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-              <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-              <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-              <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
-            </div><span class="live">Live ●</span></div>
-            <div class="demo-body">
-              <div class="transcript placeholder" aria-live="polite">
-                <span class="demo-label">Transcript (Smart Format)</span>
-                <span class="verbatim-text">Press play to see it transcribe.</span><div class="smart-result"></div>
-              </div>
-              <div class="targets" aria-hidden="true">
-                <span class="demo-label">Targets</span><div>Mail <small>Insert at cursor</small></div><div>Notes <small>Insert at cursor</small></div>
-              </div>
-              <div class="demo-context" id="demo-context"><span class="label">Screen context</span><img src="assets/email-mock.svg" alt="Fake email thumbnail showing flight confirmation" /></div>
-            </div>
-            <audio id="demo-audio" preload="auto" aria-hidden="true"></audio>
           </div>
-          <div class="hotkey-hud" aria-hidden="true"><kbd>fn</kbd><span>Hold to talk</span><i></i><b>▮▮▮▮▮</b></div>
-          <ul class="capability-rail" aria-label="Key capabilities"><li>Local ASR</li><li>LLM cleanup</li><li>Screen context</li><li>Any app</li></ul>
-        </section>
+          <div class="hotkey-hud" aria-hidden="true"><kbd>fn</kbd><span data-en="Hold to talk" data-zh="按住说话">Hold to talk</span><i></i><b>▮▮▮▮▮</b></div>
+          <div class="capability-rail" aria-label="Key capabilities">
+            <span data-en="Local ASR" data-zh="本地识别">Local ASR</span>
+            <span data-en="LLM cleanup" data-zh="LLM 润色">LLM cleanup</span>
+            <span data-en="Screen context" data-zh="屏幕上下文">Screen context</span>
+            <span data-en="Any app" data-zh="任意应用">Any app</span>
+          </div>
+        </div>
+      </section>
 
-        <section id="pipeline" class="content-section">
-          <p class="command">$ utter pipeline --verbose</p>
-          <h2>From voice to final text in one key release.</h2>
+      <section id="pipeline" class="content-section">
+        <div class="wrap">
+          <p class="kicker">$ utter pipeline --verbose</p>
+          <h2 data-en="From voice to final text in one key release." data-zh="从开口到成文，只需松开一个键。">From voice to final text in one key release.</h2>
           <ol class="pipeline" aria-label="Utter processing pipeline">
-            <li><span>01</span><h3>Hold fn</h3><b>fn</b><p>A global hotkey starts capture without leaving the current app.</p></li>
-            <li><span>02</span><h3>Speak naturally</h3><b>··|·|··</b><p>Talk like you would to a person. Utter captures audio on your Mac.</p></li>
-            <li><span>03</span><h3>Local ASR</h3><b>&lt;/&gt;</b><p>Speech recognition can run locally on Apple Silicon.</p></li>
-            <li><span>04</span><h3>LLM cleanup</h3><b>≡</b><p>The selected model removes filler, fixes grammar, and formats for context.</p></li>
-            <li><span>05</span><h3>Insert anywhere</h3><b>↵</b><p>Accessibility insertion places the final text at the cursor.</p></li>
+            <li><span>01</span><h3 data-en="Hold fn" data-zh="按住 fn">Hold fn</h3><b>fn</b><p data-en="A global hotkey starts capture without leaving the current app." data-zh="全局快捷键立即开始录音，无需离开当前应用。">A global hotkey starts capture without leaving the current app.</p></li>
+            <li><span>02</span><h3 data-en="Speak naturally" data-zh="自然地说">Speak naturally</h3><b>··|·|··</b><p data-en="Talk like you would to a person. Audio is captured on your Mac." data-zh="像跟同事说话一样就好，音频始终留在你的 Mac 上。">Talk like you would to a person. Audio is captured on your Mac.</p></li>
+            <li><span>03</span><h3 data-en="Local ASR" data-zh="本地识别">Local ASR</h3><b>&lt;/&gt;</b><p data-en="WhisperKit, Apple Speech, or local Qwen3-ASR transcribes on Apple Silicon." data-zh="WhisperKit、Apple Speech 或本地 Qwen3-ASR 在 Apple Silicon 上完成转写。">WhisperKit, Apple Speech, or local Qwen3-ASR transcribes on Apple Silicon.</p></li>
+            <li><span>04</span><h3 data-en="LLM cleanup" data-zh="LLM 润色">LLM cleanup</h3><b>≡</b><p data-en="The selected model removes filler, fixes grammar, and formats for context." data-zh="所选模型去除口头语、修正语法，并按语境排版。">The selected model removes filler, fixes grammar, and formats for context.</p></li>
+            <li><span>05</span><h3 data-en="Insert anywhere" data-zh="随处插入">Insert anywhere</h3><b>↵</b><p data-en="Accessibility insertion places the final text at the cursor." data-zh="通过辅助功能接口把最终文本写入光标位置。">Accessibility insertion places the final text at the cursor.</p></li>
           </ol>
-          <div class="transform"><div><small>Raw transcript</small><p>so basically we need to ship the update this week and test it before friday</p></div><span>⟶</span><div><small>Final text</small><p>We need to ship the update this week and test it before Friday.</p></div></div>
-        </section>
+          <div class="transform">
+            <div><small data-en="Raw transcript" data-zh="原始转写">Raw transcript</small><p class="mono" data-en="so basically we need to ship the update this week and test it before friday" data-zh="那个我们这周得把更新发出去 周五之前要测完">so basically we need to ship the update this week and test it before friday</p></div>
+            <span aria-hidden="true">⟶</span>
+            <div><small data-en="Final text" data-zh="最终文本">Final text</small><p data-en="We need to ship the update this week and test it before Friday." data-zh="我们需要在本周发布更新，并在周五之前完成测试。">We need to ship the update this week and test it before Friday.</p></div>
+          </div>
+        </div>
+      </section>
 
-        <section id="features" class="content-section">
-          <p class="command">$ utter features --list</p>
-          <h2>The features are the pipeline.</h2>
+      <section id="features" class="content-section">
+        <div class="wrap">
+          <p class="kicker">$ utter features --list</p>
+          <h2 data-en="The features are the pipeline." data-zh="功能即流程，流程即功能。">The features are the pipeline.</h2>
           <ul class="feature-list" role="list">
-            <li><span>⌗</span><h3>Screen context OCR</h3><p>Reads nearby on-screen text to better understand names, project terms, and homophones.</p></li>
-            <li><span>⌘</span><h3>Voice command mode</h3><p>Edit, summarize, translate, or reply without switching away from the current app.</p></li>
-            <li><span>◇</span><h3>Local and remote models</h3><p>Run fully on-device, or choose a remote LLM provider when it suits your workflow.</p></li>
-            <li><span>◎</span><h3>Bilingual UI</h3><p>Switch the interface between English and Simplified Chinese.</p></li>
-            <li><span>⚙</span><h3>Smart model recommendations</h3><p>Utter checks your Mac's chip, memory, GPU, and disk space, then highlights which models run well and warns about those that won't.</p></li>
+            <li><span>⌘</span><h3 data-en="Global hotkey" data-zh="全局快捷键">Global hotkey</h3><p data-en="Press and hold fn (or your key of choice) in any text field — Mail, Slack, Xcode, Notes. Hold, speak, release." data-zh="在 macOS 任何输入框按住 fn（或自定义按键）即可——邮件、Slack、Xcode、备忘录。按住、说话、松手。">Press and hold fn (or your key of choice) in any text field — Mail, Slack, Xcode, Notes. Hold, speak, release.</p></li>
+            <li><span>✎</span><h3 data-en="Verbatim or smart format" data-zh="原文或智能格式">Verbatim or smart format</h3><p data-en="Get the transcript exactly as spoken, or let the LLM polish it into finished prose. Your call, every time." data-zh="可以原样保留转写结果，也可以让 LLM 润色成稿。每次都由你决定。">Get the transcript exactly as spoken, or let the LLM polish it into finished prose. Your call, every time.</p></li>
+            <li><span>⇄</span><h3 data-en="One-key translation" data-zh="一键翻译">One-key translation</h3><p data-en="A second hotkey turns what you say into a translation in your target language — no app switching, no pasting." data-zh="另一个快捷键把你说的话直接译成目标语言——不用切换应用，也不用粘贴。">A second hotkey turns what you say into a translation in your target language — no app switching, no pasting.</p></li>
+            <li><span>◇</span><h3 data-en="Voice command mode" data-zh="语音指令模式">Voice command mode</h3><p data-en="Reply, summarize, proofread, format a table, or list action items by voice — with what's on screen as context." data-zh="用语音回复、总结、校对、排版表格、列出行动项——还能结合屏幕内容处理。">Reply, summarize, proofread, format a table, or list action items by voice — with what's on screen as context.</p></li>
+            <li><span>⌗</span><h3 data-en="Screen context OCR" data-zh="屏幕上下文 OCR">Screen context OCR</h3><p data-en="Reads nearby on-screen text to better understand names, project terms, and homophones." data-zh="读取屏幕上的相关文字，更好地理解人名、专有名词与同音字。">Reads nearby on-screen text to better understand names, project terms, and homophones.</p></li>
+            <li><span>▤</span><h3 data-en="Memory &amp; personal dictionary" data-zh="记忆与个人词典">Memory &amp; personal dictionary</h3><p data-en="Correction learning, an industry lexicon, and input history keep names and phrases exactly the way you write them." data-zh="纠错学习、行业词库与输入历史，让人名和惯用表达始终按你的写法呈现。">Correction learning, an industry lexicon, and input history keep names and phrases exactly the way you write them.</p></li>
+            <li><span>⚙</span><h3 data-en="Smart model recommendations" data-zh="智能模型推荐">Smart model recommendations</h3><p data-en="Checks your Mac's chip, memory, GPU, and disk space, then highlights which models run well — and warns about those that won't." data-zh="检测 Mac 的芯片、内存、GPU 与磁盘空间，标出适合的模型，并对跑不动的给出警告。">Checks your Mac's chip, memory, GPU, and disk space, then highlights which models run well — and warns about those that won't.</p></li>
+            <li><span>∿</span><h3 data-en="Streaming recognition (beta)" data-zh="流式识别（Beta）">Streaming recognition (beta)</h3><p data-en="Partial transcripts appear while you speak — near-instant feedback on supported engines." data-zh="边说边出字，在支持的引擎上近乎实时地看到转写结果。">Partial transcripts appear while you speak — near-instant feedback on supported engines.</p></li>
+            <li><span>◎</span><h3 data-en="Bilingual UI" data-zh="双语界面">Bilingual UI</h3><p data-en="The interface switches between English and 简体中文, and recognition covers many languages." data-zh="界面可在英文与简体中文间切换，识别支持多种语言。">The interface switches between English and 简体中文, and recognition covers many languages.</p></li>
+            <li><span>⇥</span><h3 data-en="Inserts anywhere" data-zh="随处插入">Inserts anywhere</h3><p data-en="Text is typed at your cursor via the Accessibility API, with a clipboard-paste fallback for stubborn fields." data-zh="文本通过辅助功能接口在光标处输入，特殊输入框自动回退到剪贴板粘贴。">Text is typed at your cursor via the Accessibility API, with a clipboard-paste fallback for stubborn fields.</p></li>
           </ul>
-        </section>
+        </div>
+      </section>
 
-        <section id="hardware" class="content-section">
-          <p class="command">$ utter hardware --check</p>
-          <h2>Pick the right model for your Mac.</h2>
-          <p class="hero-sub" style="margin-bottom:24px">Utter pre-checks CPU, GPU, RAM, and disk space so you always know which models fit your hardware before downloading.</p>
-          <div class="tech-list" style="border-top:1px solid var(--line);border-left:1px solid var(--line)">
-            <div><dt>Qwen3.5 0.8B</dt><dd>2 GB RAM · 0.7 GB disk · Any Apple Silicon</dd></div>
-            <div><dt>Qwen3.5 2B</dt><dd>4 GB RAM · 1.8 GB disk · M1 or later</dd></div>
-            <div><dt>Qwen3.5 9B</dt><dd>10 GB RAM · 7.1 GB disk · 16 GB Mac recommended</dd></div>
-            <div><dt>Qwen3 30B-A3B</dt><dd>12 GB RAM · 17.2 GB disk · 18 GB+ Mac recommended</dd></div>
-            <div><dt>Gemma 4 E2B</dt><dd>6 GB RAM · 3.6 GB disk · 8 GB Mac or above</dd></div>
-            <div><dt>Llama 4 Scout</dt><dd>48 GB RAM · 61.2 GB disk · M-series Max/Ultra only</dd></div>
+      <section id="models" class="content-section">
+        <div class="wrap">
+          <p class="kicker">$ utter hardware --check</p>
+          <h2 data-en="Pick the right model for your Mac." data-zh="为你的 Mac 挑对模型。">Pick the right model for your Mac.</h2>
+          <p class="section-lead" data-en="A curated catalog of Qwen, Gemma, and Llama models in MLX quantized variants. Utter pre-checks your chip, RAM, GPU, and disk space, flags models that won't fit, and you can also point it at your own local MLX model folders."
+              data-zh="精选 Qwen、Gemma 与 Llama 三大系列的 MLX 量化模型。Utter 会预先检测芯片、内存、GPU 与磁盘空间，标出不兼容的模型，也支持加载你自己的本地 MLX 模型文件夹。">A curated catalog of Qwen, Gemma, and Llama models in MLX quantized variants. Utter pre-checks your chip, RAM, GPU, and disk space, flags models that won't fit, and you can also point it at your own local MLX model folders.</p>
+          <dl class="tech-list">
+            <div><dt>Qwen3.5 0.8B</dt><dd data-en="2 GB RAM · 0.7 GB disk · any Apple Silicon" data-zh="2 GB 内存 · 0.7 GB 磁盘 · 任意 Apple Silicon">2 GB RAM · 0.7 GB disk · any Apple Silicon</dd></div>
+            <div><dt>Qwen3.5 2B</dt><dd data-en="4 GB RAM · 1.8 GB disk · M1 or later" data-zh="4 GB 内存 · 1.8 GB 磁盘 · M1 及以上">4 GB RAM · 1.8 GB disk · M1 or later</dd></div>
+            <div><dt>Gemma 4 E2B</dt><dd data-en="6 GB RAM · 3.6 GB disk · 8 GB Mac or above" data-zh="6 GB 内存 · 3.6 GB 磁盘 · 8 GB 内存的 Mac 及以上">6 GB RAM · 3.6 GB disk · 8 GB Mac or above</dd></div>
+            <div><dt>Gemma 4 E4B</dt><dd data-en="8 GB RAM · 5.3 GB disk · 10 GB+ Mac recommended" data-zh="8 GB 内存 · 5.3 GB 磁盘 · 建议 10 GB 以上内存">8 GB RAM · 5.3 GB disk · 10 GB+ Mac recommended</dd></div>
+            <div><dt>Qwen3.5 9B</dt><dd data-en="10 GB RAM · 7.1 GB disk · 16 GB Mac recommended" data-zh="10 GB 内存 · 7.1 GB 磁盘 · 建议 16 GB 内存的 Mac">10 GB RAM · 7.1 GB disk · 16 GB Mac recommended</dd></div>
+            <div><dt>Qwen3 30B-A3B</dt><dd data-en="12 GB RAM · 17.2 GB disk · 18 GB+ Mac recommended" data-zh="12 GB 内存 · 17.2 GB 磁盘 · 建议 18 GB 以上内存">12 GB RAM · 17.2 GB disk · 18 GB+ Mac recommended</dd></div>
+            <div><dt>Qwen3.5 35B-A3B</dt><dd data-en="16 GB RAM · 20.5 GB disk · 24 GB+ Mac recommended" data-zh="16 GB 内存 · 20.5 GB 磁盘 · 建议 24 GB 以上内存">16 GB RAM · 20.5 GB disk · 24 GB+ Mac recommended</dd></div>
+            <div><dt>Llama 4 Scout</dt><dd data-en="48 GB RAM · 61.2 GB disk · M-series Max/Ultra only" data-zh="48 GB 内存 · 61.2 GB 磁盘 · 仅限 Max/Ultra 机型">48 GB RAM · 61.2 GB disk · M-series Max/Ultra only</dd></div>
+            <div><dt>Llama 4 Maverick</dt><dd data-en="128 GB RAM · 226 GB disk · M-series Ultra only" data-zh="128 GB 内存 · 226 GB 磁盘 · 仅限 Ultra 机型">128 GB RAM · 226 GB disk · M-series Ultra only</dd></div>
+          </dl>
+          <p class="footnote" data-en="Custom MLX model folders are welcome, and remote LLM providers in OpenAI / Anthropic format are there when you want them."
+              data-zh="也支持加载自定义 MLX 模型文件夹；需要时还可接入 OpenAI / Anthropic 格式的远程模型。">Custom MLX model folders are welcome, and remote LLM providers in OpenAI / Anthropic format are there when you want them.</p>
+        </div>
+      </section>
+
+      <section id="stack" class="content-section">
+        <div class="wrap">
+          <p class="kicker">$ utter stack</p>
+          <h2 data-en="Native, local, and built for Apple Silicon." data-zh="原生、本地、为 Apple Silicon 而生。">Native, local, and built for Apple Silicon.</h2>
+          <div class="stack">
+            <span><b>WhisperKit</b> · <span data-en="offline Whisper ASR" data-zh="离线 Whisper 识别">offline Whisper ASR</span></span>
+            <span><b>Qwen3-ASR</b> · <span data-en="local MLX ASR" data-zh="本地 MLX 语音识别">local MLX ASR</span></span>
+            <span><b>Volc</b> · <span data-en="streaming ASR" data-zh="流式语音识别">streaming ASR</span></span>
+            <span><b>MLX-Swift-LM</b> · <span data-en="on-device LLM inference" data-zh="端侧 LLM 推理">on-device LLM inference</span></span>
+            <span><b>OpenAI / Anthropic</b> · <span data-en="optional remote LLM" data-zh="可选远程 LLM">optional remote LLM</span></span>
+            <span><b>Swift 6</b> · <span data-en="native macOS app" data-zh="原生 macOS 应用">native macOS app</span></span>
+            <span><b>ScreenCaptureKit</b> · <span data-en="screen context capture" data-zh="屏幕内容捕获">screen context capture</span></span>
+            <span><b>AVAudioEngine</b> · <span data-en="low-latency mic capture" data-zh="低延迟麦克风采集">low-latency mic capture</span></span>
+            <span><b>Vision</b> · <span data-en="on-device OCR" data-zh="端侧 OCR">on-device OCR</span></span>
           </div>
-          <p style="margin-top:14px;color:var(--muted);font-size:11px">Models that exceed your hardware are flagged in Settings → Models. You can always use a remote LLM provider instead.</p>
-        </section>
+        </div>
+      </section>
 
-        <section id="privacy" class="content-section privacy-section">
-          <p class="command">$ utter privacy --local</p>
-          <div class="privacy-grid"><div><h2>Private by default.<br />Local when you want it.</h2><p>WhisperKit transcribes on-device. MLX-Swift-LM can refine text locally. Remote providers are optional.</p></div>
-            <dl><div><dt>Audio upload</dt><dd>0 required <i></i></dd></div><div><dt>Cloud calls</dt><dd>0 required <i></i></dd></div><div><dt>Remote providers</dt><dd>optional <i></i></dd></div></dl>
+      <section id="privacy" class="content-section">
+        <div class="wrap">
+          <p class="kicker">$ utter privacy --local</p>
+          <h2 data-en="Private by default. Local when you want it." data-zh="默认私有，本地优先。">Private by default. Local when you want it.</h2>
+          <div class="privacy-grid">
+            <p class="section-lead" data-en="WhisperKit transcribes on-device. MLX refines text locally. Remote providers exist for when you want them — and are off unless you turn them on. Nothing is uploaded unless you choose it."
+                data-zh="WhisperKit 在本机转写，MLX 在本机润色。远程模型只在你想用的时候才存在——不打开就保持关闭。除非你主动选择，否则什么都不会上传。">WhisperKit transcribes on-device. MLX refines text locally. Remote providers exist for when you want them — and are off unless you turn them on. Nothing is uploaded unless you choose it.</p>
+            <dl>
+              <div><dt data-en="Audio upload" data-zh="音频上传">Audio upload</dt><dd><span data-en="0 required" data-zh="0 次（必需）">0 required</span><i></i></dd></div>
+              <div><dt data-en="Cloud calls" data-zh="云端调用">Cloud calls</dt><dd><span data-en="0 required" data-zh="0 次（必需）">0 required</span><i></i></dd></div>
+              <div><dt data-en="Remote providers" data-zh="远程提供商">Remote providers</dt><dd><span data-en="optional" data-zh="可选">optional</span><i></i></dd></div>
+            </dl>
           </div>
-          <p class="command stack-command">$ utter stack</p>
-          <dl class="tech-list"><div><dt>WhisperKit</dt><dd>Offline speech recognition</dd></div><div><dt>MLX-Swift-LM</dt><dd>On-device LLM inference</dd></div><div><dt>Swift 6</dt><dd>Native macOS app</dd></div><div><dt>ScreenCaptureKit</dt><dd>Screen context capture</dd></div><div><dt>AVAudioEngine</dt><dd>Low-latency mic capture</dd></div><div><dt>Vision</dt><dd>On-device OCR</dd></div></dl>
-        </section>
+        </div>
+      </section>
 
-        <section id="install" class="content-section install-section">
-          <p class="command">$ utter install</p><div class="install-head"><h2>Get Utter from GitHub Releases.</h2><div class="hero-actions"><a class="btn btn-primary" href="https://github.com/IchenDEV/utter/releases/latest">Download for macOS</a><a class="btn" href="https://github.com/IchenDEV/utter">View source</a></div></div>
-          <button class="install-code" id="install-code" type="button" aria-label="Copy Gatekeeper command"><code><span>$</span> xattr -cr /Applications/Utter.app</code><span id="copy-label">copy</span></button>
-          <p class="install-caption">Run once if macOS shows a Gatekeeper prompt.</p>
-        </section>
-
-        <section id="faq" class="content-section faq-section">
-          <p class="command">$ utter faq</p><h2>Questions, answered.</h2>
+      <section id="faq" class="content-section">
+        <div class="wrap">
+          <p class="kicker">$ utter faq</p>
+          <h2 data-en="Questions, answered." data-zh="常见问题。">Questions, answered.</h2>
           <div class="faq-list">
-            <details open><summary>What is Utter?</summary><p>Utter is a native macOS menu bar app that turns your voice into polished text in any app. Hold a hotkey, speak, and the result is typed directly at your cursor.</p></details>
-            <details><summary>Does Utter work offline?</summary><p>Yes. With WhisperKit or Apple Speech plus a local MLX model, Utter can transcribe and refine text entirely on-device. Remote LLM providers are optional.</p></details>
-            <details><summary>Which macOS version and hardware does Utter require?</summary><p>macOS 26 or later on Apple Silicon. Intel Macs are not supported. Utter checks your chip, RAM, GPU, and disk space and shows which models are compatible with your Mac.</p></details>
-            <details><summary>How does Utter decide which models I can run?</summary><p>Utter reads your Mac's chip type, unified memory, GPU core count, and available disk space. Models that exceed your hardware are flagged with a warning badge. Smaller models are recommended for Macs with 8 GB of RAM, while larger MoE models require 16 GB or more.</p></details>
-            <details><summary>Which apps does Utter work in?</summary><p>Any macOS app that accepts text input. Utter uses the Accessibility API, with a clipboard-paste fallback.</p></details>
-            <details><summary>Is Utter free and open source?</summary><p>Yes. Utter is MIT-licensed and the full source is on GitHub.</p></details>
+            <details open><summary data-en="What is Utter?" data-zh="Utter 是什么？">What is Utter?</summary><p data-en="A native macOS menu bar app that turns your voice into polished text in any app. Hold a hotkey, speak, and the result is typed directly at your cursor." data-zh="一款原生 macOS 菜单栏应用，把你的语音变成润色好的文字，写入任意应用。按住快捷键说话，结果直接落在光标处。">A native macOS menu bar app that turns your voice into polished text in any app. Hold a hotkey, speak, and the result is typed directly at your cursor.</p></details>
+            <details><summary data-en="How is Utter different from Apple's built-in dictation?" data-zh="和 macOS 自带的听写有什么区别？">How is Utter different from Apple's built-in dictation?</summary><p data-en="Utter adds LLM cleanup, screen context via OCR, one-key translation, voice command mode, and global hotkey insertion into any app — all with local models by default." data-zh="Utter 在系统听写之上增加了 LLM 润色、屏幕上下文 OCR、一键翻译、语音指令模式，以及任意应用里的全局快捷键插入——而且默认全部使用本地模型。">Utter adds LLM cleanup, screen context via OCR, one-key translation, voice command mode, and global hotkey insertion into any app — all with local models by default.</p></details>
+            <details><summary data-en="Does Utter work offline?" data-zh="Utter 可以离线使用吗？">Does Utter work offline?</summary><p data-en="Yes. With WhisperKit, Apple Speech, or local Qwen3-ASR plus a local MLX model, Utter transcribes and refines text entirely on-device. Remote providers are optional." data-zh="可以。使用 WhisperKit、Apple Speech 或本地 Qwen3-ASR，再加上本地 MLX 模型，转写和润色全部在本机完成。远程模型是可选项。">Yes. With WhisperKit, Apple Speech, or local Qwen3-ASR plus a local MLX model, Utter transcribes and refines text entirely on-device. Remote providers are optional.</p></details>
+            <details><summary data-en="Which macOS version and hardware does Utter require?" data-zh="对系统版本和硬件有什么要求？">Which macOS version and hardware does Utter require?</summary><p data-en="macOS 26 or later on Apple Silicon. Intel Macs are not supported. Utter checks your chip, RAM, GPU, and disk space and shows which models are compatible." data-zh="需要 macOS 26 或更高版本的 Apple Silicon 机型，不支持 Intel Mac。Utter 会检测芯片、内存、GPU 与磁盘空间，并标出兼容的模型。">macOS 26 or later on Apple Silicon. Intel Macs are not supported. Utter checks your chip, RAM, GPU, and disk space and shows which models are compatible.</p></details>
+            <details><summary data-en="Which apps does Utter work in?" data-zh="可以在哪些应用里使用？">Which apps does Utter work in?</summary><p data-en="Any macOS app that accepts text input. Utter uses the Accessibility API, with a clipboard-paste fallback." data-zh="任何接受文本输入的 macOS 应用。Utter 通过辅助功能接口写入文本，必要时回退到剪贴板粘贴。">Any macOS app that accepts text input. Utter uses the Accessibility API, with a clipboard-paste fallback.</p></details>
+            <details><summary data-en="Which languages does Utter support?" data-zh="支持哪些语言？">Which languages does Utter support?</summary><p data-en="Speech recognition supports many languages via WhisperKit, Apple Speech, and Qwen3-ASR. The app UI is bilingual in English and Simplified Chinese." data-zh="语音识别通过 WhisperKit、Apple Speech 与 Qwen3-ASR 支持多种语言；应用界面支持英文与简体中文。">Speech recognition supports many languages via WhisperKit, Apple Speech, and Qwen3-ASR. The app UI is bilingual in English and Simplified Chinese.</p></details>
+            <details><summary data-en="Is Utter free and open source?" data-zh="Utter 免费开源吗？">Is Utter free and open source?</summary><p data-en="Yes. Utter is MIT-licensed and the full source is on GitHub." data-zh="是。Utter 采用 MIT 许可证，完整源码托管在 GitHub。">Yes. Utter is MIT-licensed and the full source is on GitHub.</p></details>
           </div>
-        </section>
-      </main>
-    </div>
+        </div>
+      </section>
 
-    <footer><nav aria-label="Footer"><a href="https://github.com/IchenDEV/utter">GitHub</a><a href="https://github.com/IchenDEV/utter/releases/latest">Latest release</a><a href="https://github.com/IchenDEV/utter/issues">Issues</a><a href="https://github.com/IchenDEV/utter/blob/main/README.md">Docs</a><a href="https://github.com/IchenDEV/utter/blob/main/LICENSE">MIT</a></nav><span>Built for Apple Silicon</span></footer>
+      <section id="install" class="content-section">
+        <div class="wrap">
+          <p class="kicker">$ utter install</p>
+          <h2 data-en="Get Utter from GitHub Releases." data-zh="从 GitHub Releases 下载 Utter。">Get Utter from GitHub Releases.</h2>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://github.com/IchenDEV/utter/releases/latest" data-en="Download the DMG" data-zh="下载 DMG">Download the DMG</a>
+            <a class="btn" href="https://github.com/IchenDEV/utter" data-en="View source" data-zh="查看源码">View source</a>
+          </div>
+          <ol class="install-steps">
+            <li><span>01</span><h3 data-en="Open the DMG" data-zh="打开 DMG">Open the DMG</h3><p data-en="Grab the latest Utter-&lt;version&gt;.dmg from GitHub Releases and double-click it." data-zh="从 GitHub Releases 下载最新的 Utter-&lt;version&gt;.dmg，双击打开。">Grab the latest Utter-&lt;version&gt;.dmg from GitHub Releases and double-click it.</p></li>
+            <li><span>02</span><h3 data-en="Drag to Applications" data-zh="拖入「应用程序」">Drag to Applications</h3><p data-en="Drag Utter.app into the Applications folder shown in the DMG window." data-zh="把 Utter.app 拖进 DMG 窗口里显示的「应用程序」文件夹。">Drag Utter.app into the Applications folder shown in the DMG window.</p></li>
+            <li><span>03</span><h3 data-en="Launch from the menu bar" data-zh="从菜单栏启动">Launch from the menu bar</h3><p data-en="Open Utter once from Applications. It lives in your menu bar from then on." data-zh="在「应用程序」里打开一次 Utter，之后它就常驻菜单栏。">Open Utter once from Applications. It lives in your menu bar from then on.</p></li>
+          </ol>
+          <button class="install-code" id="install-code" type="button" aria-label="Copy Gatekeeper command">
+            <code><span class="dollar">$</span> xattr -cr /Applications/Utter.app</code>
+            <span class="copy" id="copy-label" data-en="copy" data-zh="复制">copy</span>
+          </button>
+          <p class="footnote" data-en="Only needed if macOS blocks the first launch: self-signed releases are not Apple-notarized. Developer ID releases open normally."
+              data-zh="仅在首次打开被 macOS 拦截时需要：自签发布的 DMG 未经 Apple 公证；Developer ID 发布可直接打开。">Only needed if macOS blocks the first launch: self-signed releases are not Apple-notarized. Developer ID releases open normally.</p>
+        </div>
+      </section>
+
+      <section id="get-started" class="cta-band">
+        <div class="wrap">
+          <p class="kicker">$ utter --start</p>
+          <h2 data-en="Try saying that email instead of typing it." data-zh="试着把那封邮件「说」出来，而不是打出来。">Try saying that email instead of typing it.</h2>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://github.com/IchenDEV/utter/releases/latest" data-en="Get Utter" data-zh="获取 Utter">Get Utter</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap row">
+        <nav aria-label="Footer">
+          <a href="https://github.com/IchenDEV/utter">GitHub</a>
+          <a href="https://github.com/IchenDEV/utter/releases/latest" data-en="Latest release" data-zh="最新版本">Latest release</a>
+          <a href="https://github.com/IchenDEV/utter/issues" data-en="Issues" data-zh="问题反馈">Issues</a>
+          <a href="https://github.com/IchenDEV/utter/blob/main/LICENSE">MIT</a>
+        </nav>
+        <span class="sig" data-en="Built for Apple Silicon" data-zh="为 Apple Silicon 而生">Built for Apple Silicon</span>
+      </div>
+    </footer>
   </div>
-  <script src="assets/demo.js" defer></script>
+  <script src="assets/demo.js?v=20260831-native" defer></script>
 </body>
 </html>
