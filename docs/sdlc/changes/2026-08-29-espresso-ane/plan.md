@@ -19,7 +19,7 @@
 - [x] Targeted `ConfigurationTests`
 - [x] Release-style app build
 - [x] Real GPT-2 `.esp` inspection and generation attempt
-- [ ] GitHub Xcode 26.6 release-style app build after the dependency pin
+- [x] GitHub Xcode 26.6 release-style app build after the dependency pin
 
 ## Human gates
 

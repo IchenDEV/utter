@@ -10,6 +10,7 @@
 | `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer bash scripts/build-app.sh --app-only --sign=-` | Pass | Pinned-fork Release app and CLI built, assembled, ad-hoc signed, and passed release artifact verification |
 | GitHub run `33296463655`, Xcode 26.6 Release build | Fail; diagnosed | Swift 6.2 emitted cross-module references to three internal `RealModelInferenceEngine.Compiled*` metadata symbols, then failed final arm64 linking |
 | Pinned Espresso commit `f3603c7` symbol probe | Pass | The three metadata symbols are emitted as external after changing only the holder types from internal to package visibility |
+| GitHub run `33297701825`, Xcode 26.6 | Pass | Contract & Tests, Release-style App Build, and SDLC Gate all passed; the app build completed in 9m12s |
 | Independent high-risk review | Completed; findings addressed | Review found generic ANE errors, stale preload publication, public path logging, and stale loading status; fixes surface localized guidance, use a preload generation token, clear owned loading state, and keep path-bearing details private |
 | Espresso 0.9.0 GPT-2 generation | Fail | M5 Max/macOS 27 ANE compiler returned code 10, `verifyBundleAtPath: invalid model`, while compiling layer 0 attention |
 | Espresso main `eafb33d` GPT-2 generation | Fail | Latest upstream source produced the same ANE code 10 on the same host |
@@ -34,7 +35,7 @@ light/dark UI pass has not yet been recorded.
 ## Decision
 
 Implementation, regression checks, dependency resolution, and the Release link
-are locally verified. The hosted Xcode 26.6 rerun is pending the branch push.
-Real inference acceptance remains blocked on the tested host. Do not describe
-the backend as runtime-verified on M5 Max/macOS 27 or merge without explicit
-acceptance of this risk.
+are verified locally and on the hosted Xcode 26.6 runner. Real inference
+acceptance remains blocked on the tested host. Do not describe the backend as
+runtime-verified on M5 Max/macOS 27 or merge without explicit acceptance of
+this risk.
