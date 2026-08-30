@@ -1,5 +1,10 @@
 # Plan: Match the macOS settings background hierarchy
 
+**Status:** draft
+**Approved-by:** —
+**Approved-date:** —
+**Upstream:** [spec.md](spec.md)
+
 ## Work items
 
 - [x] Identify the shared forced background used by every settings tab.
@@ -11,7 +16,7 @@
 
 - [x] Real-window dark-appearance inspection
 - [x] `swift test`
-- [x] `python3 scripts/sdlc.py validate --worktree`
+- [x] `bash scripts/sdlc-checks.sh`
 - [x] `bash scripts/ci-basic-checks.sh`
 - [x] Final `bash scripts/build-app.sh`
 - [x] `git diff --check`

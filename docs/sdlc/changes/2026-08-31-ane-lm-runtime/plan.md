@@ -1,5 +1,10 @@
 # Plan: Replace Espresso with a packaged ANE-LM runtime
 
+**Status:** draft
+**Approved-by:** —
+**Approved-date:** —
+**Upstream:** [spec.md](spec.md)
+
 ## Work items
 
 - [x] Reduce the successful M5 proof of concept to the required Qwen3 program
@@ -21,7 +26,7 @@
 - [x] Real Qwen3-0.6B generation on M5 Max/macOS 27.
 - [x] Same-process 20-request resident-memory sample and post-unload sample.
 - [x] Focused ANE selection and fallback tests.
-- [x] `python3 scripts/sdlc.py validate --worktree`
+- [x] `bash scripts/sdlc-checks.sh`
 - [x] `bash scripts/ci-basic-checks.sh`
 - [x] `swift test`
 - [x] `bash scripts/build-app.sh`

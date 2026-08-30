@@ -96,7 +96,7 @@ open Package.swift
 提交 Pull Request 前请运行：
 
 ```bash
-python3 scripts/sdlc.py validate --worktree
+bash scripts/sdlc-checks.sh
 bash scripts/ci-basic-checks.sh
 swift test
 ```

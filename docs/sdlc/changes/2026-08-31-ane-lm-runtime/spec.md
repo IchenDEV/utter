@@ -1,5 +1,10 @@
 # Spec: Replace Espresso with a packaged ANE-LM runtime
 
+**Status:** draft
+**Approved-by:** —
+**Approved-date:** —
+**Upstream:** [intent.md](intent.md)
+
 ## Context
 
 `TextProcessor` already owns one actor for the optional ANE backend and already

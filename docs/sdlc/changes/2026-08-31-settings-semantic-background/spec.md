@@ -1,5 +1,10 @@
 # Spec: Match the macOS settings background hierarchy
 
+**Status:** draft
+**Approved-by:** —
+**Approved-date:** —
+**Upstream:** [intent.md](intent.md)
+
 ## Context
 
 `SettingsView` and `settingsPageSurface()` both paint

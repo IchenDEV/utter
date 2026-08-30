@@ -1,5 +1,10 @@
 # Verification: Match the macOS settings background hierarchy
 
+**Status:** draft
+**Approved-by:** —
+**Approved-date:** —
+**Upstream:** [plan.md](plan.md)
+
 ## Evidence
 
 | Check | Result | Evidence |
@@ -7,8 +12,8 @@
 | Source inspection | Pass | Both shared settings paints now use AppKit `underPageBackgroundColor`; no fixed RGB or new material layer was added. |
 | Real-window dark inspection | Pass | The built 760 by 680 window was opened through the actual AppKit/SwiftUI settings path; Activity and the ANE model pane use the lighter page surface while grouped sections, warning copy, switches, and labels remain legible. |
 | `swift test` | Pass | 592 XCTest cases passed, 10 environment-gated cases skipped, and the Swift Testing model-upgrade test passed. |
-| `python3 scripts/sdlc.py validate --worktree` | Pass | Final standalone validation passed for 10 change bundles and all 29 changed governed paths after the high-risk bundle was independently verified. |
-| `bash scripts/ci-basic-checks.sh` | Pass | Package, 13 SDLC harness tests, plist/localization parity, identifiers, vocabulary, resources, conflict markers, secrets, and symlink checks passed. |
+| `bash scripts/sdlc-checks.sh` | Pass | The strict shell gate checked all 12 change bundles after merging current `main`; this intent remains pending human approval and later stages remain draft. |
+| `bash scripts/ci-basic-checks.sh` | Pass | Package, shell SDLC gate, plist/localization parity, identifiers, vocabulary, resources, conflict markers, secrets, and symlink checks passed after conflict resolution. |
 | Final `bash scripts/build-app.sh` | Pass | Final no-hook app and DMG rebuilt; app and mounted-DMG signatures and DMG checksum passed. |
 | `git diff --check` | Pass | No whitespace errors after final evidence updates. |
 

@@ -1,5 +1,10 @@
 # Verification: Replace Espresso with a packaged ANE-LM runtime
 
+**Status:** draft
+**Approved-by:** —
+**Approved-date:** —
+**Upstream:** [plan.md](plan.md)
+
 ## Evidence
 
 | Check | Result | Evidence |
@@ -11,8 +16,8 @@
 | Real M5 Qwen3 generation | Pass | The Utter Swift tokenizer → pinned C ABI → private ANE path generated non-empty output on M5 Max/macOS 27 without MLX fallback. |
 | Three-lifecycle memory sample | Pass | 20 requests across three complete load/generate/unload lifecycles, plus cancellation in the final lifecycle, passed in 84.367s. Within-lifecycle RSS growth was 80 KB, 32 KB, and 0 KB, each below the 16 MiB bound. Unload released more than 512 MiB from every lifecycle peak; the three sampled post-unload minima were 636,512 KB, 150,928 KB, and 662,592 KB. The final minimum was 26,080 KB above the first and below the enforced 128 MiB cross-lifecycle bound. |
 | Fallback behavior | Pass | Existing enabled, disabled, load-failure, generation-failure, and cancellation policy tests pass in the full suite; selection changes only after native structural validation succeeds. |
-| `python3 scripts/sdlc.py validate --worktree` | Pass | Final validation passed for 10 change bundles and all 29 changed governed paths after both active bundles reached verified. |
-| `bash scripts/ci-basic-checks.sh` | Pass | Package, SDLC harness, plist and localization, identifiers, vocabulary, resources, conflict, secret-bearing file, and symlink checks passed after the final tokenizer fix. |
+| `bash scripts/sdlc-checks.sh` | Pass | The strict shell gate checked all 12 change bundles after merging current `main`; the active intents remain pending human approval and later stages remain draft. |
+| `bash scripts/ci-basic-checks.sh` | Pass | Package, shell SDLC gate, plist and localization, identifiers, vocabulary, resources, conflict, secret-bearing file, and symlink checks passed after conflict resolution. |
 | `swift test` | Pass | 592 XCTest cases passed, 10 environment-gated cases skipped, and the Swift Testing model-upgrade test passed after the final runtime and UI changes. |
 | `bash scripts/build-app.sh` | Pass | The final no-hook `Utter.app` and `Utter-0.0.43.dmg` built; app and mounted-DMG signatures passed and the DMG checksum verified. |
 | Real-window UI | Pass | Actual 760 by 680 settings window exposed the ANE selector, Qwen3 directory chooser, enabled MLX fallback, and private-API/App Store warning with no clipping. |
@@ -53,6 +58,5 @@ immediately return to its pre-load level after switching away.
 
 ## Decision
 
-Verified with focused and full automated tests, the final release-style
-artifact, repository governance checks, and independent P1/P2 review. No
-release or human approval is recorded.
+Implementation evidence and the strict shell governance gate are ready for
+review after merging current `main`; no release or human approval is recorded.

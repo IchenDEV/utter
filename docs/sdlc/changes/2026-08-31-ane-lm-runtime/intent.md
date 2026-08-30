@@ -1,5 +1,10 @@
 # Intent: Replace Espresso with a packaged ANE-LM runtime
 
+**Status:** pending approval
+**Approved-by:** —
+**Approved-date:** —
+**Upstream:** User request and PR #86
+
 ## Problem
 
 The selectable ANE backend currently depends on Espresso, whose bundled ANE

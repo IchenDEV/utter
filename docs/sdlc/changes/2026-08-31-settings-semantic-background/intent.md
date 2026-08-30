@@ -1,5 +1,10 @@
 # Intent: Match the macOS settings background hierarchy
 
+**Status:** pending approval
+**Approved-by:** —
+**Approved-date:** —
+**Upstream:** User report and PR #86
+
 ## Problem
 
 The settings shell forces `windowBackgroundColor` behind every tab. In dark
