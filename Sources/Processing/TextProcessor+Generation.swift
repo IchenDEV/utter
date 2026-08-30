@@ -32,13 +32,67 @@ extension TextProcessor {
                 temperature: temperature
             )
         case .espresso:
-            try await espressoLLM.loadModel(path: options.espressoModelPath)
-            return try await espressoLLM.generate(
-                prompt: prompt,
-                systemPrompt: systemPrompt,
-                maxTokens: maxTokens,
-                temperature: temperature
-            )
+            do {
+                let result = try await Self.runEspressoWithMLXFallback(
+                    espresso: {
+                        try await self.espressoLLM.loadModel(path: options.espressoModelPath)
+                        return try await self.espressoLLM.generate(
+                            prompt: prompt,
+                            systemPrompt: systemPrompt,
+                            maxTokens: maxTokens,
+                            temperature: temperature
+                        )
+                    },
+                    mlx: {
+                        try await self.llm.loadModel(id: options.llmModel)
+                        return try await self.llm.generate(
+                            prompt: prompt,
+                            systemPrompt: systemPrompt,
+                            maxTokens: maxTokens,
+                            temperature: temperature
+                        )
+                    }
+                )
+                if result.usedMLX {
+                    await espressoLLM.recordMLXFallback()
+                }
+                return result.value
+            } catch let error as EspressoMLXFallbackError {
+                await espressoLLM.recordMLXFallbackFailure(details: error.details)
+                throw error
+            }
+        }
+    }
+
+    static func runEspressoWithMLXFallback<Value>(
+        espresso: () async throws -> Value,
+        mlx: () async throws -> Value
+    ) async throws -> (value: Value, usedMLX: Bool) {
+        do {
+            return (try await espresso(), false)
+        } catch {
+            let espressoFailure = error.localizedDescription
+            do {
+                return (try await mlx(), true)
+            } catch {
+                throw EspressoMLXFallbackError(
+                    espressoFailure: espressoFailure,
+                    mlxFailure: error.localizedDescription
+                )
+            }
+        }
+    }
+
+    struct EspressoMLXFallbackError: LocalizedError {
+        let espressoFailure: String
+        let mlxFailure: String
+
+        var errorDescription: String? {
+            L("error.espresso_mlx_fallback_unavailable")
+        }
+
+        var details: String {
+            "Espresso: \(espressoFailure); MLX: \(mlxFailure)"
         }
     }
 

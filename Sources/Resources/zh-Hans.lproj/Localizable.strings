@@ -21,6 +21,7 @@
 /* ── Status ── */
 "status.ready" = "就绪";
 "status.done" = "完成";
+"status.espresso_fell_back_to_mlx" = "Espresso 在这台 Mac 上失败。本次已改用 MLX 完成。";
 "status.no_speech_detected" = "未检测到语音";
 
 /* ── Tabs ── */
@@ -204,7 +205,7 @@
 "model.espresso.description" = "使用 Espresso 的 Apple 神经网络引擎后端运行兼容的 .esp 模型包。";
 "model.espresso.no_bundle" = "尚未选择 .esp 模型包";
 "model.espresso.choose" = "选择 .esp 模型包…";
-"model.espresso.private_api_warning" = "Espresso 使用 Apple 神经网络引擎私有 API，可能在 macOS 更新后失效，也无法通过 Mac App Store 审核。";
+"model.espresso.private_api_warning" = "Espresso 使用 Apple 神经网络引擎私有 API，可能在 macOS 更新后失效。失败时，Utter 会切换到已安装的 MLX 模型。Espresso 也无法通过 Mac App Store 审核。";
 "model.custom_id_placeholder" = "自定义模型 ID（如 mlx-community/…）";
 "model.active" = "当前";
 "model.use" = "启用";
@@ -465,6 +466,7 @@
 "error.network_request_failed" = "网络请求失败，请稍后重试";
 "error.operation_failed" = "操作失败，请重试";
 "error.espresso_runtime_failed" = "Espresso 无法在这台设备的 ANE 上运行此模型。请切换到 MLX，或改用受支持的 macOS 与设备。";
+"error.espresso_mlx_fallback_unavailable" = "Espresso 运行失败，所选 MLX 模型也不可用。请在“设置 → 模型”中下载一个 MLX 模型。";
 "error.volc_not_configured" = "豆包语音识别未配置 — 请在 设置 → 模型 中填写 API 凭据";
 "error.volc_invalid_endpoint" = "语音识别接口地址无效";
 "error.volc_audio_conversion" = "音频转换为 PCM 16kHz 失败";

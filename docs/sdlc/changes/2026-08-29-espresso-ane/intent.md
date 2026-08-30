@@ -8,7 +8,10 @@ Apple Neural Engine runtime for local post-processing.
 ## Outcome
 
 The model settings let users choose Espresso, select an `.esp` model bundle,
-and route local warmup and text generation through Espresso's ANE runtime.
+and route local warmup and text generation through Espresso's ANE runtime. If
+that private runtime fails and the selected MLX model is installed, Utter
+completes the request with MLX, switches the persisted backend to MLX, and
+shows which backend produced the result.
 
 ## Scope
 
@@ -29,11 +32,16 @@ Store compatibility for Espresso's private ANE API.
 - MLX and Espresso are selectable local LLM backends and the choice persists.
 - A valid `.esp` directory can be selected while malformed bundles are rejected.
 - Espresso selection routes warmup and generation through the Espresso engine.
+- An Espresso runtime failure falls back to an installed selected MLX model,
+  persists MLX as the active backend, and surfaces the fallback to the user.
+- If the selected MLX model is unavailable, the Espresso failure remains
+  visible with guidance to install an MLX model.
 - Existing local MLX and remote LLM behavior remains covered by passing tests.
-- Real text generation succeeds on a supported Apple Silicon/macOS combination.
+- The available M5/macOS 27 host rejects Espresso's private ANE program without
+  preventing local formatting when a compatible MLX model is installed.
 
 ## Open questions
 
 Which macOS 27 and M5 combinations Espresso will support remains an upstream
-compatibility question. Real inference on the available M5 Max/macOS 27 host is
-currently blocked by the ANE compiler.
+compatibility question. Direct Espresso inference on the available M5
+Max/macOS 27 host is currently blocked by the ANE compiler.

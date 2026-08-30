@@ -13,7 +13,10 @@ final class TextProcessor {
     func isLLMReady(for backend: LocalLLMBackend) async -> Bool {
         switch backend {
         case .mlx: return await llm.isLoaded
-        case .espresso: return await espressoLLM.isLoaded
+        case .espresso:
+            let espressoIsLoaded = await espressoLLM.isLoaded
+            let mlxIsLoaded = await llm.isLoaded
+            return espressoIsLoaded || mlxIsLoaded
         }
     }
 
@@ -28,26 +31,42 @@ final class TextProcessor {
         model: String,
         backend: LocalLLMBackend,
         espressoModelPath: String
-    ) async -> (loaded: Bool, errorMessage: String?) {
+    ) async -> (loaded: Bool, errorMessage: String?, fallbackMessage: String?) {
         do {
             switch backend {
             case .mlx:
                 try await llm.loadModel(id: model)
             case .espresso:
-                try await espressoLLM.loadModel(path: espressoModelPath)
+                let result = try await Self.runEspressoWithMLXFallback(
+                    espresso: { try await self.espressoLLM.loadModel(path: espressoModelPath) },
+                    mlx: { try await self.llm.loadModel(id: model) }
+                )
+                if result.usedMLX {
+                    await espressoLLM.recordMLXFallback()
+                    let message = await espressoLLM.consumeLastFallbackMessage()
+                    return (true, nil, message)
+                }
             }
-            return (true, nil)
+            return (true, nil, nil)
+        } catch let error as EspressoMLXFallbackError {
+            await espressoLLM.recordMLXFallbackFailure(details: error.details)
+            let message = await espressoLLM.consumeLastFailureMessage()
+            return (false, message ?? error.localizedDescription, nil)
         } catch {
             Log.error("[TextProcessor] LLM warmup failed: \(error.localizedDescription)")
             if backend == .espresso {
                 _ = await espressoLLM.consumeLastFailureMessage()
             }
-            return (false, error.localizedDescription)
+            return (false, error.localizedDescription, nil)
         }
     }
 
     func consumeEspressoFailureMessage() async -> String? {
         await espressoLLM.consumeLastFailureMessage()
+    }
+
+    func consumeEspressoFallbackMessage() async -> String? {
+        await espressoLLM.consumeLastFallbackMessage()
     }
 
     func basicClean(

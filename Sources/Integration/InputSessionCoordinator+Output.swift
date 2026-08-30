@@ -63,6 +63,13 @@ extension InputSessionCoordinator {
             )
         }
 
+        if await textProcessor.consumeEspressoFallbackMessage() != nil,
+           !settings.useRemoteLLM,
+           settings.localLLMBackend == .espresso {
+            settings.localLLMBackend = .mlx
+            Log.info("[InputSessionCoordinator] Espresso failed; selected MLX as the active backend")
+        }
+
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             Log.info("[InputSessionCoordinator] refusing to complete session with empty output")
             throw IntegrationError.operationFailed

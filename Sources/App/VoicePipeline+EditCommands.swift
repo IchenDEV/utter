@@ -24,7 +24,6 @@ extension VoicePipeline {
                 settings: settings,
                 targetApp: targetApp
             )
-            return true
         case .replaceSelection(let replacementRaw):
             await replaceSelectedText(
                 raw: raw,
@@ -32,7 +31,6 @@ extension VoicePipeline {
                 settings: settings,
                 targetApp: targetApp
             )
-            return true
         case .rewriteLast(let intent):
             await rewriteLastInsertion(
                 raw: raw,
@@ -40,7 +38,6 @@ extension VoicePipeline {
                 settings: settings,
                 targetApp: targetApp
             )
-            return true
         case .rewriteSelection(let intent):
             await rewriteSelectedText(
                 raw: raw,
@@ -48,14 +45,22 @@ extension VoicePipeline {
                 settings: settings,
                 targetApp: targetApp
             )
-            return true
         case .deleteSelection:
             await deleteSelectedText(targetApp: targetApp)
-            return true
         case .undoLastInsertion:
             await undoLastInsertion(targetApp: targetApp)
-            return true
         }
+
+        if let fallbackMessage = await applyEspressoFallbackIfNeeded(settings: settings) {
+            if case .error = appState.phase {
+                Log.info("[VoicePipeline] preserving edit-command error after Espresso fallback")
+            } else {
+                appState.statusMessage = fallbackMessage
+                showOverlay()
+                hideOverlayAfterDelay()
+            }
+        }
+        return true
     }
 
     private func replaceLastInsertion(

@@ -48,6 +48,18 @@ final class OverlayLayoutTests: XCTestCase {
         }
     }
 
+    func testEspressoFallbackCompletionMakesRoomForTwoLineStatus() {
+        let appState = AppState()
+        appState.phase = .done
+        appState.statusMessage = L("status.espresso_fell_back_to_mlx")
+
+        let layout = OverlayLayout(appState: appState)
+
+        XCTAssertEqual(layout.width, 288)
+        XCTAssertEqual(layout.height, 56)
+        XCTAssertFalse(layout.isInteractive)
+    }
+
     func testOverlayPlacementCentersAboveVisibleScreenBottom() {
         let visibleFrame = CGRect(x: 100, y: 80, width: 1_200, height: 760)
         let frame = OverlayPanelPlacement.frame(

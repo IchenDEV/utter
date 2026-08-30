@@ -21,6 +21,7 @@
 /* ── Status ── */
 "status.ready" = "Ready";
 "status.done" = "Done";
+"status.espresso_fell_back_to_mlx" = "Espresso failed on this Mac. This request finished with MLX.";
 "status.no_speech_detected" = "No Speech Detected";
 
 /* ── Tabs ── */
@@ -204,7 +205,7 @@
 "model.espresso.description" = "Run a compatible .esp bundle with Espresso's Apple Neural Engine backend.";
 "model.espresso.no_bundle" = "No .esp bundle selected";
 "model.espresso.choose" = "Choose .esp Bundle…";
-"model.espresso.private_api_warning" = "Espresso uses private Apple Neural Engine APIs. It may break after macOS updates and is not eligible for Mac App Store distribution.";
+"model.espresso.private_api_warning" = "Espresso uses private Apple Neural Engine APIs and may break after macOS updates. If it fails, Utter switches to your installed MLX model. Espresso is not eligible for Mac App Store distribution.";
 "model.custom_id_placeholder" = "Custom model ID (e.g. mlx-community/…)";
 "model.active" = "Active";
 "model.use" = "Use";
@@ -465,6 +466,7 @@
 "error.network_request_failed" = "Network request failed — please try again";
 "error.operation_failed" = "Operation failed — please try again";
 "error.espresso_runtime_failed" = "Espresso could not run this model on the ANE. Switch to MLX or try a supported macOS and device.";
+"error.espresso_mlx_fallback_unavailable" = "Espresso failed, and the selected MLX model is unavailable. Download an MLX model in Settings → Models.";
 "error.volc_not_configured" = "Doubao ASR not configured — enter API credentials in Settings → Models";
 "error.volc_invalid_endpoint" = "Invalid ASR endpoint URL";
 "error.volc_audio_conversion" = "Audio conversion to PCM 16kHz failed";

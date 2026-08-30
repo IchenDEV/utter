@@ -4,38 +4,49 @@
 
 | Check | Result | Evidence |
 |---|---|---|
-| `bash scripts/ci-basic-checks.sh` | Pass | Repository basic checks completed after merging `origin/main` |
-| `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test` | Pass | 567 XCTest tests passed, 8 skipped, plus 1 Swift Testing test passed after the dependency pin |
-| Targeted `ConfigurationTests` | Pass | 36 tests passed, 0 failures |
-| `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer bash scripts/build-app.sh --app-only --sign=-` | Pass | Pinned-fork Release app and CLI built, assembled, ad-hoc signed, and passed release artifact verification |
+| `bash scripts/ci-basic-checks.sh` | Pass | Current SDLC, harness, plist, localization, resource, identifier, secret-file, and symlink checks passed |
+| `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test` | Pass | 573 XCTest tests passed, 9 skipped, plus 1 Swift Testing test passed after the fallback and overlay changes |
+| Focused fallback and localization tests | Pass | Espresso success avoids MLX; Espresso failure uses MLX; dual failure preserves both diagnostics; successful fallback persists MLX; localized status and 288 by 56 two-line overlay layout pass |
+| `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer bash scripts/build-app.sh --app-only --sign=-` | Pass | Final source without the temporary visual-QA trigger built the Release app and CLI, assembled, ad-hoc signed, and passed artifact verification |
 | GitHub run `33296463655`, Xcode 26.6 Release build | Fail; diagnosed | Swift 6.2 emitted cross-module references to three internal `RealModelInferenceEngine.Compiled*` metadata symbols, then failed final arm64 linking |
 | Pinned Espresso commit `f3603c7` symbol probe | Pass | The three metadata symbols are emitted as external after changing only the holder types from internal to package visibility |
 | GitHub run `33297701825`, Xcode 26.6 | Pass | Contract & Tests, Release-style App Build, and SDLC Gate all passed; the app build completed in 9m12s |
 | Independent high-risk review | Completed; findings addressed | Review found generic ANE errors, stale preload publication, public path logging, and stale loading status; fixes surface localized guidance, use a preload generation token, clear owned loading state, and keep path-bearing details private |
 | Espresso 0.9.0 GPT-2 generation | Fail | M5 Max/macOS 27 ANE compiler returned code 10, `verifyBundleAtPath: invalid model`, while compiling layer 0 attention |
 | Espresso main `eafb33d` GPT-2 generation | Fail | Latest upstream source produced the same ANE code 10 on the same host |
+| M5 ANE compile matrix | Fail as expected | All 24 combinations failed: iOS 18, iOS 19, macOS 26, and macOS 27 MIL targets; LayerNorm and RMSNorm; spatial sizes 64, 128, and 256 |
+| Real Espresso-to-MLX fallback | Pass | On the M5 Max/macOS 27 host, a real GPT-2 `.esp` bundle produced ANE code 10, then the installed `mlx-community/Qwen3.5-2B-4bit` model generated non-empty output in the same test and produced the fallback notice |
+| Real-window fallback notice | Pass | The actual Release app displayed the 288 by 56 non-modal completion overlay without truncation in Chinese light and dark appearances and English dark appearance; the temporary environment-triggered QA entry was removed before the final build |
 
 ## Acceptance criteria
 
 - Backend selection and persistence — pass; focused settings test and full suite.
 - Bundle selection and malformed-bundle rejection — pass at metadata validation level through `ESPRuntimeBundle.open`.
 - Espresso warmup and generation dispatch — pass by code path and build coverage.
+- Automatic MLX recovery — pass in focused control-flow tests and a real M5
+  Espresso-failure-to-MLX-generation integration test.
+- Persisted backend correction — pass with isolated `UserDefaults`; MLX replaces
+  Espresso only when Espresso remains the selected backend.
+- User feedback — pass in both localizations and real Release windows without
+  treating the successful recovery as an error.
 - Existing MLX and remote behavior — pass; complete suite has no failures.
-- Real generation on a supported host — blocked on the available M5 Max/macOS 27 host; both the pinned release and upstream main fail in Apple's private ANE compiler.
+- Direct Espresso generation on a supported host — blocked on the available M5
+  Max/macOS 27 host; both the pinned release and upstream main fail in Apple's
+  private ANE compiler. The new fallback prevents that failure from blocking
+  local formatting when the selected MLX model is installed.
 
 ## Residual risk
 
-Espresso relies on a private ANE interface whose generated programs are rejected
-on the available M5 Max/macOS 27 environment. Bundle inspection succeeds, so the
-failure is only discovered during ANE kernel compilation. The repository
-maintainer owns the decision to wait for upstream compatibility, constrain the
-supported hardware/OS matrix, or accept the experimental backend. A real-window
-light/dark UI pass has not yet been recorded.
+Espresso still relies on a private ANE interface whose generated programs are
+rejected on the available M5 Max/macOS 27 environment. The fallback requires an
+already-installed selected MLX model and deliberately does not start a download.
+This change makes Utter resilient on M5; it does not establish direct Espresso
+or private-ANE compatibility on M5. A public Core ML backend remains separate
+future work.
 
 ## Decision
 
-Implementation, regression checks, dependency resolution, and the Release link
-are verified locally and on the hosted Xcode 26.6 runner. Real inference
-acceptance remains blocked on the tested host. Do not describe the backend as
-runtime-verified on M5 Max/macOS 27 or merge without explicit acceptance of
-this risk.
+Automatic recovery, persistence, regression checks, real M5 fallback, localized
+window behavior, dependency resolution, and the Release link are verified.
+Direct Espresso inference remains blocked on the tested host. Do not describe
+the private ANE backend itself as runtime-compatible with M5 Max/macOS 27.

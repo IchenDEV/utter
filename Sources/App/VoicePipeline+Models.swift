@@ -93,11 +93,18 @@ extension VoicePipeline {
         appState.llmModelReady = warmup.loaded && ready
 
         if appState.llmModelReady {
+            if warmup.fallbackMessage != nil,
+               !settings.useRemoteLLM,
+               settings.localLLMBackend == .espresso {
+                settings.localLLMBackend = .mlx
+            }
             if backend == .mlx {
                 catalog.updateLLMStatus(model, status: .ready)
             }
             Log.info("[VoicePipeline] LLM model loaded into memory, ready for instant inference")
-            appState.statusMessage = L("status.ready")
+            appState.statusMessage = showFailureInStatus
+                ? (warmup.fallbackMessage ?? L("status.ready"))
+                : L("status.ready")
         } else {
             if backend == .mlx {
                 catalog.updateLLMStatus(model, status: .error(L("pipeline.model_load_failed")))
@@ -123,6 +130,14 @@ extension VoicePipeline {
         case .espresso:
             return settings.espressoModelPath.trimmingCharacters(in: .whitespacesAndNewlines) == espressoPath
         }
+    }
+
+    func applyEspressoFallbackIfNeeded(settings: AppSettings) async -> String? {
+        guard let message = await textProcessor.consumeEspressoFallbackMessage() else { return nil }
+        if !settings.useRemoteLLM, settings.localLLMBackend == .espresso {
+            settings.localLLMBackend = .mlx
+        }
+        return message
     }
 
     func ensureEngineLoaded(requestPermission: Bool = true) async {

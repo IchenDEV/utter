@@ -235,6 +235,7 @@ extension VoicePipeline {
             allowsGuardFallback: false,
             dictionarySnapshot: dictionarySnapshot
         )
+        let fallbackMessage = await applyEspressoFallbackIfNeeded(settings: appState.settings)
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         appState.lastFormattingDurationSeconds = elapsed
         Log.info("[VoicePipeline] Smart Format completed in \(String(format: "%.2f", elapsed))s")
@@ -253,7 +254,7 @@ extension VoicePipeline {
 
         replacement.formattedText = formattedText
         replacement.state = .ready
-        replacement.message = L("pipeline.formatted_ready")
+        replacement.message = fallbackMessage ?? L("pipeline.formatted_ready")
         replacement.context = inputContext
         appState.pendingReplacement = replacement
     }

@@ -251,6 +251,7 @@ extension VoicePipeline {
         targetApp: NSRunningApplication?
     ) async {
         let finalText = output.text
+        let fallbackMessage = await applyEspressoFallbackIfNeeded(settings: settings)
         guard !finalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             Log.info("[VoicePipeline] skipping empty final text")
             let espressoFailure = await textProcessor.consumeEspressoFailureMessage()
@@ -269,7 +270,7 @@ extension VoicePipeline {
         Log.info("[VoicePipeline] insert stage finished in \(String(format: "%.2f", elapsed))s")
 
         appState.phase = .done
-        appState.statusMessage = L("status.done")
+        appState.statusMessage = fallbackMessage ?? L("status.done")
         hideOverlayAfterDelay()
 
         if case .probablyFailed(let reason) = result {

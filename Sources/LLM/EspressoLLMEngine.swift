@@ -17,13 +17,15 @@ actor EspressoLLMEngine {
 
     private var model: LoadedModel?
     private var lastFailureMessage: String?
+    private var lastFallbackMessage: String?
 
     func loadModel(path: String) throws {
         let expandedPath = NSString(string: path).expandingTildeInPath
         let url = URL(fileURLWithPath: expandedPath, isDirectory: true).standardizedFileURL
+        lastFailureMessage = nil
+        lastFallbackMessage = nil
         guard model?.path != url.path else { return }
 
-        lastFailureMessage = nil
         Log.info("[EspressoLLMEngine] loading bundle: \(url.lastPathComponent)")
         do {
             let bundle = try ESPRuntimeBundle.open(at: url)
@@ -52,6 +54,7 @@ actor EspressoLLMEngine {
     ) throws -> String {
         guard let model else { throw EspressoLLMError.modelNotLoaded }
         lastFailureMessage = nil
+        lastFallbackMessage = nil
         let input = Self.formatPrompt(
             user: prompt,
             system: systemPrompt,
@@ -86,6 +89,24 @@ actor EspressoLLMEngine {
     func consumeLastFailureMessage() -> String? {
         defer { lastFailureMessage = nil }
         return lastFailureMessage
+    }
+
+    func recordMLXFallback() {
+        lastFailureMessage = nil
+        lastFallbackMessage = L("status.espresso_fell_back_to_mlx")
+        Log.info("[EspressoLLMEngine] Espresso failed; using the selected MLX model")
+    }
+
+    func recordMLXFallbackFailure(details: String) {
+        lastFallbackMessage = nil
+        lastFailureMessage = L("error.espresso_mlx_fallback_unavailable")
+        Log.sensitive("[EspressoLLMEngine] Espresso and MLX fallback failed: \(details)")
+        Log.error("[EspressoLLMEngine] MLX fallback unavailable")
+    }
+
+    func consumeLastFallbackMessage() -> String? {
+        defer { lastFallbackMessage = nil }
+        return lastFallbackMessage
     }
 
     private func recordFailure(_ error: Error) -> EspressoLLMError {

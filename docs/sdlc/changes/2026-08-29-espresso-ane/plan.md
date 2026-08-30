@@ -11,6 +11,9 @@
 - [x] Merge current `origin/main` and preserve both dependency sets.
 - [x] Resolve independent-review findings for error visibility, stale preload state, and path privacy.
 - [x] Diagnose the Xcode 26.6 Release linker failure and pin the minimal Espresso metadata fix.
+- [x] Fall back from failed Espresso warmup and generation to an installed MLX model.
+- [x] Persist MLX after successful fallback and surface a localized completion notice.
+- [x] Cover fallback ordering, success, and dual-failure behavior with focused tests.
 
 ## Verification plan
 
@@ -20,6 +23,9 @@
 - [x] Release-style app build
 - [x] Real GPT-2 `.esp` inspection and generation attempt
 - [x] GitHub Xcode 26.6 release-style app build after the dependency pin
+- [x] Real M5 ANE compile matrix across deployment targets and normalization variants
+- [x] Targeted Espresso fallback tests
+- [x] Current full repository gates and release-style app build
 
 ## Human gates
 
