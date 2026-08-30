@@ -114,7 +114,7 @@ struct IntegrationHTTPDispatcher {
             return 404
         case .permissionDenied, .modelNotReady, .noSpeechDetected:
             return 400
-        case .operationFailed:
+        case .operationFailed, .operationFailedWithMessage:
             return 500
         }
     }

@@ -18,7 +18,7 @@ struct OverlayLayout: Equatable {
     init(appState: AppState) {
         let hasPreview = appState.phase == .recording && !appState.rawTranscription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let showsEspressoFallback = appState.phase == .done
-            && appState.statusMessage == L("status.espresso_fell_back_to_mlx")
+            && appState.completionKind == .espressoFallback
         isInteractive = appState.isRecording
 
         switch appState.phase {
@@ -101,7 +101,7 @@ struct OverlayContentView: View {
 
     private var showsEspressoFallback: Bool {
         appState.phase == .done
-            && appState.statusMessage == L("status.espresso_fell_back_to_mlx")
+            && appState.completionKind == .espressoFallback
     }
 
     var body: some View {

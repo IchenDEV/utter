@@ -10,6 +10,7 @@ struct ModelManagementView: View {
     var onUnloadWhisper: (() -> Void)?
     var onUnloadLLM: (() -> Void)?
     var onLoadLLM: (() -> Void)?
+    var onBenchmarkLLM: ((String) async throws -> LLMEngine.BenchmarkResult)?
     var onUnloadLocalASR: (() -> Void)?
 
     @State var customLLMInput = ""
@@ -18,7 +19,6 @@ struct ModelManagementView: View {
     @State var selectedModelFamily: ModelCatalog.ModelFamily? = .qwen
     @State var showLegacyModels = false
     @State var pendingModelAction: PendingModelAction?
-    let benchmarkEngine = LLMEngine()
 
     var body: some View {
         VStack(spacing: 0) {

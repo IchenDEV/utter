@@ -36,6 +36,9 @@ Store compatibility for Espresso's private ANE API.
   persists MLX as the active backend, and surfaces the fallback to the user.
 - If the selected MLX model is unavailable, the Espresso failure remains
   visible with guidance to install an MLX model.
+- Repeated fallback requests do not retain request-scoped state, and explicitly
+  unloading local models waits for active local inference, releases every
+  production model container, and clears MLX's reusable memory cache.
 - Existing local MLX and remote LLM behavior remains covered by passing tests.
 - The available M5/macOS 27 host rejects Espresso's private ANE program without
   preventing local formatting when a compatible MLX model is installed.

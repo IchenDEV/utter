@@ -5,6 +5,12 @@ import XCTest
 
 @MainActor
 final class IntegrationOutputTests: XCTestCase {
+    func testAppDelegateSharesTextProcessorWithIntegrationCoordinator() {
+        let delegate = AppDelegate()
+
+        XCTAssertTrue(delegate.integrationSessionCoordinator.textProcessor === delegate.textProcessor)
+    }
+
     func testServiceRejectsEmptyFinalText() async throws {
         let store = registry()
         defer { store.cleanup() }
@@ -39,6 +45,38 @@ final class IntegrationOutputTests: XCTestCase {
 
         await assertThrowsIntegrationError(.operationFailed) {
             _ = try await coordinator.outputText(for: "   ", active: active)
+        }
+    }
+
+    func testCoordinatorPreservesCombinedLocalModelFailureGuidance() async {
+        let store = registry()
+        defer { store.cleanup() }
+        store.registry.approve(IntegrationClient.localHTTP(tokenID: "token"))
+        let coordinator = InputSessionCoordinator(service: makeService(registry: store.registry))
+        let active = InputSessionCoordinator.ActiveSession(
+            sessionID: UUID(),
+            clientID: clientID,
+            engine: TestSpeechEngine(transcript: ""),
+            languageCode: nil,
+            mode: .direct,
+            inputLanguage: .english,
+            useScreenContext: false,
+            streamingEnabled: false,
+            screenContextTask: nil,
+            client: IntegrationClient.localHTTP(tokenID: "token")
+        )
+
+        do {
+            try await TextProcessor.withEspressoOutcomeTracking {
+                await TextProcessor.recordEspressoOutcome(.unavailable)
+                _ = try await coordinator.outputText(for: "   ", active: active)
+            }
+            XCTFail("Expected local model failure")
+        } catch let error as IntegrationError {
+            XCTAssertEqual(error, .operationFailedWithMessage(EspressoGenerationOutcome.unavailable.message))
+            XCTAssertEqual(error.payload.error, "operation_failed")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
     }
 }

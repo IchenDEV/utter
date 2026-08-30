@@ -49,13 +49,13 @@ extension VoicePipeline {
                 }
             }
 
+            let expectedEspressoModelPath = settings.espressoModelPath
             let output = await outputText(
                 for: preparedRaw,
                 settings: settings,
                 inputMode: inputMode,
                 targetApp: targetApp
             )
-
             guard !Task.isCancelled else {
                 resetToIdle()
                 return
@@ -65,6 +65,7 @@ extension VoicePipeline {
                 output,
                 raw: preparedRaw,
                 settings: settings,
+                expectedEspressoModelPath: expectedEspressoModelPath,
                 inputMode: inputMode,
                 targetApp: targetApp
             )
@@ -237,82 +238,4 @@ extension VoicePipeline {
         return VoicePipelineOutput(text: text, context: inputContext)
     }
 
-    func recordFormattingDuration(_ started: CFAbsoluteTime, label: String) {
-        let elapsed = CFAbsoluteTimeGetCurrent() - started
-        appState.lastFormattingDurationSeconds = elapsed
-        Log.info("[VoicePipeline] \(label) completed in \(String(format: "%.2f", elapsed))s")
-    }
-
-    private func insertFinalText(
-        _ output: VoicePipelineOutput,
-        raw: String,
-        settings: AppSettings,
-        inputMode: VoiceInputMode,
-        targetApp: NSRunningApplication?
-    ) async {
-        let finalText = output.text
-        let fallbackMessage = await applyEspressoFallbackIfNeeded(settings: settings)
-        guard !finalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            Log.info("[VoicePipeline] skipping empty final text")
-            let espressoFailure = await textProcessor.consumeEspressoFailureMessage()
-            showErrorHint(espressoFailure ?? L("error.operation_failed"))
-            return
-        }
-
-        appState.processedText = finalText
-        appState.phase = .inserting
-        appState.statusMessage = L("pipeline.inserting")
-
-        Log.sensitive("[VoicePipeline] inserting \(finalText.count) chars")
-        let started = CFAbsoluteTimeGetCurrent()
-        let result = await textInserter.insert(text: finalText, targetApp: targetApp)
-        let elapsed = CFAbsoluteTimeGetCurrent() - started
-        Log.info("[VoicePipeline] insert stage finished in \(String(format: "%.2f", elapsed))s")
-
-        appState.phase = .done
-        appState.statusMessage = fallbackMessage ?? L("status.done")
-        hideOverlayAfterDelay()
-
-        if case .probablyFailed(let reason) = result {
-            Log.info("[VoicePipeline] insertion probably failed: \(reason)")
-            TextInserter.copyToClipboard(finalText)
-            showInsertionFailedAlert(text: finalText, reason: reason)
-            return
-        }
-
-        let wasProcessed = inputMode.isTranslation
-            || settings.outputMode == .processed
-            || settings.outputMode == .command
-        let recordID = InputHistory.shared.addRecord(
-            rawText: raw,
-            processedText: finalText,
-            wasProcessed: wasProcessed,
-            context: output.context,
-            formatKind: output.formatKind
-        )
-        appState.lastInsertedText = finalText
-        if !inputMode.isTranslation {
-            beginCorrectionCapture(
-                recordID: recordID,
-                insertedText: finalText,
-                context: output.context
-            )
-        }
-    }
-}
-
-struct VoicePipelineOutput {
-    let text: String
-    let context: InputContext
-    let formatKind: TextFormatKind?
-
-    init(text: String, context: InputContext, formatKind: TextFormatKind? = nil) {
-        self.text = text
-        self.context = context
-        self.formatKind = formatKind
-    }
-}
-
-private enum VoicePipelineStop: Error {
-    case noSpeech
 }

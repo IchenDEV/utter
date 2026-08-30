@@ -14,6 +14,10 @@
 - [x] Fall back from failed Espresso warmup and generation to an installed MLX model.
 - [x] Persist MLX after successful fallback and surface a localized completion notice.
 - [x] Cover fallback ordering, success, and dual-failure behavior with focused tests.
+- [x] Scope fallback outcomes to one request and preserve actionable dual-failure guidance.
+- [x] Reproduce retained MLX memory after unload and clear the MLX cache on explicit unload.
+- [x] Share one processor across voice and integration workflows and include benchmarking in its lifecycle.
+- [x] Serialize complete local-model transactions and remove cancelled waiters from the lifecycle queue.
 
 ## Verification plan
 
@@ -26,6 +30,8 @@
 - [x] Real M5 ANE compile matrix across deployment targets and normalization variants
 - [x] Targeted Espresso fallback tests
 - [x] Current full repository gates and release-style app build
+- [x] Repeated real fallback requests and explicit-unload memory regression
+- [x] Independent cancellation, unload-order, shared-ownership, and file-size review
 
 ## Human gates
 

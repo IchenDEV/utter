@@ -23,6 +23,7 @@ struct SettingsView: View {
     var onUnloadWhisper: (() -> Void)?
     var onUnloadLLM: (() -> Void)?
     var onLoadLLM: (() -> Void)?
+    var onBenchmarkLLM: ((String) async throws -> LLMEngine.BenchmarkResult)?
     var onUnloadLocalASR: (() -> Void)?
 
     var body: some View {
@@ -35,6 +36,7 @@ struct SettingsView: View {
                 onUnloadWhisper: onUnloadWhisper,
                 onUnloadLLM: onUnloadLLM,
                 onLoadLLM: onLoadLLM,
+                onBenchmarkLLM: onBenchmarkLLM,
                 onUnloadLocalASR: onUnloadLocalASR
             )
             .tabItem { Label(L("tab.models"), systemImage: "cpu") }

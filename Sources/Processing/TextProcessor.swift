@@ -4,70 +4,16 @@ import Foundation
 final class TextProcessor {
     static let defaultAllowsPreparedFallback = false
 
+    @TaskLocal static var espressoGenerationTracker: EspressoGenerationTracker?
+    @TaskLocal static var hasLocalModelAccess = false
+
     let llm = LLMEngine()
+    let benchmarkEngine = LLMEngine()
     let espressoLLM = EspressoLLMEngine()
     let vlm = VLMEngine()
+    let localModelAccessGate = LocalModelAccessGate()
     let remoteLLMClient = RemoteLLMClient()
     private let dictionary = PersonalDictionary.shared
-
-    func isLLMReady(for backend: LocalLLMBackend) async -> Bool {
-        switch backend {
-        case .mlx: return await llm.isLoaded
-        case .espresso:
-            let espressoIsLoaded = await espressoLLM.isLoaded
-            let mlxIsLoaded = await llm.isLoaded
-            return espressoIsLoaded || mlxIsLoaded
-        }
-    }
-
-    func unloadLLM() async {
-        await llm.unload()
-        await espressoLLM.unload()
-        await vlm.unload()
-    }
-
-    @discardableResult
-    func warmUpLLM(
-        model: String,
-        backend: LocalLLMBackend,
-        espressoModelPath: String
-    ) async -> (loaded: Bool, errorMessage: String?, fallbackMessage: String?) {
-        do {
-            switch backend {
-            case .mlx:
-                try await llm.loadModel(id: model)
-            case .espresso:
-                let result = try await Self.runEspressoWithMLXFallback(
-                    espresso: { try await self.espressoLLM.loadModel(path: espressoModelPath) },
-                    mlx: { try await self.llm.loadModel(id: model) }
-                )
-                if result.usedMLX {
-                    await espressoLLM.recordMLXFallback()
-                    let message = await espressoLLM.consumeLastFallbackMessage()
-                    return (true, nil, message)
-                }
-            }
-            return (true, nil, nil)
-        } catch let error as EspressoMLXFallbackError {
-            await espressoLLM.recordMLXFallbackFailure(details: error.details)
-            let message = await espressoLLM.consumeLastFailureMessage()
-            return (false, message ?? error.localizedDescription, nil)
-        } catch {
-            Log.error("[TextProcessor] LLM warmup failed: \(error.localizedDescription)")
-            if backend == .espresso {
-                _ = await espressoLLM.consumeLastFailureMessage()
-            }
-            return (false, error.localizedDescription, nil)
-        }
-    }
-
-    func consumeEspressoFailureMessage() async -> String? {
-        await espressoLLM.consumeLastFailureMessage()
-    }
-
-    func consumeEspressoFallbackMessage() async -> String? {
-        await espressoLLM.consumeLastFallbackMessage()
-    }
 
     func basicClean(
         text: String,
@@ -164,33 +110,35 @@ final class TextProcessor {
             var result: String
             let llmStarted = CFAbsoluteTimeGetCurrent()
             if let screenImage, useScreenImage {
-                do {
-                    result = try await generateWithScreenImage(
-                        prompt: userPrompt,
-                        systemPrompt: systemPrompt,
-                        model: options.llmModel,
-                        image: screenImage,
-                        maxTokens: generationOptions.maxTokens,
-                        temperature: generationOptions.temperature
-                    )
-                } catch {
-                    Log.error("[TextProcessor] VLM failed, falling back to text LLM: \(error.localizedDescription)")
-                    let textFallbackSystemPrompt = formattingSystemPrompt(
-                        options: options,
-                        screenContext: screenContext,
-                        screenImageAvailable: false,
-                        memoryContext: memoryContext,
-                        inputContext: inputContext,
-                        formatKind: formatKind,
-                        dictionarySnapshot: dictionarySnapshot
-                    )
-                    result = try await generateText(
-                        prompt: userPrompt,
-                        systemPrompt: textFallbackSystemPrompt,
-                        options: options,
-                        maxTokens: generationOptions.maxTokens,
-                        temperature: generationOptions.temperature
-                    )
+                result = try await withLocalModelAccess {
+                    do {
+                        return try await generateWithScreenImage(
+                            prompt: userPrompt,
+                            systemPrompt: systemPrompt,
+                            model: options.llmModel,
+                            image: screenImage,
+                            maxTokens: generationOptions.maxTokens,
+                            temperature: generationOptions.temperature
+                        )
+                    } catch {
+                        Log.error("[TextProcessor] VLM failed, falling back to text LLM: \(error.localizedDescription)")
+                        let textFallbackSystemPrompt = formattingSystemPrompt(
+                            options: options,
+                            screenContext: screenContext,
+                            screenImageAvailable: false,
+                            memoryContext: memoryContext,
+                            inputContext: inputContext,
+                            formatKind: formatKind,
+                            dictionarySnapshot: dictionarySnapshot
+                        )
+                        return try await generateText(
+                            prompt: userPrompt,
+                            systemPrompt: textFallbackSystemPrompt,
+                            options: options,
+                            maxTokens: generationOptions.maxTokens,
+                            temperature: generationOptions.temperature
+                        )
+                    }
                 }
             } else {
                 result = try await generateText(
@@ -283,32 +231,34 @@ final class TextProcessor {
         do {
             var result: String
             if let screenImage, useScreenImage {
-                do {
-                    result = try await generateWithScreenImage(
-                        prompt: userPrompt,
-                        systemPrompt: systemPrompt,
-                        model: options.llmModel,
-                        image: screenImage,
-                        maxTokens: 4096,
-                        temperature: 0.3
-                    )
-                } catch {
-                    Log.error("[TextProcessor] Command VLM failed, falling back to text LLM: \(error.localizedDescription)")
-                    let textFallbackSystemPrompt = commandSystemPrompt(
-                        options: options,
-                        screenContext: screenContext,
-                        screenImageAvailable: false,
-                        memoryContext: memoryContext,
-                        inputContext: inputContext,
-                        dictionarySnapshot: dictionarySnapshot
-                    )
-                    result = try await generateText(
-                        prompt: userPrompt,
-                        systemPrompt: textFallbackSystemPrompt,
-                        options: options,
-                        maxTokens: 4096,
-                        temperature: 0.3
-                    )
+                result = try await withLocalModelAccess {
+                    do {
+                        return try await generateWithScreenImage(
+                            prompt: userPrompt,
+                            systemPrompt: systemPrompt,
+                            model: options.llmModel,
+                            image: screenImage,
+                            maxTokens: 4096,
+                            temperature: 0.3
+                        )
+                    } catch {
+                        Log.error("[TextProcessor] Command VLM failed, falling back to text LLM: \(error.localizedDescription)")
+                        let textFallbackSystemPrompt = commandSystemPrompt(
+                            options: options,
+                            screenContext: screenContext,
+                            screenImageAvailable: false,
+                            memoryContext: memoryContext,
+                            inputContext: inputContext,
+                            dictionarySnapshot: dictionarySnapshot
+                        )
+                        return try await generateText(
+                            prompt: userPrompt,
+                            systemPrompt: textFallbackSystemPrompt,
+                            options: options,
+                            maxTokens: 4096,
+                            temperature: 0.3
+                        )
+                    }
                 }
             } else {
                 result = try await generateText(

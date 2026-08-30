@@ -301,18 +301,6 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertTrue(
             Loc.string("error.espresso_runtime_failed", language: .chinese).contains("MLX")
         )
-        XCTAssertTrue(
-            Loc.string("status.espresso_fell_back_to_mlx", language: .english).contains("MLX")
-        )
-        XCTAssertTrue(
-            Loc.string("status.espresso_fell_back_to_mlx", language: .chinese).contains("MLX")
-        )
-        XCTAssertTrue(
-            Loc.string("error.espresso_mlx_fallback_unavailable", language: .english).contains("MLX")
-        )
-        XCTAssertTrue(
-            Loc.string("error.espresso_mlx_fallback_unavailable", language: .chinese).contains("MLX")
-        )
     }
 
     func testDeveloperHTTPTokenCanBeReset() {

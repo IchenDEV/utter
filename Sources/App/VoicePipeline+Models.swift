@@ -9,39 +9,17 @@ extension VoicePipeline {
         appState.statusMessage = L("pipeline.whisper_unloaded")
     }
 
-    func unloadLLM() {
-        formattingPreloadGeneration += 1
-        processingTask?.cancel()
-        processingTask = nil
-        replacementTask?.cancel()
-        replacementTask = nil
-        appState.clearPendingReplacement()
-        if appState.phase == .processing {
-            appState.phase = .idle
-            appState.statusMessage = L("status.ready")
-        } else if appState.statusMessage == L("pipeline.loading_llm") {
-            appState.statusMessage = L("status.ready")
-        }
-        appState.llmModelReady = false
-        Task { await textProcessor.unloadLLM() }
-    }
-
     func unloadLocalASR() {
         qwenSpeechEngine = nil
     }
 
-    func loadLLM() {
-        Task {
-            await preloadFormattingModel(showFailureInStatus: true)
-        }
-    }
-
-    func preloadFormattingModel(showFailureInStatus: Bool) async {
+    @discardableResult
+    func preloadFormattingModelNow(showFailureInStatus: Bool) async -> EspressoGenerationOutcome? {
         formattingPreloadGeneration += 1
         let preloadGeneration = formattingPreloadGeneration
         guard !appState.settings.useRemoteLLM else {
             appState.llmModelReady = true
-            return
+            return nil
         }
 
         let settings = appState.settings
@@ -49,7 +27,7 @@ extension VoicePipeline {
         let model = settings.llmModel.trimmingCharacters(in: .whitespacesAndNewlines)
         let espressoPath = settings.espressoModelPath.trimmingCharacters(in: .whitespacesAndNewlines)
         let selectedModel = backend == .espresso ? espressoPath : model
-        guard !selectedModel.isEmpty else { return }
+        guard !selectedModel.isEmpty else { return nil }
 
         let catalog = ModelCatalog.shared
         let modelIsAvailable: Bool
@@ -68,7 +46,7 @@ extension VoicePipeline {
                 catalog.updateLLMStatus(model, status: .error(message))
             }
             appState.statusMessage = showFailureInStatus ? message : L("status.ready")
-            return
+            return nil
         }
 
         appState.statusMessage = L("pipeline.loading_llm")
@@ -83,28 +61,28 @@ extension VoicePipeline {
         )
         guard preloadGeneration == formattingPreloadGeneration,
               formattingSelectionMatches(backend: backend, model: model, espressoPath: espressoPath) else {
-            return
+            return nil
         }
         let ready = warmup.loaded ? await textProcessor.isLLMReady(for: backend) : false
         guard preloadGeneration == formattingPreloadGeneration,
               formattingSelectionMatches(backend: backend, model: model, espressoPath: espressoPath) else {
-            return
+            return nil
         }
         appState.llmModelReady = warmup.loaded && ready
 
         if appState.llmModelReady {
-            if warmup.fallbackMessage != nil,
-               !settings.useRemoteLLM,
-               settings.localLLMBackend == .espresso {
-                settings.localLLMBackend = .mlx
-            }
+            EspressoFallbackPolicy.selectMLXIfNeeded(
+                after: warmup.espressoOutcome,
+                settings: settings,
+                expectedEspressoModelPath: espressoPath
+            )
             if backend == .mlx {
                 catalog.updateLLMStatus(model, status: .ready)
             }
             Log.info("[VoicePipeline] LLM model loaded into memory, ready for instant inference")
-            appState.statusMessage = showFailureInStatus
-                ? (warmup.fallbackMessage ?? L("status.ready"))
-                : L("status.ready")
+            appState.statusMessage = warmup.espressoOutcome?.message ?? L("status.ready")
+            presentEspressoWarmupOutcomeIfNeeded(warmup.espressoOutcome)
+            return warmup.espressoOutcome
         } else {
             if backend == .mlx {
                 catalog.updateLLMStatus(model, status: .error(L("pipeline.model_load_failed")))
@@ -113,7 +91,11 @@ extension VoicePipeline {
             let message = backend == .espresso
                 ? (warmup.errorMessage ?? L("error.espresso_runtime_failed"))
                 : L("pipeline.model_load_failed")
-            appState.statusMessage = showFailureInStatus ? message : L("status.ready")
+            appState.statusMessage = warmup.espressoOutcome != nil || showFailureInStatus
+                ? message
+                : L("status.ready")
+            presentEspressoWarmupOutcomeIfNeeded(warmup.espressoOutcome)
+            return warmup.espressoOutcome
         }
     }
 
@@ -132,12 +114,18 @@ extension VoicePipeline {
         }
     }
 
-    func applyEspressoFallbackIfNeeded(settings: AppSettings) async -> String? {
-        guard let message = await textProcessor.consumeEspressoFallbackMessage() else { return nil }
-        if !settings.useRemoteLLM, settings.localLLMBackend == .espresso {
-            settings.localLLMBackend = .mlx
-        }
-        return message
+    func consumeEspressoOutcome(
+        settings: AppSettings,
+        expectedEspressoModelPath: String
+    ) async -> EspressoGenerationOutcome? {
+        let outcome = await textProcessor.consumeEspressoOutcome()
+        guard !Task.isCancelled else { return nil }
+        EspressoFallbackPolicy.selectMLXIfNeeded(
+            after: outcome,
+            settings: settings,
+            expectedEspressoModelPath: expectedEspressoModelPath
+        )
+        return outcome
     }
 
     func ensureEngineLoaded(requestPermission: Bool = true) async {

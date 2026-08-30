@@ -3,7 +3,7 @@
   "id": "2026-08-29-espresso-ane",
   "title": "Add a selectable Espresso ANE inference backend",
   "risk": "high",
-  "status": "implementing",
+  "status": "verified",
   "owners": [
     "repository maintainer"
   ],
@@ -13,6 +13,7 @@
     "When Espresso is selected, local text generation and model warmup use its ANE runtime.",
     "When Espresso fails, an installed selected MLX model completes the request, the persisted backend changes to MLX, and the user sees the fallback.",
     "When both Espresso and MLX are unavailable, the user sees actionable local-model guidance.",
+    "Fallback outcome tracking is request-scoped and explicit local-model unload waits for active local work, releases every production model container, and clears the MLX memory cache.",
     "The existing MLX and remote LLM paths continue to pass the automated test suite.",
     "A real Espresso failure on the available M5 Max and macOS 27 host does not prevent local formatting when MLX is available."
   ],

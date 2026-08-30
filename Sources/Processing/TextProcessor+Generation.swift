@@ -22,44 +22,52 @@ extension TextProcessor {
             )
         }
 
-        switch options.localLLMBackend {
-        case .mlx:
-            await ensureModelLoaded(options.llmModel)
-            return try await llm.generate(
-                prompt: prompt,
-                systemPrompt: systemPrompt,
-                maxTokens: maxTokens,
-                temperature: temperature
-            )
-        case .espresso:
-            do {
-                let result = try await Self.runEspressoWithMLXFallback(
-                    espresso: {
-                        try await self.espressoLLM.loadModel(path: options.espressoModelPath)
-                        return try await self.espressoLLM.generate(
-                            prompt: prompt,
-                            systemPrompt: systemPrompt,
-                            maxTokens: maxTokens,
-                            temperature: temperature
-                        )
-                    },
-                    mlx: {
-                        try await self.llm.loadModel(id: options.llmModel)
-                        return try await self.llm.generate(
-                            prompt: prompt,
-                            systemPrompt: systemPrompt,
-                            maxTokens: maxTokens,
-                            temperature: temperature
-                        )
-                    }
+        return try await withLocalModelAccess {
+            try Task.checkCancellation()
+            switch options.localLLMBackend {
+            case .mlx:
+                await ensureModelLoaded(options.llmModel)
+                return try await llm.generate(
+                    prompt: prompt,
+                    systemPrompt: systemPrompt,
+                    maxTokens: maxTokens,
+                    temperature: temperature
                 )
-                if result.usedMLX {
-                    await espressoLLM.recordMLXFallback()
+            case .espresso:
+                do {
+                    let result = try await Self.runEspressoWithMLXFallback(
+                        espresso: {
+                            try await self.espressoLLM.loadModel(path: options.espressoModelPath)
+                            return try await self.espressoLLM.generate(
+                                prompt: prompt,
+                                systemPrompt: systemPrompt,
+                                maxTokens: maxTokens,
+                                temperature: temperature
+                            )
+                        },
+                        mlx: {
+                            try await self.llm.loadModel(id: options.llmModel)
+                            return try await self.llm.generate(
+                                prompt: prompt,
+                                systemPrompt: systemPrompt,
+                                maxTokens: maxTokens,
+                                temperature: temperature
+                            )
+                        }
+                    )
+                    if result.usedMLX {
+                        _ = await espressoLLM.consumeLastFailureMessage()
+                        await Self.recordEspressoOutcome(.fallback)
+                        Log.info("[TextProcessor] Espresso failed; used the selected MLX model")
+                    }
+                    return result.value
+                } catch let error as EspressoMLXFallbackError {
+                    _ = await espressoLLM.consumeLastFailureMessage()
+                    await Self.recordEspressoOutcome(.unavailable)
+                    Log.sensitive("[TextProcessor] Espresso and MLX fallback failed: \(error.details)")
+                    Log.error("[TextProcessor] MLX fallback unavailable")
+                    throw error
                 }
-                return result.value
-            } catch let error as EspressoMLXFallbackError {
-                await espressoLLM.recordMLXFallbackFailure(details: error.details)
-                throw error
             }
         }
     }
@@ -71,10 +79,14 @@ extension TextProcessor {
         do {
             return (try await espresso(), false)
         } catch {
+            try Task.checkCancellation()
             let espressoFailure = error.localizedDescription
             do {
-                return (try await mlx(), true)
+                let value = try await mlx()
+                try Task.checkCancellation()
+                return (value, true)
             } catch {
+                try Task.checkCancellation()
                 throw EspressoMLXFallbackError(
                     espressoFailure: espressoFailure,
                     mlxFailure: error.localizedDescription
@@ -104,14 +116,17 @@ extension TextProcessor {
         maxTokens: Int,
         temperature: Double
     ) async throws -> String {
-        try await vlm.loadModel(id: model)
-        return try await vlm.generate(
-            prompt: prompt,
-            systemPrompt: systemPrompt,
-            image: image,
-            maxTokens: maxTokens,
-            temperature: temperature
-        )
+        try await withLocalModelAccess {
+            try Task.checkCancellation()
+            try await vlm.loadModel(id: model)
+            return try await vlm.generate(
+                prompt: prompt,
+                systemPrompt: systemPrompt,
+                image: image,
+                maxTokens: maxTokens,
+                temperature: temperature
+            )
+        }
     }
 
     func shouldUseScreenImage(options: TextProcessingOptions, image: CGImage?) -> Bool {

@@ -52,12 +52,22 @@ final class OverlayLayoutTests: XCTestCase {
         let appState = AppState()
         appState.phase = .done
         appState.statusMessage = L("status.espresso_fell_back_to_mlx")
+        appState.completionKind = .espressoFallback
 
         let layout = OverlayLayout(appState: appState)
 
         XCTAssertEqual(layout.width, 288)
         XCTAssertEqual(layout.height, 56)
         XCTAssertFalse(layout.isInteractive)
+    }
+
+    func testFallbackLayoutDoesNotDependOnLocalizedMessageText() {
+        let appState = AppState()
+        appState.phase = .done
+        appState.statusMessage = "Changed copy"
+        appState.completionKind = .espressoFallback
+
+        XCTAssertEqual(OverlayLayout(appState: appState).height, 56)
     }
 
     func testOverlayPlacementCentersAboveVisibleScreenBottom() {

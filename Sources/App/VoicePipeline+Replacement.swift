@@ -235,18 +235,22 @@ extension VoicePipeline {
             allowsGuardFallback: false,
             dictionarySnapshot: dictionarySnapshot
         )
-        let fallbackMessage = await applyEspressoFallbackIfNeeded(settings: appState.settings)
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         appState.lastFormattingDurationSeconds = elapsed
         Log.info("[VoicePipeline] Smart Format completed in \(String(format: "%.2f", elapsed))s")
 
         guard !Task.isCancelled else { return }
         guard var replacement = appState.pendingReplacement, replacement.id == replacementID else { return }
+        let espressoOutcome = await consumeEspressoOutcome(
+            settings: appState.settings,
+            expectedEspressoModelPath: processingOptions.espressoModelPath
+        )
+        guard !Task.isCancelled else { return }
 
         guard !formattedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             Log.info("[VoicePipeline] deferred Smart Format produced no LLM output")
             replacement.state = .failed
-            replacement.message = L("pipeline.formatting_failed")
+            replacement.message = espressoOutcome?.message ?? L("pipeline.formatting_failed")
             replacement.context = inputContext
             appState.pendingReplacement = replacement
             return
@@ -254,7 +258,7 @@ extension VoicePipeline {
 
         replacement.formattedText = formattedText
         replacement.state = .ready
-        replacement.message = fallbackMessage ?? L("pipeline.formatted_ready")
+        replacement.message = espressoOutcome?.message ?? L("pipeline.formatted_ready")
         replacement.context = inputContext
         appState.pendingReplacement = replacement
     }
@@ -278,36 +282,4 @@ extension VoicePipeline {
         )
     }
 
-    private func immediateInsertText(
-        from raw: String,
-        inputLanguage: InputLanguage,
-        dictionarySnapshot: PersonalDictionarySnapshot
-    ) -> String {
-        let cleaned = textProcessor.prepareForFormatting(
-            text: raw,
-            inputLanguage: inputLanguage,
-            dictionarySnapshot: dictionarySnapshot
-        )
-        let fallback = textProcessor.basicClean(
-            text: raw,
-            inputLanguage: inputLanguage,
-            dictionarySnapshot: dictionarySnapshot
-        )
-        if !cleaned.isEmpty { return cleaned }
-        if !fallback.isEmpty { return fallback }
-        return ""
-    }
-
-    private func replacementCopyMessage(for reason: DeferredReplacementCopyReason) -> String {
-        switch reason {
-        case .expired:
-            return L("pipeline.replacement_copied_expired")
-        case .missingTarget:
-            return L("pipeline.replacement_copied_missing_target")
-        case .appChanged:
-            return L("pipeline.replacement_copied_app_changed")
-        case .notReady:
-            return L("pipeline.replacement_not_ready")
-        }
-    }
 }

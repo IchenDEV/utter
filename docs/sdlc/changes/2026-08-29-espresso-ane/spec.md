@@ -25,10 +25,18 @@ For local Espresso warmup and generation, `TextProcessor` first attempts the
 selected `.esp` bundle. If that attempt fails, it tries the already-selected
 MLX model through the existing `LLMEngine`; `LLMEngine` continues to require a
 complete local model and never downloads during fallback. A successful MLX
-fallback records a localized notice. The main app consumes that notice, changes
-the persisted backend to MLX only if Espresso is still selected, and shows the
-notice in the completion state. Integration sessions also persist the backend
-change and log it without changing their response schema.
+fallback records a request-scoped semantic outcome. The main app consumes that
+outcome, changes the persisted backend to MLX only if Espresso is still
+selected, and shows the notice in the completion state. Integration sessions
+also persist the backend change and log it without changing their response
+schema.
+
+The voice pipeline, integration sessions, and model benchmark UI share one
+application-owned `TextProcessor`. A cancellable FIFO gate serializes complete
+local-model transactions, including multimodal-to-text fallback, benchmarking,
+warmup, and explicit unload. Benchmark containers are dropped after each run;
+explicit unload waits for active work, drops every local container, and then
+clears MLX's reusable allocation cache.
 
 Pin Espresso to the reviewed `v0.9.0` source plus a three-line Swift 6.2
 compatibility patch. The patch gives three internal compiled-kernel holder
@@ -49,7 +57,10 @@ The UI warning explicitly states the private-API and App Store limitation. No
 fallback is silent: successful fallback produces a localized status message
 and changes the persisted backend to MLX so later requests do not repeatedly
 compile a rejected private ANE program. A concurrent user change away from
-Espresso is preserved.
+Espresso is preserved. Outcome tracking is scoped to one processing task, so
+cancellation, unload, language changes, and unrelated requests cannot consume
+stale fallback state. Explicit model unload drops all local model containers and
+clears MLX's reusable memory cache.
 
 The patched dependency is pinned by commit rather than a moving branch. Rollback
 returns the package URL and version requirement to upstream `v0.9.0` once an
@@ -58,10 +69,11 @@ experimental backend.
 
 ## Test strategy
 
-Persistence, prompt formatting, and Espresso-to-MLX fallback ordering and
-failure behavior have focused unit tests. The complete Swift suite and
-repository checks cover existing paths and package integration. A
-release-style app build checks dependency and Metal/resource packaging. Real
+Persistence, prompt formatting, request-scoped Espresso-to-MLX fallback
+ordering, failure behavior, cancellable local-model serialization, shared
+processor wiring, and unload memory behavior have focused tests. The complete
+Swift suite and repository checks cover existing paths and package integration.
+A release-style app build checks dependency and Metal/resource packaging. Real
 inference is exercised with a prepared GPT-2 `.esp` bundle and recorded even if
 the host's private ANE compiler rejects it.
 

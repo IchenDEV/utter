@@ -8,7 +8,7 @@ final class VoicePipeline {
     let audioCapture = AudioCaptureManager()
     let textInserter = TextInserter()
     let correctionCapture = CorrectionCaptureService()
-    let textProcessor = TextProcessor()
+    let textProcessor: TextProcessor
     let overlay = OverlayPanel()
     var whisperEngine: WhisperEngine?
     var appleSpeechEngine: AppleSpeechEngine?
@@ -19,6 +19,7 @@ final class VoicePipeline {
     var processingTask: Task<Void, Never>?
     var replacementTask: Task<Void, Never>?
     var hideOverlayTask: Task<Void, Never>?
+    var formattingModelLifecycleTask: Task<EspressoGenerationOutcome?, Never>?
     var recordingTargetApp: NSRunningApplication?
     var formattingPreloadGeneration = 0
 
@@ -32,8 +33,9 @@ final class VoicePipeline {
         }
     }
 
-    init(appState: AppState) {
+    init(appState: AppState, textProcessor: TextProcessor = TextProcessor()) {
         self.appState = appState
+        self.textProcessor = textProcessor
     }
 
     func warmUp() async {
@@ -64,7 +66,12 @@ final class VoicePipeline {
         }
 
         if shouldLoadFormatting {
-            await preloadFormattingModel(showFailureInStatus: false)
+            let espressoOutcome = await enqueueFormattingModelPreload(
+                showFailureInStatus: false
+            ).value
+            if espressoOutcome != nil {
+                return
+            }
         }
 
         markReadyIfPossible()
@@ -188,14 +195,16 @@ final class VoicePipeline {
 
         processingTask = Task { @MainActor [weak self] in
             guard let self else { return }
-            await self.processRecording(
-                audioURL: audioURL,
-                audioActivity: audioActivity,
-                language: language,
-                settings: settings,
-                inputMode: inputMode,
-                targetApp: resolvedTargetApp
-            )
+            await TextProcessor.withEspressoOutcomeTracking {
+                await self.processRecording(
+                    audioURL: audioURL,
+                    audioActivity: audioActivity,
+                    language: language,
+                    settings: settings,
+                    inputMode: inputMode,
+                    targetApp: resolvedTargetApp
+                )
+            }
         }
     }
 
