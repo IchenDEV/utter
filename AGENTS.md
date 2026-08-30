@@ -49,9 +49,9 @@ Utter is a macOS menu bar voice input app built with Swift 6 / SwiftUI / AppKit.
 
 - Read `docs/sdlc/README.md` before non-trivial implementation, automation, test, UI, dependency, permission, or release changes.
 - Create or update `docs/sdlc/changes/<yyyy-mm-dd-slug>/`. Low risk requires intent, plan, and verification; medium/high risk also requires a spec.
-- Keep `state.json` honest. An agent may advance work to `verified` with current evidence, but may not record its own work as human approval.
+- **Every stage requires explicit human approval before the next one starts.** Set the artifact's `Status: pending approval` and stop for the user's decision; never mark a stage `approved` on the user's behalf. `approved` requires `Approved-by` and `Approved-date`. Artifacts without a Status header are legacy merged bundles.
 - Begin implementation only after intent has observable acceptance criteria and medium/high-risk design choices have been reviewed.
-- Always run `python3 scripts/sdlc.py validate --worktree`, `bash scripts/ci-basic-checks.sh`, and `swift test`. Add release-style build, real-window visual QA, permission/privacy paths, or clean-machine checks in proportion to risk.
+- Always run `bash scripts/sdlc-checks.sh`, `bash scripts/ci-basic-checks.sh`, and `swift test`. Add release-style build, real-window visual QA, permission/privacy paths, or clean-machine checks in proportion to risk.
 - High-risk changes require an independent verifier, explicit rollback, PR approval, and protected production approval.
 - A production incident must link a corrective intent and add a regression test, deterministic guardrail, eval case, or explicit reason automation is impossible.
 - Never fall back to ad-hoc signing when configured signing fails. A self-signed release must use the configured identity, pass the same artifact/checksum checks, and be labeled as not Apple-notarized.

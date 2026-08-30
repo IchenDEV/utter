@@ -24,25 +24,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate changed SDLC artifacts
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          BASE_REF: ${{ github.base_ref }}
-          BEFORE_SHA: ${{ github.event.before }}
-        run: |
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            python3 scripts/sdlc.py validate --base "origin/$BASE_REF"
-          elif [ "$EVENT_NAME" = "push" ]; then
-            if [ -z "$BEFORE_SHA" ] || [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
-              echo "Push event has no usable previous SHA; refusing schema-only validation"
-              exit 1
-            fi
-            git fetch --no-tags origin "$BEFORE_SHA"
-            git cat-file -e "$BEFORE_SHA^{commit}"
-            python3 scripts/sdlc.py validate --push-base "$BEFORE_SHA"
-          else
-            python3 scripts/sdlc.py validate
-          fi
+      - name: Validate SDLC artifact gates
+        run: bash ./scripts/sdlc-checks.sh
 
       - name: Run linked repository checks
         run: bash ./scripts/ci-basic-checks.sh

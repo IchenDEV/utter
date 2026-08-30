@@ -1,5 +1,10 @@
 # Spec: {{CHANGE_TITLE}}
 
+**Status:** draft            # draft | pending approval | approved | rejected | blocked
+**Approved-by:** —
+**Approved-date:** —
+**Upstream:** —             # link to the previous stage artifact
+
 ## Context
 
 {{Summarize the relevant existing architecture and evidence.}}

@@ -96,7 +96,7 @@ Material changes follow the artifact-driven workflow in
 [`docs/sdlc/README.md`](docs/sdlc/README.md). Before opening a pull request, run:
 
 ```bash
-python3 scripts/sdlc.py validate --worktree
+bash scripts/sdlc-checks.sh
 bash scripts/ci-basic-checks.sh
 swift test
 ```
