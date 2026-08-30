@@ -1,5 +1,8 @@
 # Incident: {{INCIDENT_TITLE}}
 
+**Status:** open            # open | mitigated | resolved
+**Linked change:** —        # corrective intent once one exists
+
 ## Impact
 
 {{Affected users, systems, duration, and severity.}}

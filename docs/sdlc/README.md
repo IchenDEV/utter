@@ -34,27 +34,28 @@ risk, and a one-line permission or release change can be high risk.
 Non-trivial work lives at `docs/sdlc/changes/<yyyy-mm-dd-slug>/`:
 
 ```text
-state.json       Machine-readable identity, risk, status, governed paths, and artifact paths
 intent.md        Problem, outcome, scope, constraints, and acceptance criteria
 spec.md          Design and failure analysis; required for medium/high risk
 plan.md          Executable work items and verification plan
 verification.md  Commands, results, visual/runtime evidence, and residual risk
 ```
 
-Copy starting points from `docs/sdlc/templates/`. Status transitions are:
-`intent -> designed -> planned -> implementing -> verified -> released -> closed`.
-Only change the status when the corresponding artifact exists and its evidence
-is current. An agent may record evidence, but may not represent its own output as
-human approval.
+Copy starting points from `docs/sdlc/templates/`. Stage state lives in each
+artifact's header fields — the single source of status for the bundle:
 
-`python3 scripts/sdlc.py validate --worktree` validates local work. Pull-request
-CI compares the branch to its base and requires a changed verified bundle when
-governed paths change. Trivial documentation-only changes stay on the fast path.
+- `Status`: one of `draft | pending approval | approved | rejected | blocked`;
+  `approved` must be paired with `Approved-by` and `Approved-date`.
+- **Strict per-stage approval.** A stage may only become `approved` after the
+  previous stage is `approved` (intent -> spec -> plan -> verification ->
+  release). Set `Status: pending approval` and stop for the human decision;
+  an agent may record evidence, but may never represent its own output as
+  human approval. Rejections and blocks stay in the artifact with a reason.
+- Bundles merged before this gate existed carry no `Status` header and are
+  treated as historical archives by the checks.
 
-The validator also enforces a minimum risk for deterministic control surfaces:
-entitlements, workflows, signing/build/release verification, the SDLC validator,
-and its CI guard are high risk; dependencies, agent context, issue/review policy,
-and other automation are at least medium risk.
+`bash scripts/sdlc-checks.sh` validates the gate locally. Pull-request CI runs
+the same script in the `SDLC Gate` job. Trivial documentation-only changes
+stay on the fast path.
 
 ## Definition of ready
 
@@ -83,9 +84,9 @@ A change is ready for PR approval when:
 
 Repository instructions and this document are guidance. Enforcement lives in:
 
-- `scripts/sdlc.py`: artifact schema and governed-change check;
-- `scripts/ci-basic-checks.sh`: linked resources, localization, identifiers, and
-  repository invariants;
+- `scripts/sdlc-checks.sh`: stage order and approval-field gate;
+- `scripts/ci-basic-checks.sh`: SDLC gate, linked resources, localization,
+  identifiers, and repository invariants;
 - `.github/workflows/pr.yml`: artifact validation, unit tests, and release-style
   app build, summarized by the stable `SDLC Gate` job;
 - `.github/workflows/release.yml`: main-ancestry, tests, explicit signing-mode

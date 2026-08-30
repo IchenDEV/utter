@@ -21,8 +21,7 @@ step "Checking Package.swift"
 swift package describe >/dev/null
 
 step "Checking SDLC artifacts and harness regression tests"
-python3 scripts/sdlc.py validate
-python3 scripts/tests/test_sdlc.py
+bash scripts/sdlc-checks.sh
 bash scripts/tests/test_build_version.sh
 bash scripts/tests/test_release_version.sh
 
