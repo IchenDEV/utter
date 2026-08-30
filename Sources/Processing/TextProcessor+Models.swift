@@ -108,11 +108,16 @@ extension TextProcessor {
     func unloadLLM() async {
         do {
             try await withLocalModelAccess {
+                let llmWasLoaded = await llm.isLoaded
+                let benchmarkWasLoaded = await benchmarkEngine.isLoaded
+                let vlmWasLoaded = await vlm.isLoaded
                 await llm.unload()
                 await benchmarkEngine.unload()
                 await espressoLLM.unload()
                 await vlm.unload()
-                Memory.clearCache()
+                if llmWasLoaded || benchmarkWasLoaded || vlmWasLoaded {
+                    Memory.clearCache()
+                }
             }
         } catch {
             Log.info("[TextProcessor] local model unload cancelled")
@@ -124,12 +129,14 @@ extension TextProcessor {
             try Task.checkCancellation()
             do {
                 let result = try await benchmarkEngine.benchmark(modelID: modelID)
+                let wasLoaded = await benchmarkEngine.isLoaded
                 await benchmarkEngine.unload()
-                Memory.clearCache()
+                if wasLoaded { Memory.clearCache() }
                 return result
             } catch {
+                let wasLoaded = await benchmarkEngine.isLoaded
                 await benchmarkEngine.unload()
-                Memory.clearCache()
+                if wasLoaded { Memory.clearCache() }
                 throw error
             }
         }
