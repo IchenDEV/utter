@@ -9,6 +9,7 @@
 - [x] Add focused settings and prompt-format tests.
 - [x] Exercise a prepared GPT-2 bundle on the available ANE host.
 - [x] Merge current `origin/main` and preserve both dependency sets.
+- [x] Resolve independent-review findings for error visibility, stale preload state, and path privacy.
 
 ## Verification plan
 

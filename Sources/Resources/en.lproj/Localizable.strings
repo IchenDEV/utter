@@ -464,6 +464,7 @@
 "error.load_failed" = "Model loading failed: %@";
 "error.network_request_failed" = "Network request failed — please try again";
 "error.operation_failed" = "Operation failed — please try again";
+"error.espresso_runtime_failed" = "Espresso could not run this model on the ANE. Switch to MLX or try a supported macOS and device.";
 "error.volc_not_configured" = "Doubao ASR not configured — enter API credentials in Settings → Models";
 "error.volc_invalid_endpoint" = "Invalid ASR endpoint URL";
 "error.volc_audio_conversion" = "Audio conversion to PCM 16kHz failed";

@@ -16,26 +16,32 @@ actor EspressoLLMEngine {
     }
 
     private var model: LoadedModel?
+    private var lastFailureMessage: String?
 
     func loadModel(path: String) throws {
         let expandedPath = NSString(string: path).expandingTildeInPath
         let url = URL(fileURLWithPath: expandedPath, isDirectory: true).standardizedFileURL
         guard model?.path != url.path else { return }
 
-        Log.info("[EspressoLLMEngine] loading bundle: \(url.path)")
-        let bundle = try ESPRuntimeBundle.open(at: url)
-        let selection = try ESPRuntimeRunner.resolve(bundle: bundle)
-        guard selection.backend == .anePrivate else {
-            throw EspressoLLMError.aneBackendUnavailable
-        }
+        lastFailureMessage = nil
+        Log.info("[EspressoLLMEngine] loading bundle: \(url.lastPathComponent)")
+        do {
+            let bundle = try ESPRuntimeBundle.open(at: url)
+            let selection = try ESPRuntimeRunner.resolve(bundle: bundle)
+            guard selection.backend == .anePrivate else {
+                throw EspressoLLMError.aneBackendUnavailable
+            }
 
-        let engine = try RealModelInferenceEngine.build(
-            config: bundle.config,
-            weightDir: bundle.archive.weightsURL.path,
-            tokenizerDir: bundle.archive.tokenizerURL.path
-        )
-        model = LoadedModel(path: url.path, name: bundle.config.name, engine: engine)
-        Log.info("[EspressoLLMEngine] bundle ready for ANE inference")
+            let engine = try RealModelInferenceEngine.build(
+                config: bundle.config,
+                weightDir: bundle.archive.weightsURL.path,
+                tokenizerDir: bundle.archive.tokenizerURL.path
+            )
+            model = LoadedModel(path: url.path, name: bundle.config.name, engine: engine)
+            Log.info("[EspressoLLMEngine] bundle ready for ANE inference")
+        } catch {
+            throw recordFailure(error)
+        }
     }
 
     func generate(
@@ -45,17 +51,23 @@ actor EspressoLLMEngine {
         temperature: Double
     ) throws -> String {
         guard let model else { throw EspressoLLMError.modelNotLoaded }
+        lastFailureMessage = nil
         let input = Self.formatPrompt(
             user: prompt,
             system: systemPrompt,
             modelName: model.name
         )
         let started = CFAbsoluteTimeGetCurrent()
-        let result = try model.engine.generate(
-            prompt: input,
-            maxTokens: maxTokens,
-            temperature: Float(temperature)
-        )
+        let result: GenerationResult
+        do {
+            result = try model.engine.generate(
+                prompt: input,
+                maxTokens: maxTokens,
+                temperature: Float(temperature)
+            )
+        } catch {
+            throw recordFailure(error)
+        }
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         Log.info(
             "[EspressoLLMEngine] generated \(result.text.count) chars on ANE in "
@@ -68,6 +80,20 @@ actor EspressoLLMEngine {
 
     func unload() {
         model = nil
+        lastFailureMessage = nil
+    }
+
+    func consumeLastFailureMessage() -> String? {
+        defer { lastFailureMessage = nil }
+        return lastFailureMessage
+    }
+
+    private func recordFailure(_ error: Error) -> EspressoLLMError {
+        let mapped = error as? EspressoLLMError ?? .runtimeFailure
+        Log.sensitive("[EspressoLLMEngine] ANE runtime detail: \(error.localizedDescription)")
+        Log.error("[EspressoLLMEngine] \(mapped.localizedDescription)")
+        lastFailureMessage = mapped.localizedDescription
+        return mapped
     }
 
     static func formatPrompt(user: String, system: String, modelName: String) -> String {
@@ -83,11 +109,13 @@ actor EspressoLLMEngine {
 enum EspressoLLMError: LocalizedError {
     case modelNotLoaded
     case aneBackendUnavailable
+    case runtimeFailure
 
     var errorDescription: String? {
         switch self {
         case .modelNotLoaded: return L("error.espresso_not_loaded")
         case .aneBackendUnavailable: return L("error.espresso_ane_unavailable")
+        case .runtimeFailure: return L("error.espresso_runtime_failed")
         }
     }
 }

@@ -464,6 +464,7 @@
 "error.load_failed" = "模型加载失败: %@";
 "error.network_request_failed" = "网络请求失败，请稍后重试";
 "error.operation_failed" = "操作失败，请重试";
+"error.espresso_runtime_failed" = "Espresso 无法在这台设备的 ANE 上运行此模型。请切换到 MLX，或改用受支持的 macOS 与设备。";
 "error.volc_not_configured" = "豆包语音识别未配置 — 请在 设置 → 模型 中填写 API 凭据";
 "error.volc_invalid_endpoint" = "语音识别接口地址无效";
 "error.volc_audio_conversion" = "音频转换为 PCM 16kHz 失败";

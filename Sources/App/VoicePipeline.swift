@@ -20,6 +20,7 @@ final class VoicePipeline {
     var replacementTask: Task<Void, Never>?
     var hideOverlayTask: Task<Void, Never>?
     var recordingTargetApp: NSRunningApplication?
+    var formattingPreloadGeneration = 0
 
     var currentEngine: (any SpeechEngine)? {
         switch appState.settings.speechEngine {

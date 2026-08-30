@@ -9,13 +9,11 @@ final class TextProcessor {
     let vlm = VLMEngine()
     let remoteLLMClient = RemoteLLMClient()
     private let dictionary = PersonalDictionary.shared
-    var isLLMReady: Bool {
-        get async {
-            if AppSettings.shared.useRemoteLLM { return true }
-            switch AppSettings.shared.localLLMBackend {
-            case .mlx: return await llm.isLoaded
-            case .espresso: return await espressoLLM.isLoaded
-            }
+
+    func isLLMReady(for backend: LocalLLMBackend) async -> Bool {
+        switch backend {
+        case .mlx: return await llm.isLoaded
+        case .espresso: return await espressoLLM.isLoaded
         }
     }
 
@@ -26,8 +24,11 @@ final class TextProcessor {
     }
 
     @discardableResult
-    func warmUpLLM(model: String, backend: LocalLLMBackend, espressoModelPath: String) async -> Bool {
-        if AppSettings.shared.useRemoteLLM { return true }
+    func warmUpLLM(
+        model: String,
+        backend: LocalLLMBackend,
+        espressoModelPath: String
+    ) async -> (loaded: Bool, errorMessage: String?) {
         do {
             switch backend {
             case .mlx:
@@ -35,11 +36,18 @@ final class TextProcessor {
             case .espresso:
                 try await espressoLLM.loadModel(path: espressoModelPath)
             }
-            return true
+            return (true, nil)
         } catch {
             Log.error("[TextProcessor] LLM warmup failed: \(error.localizedDescription)")
-            return false
+            if backend == .espresso {
+                _ = await espressoLLM.consumeLastFailureMessage()
+            }
+            return (false, error.localizedDescription)
         }
+    }
+
+    func consumeEspressoFailureMessage() async -> String? {
+        await espressoLLM.consumeLastFailureMessage()
     }
 
     func basicClean(

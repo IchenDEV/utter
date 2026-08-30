@@ -294,6 +294,15 @@ final class ConfigurationTests: XCTestCase {
         )
     }
 
+    func testEspressoRuntimeFailureSuggestsMLXFallback() {
+        XCTAssertTrue(
+            Loc.string("error.espresso_runtime_failed", language: .english).contains("MLX")
+        )
+        XCTAssertTrue(
+            Loc.string("error.espresso_runtime_failed", language: .chinese).contains("MLX")
+        )
+    }
+
     func testDeveloperHTTPTokenCanBeReset() {
         let (defaults, suiteName) = makeIsolatedDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

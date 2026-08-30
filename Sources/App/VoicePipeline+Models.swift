@@ -10,6 +10,7 @@ extension VoicePipeline {
     }
 
     func unloadLLM() {
+        formattingPreloadGeneration += 1
         processingTask?.cancel()
         processingTask = nil
         replacementTask?.cancel()
@@ -17,6 +18,8 @@ extension VoicePipeline {
         appState.clearPendingReplacement()
         if appState.phase == .processing {
             appState.phase = .idle
+            appState.statusMessage = L("status.ready")
+        } else if appState.statusMessage == L("pipeline.loading_llm") {
             appState.statusMessage = L("status.ready")
         }
         appState.llmModelReady = false
@@ -34,6 +37,8 @@ extension VoicePipeline {
     }
 
     func preloadFormattingModel(showFailureInStatus: Bool) async {
+        formattingPreloadGeneration += 1
+        let preloadGeneration = formattingPreloadGeneration
         guard !appState.settings.useRemoteLLM else {
             appState.llmModelReady = true
             return
@@ -71,13 +76,21 @@ extension VoicePipeline {
             catalog.updateLLMStatus(model, status: .loading, detail: L("model.loading"))
         }
 
-        let loaded = await textProcessor.warmUpLLM(
+        let warmup = await textProcessor.warmUpLLM(
             model: model,
             backend: backend,
             espressoModelPath: espressoPath
         )
-        let ready = await textProcessor.isLLMReady
-        appState.llmModelReady = loaded && ready
+        guard preloadGeneration == formattingPreloadGeneration,
+              formattingSelectionMatches(backend: backend, model: model, espressoPath: espressoPath) else {
+            return
+        }
+        let ready = warmup.loaded ? await textProcessor.isLLMReady(for: backend) : false
+        guard preloadGeneration == formattingPreloadGeneration,
+              formattingSelectionMatches(backend: backend, model: model, espressoPath: espressoPath) else {
+            return
+        }
+        appState.llmModelReady = warmup.loaded && ready
 
         if appState.llmModelReady {
             if backend == .mlx {
@@ -90,7 +103,25 @@ extension VoicePipeline {
                 catalog.updateLLMStatus(model, status: .error(L("pipeline.model_load_failed")))
             }
             Log.info("[VoicePipeline] LLM warmup failed, will retry on demand")
-            appState.statusMessage = showFailureInStatus ? L("pipeline.model_load_failed") : L("status.ready")
+            let message = backend == .espresso
+                ? (warmup.errorMessage ?? L("error.espresso_runtime_failed"))
+                : L("pipeline.model_load_failed")
+            appState.statusMessage = showFailureInStatus ? message : L("status.ready")
+        }
+    }
+
+    private func formattingSelectionMatches(
+        backend: LocalLLMBackend,
+        model: String,
+        espressoPath: String
+    ) -> Bool {
+        let settings = appState.settings
+        guard !settings.useRemoteLLM, settings.localLLMBackend == backend else { return false }
+        switch backend {
+        case .mlx:
+            return settings.llmModel.trimmingCharacters(in: .whitespacesAndNewlines) == model
+        case .espresso:
+            return settings.espressoModelPath.trimmingCharacters(in: .whitespacesAndNewlines) == espressoPath
         }
     }
 

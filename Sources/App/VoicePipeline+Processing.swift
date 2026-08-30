@@ -253,7 +253,8 @@ extension VoicePipeline {
         let finalText = output.text
         guard !finalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             Log.info("[VoicePipeline] skipping empty final text")
-            showErrorHint(L("error.operation_failed"))
+            let espressoFailure = await textProcessor.consumeEspressoFailureMessage()
+            showErrorHint(espressoFailure ?? L("error.operation_failed"))
             return
         }
 
