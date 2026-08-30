@@ -3,6 +3,7 @@ import SwiftUI
 
 struct HistoryRecordsView: View {
     @ObservedObject var history: InputHistory
+    @Binding var section: HistorySection
     @ObservedObject private var settings = AppSettings.shared
     @State private var searchText = ""
     @State private var showClearConfirm = false
@@ -19,19 +20,21 @@ struct HistoryRecordsView: View {
         HStack(spacing: 10) {
             TextField(L("history.search"), text: $searchText)
                 .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 320)
+                .frame(minWidth: 180, maxWidth: 260)
 
             Text(String(format: L("history.records_count"), filteredRecords.count))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            Spacer()
+            Spacer(minLength: 0)
+
+            HistoryModePicker(selection: $section)
 
             Picker(L("settings.history_retention"), selection: $settings.historyRetention) {
                 ForEach(HistoryRetention.allCases, id: \.self) { Text($0.label) }
             }
             .labelsHidden()
-            .frame(width: 120)
+            .frame(width: 110)
             .controlSize(.small)
 
             Button(role: .destructive) {
@@ -51,7 +54,7 @@ struct HistoryRecordsView: View {
                 Text(L("common.cannot_undo"))
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, SettingsPageLayout.contentInset)
         .padding(.vertical, 10)
     }
 
@@ -66,7 +69,7 @@ struct HistoryRecordsView: View {
                         recordCard(record)
                     }
                 }
-                .padding(16)
+                .padding(SettingsPageLayout.contentInset)
             }
         }
     }
@@ -74,13 +77,9 @@ struct HistoryRecordsView: View {
     private var emptyState: some View {
         VStack(spacing: 10) {
             Spacer()
-            if searchText.isEmpty {
-                SettingsPageIllustration(kind: .activity, size: 84)
-            } else {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.quaternary)
-            }
+            Image(systemName: searchText.isEmpty ? "clock.arrow.circlepath" : "magnifyingglass")
+                .font(.system(size: 24))
+                .foregroundStyle(.quaternary)
             Text(searchText.isEmpty ? L("history.empty") : L("history.no_match"))
                 .font(.callout)
                 .foregroundStyle(.secondary)

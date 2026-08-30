@@ -4,6 +4,7 @@ import SwiftUI
 struct HistoryInsightsOverview: View {
     let analytics: InputHistoryAnalytics
     @Binding var range: InputAnalyticsRange
+    @Binding var section: HistorySection
 
     private let metricColumns = [GridItem(.adaptive(minimum: 155), spacing: 12)]
 
@@ -15,12 +16,12 @@ struct HistoryInsightsOverview: View {
                 chartRow
                 HourlyInsightCard(activity: analytics.hourlyActivity)
             }
-            .padding(20)
+            .padding(SettingsPageLayout.contentInset)
         }
     }
 
     private var rangeBar: some View {
-        HStack {
+        HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L("history.overview.title"))
                     .font(.headline)
@@ -28,7 +29,12 @@ struct HistoryInsightsOverview: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Spacer()
+            .layoutPriority(1)
+
+            Spacer(minLength: 8)
+
+            HistoryModePicker(selection: $section)
+
             Picker(L("history.range.label"), selection: $range) {
                 ForEach(InputAnalyticsRange.allCases) { item in
                     Text(rangeLabel(item)).tag(item)
@@ -36,6 +42,7 @@ struct HistoryInsightsOverview: View {
             }
             .pickerStyle(.menu)
             .controlSize(.small)
+            .fixedSize()
         }
     }
 
@@ -194,8 +201,10 @@ struct HistoryInsightsOverview: View {
     }
 
     private var chartEmptyState: some View {
-        HStack(spacing: 12) {
-            SettingsPageIllustration(kind: .activity, size: 64)
+        HStack(spacing: 8) {
+            Image(systemName: "chart.xyaxis.line")
+                .font(.system(size: 20))
+                .foregroundStyle(.quaternary)
             Text(L("history.empty"))
                 .font(.caption)
                 .foregroundStyle(.secondary)

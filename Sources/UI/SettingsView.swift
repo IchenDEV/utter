@@ -1,10 +1,14 @@
+import AppKit
 import SwiftUI
 
 enum SettingsWindowLayout {
-    static let width: CGFloat = 920
+    static let width: CGFloat = 760
     static let height: CGFloat = 680
-    static let minimumWidth: CGFloat = 760
-    static let minimumHeight: CGFloat = 540
+    static let styleMask: NSWindow.StyleMask = [.titled, .closable, .miniaturizable]
+
+    static var contentSize: NSSize {
+        NSSize(width: width, height: height)
+    }
 }
 
 enum SettingsWindowTitle {
@@ -47,10 +51,7 @@ struct SettingsView: View {
             AboutView()
                 .tabItem { Label(L("tab.about"), systemImage: "info.circle") }
         }
-        .frame(
-            minWidth: SettingsWindowLayout.minimumWidth,
-            minHeight: SettingsWindowLayout.minimumHeight
-        )
+        .frame(width: SettingsWindowLayout.width, height: SettingsWindowLayout.height)
         .background(Color(nsColor: .windowBackgroundColor))
         .id(settings.uiLanguage)
     }

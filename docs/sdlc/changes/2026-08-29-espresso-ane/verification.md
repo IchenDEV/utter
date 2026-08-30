@@ -5,7 +5,7 @@
 | Check | Result | Evidence |
 |---|---|---|
 | `bash scripts/ci-basic-checks.sh` | Pass | Current SDLC, harness, plist, localization, resource, identifier, secret-file, and symlink checks passed |
-| `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test` | Pass | 584 XCTest tests passed, 9 skipped, plus 1 Swift Testing test passed after request-scoped fallback and unload-memory changes |
+| `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer swift test` | Pass | 586 XCTest tests passed, 9 skipped, plus 1 Swift Testing test passed after merging the latest settings UI and retaining request-scoped fallback and unload-memory changes |
 | Focused fallback and localization tests | Pass | Espresso success avoids MLX; Espresso failure uses MLX; cancellation skips fallback; dual failure preserves both diagnostics; request trackers deallocate and do not cross requests; successful fallback persists MLX; localized status and typed 288 by 56 two-line overlay layout pass |
 | `DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer bash scripts/build-app.sh --app-only --sign=-` | Pass | Final source without the temporary visual-QA trigger built the Release app and CLI, assembled, ad-hoc signed, and passed artifact verification |
 | GitHub run `33296463655`, Xcode 26.6 Release build | Fail; diagnosed | Swift 6.2 emitted cross-module references to three internal `RealModelInferenceEngine.Compiled*` metadata symbols, then failed final arm64 linking |
@@ -18,6 +18,7 @@
 | Real Espresso-to-MLX fallback | Pass | On the M5 Max/macOS 27 host, a real GPT-2 `.esp` bundle produced ANE code 10, then the installed `mlx-community/Qwen3.5-2B-4bit` model generated non-empty output in the same test and produced the fallback notice |
 | Repeated fallback memory loop | Pass after fix | Twenty post-fallback MLX requests grew physical footprint by about 64 KiB. Before `Memory.clearCache()`, explicit unload retained about 1.74 GiB over baseline; after the fix MLX reported about 3 KiB active and zero cache memory, and the guarded footprint check passed. `vmmap` identified most remaining delta as empty malloc regions and first-loaded framework pages rather than active model tensors |
 | Production model ownership and unload ordering | Pass | AppDelegate injects one processor into voice and integration workflows; benchmarking runs through the same processor and releases its container; focused tests prove unload waits for active local work, nested multimodal transactions are reentrant, and cancelled waiters never run |
+| Latest-main settings merge | Pass | The native segmented model picker now orders Qwen, Gemma, Llama, ANE, Remote, and Custom; focused tests preserve explicit selection across ANE-to-MLX backend changes; Chinese and English light/dark 760-point window renders fit; and the complete suite and Release build pass |
 | Real-window fallback notice | Pass | The actual Release app displayed the 288 by 56 non-modal completion overlay without truncation in Chinese light and dark appearances and English dark appearance; the temporary environment-triggered QA entry was removed before the final build |
 
 ## Acceptance criteria

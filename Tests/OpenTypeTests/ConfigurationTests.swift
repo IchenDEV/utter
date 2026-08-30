@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import XCTest
 @testable import OpenType
@@ -58,8 +59,52 @@ final class ConfigurationTests: XCTestCase {
             "whisper", "apple", "volc", "qwen3", "mimo",
         ])
         XCTAssertEqual(SpeechEngineType.selectableCases.map(\.rawValue), [
-            "whisper", "apple", "volc", "qwen3",
+            "qwen3", "whisper", "apple", "volc",
         ])
+    }
+
+    @MainActor
+    func testFormattingModelTypesPutRecommendedQwenFirstAndCustomLast() {
+        XCTAssertEqual(FormattingModelType.allCases.map(\.rawValue), [
+            "qwen", "gemma", "llama", "espresso", "remote", "custom",
+        ])
+        XCTAssertTrue(FormattingModelType.qwen.isRecommended)
+        XCTAssertTrue(FormattingModelType.allCases.dropFirst().allSatisfy { !$0.isRecommended })
+    }
+
+    @MainActor
+    func testFormattingModelBackendChangePreservesExplicitTypeSelection() {
+        let activeGemma: ModelCatalog.ModelFamily?? = .some(.gemma)
+        XCTAssertEqual(
+            FormattingModelType.resolvedLocalSelection(
+                pending: .qwen,
+                activeFamily: activeGemma
+            ),
+            .qwen
+        )
+        XCTAssertEqual(
+            FormattingModelType.resolvedLocalSelection(
+                pending: .custom,
+                activeFamily: activeGemma
+            ),
+            .custom
+        )
+
+        let activeCustom: ModelCatalog.ModelFamily?? = .some(nil)
+        XCTAssertEqual(
+            FormattingModelType.resolvedLocalSelection(
+                pending: nil,
+                activeFamily: activeCustom
+            ),
+            .custom
+        )
+        XCTAssertEqual(
+            FormattingModelType.resolvedLocalSelection(
+                pending: nil,
+                activeFamily: nil
+            ),
+            .qwen
+        )
     }
 
     func testQwenASRDefaultUsesNativeCompatibleModel() {
@@ -209,8 +254,14 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(SettingsWindowTitle.text(for: .chinese), "Utter 设置")
     }
 
-    func testSettingsWindowWidthAllowsEnglishTabLabels() {
-        XCTAssertGreaterThanOrEqual(SettingsWindowLayout.width, 760)
+    func testSettingsWindowUsesFixedContentSize() {
+        XCTAssertEqual(SettingsWindowLayout.width, 760)
+        XCTAssertEqual(SettingsWindowLayout.height, 680)
+        XCTAssertEqual(SettingsWindowLayout.width, SettingsWindowLayout.contentSize.width)
+        XCTAssertEqual(SettingsWindowLayout.height, SettingsWindowLayout.contentSize.height)
+        XCTAssertFalse(SettingsWindowLayout.styleMask.contains(.resizable))
+        XCTAssertTrue(SettingsWindowLayout.styleMask.contains(.closable))
+        XCTAssertTrue(SettingsWindowLayout.styleMask.contains(.miniaturizable))
     }
 
     func testInstantInsertDefaultsOff() {

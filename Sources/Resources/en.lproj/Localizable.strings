@@ -15,6 +15,7 @@
 "common.copy_clipboard" = "Copy to Clipboard";
 "common.cannot_undo" = "This action cannot be undone.";
 "common.recommended" = "Recommended";
+"common.recommended_short" = "Rec.";
 "common.custom" = "Custom";
 "common.retry" = "Retry";
 

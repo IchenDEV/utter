@@ -51,12 +51,6 @@ extension ModelManagementView {
 
     var activeDownloadsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label(
-                String(format: L("model.downloads_active"), activeDownloads.count),
-                systemImage: "arrow.down.circle.fill"
-            )
-            .font(.headline)
-
             ForEach(activeDownloads) { download in
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
@@ -85,8 +79,7 @@ extension ModelManagementView {
                         .font(.system(size: 10))
                         .foregroundStyle(.tertiary)
                 }
-                .padding(10)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                .padding(.vertical, 4)
             }
         }
     }

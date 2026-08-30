@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-30-dev-app-icon-packaging",
+  "title": "Restore the Dock icon in development app bundles",
+  "risk": "medium",
+  "status": "verified",
+  "owners": [
+    "repository maintainer"
+  ],
+  "acceptanceCriteria": [
+    "The development Utter.app declares AppIcon through the canonical Info.plist.",
+    "The development bundle contains a root Contents/Resources/AppIcon.icns file for Dock and LaunchServices.",
+    "The development packaging command fails before launch when either icon invariant is missing.",
+    "Existing build, signing, helper, resource-bundle, and launch behavior remains intact."
+  ],
+  "governedPaths": [
+    "scripts/build-and-run.sh"
+  ],
+  "artifacts": {
+    "intent": "intent.md",
+    "spec": "spec.md",
+    "plan": "plan.md",
+    "verification": "verification.md"
+  }
+}

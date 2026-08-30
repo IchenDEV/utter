@@ -220,16 +220,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 width: SettingsWindowLayout.width,
                 height: SettingsWindowLayout.height
             ),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            styleMask: SettingsWindowLayout.styleMask,
             backing: .buffered,
             defer: false
         )
         window.title = SettingsWindowTitle.current
-        window.minSize = NSSize(
-            width: SettingsWindowLayout.minimumWidth,
-            height: SettingsWindowLayout.minimumHeight
-        )
         window.setFrameAutosaveName("UtterSettingsWindow")
+        window.contentMinSize = SettingsWindowLayout.contentSize
+        window.contentMaxSize = SettingsWindowLayout.contentSize
+        window.setContentSize(SettingsWindowLayout.contentSize)
         window.center()
         window.contentView = NSHostingView(rootView: settingsView)
         window.isReleasedWhenClosed = false

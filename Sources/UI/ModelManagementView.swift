@@ -19,46 +19,48 @@ struct ModelManagementView: View {
     @State var selectedModelFamily: ModelCatalog.ModelFamily? = .qwen
     @State var showLegacyModels = false
     @State var pendingModelAction: PendingModelAction?
+    @State var pendingFormattingTypeAfterBackendChange: FormattingModelType?
 
     var body: some View {
-        VStack(spacing: 0) {
-            SettingsPageHeader(
-                kind: .models,
-                title: L("settings.page.models.title"),
-                subtitle: L("settings.page.models.subtitle")
-            ) {
-                SettingsPageBadge(title: settings.speechEngine.label, symbol: "waveform")
-            }
-            Divider()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    if hasActiveDownloads {
-                        SettingsPanel { activeDownloadsSection }
-                    }
-
-                    SettingsPanel { deviceInfoSection }
-
-                    SettingsPanel {
-                        enginePickerSection
-                        Divider().padding(.vertical, 4)
-                        selectedRecognitionConfiguration
-                    }
-
-                    SettingsPanel { llmSection }
-                    SettingsPanel { preloadSection }
-                    SettingsPanel { storageSection }
+        Form {
+            if hasActiveDownloads {
+                Section(String(format: L("model.downloads_active"), activeDownloads.count)) {
+                    activeDownloadsSection
                 }
-                .padding(20)
+            }
+
+            Section(L("device.title")) {
+                deviceInfoSection
+            }
+
+            Section(L("model.speech_recognition")) {
+                enginePickerSection
+                selectedRecognitionConfiguration
+            }
+
+            Section(L("model.text_formatting")) {
+                llmSection
+            }
+
+            Section(L("model.preload.title")) {
+                preloadSection
+            }
+
+            Section(L("model.storage.title")) {
+                storageSection
             }
         }
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
         .settingsPageSurface()
         .onAppear {
             catalog.refreshStatus(recheckingErrors: true)
             syncSelectedFamilyFromActiveModel()
         }
         .onChange(of: settings.llmModel) { _, _ in syncSelectedFamilyFromActiveModel() }
-        .onChange(of: settings.localLLMBackend) { _, _ in syncSelectedFamilyFromActiveModel() }
+        .onChange(of: settings.localLLMBackend) { _, _ in
+            syncSelectedFamilyAfterBackendChange()
+        }
         .onChange(of: settings.qwenASRModel) { _, _ in onUnloadLocalASR?() }
         .alert(item: $pendingModelAction, content: modelActionAlert)
     }

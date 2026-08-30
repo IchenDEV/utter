@@ -7,9 +7,7 @@ set -euo pipefail
 MODE="${1:-run}"
 APP_NAME="Utter"
 BUILD_PRODUCT="OpenType"
-BUNDLE_ID="com.opentype.voiceinput"
 CLI_HELPER_NAME="opentype-cli"
-MIN_SYSTEM_VERSION="26.0"
 SUBSYSTEM="com.opentype.voiceinput"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -21,6 +19,7 @@ APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 CLI_HELPER_BINARY="$APP_MACOS/$CLI_HELPER_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
+ICON_RESOURCES="$ROOT_DIR/Sources/Resources"
 
 export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-/tmp/clang-module-cache}"
 mkdir -p "$CLANG_MODULE_CACHE_PATH"
@@ -43,36 +42,11 @@ if [ -x "$CLI_BUILD_BINARY" ]; then
   chmod +x "$CLI_HELPER_BINARY"
 fi
 
-cat >"$INFO_PLIST" <<PLIST
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>CFBundleExecutable</key>
-  <string>$APP_NAME</string>
-  <key>CFBundleIdentifier</key>
-  <string>$BUNDLE_ID</string>
-  <key>CFBundleName</key>
-  <string>$APP_NAME</string>
-  <key>CFBundlePackageType</key>
-  <string>APPL</string>
-  <key>LSMinimumSystemVersion</key>
-  <string>$MIN_SYSTEM_VERSION</string>
-  <key>LSUIElement</key>
-  <true/>
-  <key>NSMicrophoneUsageDescription</key>
-  <string>Utter needs microphone access to capture voice for transcription.</string>
-  <key>NSSpeechRecognitionUsageDescription</key>
-  <string>Utter uses speech recognition to convert voice to text.</string>
-  <key>NSAppleEventsUsageDescription</key>
-  <string>Utter needs automation access to type text into other applications.</string>
-  <key>NSScreenCaptureUsageDescription</key>
-  <string>Utter uses screen content for context-aware text correction.</string>
-  <key>NSPrincipalClass</key>
-  <string>NSApplication</string>
-</dict>
-</plist>
-PLIST
+cp "$ROOT_DIR/Resources/Info.plist" "$INFO_PLIST"
+
+for icon in AppIcon.icns AppIconLight.icns AppIconDark.icns; do
+  cp "$ICON_RESOURCES/$icon" "$APP_RESOURCES/$icon"
+done
 
 for bundle in "$BUILD_DIR"/*.bundle; do
   [ -d "$bundle" ] || continue
@@ -96,6 +70,16 @@ if [ -n "$SIGN_IDENTITY" ] && [ "$SIGN_IDENTITY" != "-" ]; then
 else
   codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
 fi
+
+icon_file="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$INFO_PLIST" 2>/dev/null || true)"
+[ "$icon_file" = "AppIcon" ] || {
+  echo "error: development app is missing CFBundleIconFile=AppIcon" >&2
+  exit 1
+}
+[ -s "$APP_RESOURCES/AppIcon.icns" ] || {
+  echo "error: development app is missing Contents/Resources/AppIcon.icns" >&2
+  exit 1
+}
 
 open_app() {
   /usr/bin/open -n "$APP_BUNDLE"
