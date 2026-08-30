@@ -9,20 +9,7 @@ struct GeneralSettingsView: View {
     @State private var showsLaunchAtLoginError = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            SettingsPageHeader(
-                kind: .general,
-                title: L("settings.page.general.title"),
-                subtitle: L("settings.page.general.subtitle")
-            ) {
-                SettingsPageBadge(
-                    title: "\(settings.hotkeyType.rawValue) · \(settings.activationMode.label)",
-                    symbol: "keyboard"
-                )
-            }
-            Divider()
-            settingsForm
-        }
+        settingsForm
         .settingsPageSurface()
         .onAppear(perform: refreshLaunchAtLoginStatus)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -54,7 +41,7 @@ struct GeneralSettingsView: View {
                     }
                 }
             } header: {
-                SettingsSectionHeader(title: L("settings.activation"), symbol: "keyboard.badge.ellipsis")
+                SettingsSectionHeader(title: L("settings.activation"))
             } footer: {
                 Text(L("settings.activation_help"))
             }
@@ -73,7 +60,7 @@ struct GeneralSettingsView: View {
                     }
                 }
             } header: {
-                SettingsSectionHeader(title: L("settings.audio"), symbol: "waveform")
+                SettingsSectionHeader(title: L("settings.audio"))
             }
 
             Section {
@@ -90,7 +77,7 @@ struct GeneralSettingsView: View {
                 }
                 .disabled(settings.outputMode != .processed)
             } header: {
-                SettingsSectionHeader(title: L("settings.output"), symbol: "text.badge.checkmark")
+                SettingsSectionHeader(title: L("settings.output"))
             }
 
             Section {
@@ -113,7 +100,7 @@ struct GeneralSettingsView: View {
                     .fixedSize()
                 }
             } header: {
-                SettingsSectionHeader(title: L("settings.translation"), symbol: "character.bubble")
+                SettingsSectionHeader(title: L("settings.translation"))
             } footer: {
                 Text(L("settings.translation_shortcut_help"))
             }
@@ -131,7 +118,7 @@ struct GeneralSettingsView: View {
                 .disabled(!settings.useScreenContext)
                 Toggle(L("settings.sound_cues"), isOn: $settings.playSounds)
             } header: {
-                SettingsSectionHeader(title: L("settings.context_feedback"), symbol: "rectangle.and.text.magnifyingglass")
+                SettingsSectionHeader(title: L("settings.context_feedback"))
             }
 
             Section {
@@ -143,7 +130,7 @@ struct GeneralSettingsView: View {
                 }
                 .disabled(!settings.enableMemory)
             } header: {
-                SettingsSectionHeader(title: L("settings.memory"), symbol: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                SettingsSectionHeader(title: L("settings.memory"))
             } footer: {
                 Text(L("settings.memory_help"))
             }
@@ -166,7 +153,7 @@ struct GeneralSettingsView: View {
                         .foregroundStyle(.orange)
                 }
             } header: {
-                SettingsSectionHeader(title: L("settings.startup"), symbol: "power")
+                SettingsSectionHeader(title: L("settings.startup"))
             }
 
             Section {
@@ -186,7 +173,7 @@ struct GeneralSettingsView: View {
                 }
                 menuBarIconPicker
             } header: {
-                SettingsSectionHeader(title: L("settings.interface"), symbol: "paintbrush")
+                SettingsSectionHeader(title: L("settings.interface"))
             }
         }
         .formStyle(.grouped)
@@ -260,10 +247,9 @@ struct GeneralSettingsView: View {
 
 private struct SettingsSectionHeader: View {
     let title: String
-    let symbol: String
 
     var body: some View {
-        Label(title, systemImage: symbol)
+        Text(title)
             .font(.caption.weight(.semibold))
             .foregroundStyle(.secondary)
     }

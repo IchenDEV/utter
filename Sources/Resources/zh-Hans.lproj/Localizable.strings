@@ -15,6 +15,7 @@
 "common.copy_clipboard" = "复制到剪贴板";
 "common.cannot_undo" = "此操作不可撤销。";
 "common.recommended" = "推荐";
+"common.recommended_short" = "推荐";
 "common.custom" = "自定义";
 "common.retry" = "重试";
 

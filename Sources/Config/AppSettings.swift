@@ -36,7 +36,7 @@ enum SpeechEngineType: String, Codable, CaseIterable {
     case mimo = "mimo"
 
     static var selectableCases: [SpeechEngineType] {
-        allCases.filter { $0 != .mimo }
+        [.qwen3, .whisper, .apple, .volc]
     }
 
     var label: String {

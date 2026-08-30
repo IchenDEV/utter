@@ -4,25 +4,38 @@ import Speech
 
 struct AboutView: View {
     var body: some View {
-        VStack(spacing: 0) {
-            SettingsPageHeader(
-                kind: .about,
-                title: ProductBrand.displayName,
-                subtitle: L("settings.page.about.subtitle")
-            ) {
-                SettingsPageBadge(title: version, symbol: "shippingbox")
-            }
-            Divider()
-
-            ScrollView {
-                VStack(spacing: 14) {
-                    SettingsPanel { permissionsSection }
-                    SettingsPanel { appInfo }
+        Form {
+            Section {
+                permRow(icon: "hand.raised.fill", name: L("perm.accessibility"),
+                        hint: L("perm.accessibility_hint"), granted: accessibilityGranted, action: openAccessibility)
+                permRow(icon: "mic.fill", name: L("perm.microphone"),
+                        hint: L("perm.microphone_hint"), granted: microphoneGranted, action: requestMicrophone)
+                permRow(icon: "waveform", name: L("perm.speech"),
+                        hint: L("perm.speech_hint"), granted: speechGranted, action: requestSpeech)
+                permRow(icon: "rectangle.dashed.badge.record", name: L("perm.screen"),
+                        hint: L("perm.screen_hint"), granted: screenCaptureGranted, action: requestScreenCapture)
+            } header: {
+                HStack {
+                    Text(L("settings.permissions"))
+                    Spacer()
+                    Button {
+                        checkAll()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L("settings.permissions"))
                 }
-                .padding(20)
+            }
+
+            Section {
+                appInfo
             }
         }
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
         .settingsPageSurface()
+        .onAppear { checkAll() }
     }
 
     // MARK: - App Info
@@ -65,43 +78,6 @@ struct AboutView: View {
     @State private var speechGranted = false
     @State private var screenCaptureGranted = false
 
-    private var permissionsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Label(L("settings.permissions"), systemImage: "lock.shield")
-                    .font(.headline)
-                Spacer()
-                Button {
-                    checkAll()
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 11))
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-            }
-
-            VStack(spacing: 0) {
-                permRow(icon: "hand.raised.fill", name: L("perm.accessibility"),
-                        hint: L("perm.accessibility_hint"), granted: accessibilityGranted, action: openAccessibility)
-                Divider().padding(.horizontal, 12)
-                permRow(icon: "mic.fill", name: L("perm.microphone"),
-                        hint: L("perm.microphone_hint"), granted: microphoneGranted, action: requestMicrophone)
-                Divider().padding(.horizontal, 12)
-                permRow(icon: "waveform", name: L("perm.speech"),
-                        hint: L("perm.speech_hint"), granted: speechGranted, action: requestSpeech)
-                Divider().padding(.horizontal, 12)
-                permRow(icon: "rectangle.dashed.badge.record", name: L("perm.screen"),
-                        hint: L("perm.screen_hint"), granted: screenCaptureGranted, action: requestScreenCapture)
-            }
-            .background(Color(nsColor: .controlBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(nsColor: .separatorColor), lineWidth: 0.5))
-
-        }
-        .onAppear { checkAll() }
-    }
-
     private func permRow(icon: String, name: String, hint: String, granted: Bool, action: @escaping () -> Void) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
@@ -125,8 +101,6 @@ struct AboutView: View {
                     .controlSize(.mini)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
     }
 
     // MARK: - Permission actions

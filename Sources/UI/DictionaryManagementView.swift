@@ -19,12 +19,16 @@ struct DictionaryManagementView: View {
     @State private var showClearConfirmation = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            header
+        Section {
+            Toggle(L("dictionary.auto_learning"), isOn: $settings.enableCorrectionLearning)
             addRow
             filterRow
             entriesList
             footer
+        } header: {
+            Text(L("dictionary.title"))
+        } footer: {
+            Text(L("dictionary.subtitle"))
         }
         .alert(L("dictionary.clear_learned_confirm"), isPresented: $showClearConfirmation) {
             Button(L("common.cancel"), role: .cancel) {}
@@ -33,22 +37,6 @@ struct DictionaryManagementView: View {
             }
         } message: {
             Text(L("common.cannot_undo"))
-        }
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack {
-                Label(L("dictionary.title"), systemImage: "text.book.closed")
-                    .font(.headline)
-                Spacer()
-                Toggle(L("dictionary.auto_learning"), isOn: $settings.enableCorrectionLearning)
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-            }
-            Text(L("dictionary.subtitle"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
@@ -106,12 +94,6 @@ struct DictionaryManagementView: View {
                     }
                 }
                 .frame(minHeight: 110, maxHeight: 190)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-                }
             }
         }
     }

@@ -16,12 +16,6 @@ extension ModelManagementView {
                 if index < models.count - 1 { Divider().padding(.horizontal, 10) }
             }
         }
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-        )
     }
 
     func modelRow(
@@ -228,9 +222,7 @@ extension ModelManagementView {
             onUnloadLLM?()
             settings.useRemoteLLM = false
             settings.llmModel = model.id
-            if let family = model.family {
-                selectedModelFamily = family
-            }
+            selectedModelFamily = model.family
             onLoadLLM?()
         case .asr:
             onUnloadLocalASR?()

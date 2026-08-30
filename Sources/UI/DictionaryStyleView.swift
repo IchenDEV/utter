@@ -3,148 +3,69 @@ import SwiftUI
 struct DictionaryStyleView: View {
     @EnvironmentObject var settings: AppSettings
     @StateObject private var dictionary = PersonalDictionary.shared
-
     @State private var newRule = ""
 
     var body: some View {
-        VStack(spacing: 0) {
-            SettingsPageHeader(
-                kind: .style,
-                title: L("settings.page.style.title"),
-                subtitle: L("settings.page.style.subtitle")
-            ) {
-                SettingsPageBadge(title: settings.languageStyle.label, symbol: settings.languageStyle.icon)
+        Form {
+            if !settings.useCustomSystemPrompt {
+                styleSection
             }
-            Divider()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    if !settings.useCustomSystemPrompt {
-                        SettingsPanel { styleSection }
-                    }
-                    SettingsPanel { IndustryLexiconView() }
-                    SettingsPanel { DictionaryManagementView() }
-                    SettingsPanel { editRulesSection }
-                    SettingsPanel { customSystemPromptSection }
-                }
-                .padding(20)
-            }
+            IndustryLexiconView()
+            DictionaryManagementView()
+            editRulesSection
+            customSystemPromptSection
         }
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
         .settingsPageSurface()
     }
 
-    // MARK: - Custom System Prompt
-
-    private var customSystemPromptSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Label(L("custom_prompt.title"), systemImage: "terminal")
-                    .font(.headline)
-                Spacer()
-                Toggle("", isOn: $settings.useCustomSystemPrompt)
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-                    .labelsHidden()
-            }
-
-            Text(L("custom_prompt.desc"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            if settings.useCustomSystemPrompt {
-                TextEditor(text: $settings.customSystemPrompt)
-                    .font(.system(size: 11.5, design: .monospaced))
-                    .scrollContentBackground(.hidden)
-                    .padding(8)
-                    .frame(minHeight: 140, maxHeight: 280)
-                    .background(Color(nsColor: .controlBackgroundColor))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-                    )
-
-                Text(L("custom_prompt.hint"))
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
-        }
-    }
-
-    // MARK: - Style
-
     private var styleSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(L("style.title"), systemImage: "paintbrush")
-                .font(.headline)
-
-            HStack(spacing: 10) {
+        Section {
+            Picker(L("style.title"), selection: $settings.languageStyle) {
                 ForEach(LanguageStyle.allCases, id: \.self) { style in
-                    StylePresetCard(
-                        style: style,
-                        isSelected: settings.languageStyle == style
-                    ) {
-                        settings.languageStyle = style
-                        if style.usesCustomPrompt,
-                           settings.customStylePrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || LanguageStyle.looksLikePresetPrompt(settings.customStylePrompt) {
-                            settings.customStylePrompt = style.defaultPrompt
-                        }
-                    }
+                    Text(style.label).tag(style)
                 }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .onChange(of: settings.languageStyle) { _, style in
+                guard style.usesCustomPrompt,
+                      settings.customStylePrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        || LanguageStyle.looksLikePresetPrompt(settings.customStylePrompt) else { return }
+                settings.customStylePrompt = style.defaultPrompt
             }
 
-            if settings.languageStyle.usesCustomPrompt {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(L("style.prompt"))
-                        .font(.subheadline.weight(.medium))
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L("style.prompt"))
+                    .font(.subheadline.weight(.medium))
+
+                if settings.languageStyle.usesCustomPrompt {
                     TextEditor(text: $settings.customStylePrompt)
-                        .font(.system(size: 11.5, design: .monospaced))
+                        .font(.system(.caption, design: .monospaced))
                         .scrollContentBackground(.hidden)
-                        .padding(8)
-                        .frame(height: 92)
-                        .background(Color(nsColor: .controlBackgroundColor))
+                        .padding(6)
+                        .frame(height: 88)
+                        .background(Color(nsColor: .textBackgroundColor))
                         .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-                        )
-                    Text(L("style.prompt_help"))
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-            } else {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(L("style.prompt"))
-                        .font(.subheadline.weight(.medium))
+                } else {
                     Text(settings.languageStyle.defaultPrompt)
-                        .font(.system(size: 11.5))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
-                        .padding(10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(nsColor: .controlBackgroundColor))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-                        )
-                    Text(L("style.preset_help"))
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
+        } header: {
+            Text(L("style.title"))
+        } footer: {
+            Text(settings.languageStyle.usesCustomPrompt
+                 ? L("style.prompt_help")
+                 : L("style.preset_help"))
         }
     }
-
-    // MARK: - Edit Rules
 
     private var editRulesSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label(L("rules.title"), systemImage: "list.bullet.rectangle")
-                .font(.headline)
-            Text(L("rules.subtitle"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
+        Section {
             HStack(spacing: 8) {
                 TextField(L("rules.placeholder"), text: $newRule)
                     .textFieldStyle(.roundedBorder)
@@ -159,34 +80,53 @@ struct DictionaryStyleView: View {
             if dictionary.editRules.isEmpty {
                 emptyHint(L("rules.empty"))
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(dictionary.editRules.enumerated()), id: \.element.id) { index, rule in
-                        HStack {
-                            Image(systemName: rule.enabled ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(rule.enabled ? .green : .secondary)
-                                .font(.caption)
-                            Text(rule.description)
-                                .font(.system(size: 12))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            deleteButton { dictionary.removeRule(at: IndexSet(integer: index)) }
-                        }
-                        .padding(.vertical, 6)
-                        .padding(.horizontal, 10)
-                        if index < dictionary.editRules.count - 1 { Divider().padding(.horizontal, 10) }
+                ForEach(Array(dictionary.editRules.enumerated()), id: \.element.id) { index, rule in
+                    HStack {
+                        Image(systemName: rule.enabled ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(rule.enabled ? .green : .secondary)
+                            .font(.caption)
+                        Text(rule.description)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        deleteButton { dictionary.removeRule(at: IndexSet(integer: index)) }
                     }
                 }
-                .listCard()
             }
+        } header: {
+            Text(L("rules.title"))
+        } footer: {
+            Text(L("rules.subtitle"))
         }
     }
 
-    // MARK: - Helpers
+    private var customSystemPromptSection: some View {
+        Section {
+            Toggle(isOn: $settings.useCustomSystemPrompt) {
+                Text(L("custom_prompt.desc"))
+            }
+
+            if settings.useCustomSystemPrompt {
+                TextEditor(text: $settings.customSystemPrompt)
+                    .font(.system(.caption, design: .monospaced))
+                    .scrollContentBackground(.hidden)
+                    .padding(6)
+                    .frame(minHeight: 130, maxHeight: 260)
+                    .background(Color(nsColor: .textBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+        } header: {
+            Text(L("custom_prompt.title"))
+        } footer: {
+            if settings.useCustomSystemPrompt {
+                Text(L("custom_prompt.hint"))
+            }
+        }
+    }
 
     private func emptyHint(_ text: String) -> some View {
         Text(text)
             .font(.caption)
             .foregroundStyle(.tertiary)
-            .frame(maxWidth: .infinity, minHeight: 36)
+            .frame(maxWidth: .infinity, minHeight: 28)
     }
 
     private func deleteButton(action: @escaping () -> Void) -> some View {
@@ -196,58 +136,6 @@ struct DictionaryStyleView: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(.secondary)
-    }
-}
-
-// MARK: - Style Preset Card
-
-private struct StylePresetCard: View {
-    let style: LanguageStyle
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 4) {
-                    Image(systemName: style.icon)
-                        .font(.system(size: 13))
-                    Text(style.label)
-                        .font(.system(size: 12, weight: .semibold))
-                }
-                Text(style.defaultPrompt)
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? Color.accentColor.opacity(0.08) : Color(nsColor: .controlBackgroundColor))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? Color.accentColor : Color(nsColor: .separatorColor),
-                            lineWidth: isSelected ? 1.5 : 0.5)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - List Card Modifier
-
-private struct ListCardModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(SettingsCardBackground(cornerRadius: 8))
-    }
-}
-
-private extension View {
-    func listCard() -> some View {
-        modifier(ListCardModifier())
+        .accessibilityLabel(L("common.delete"))
     }
 }

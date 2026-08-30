@@ -1,68 +1,74 @@
 import SwiftUI
 
+enum FormattingModelType: String, CaseIterable {
+    case qwen
+    case gemma
+    case llama
+    case remote
+    case custom
+
+    var family: ModelCatalog.ModelFamily? {
+        switch self {
+        case .qwen: .qwen
+        case .gemma: .gemma
+        case .llama: .llama
+        case .remote, .custom: nil
+        }
+    }
+
+    var isRecommended: Bool { self == .qwen }
+
+    var title: String {
+        switch self {
+        case .qwen:
+            "\(ModelCatalog.ModelFamily.qwen.rawValue) · \(L("common.recommended_short"))"
+        case .gemma: ModelCatalog.ModelFamily.gemma.rawValue
+        case .llama: ModelCatalog.ModelFamily.llama.rawValue
+        case .remote: L("model.family.remote")
+        case .custom: L("common.custom")
+        }
+    }
+}
+
 extension ModelManagementView {
     var familyPicker: some View {
-        HStack(spacing: 0) {
-            ForEach(ModelCatalog.ModelFamily.allCases, id: \.self) { family in
-                familyButton(family)
+        Picker(L("model.family.title"), selection: familySelection) {
+            ForEach(FormattingModelType.allCases, id: \.self) { type in
+                Text(type.title)
+                    .tag(type)
             }
-            remoteFamilyButton
         }
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 6))
-        .overlay(
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-        )
+        .pickerStyle(.segmented)
+        .labelsHidden()
     }
 
-    func familyButton(_ family: ModelCatalog.ModelFamily) -> some View {
-        let isSelected = !settings.useRemoteLLM && selectedModelFamily == family
-
-        return Button(action: { selectLocalFamily(family) }) {
-            VStack(spacing: 2) {
-                Image(systemName: family.icon)
-                    .font(.system(size: 14))
-                Text(family.rawValue)
-                    .font(.system(size: 10, weight: isSelected ? .semibold : .medium))
+    private var familySelection: Binding<FormattingModelType> {
+        Binding(
+            get: {
+                if settings.useRemoteLLM {
+                    return .remote
+                }
+                switch selectedModelFamily {
+                case .qwen: return .qwen
+                case .gemma: return .gemma
+                case .llama: return .llama
+                case nil: return .custom
+                }
+            },
+            set: { selection in
+                switch selection {
+                case .qwen:
+                    selectLocalFamily(.qwen)
+                case .gemma:
+                    selectLocalFamily(.gemma)
+                case .llama:
+                    selectLocalFamily(.llama)
+                case .remote:
+                    selectRemoteLLM()
+                case .custom:
+                    selectCustomLLM()
+                }
             }
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .background(
-            isSelected
-                ? Color.accentColor.opacity(0.15)
-                : Color.clear
-        )
-        .foregroundStyle(
-            isSelected
-                ? Color.accentColor
-                : Color.primary
-        )
-    }
-
-    var remoteFamilyButton: some View {
-        Button(action: selectRemoteLLM) {
-            VStack(spacing: 2) {
-                Image(systemName: "cloud.fill")
-                    .font(.system(size: 14))
-                Text(L("model.family.remote"))
-                    .font(.system(size: 10, weight: settings.useRemoteLLM ? .semibold : .medium))
-            }
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .background(
-            settings.useRemoteLLM
-                ? Color.accentColor.opacity(0.15)
-                : Color.clear
-        )
-        .foregroundStyle(
-            settings.useRemoteLLM
-                ? Color.accentColor
-                : Color.primary
         )
     }
 
@@ -80,6 +86,17 @@ extension ModelManagementView {
         if !settings.useRemoteLLM {
             onUnloadLLM?()
             settings.useRemoteLLM = true
+        }
+    }
+
+    func selectCustomLLM() {
+        selectedModelFamily = nil
+        if settings.useRemoteLLM {
+            settings.useRemoteLLM = false
+            if let activeModel = catalog.llmModels.first(where: { $0.id == settings.llmModel }),
+               activeModel.family == nil {
+                onLoadLLM?()
+            }
         }
     }
 }

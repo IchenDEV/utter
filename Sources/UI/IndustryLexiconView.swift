@@ -8,25 +8,13 @@ struct IndustryLexiconView: View {
     private let catalog = IndustryLexiconCatalog.shared
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
-                Label(L("industry.lexicon.title"), systemImage: "books.vertical")
-                    .font(.headline)
-                Spacer()
-                Picker(L("industry.lexicon.selection"), selection: $settings.industryLexicon) {
-                    ForEach(IndustryLexiconID.allCases) { industry in
-                        Label(industry.label, systemImage: industry.symbolName)
-                            .tag(industry)
-                    }
+        Section {
+            Picker(L("industry.lexicon.selection"), selection: $settings.industryLexicon) {
+                ForEach(IndustryLexiconID.allCases) { industry in
+                    Text(industry.label)
+                        .tag(industry)
                 }
-                .labelsHidden()
-                .frame(width: 190)
-                .accessibilityLabel(L("industry.lexicon.selection"))
             }
-
-            Text(L("industry.lexicon.subtitle"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
 
             if let pack = activePack {
                 Label(
@@ -58,8 +46,11 @@ struct IndustryLexiconView: View {
                 Label(L("industry.lexicon.inactive"), systemImage: "minus.circle")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+        } header: {
+            Text(L("industry.lexicon.title"))
+        } footer: {
+            Text(L("industry.lexicon.subtitle"))
         }
         .onChange(of: settings.industryLexicon) { _, _ in
             searchText = ""
@@ -99,12 +90,6 @@ struct IndustryLexiconView: View {
                     }
                 }
                 .frame(maxHeight: 170)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-                }
             }
         }
     }
