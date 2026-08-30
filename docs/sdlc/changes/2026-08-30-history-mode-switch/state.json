@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-30-history-mode-switch",
+  "title": "Integrate the history mode switch into page controls",
+  "risk": "medium",
+  "status": "verified",
+  "owners": [
+    "repository maintainer"
+  ],
+  "acceptanceCriteria": [
+    "The Insights and History switch no longer occupies a separate full-width strip below the primary settings tabs.",
+    "The compact native switch remains visible and keyboard accessible in both history modes.",
+    "The switch aligns with the existing 28-point content grid and adjacent contextual controls without clipping in Chinese or English.",
+    "The real fixed-size window is inspected in light and dark appearances for both history modes."
+  ],
+  "governedPaths": [
+    "Sources/UI/HistoryStatsView.swift",
+    "Sources/UI/HistoryInsightsOverview.swift",
+    "Sources/UI/HistoryRecordsView.swift"
+  ],
+  "artifacts": {
+    "intent": "intent.md",
+    "spec": "spec.md",
+    "plan": "plan.md",
+    "verification": "verification.md"
+  }
+}

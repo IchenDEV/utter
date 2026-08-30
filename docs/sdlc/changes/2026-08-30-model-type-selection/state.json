@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-30-model-type-selection",
+  "title": "Make custom models an explicit recommended-first type",
+  "risk": "high",
+  "status": "verified",
+  "owners": [
+    "repository maintainer"
+  ],
+  "acceptanceCriteria": [
+    "Text formatting types appear as Qwen recommended, Gemma, Llama, Remote, and Custom in that order.",
+    "Custom model entries, model ID input, and local import appear only when Custom is selected.",
+    "An active custom or imported local model selects Custom instead of falling back to Qwen.",
+    "Speech engine types put Qwen recommended first, followed by Whisper, Apple, and Doubao.",
+    "The real fixed-size window is inspected in Chinese and English, in light and dark appearances, without clipped type labels."
+  ],
+  "governedPaths": [
+    "Sources/Config/AppSettings.swift",
+    "Sources/UI/ModelManagementEnginePicker.swift",
+    "Sources/UI/ModelManagementFamilies.swift",
+    "Sources/UI/ModelManagementRows.swift",
+    "Sources/UI/ModelManagementSections.swift",
+    "Sources/Resources/en.lproj/Localizable.strings",
+    "Sources/Resources/zh-Hans.lproj/Localizable.strings",
+    "Tests/OpenTypeTests/ConfigurationTests.swift"
+  ],
+  "artifacts": {
+    "intent": "intent.md",
+    "spec": "spec.md",
+    "plan": "plan.md",
+    "verification": "verification.md"
+  }
+}

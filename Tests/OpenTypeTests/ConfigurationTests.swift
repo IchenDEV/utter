@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import XCTest
 @testable import OpenType
@@ -58,8 +59,17 @@ final class ConfigurationTests: XCTestCase {
             "whisper", "apple", "volc", "qwen3", "mimo",
         ])
         XCTAssertEqual(SpeechEngineType.selectableCases.map(\.rawValue), [
-            "whisper", "apple", "volc", "qwen3",
+            "qwen3", "whisper", "apple", "volc",
         ])
+    }
+
+    @MainActor
+    func testFormattingModelTypesPutRecommendedQwenFirstAndCustomLast() {
+        XCTAssertEqual(FormattingModelType.allCases.map(\.rawValue), [
+            "qwen", "gemma", "llama", "remote", "custom",
+        ])
+        XCTAssertTrue(FormattingModelType.qwen.isRecommended)
+        XCTAssertTrue(FormattingModelType.allCases.dropFirst().allSatisfy { !$0.isRecommended })
     }
 
     func testQwenASRDefaultUsesNativeCompatibleModel() {
@@ -209,8 +219,14 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(SettingsWindowTitle.text(for: .chinese), "Utter 设置")
     }
 
-    func testSettingsWindowWidthAllowsEnglishTabLabels() {
-        XCTAssertGreaterThanOrEqual(SettingsWindowLayout.width, 760)
+    func testSettingsWindowUsesFixedContentSize() {
+        XCTAssertEqual(SettingsWindowLayout.width, 760)
+        XCTAssertEqual(SettingsWindowLayout.height, 680)
+        XCTAssertEqual(SettingsWindowLayout.width, SettingsWindowLayout.contentSize.width)
+        XCTAssertEqual(SettingsWindowLayout.height, SettingsWindowLayout.contentSize.height)
+        XCTAssertFalse(SettingsWindowLayout.styleMask.contains(.resizable))
+        XCTAssertTrue(SettingsWindowLayout.styleMask.contains(.closable))
+        XCTAssertTrue(SettingsWindowLayout.styleMask.contains(.miniaturizable))
     }
 
     func testInstantInsertDefaultsOff() {

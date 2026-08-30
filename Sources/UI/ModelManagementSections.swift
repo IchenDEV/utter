@@ -5,9 +5,6 @@ extension ModelManagementView {
     var deviceInfoSection: some View {
         let info = DeviceCapability.current
         return VStack(alignment: .leading, spacing: 10) {
-            Label(L("device.title"), systemImage: "cpu")
-                .font(.headline)
-
             HStack(spacing: 16) {
                 deviceInfoItem(
                     icon: "memorychip",
@@ -53,9 +50,6 @@ extension ModelManagementView {
 
     var storageSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(L("model.storage.title"), systemImage: "externaldrive")
-                .font(.headline)
-
             Text(ModelStorage.root.path)
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundStyle(.secondary)
@@ -85,17 +79,13 @@ extension ModelManagementView {
         }
     }
 
+    @ViewBuilder
     var preloadSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label(L("model.preload.title"), systemImage: "bolt.circle")
-                .font(.headline)
+        Toggle(L("model.preload.speech"), isOn: $settings.preloadSpeechModelOnLaunch)
+            .help(L("model.preload.speech_help"))
 
-            Toggle(L("model.preload.speech"), isOn: $settings.preloadSpeechModelOnLaunch)
-                .help(L("model.preload.speech_help"))
-
-            Toggle(L("model.preload.formatting"), isOn: $settings.preloadFormattingModelOnLaunch)
-                .help(L("model.preload.formatting_help"))
-        }
+        Toggle(L("model.preload.formatting"), isOn: $settings.preloadFormattingModelOnLaunch)
+            .help(L("model.preload.formatting_help"))
     }
 
     var whisperSection: some View {
@@ -145,9 +135,6 @@ extension ModelManagementView {
 
     var llmSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label(L("model.text_formatting"), systemImage: "brain")
-                .font(.headline)
-
             if appState.lastFormattingDurationSeconds > 0 {
                 HStack(spacing: 8) {
                     Text(L("model.last_formatting"))
@@ -184,37 +171,36 @@ extension ModelManagementView {
         if let family = selectedModelFamily {
             let familyModels = catalog.llmModels.filter { $0.family == family }
             groupedLLMModelList(familyModels, activeID: settings.llmModel)
-        }
-        let customModels = catalog.llmModels.filter { $0.family == nil }
-        if !customModels.isEmpty {
-            Text(L("model.custom_local"))
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 2)
-            modelList(customModels, activeID: settings.llmModel, type: .llm)
-        }
+        } else {
+            let customModels = catalog.llmModels.filter { $0.family == nil }
+            if !customModels.isEmpty {
+                modelList(customModels, activeID: settings.llmModel, type: .llm)
+            }
 
-        HStack(spacing: 8) {
-            TextField(L("model.custom_id_placeholder"), text: $customLLMInput)
-                .textFieldStyle(.roundedBorder)
-                .font(.system(size: 11))
-            Button(L("common.add")) {
-                catalog.addCustomLLM(customLLMInput)
-                customLLMInput = ""
+            HStack(spacing: 8) {
+                TextField(L("model.custom_id_placeholder"), text: $customLLMInput)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 11))
+                Button(L("common.add")) {
+                    catalog.addCustomLLM(customLLMInput)
+                    customLLMInput = ""
+                }
+                .controlSize(.small)
+                .disabled(customLLMInput.isEmpty)
+            }
+            Button(L("model.import_local")) {
+                importLocalLLM()
             }
             .controlSize(.small)
-            .disabled(customLLMInput.isEmpty)
         }
-        Button(L("model.import_local")) {
-            importLocalLLM()
-        }
-        .controlSize(.small)
     }
 
     func syncSelectedFamilyFromActiveModel() {
         guard !settings.useRemoteLLM else { return }
-        if let family = catalog.llmModels.first(where: { $0.id == settings.llmModel })?.family {
-            selectedModelFamily = family
+        if let activeModel = catalog.llmModels.first(where: { $0.id == settings.llmModel }) {
+            selectedModelFamily = activeModel.family
+        } else {
+            selectedModelFamily = .qwen
         }
     }
 

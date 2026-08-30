@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum HistorySection: String, CaseIterable, Identifiable {
+enum HistorySection: String, CaseIterable, Identifiable {
     case insights
     case records
 
@@ -14,33 +14,34 @@ struct HistoryStatsView: View {
     @State private var range: InputAnalyticsRange = .sevenDays
 
     var body: some View {
-        VStack(spacing: 0) {
-            SettingsPageHeader(
-                kind: .activity,
-                title: L("history.title"),
-                subtitle: L("history.subtitle")
-            ) {
-                Picker(L("history.section.label"), selection: $section) {
-                    ForEach(HistorySection.allCases) { item in
-                        Text(item.label).tag(item)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 210)
-            }
-            Divider()
-
+        Group {
             switch section {
             case .insights:
                 HistoryInsightsOverview(
                     analytics: .make(records: history.records, range: range),
-                    range: $range
+                    range: $range,
+                    section: $section
                 )
             case .records:
-                HistoryRecordsView(history: history)
+                HistoryRecordsView(history: history, section: $section)
             }
         }
         .settingsPageSurface()
+    }
+}
+
+struct HistoryModePicker: View {
+    @Binding var selection: HistorySection
+
+    var body: some View {
+        Picker(L("history.section.label"), selection: $selection) {
+            ForEach(HistorySection.allCases) { item in
+                Text(item.label).tag(item)
+            }
+        }
+        .pickerStyle(.segmented)
+        .controlSize(.small)
+        .labelsHidden()
+        .frame(width: 140)
     }
 }
