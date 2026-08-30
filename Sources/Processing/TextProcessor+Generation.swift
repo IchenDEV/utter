@@ -61,7 +61,7 @@ extension TextProcessor {
                     if result.usedMLX {
                         _ = await espressoLLM.consumeLastFailureMessage()
                         await Self.recordEspressoOutcome(.fallback)
-                        Log.info("[TextProcessor] Espresso failed; used the selected MLX model")
+                        Log.info("[TextProcessor] ANE-LM failed; used the selected MLX model")
                     } else {
                         await Self.clearEspressoOutcome()
                     }
@@ -71,14 +71,14 @@ extension TextProcessor {
                 } catch let error as EspressoMLXFallbackError {
                     _ = await espressoLLM.consumeLastFailureMessage()
                     await Self.recordEspressoOutcome(.unavailable)
-                    Log.sensitive("[TextProcessor] Espresso and MLX fallback failed: \(error.details)")
+                    Log.sensitive("[TextProcessor] ANE-LM and MLX fallback failed: \(error.details)")
                     Log.error("[TextProcessor] MLX fallback unavailable")
                     throw error
                 } catch {
                     if !options.fallbackToMLXOnEspressoFailure {
                         _ = await espressoLLM.consumeLastFailureMessage()
                         await Self.recordEspressoOutcome(.failed)
-                        Log.error("[TextProcessor] Espresso failed; MLX fallback is disabled")
+                        Log.error("[TextProcessor] ANE-LM failed; MLX fallback is disabled")
                     }
                     throw error
                 }
@@ -122,7 +122,7 @@ extension TextProcessor {
         }
 
         var details: String {
-            "Espresso: \(espressoFailure); MLX: \(mlxFailure)"
+            "ANE-LM: \(espressoFailure); MLX: \(mlxFailure)"
         }
     }
 

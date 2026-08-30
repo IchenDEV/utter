@@ -75,7 +75,7 @@ extension InputSessionCoordinator {
             settings: settings,
             expectedEspressoModelPath: options.espressoModelPath
         ) {
-            Log.info("[InputSessionCoordinator] Espresso failed; selected MLX as the active backend")
+            Log.info("[InputSessionCoordinator] ANE-LM failed; selected MLX as the active backend")
         }
 
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {

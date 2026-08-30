@@ -58,7 +58,7 @@ extension VoicePipeline {
             expectedEspressoModelPath: expectedEspressoModelPath
         ) {
             if case .error = appState.phase, espressoOutcome == .fallback {
-                Log.info("[VoicePipeline] preserving edit-command error after Espresso fallback")
+                Log.info("[VoicePipeline] preserving edit-command error after ANE-LM fallback")
             } else if espressoOutcome != .fallback {
                 showErrorHint(espressoOutcome.message)
             } else {

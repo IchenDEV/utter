@@ -145,12 +145,12 @@ final class EspressoFallbackTests: XCTestCase {
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let settings = AppSettings(defaults: defaults)
         settings.localLLMBackend = .espresso
-        settings.espressoModelPath = "/models/new.esp"
+        settings.espressoModelPath = "/models/Qwen3-new"
 
         XCTAssertFalse(EspressoFallbackPolicy.selectMLXIfNeeded(
             after: .fallback,
             settings: settings,
-            expectedEspressoModelPath: "/models/old.esp"
+            expectedEspressoModelPath: "/models/Qwen3-old"
         ))
         XCTAssertEqual(settings.localLLMBackend, .espresso)
     }
@@ -182,20 +182,20 @@ final class EspressoFallbackTests: XCTestCase {
         }
     }
 
-    func testRealEspressoFailureFallsBackToInstalledMLX() async throws {
+    func testRealANEFailureFallsBackToInstalledMLX() async throws {
         let environment = ProcessInfo.processInfo.environment
-        guard environment["OPENTYPE_ESPRESSO_MLX_FALLBACK_INTEGRATION"] == "1" else {
-            throw XCTSkip("Set OPENTYPE_ESPRESSO_MLX_FALLBACK_INTEGRATION=1 to run")
+        guard environment["OPENTYPE_ANE_MLX_FALLBACK_INTEGRATION"] == "1" else {
+            throw XCTSkip("Set OPENTYPE_ANE_MLX_FALLBACK_INTEGRATION=1 to run")
         }
-        guard let bundlePath = environment["OPENTYPE_ESPRESSO_BUNDLE"],
+        guard let modelPath = environment["OPENTYPE_ANE_FAILURE_MODEL"],
               let mlxModel = environment["OPENTYPE_MLX_MODEL"] else {
-            throw XCTSkip("Set OPENTYPE_ESPRESSO_BUNDLE and OPENTYPE_MLX_MODEL")
+            throw XCTSkip("Set OPENTYPE_ANE_FAILURE_MODEL and OPENTYPE_MLX_MODEL")
         }
 
         var options = TextProcessingOptions(settings: AppSettings.shared, inputLanguage: .english)
         options.useRemoteLLM = false
         options.localLLMBackend = .espresso
-        options.espressoModelPath = bundlePath
+        options.espressoModelPath = modelPath
         options.llmModel = mlxModel
 
         let processor = TextProcessor()

@@ -199,7 +199,7 @@ extension ModelManagementView {
 
     var espressoLLMSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label("Espresso", systemImage: "neural.engine")
+            Label("ANE-LM", systemImage: "neural.engine")
                 .font(.system(size: 12, weight: .semibold))
 
             Text(L("model.espresso.description"))
@@ -216,7 +216,7 @@ extension ModelManagementView {
                     .textSelection(.enabled)
                 Spacer()
                 Button(L("model.espresso.choose")) {
-                    chooseEspressoBundle()
+                    chooseANEModel()
                 }
                 .controlSize(.small)
             }

@@ -323,11 +323,11 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertTrue(settings.espressoModelPath.isEmpty)
 
         settings.localLLMBackend = .espresso
-        settings.espressoModelPath = "/tmp/qwen.esp"
+        settings.espressoModelPath = "/tmp/Qwen3-0.6B"
 
         let reloaded = AppSettings(defaults: defaults)
         XCTAssertEqual(reloaded.localLLMBackend, .espresso)
-        XCTAssertEqual(reloaded.espressoModelPath, "/tmp/qwen.esp")
+        XCTAssertEqual(reloaded.espressoModelPath, "/tmp/Qwen3-0.6B")
     }
 
     func testEspressoPromptUsesQwenChatTemplate() {

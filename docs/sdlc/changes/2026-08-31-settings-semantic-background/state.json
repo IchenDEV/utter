@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-31-settings-semantic-background",
+  "title": "Match the macOS settings background hierarchy",
+  "risk": "medium",
+  "status": "verified",
+  "owners": [
+    "repository maintainer"
+  ],
+  "acceptanceCriteria": [
+    "The shared settings shell and page surfaces use AppKit underPageBackgroundColor.",
+    "The real dark-appearance settings window has the lighter system-like hierarchy without clipping or reduced text and control contrast.",
+    "Existing automated tests and the release-style build continue to pass."
+  ],
+  "governedPaths": [
+    "Sources/UI/SettingsView.swift",
+    "Sources/UI/SettingsVoiceIllustration.swift"
+  ],
+  "artifacts": {
+    "intent": "intent.md",
+    "spec": "spec.md",
+    "plan": "plan.md",
+    "verification": "verification.md"
+  }
+}

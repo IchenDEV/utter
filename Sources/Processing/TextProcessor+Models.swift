@@ -174,7 +174,7 @@ extension TextProcessor {
                 } catch is CancellationError {
                     throw CancellationError()
                 } catch let error as EspressoMLXFallbackError {
-                    Log.sensitive("[TextProcessor] Espresso and MLX warmup failed: \(error.details)")
+                    Log.sensitive("[TextProcessor] ANE-LM and MLX warmup failed: \(error.details)")
                     Log.error("[TextProcessor] MLX fallback unavailable during warmup")
                     _ = await espressoLLM.consumeLastFailureMessage()
                     return (false, EspressoGenerationOutcome.unavailable.message, .unavailable)
