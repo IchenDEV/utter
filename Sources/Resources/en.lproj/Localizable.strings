@@ -206,7 +206,9 @@
 "model.espresso.description" = "Run a compatible .esp bundle with Espresso's Apple Neural Engine backend.";
 "model.espresso.no_bundle" = "No .esp bundle selected";
 "model.espresso.choose" = "Choose .esp Bundle…";
-"model.espresso.private_api_warning" = "Espresso uses private Apple Neural Engine APIs and may break after macOS updates. If it fails, Utter switches to your installed MLX model. Espresso is not eligible for Mac App Store distribution.";
+"model.espresso.auto_fallback" = "Automatically switch to MLX if Espresso fails";
+"model.espresso.auto_fallback_help" = "Finish the request with the selected installed MLX model and make MLX active. Turn this off to keep Espresso selected and show its error.";
+"model.espresso.private_api_warning" = "Espresso uses private Apple Neural Engine APIs. Compatibility depends on the Mac and macOS version and is not guaranteed. Espresso is not eligible for Mac App Store distribution.";
 "model.custom_id_placeholder" = "Custom model ID (e.g. mlx-community/…)";
 "model.active" = "Active";
 "model.use" = "Use";

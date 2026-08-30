@@ -18,6 +18,7 @@ struct TextProcessingOptions {
     var useRemoteLLM: Bool
     var localLLMBackend: LocalLLMBackend
     var espressoModelPath: String
+    var fallbackToMLXOnEspressoFailure: Bool
     var remoteBaseURL: String
     var remoteAPIKey: String
     var remoteModel: String
@@ -42,6 +43,7 @@ struct TextProcessingOptions {
         self.useRemoteLLM = settings.useRemoteLLM
         self.localLLMBackend = settings.localLLMBackend
         self.espressoModelPath = settings.espressoModelPath
+        self.fallbackToMLXOnEspressoFailure = settings.fallbackToMLXOnEspressoFailure
         self.remoteBaseURL = settings.remoteBaseURL
         self.remoteAPIKey = settings.remoteAPIKey
         self.remoteModel = settings.remoteModel

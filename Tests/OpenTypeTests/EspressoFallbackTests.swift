@@ -3,8 +3,20 @@ import MLX
 @testable import OpenType
 
 final class EspressoFallbackTests: XCTestCase {
-    private final class WeakTrackerBox {
-        weak var value: EspressoGenerationTracker?
+    private actor AsyncGate {
+        private var isOpen = false
+        private var continuation: CheckedContinuation<Void, Never>?
+
+        func wait() async {
+            guard !isOpen else { return }
+            await withCheckedContinuation { continuation = $0 }
+        }
+
+        func open() {
+            isOpen = true
+            continuation?.resume()
+            continuation = nil
+        }
     }
 
     private enum StubError: LocalizedError {
@@ -44,14 +56,35 @@ final class EspressoFallbackTests: XCTestCase {
         XCTAssertTrue(result.usedMLX)
     }
 
-    func testCancellationDoesNotStartMLXFallback() async {
+    func testDisabledFallbackDoesNotRunMLX() async {
+        var ranMLX = false
+
+        do {
+            _ = try await TextProcessor.runEspressoWithMLXFallback(
+                fallbackEnabled: false,
+                espresso: { throw StubError.espresso },
+                mlx: {
+                    ranMLX = true
+                    return "mlx output"
+                }
+            ) as (value: String, usedMLX: Bool)
+            XCTFail("Expected the Espresso failure")
+        } catch {
+            XCTAssertEqual(error.localizedDescription, "espresso failed")
+            XCTAssertFalse(ranMLX)
+        }
+    }
+
+    func testDisabledFallbackCancellationDoesNotStartMLX() async {
         let espressoStarted = expectation(description: "Espresso started")
+        let gate = AsyncGate()
         var ranMLX = false
         let task = Task {
             try await TextProcessor.runEspressoWithMLXFallback(
+                fallbackEnabled: false,
                 espresso: {
                     espressoStarted.fulfill()
-                    try await Task.sleep(for: .seconds(10))
+                    await gate.wait()
                     return "espresso output"
                 },
                 mlx: {
@@ -63,6 +96,7 @@ final class EspressoFallbackTests: XCTestCase {
 
         await fulfillment(of: [espressoStarted], timeout: 1)
         task.cancel()
+        await gate.open()
 
         do {
             _ = try await task.value
@@ -87,34 +121,6 @@ final class EspressoFallbackTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
-    }
-
-    func testOutcomeTrackingIsRequestScoped() async {
-        let processor = TextProcessor()
-        var first: EspressoGenerationOutcome?
-        var second: EspressoGenerationOutcome?
-
-        await TextProcessor.withEspressoOutcomeTracking {
-            await TextProcessor.recordEspressoOutcome(.fallback)
-            first = await processor.consumeEspressoOutcome()
-        }
-        await TextProcessor.withEspressoOutcomeTracking {
-            second = await processor.consumeEspressoOutcome()
-        }
-
-        XCTAssertEqual(first, .fallback)
-        XCTAssertNil(second)
-    }
-
-    func testOutcomeTrackerIsReleasedAfterRequestCompletes() async {
-        let box = WeakTrackerBox()
-
-        await TextProcessor.withEspressoOutcomeTracking {
-            box.value = TextProcessor.espressoGenerationTracker
-            XCTAssertNotNil(box.value)
-        }
-
-        XCTAssertNil(box.value)
     }
 
     func testFallbackOutcomeSwitchesPersistedBackendToMLX() {
@@ -149,10 +155,30 @@ final class EspressoFallbackTests: XCTestCase {
         XCTAssertEqual(settings.localLLMBackend, .espresso)
     }
 
+    func testDisabledFallbackPreservesEspressoSelection() {
+        let suiteName = "EspressoFallbackTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertTrue(settings.fallbackToMLXOnEspressoFailure)
+        settings.localLLMBackend = .espresso
+        settings.fallbackToMLXOnEspressoFailure = false
+        let reloaded = AppSettings(defaults: defaults)
+        XCTAssertFalse(reloaded.fallbackToMLXOnEspressoFailure)
+
+        XCTAssertFalse(EspressoFallbackPolicy.selectMLXIfNeeded(
+            after: .fallback,
+            settings: reloaded,
+            expectedEspressoModelPath: reloaded.espressoModelPath
+        ))
+        XCTAssertEqual(reloaded.localLLMBackend, .espresso)
+    }
+
     func testLocalizedFallbackMessagesMentionMLX() {
         for language in [UILanguage.english, .chinese] {
             XCTAssertTrue(Loc.string("status.espresso_fell_back_to_mlx", language: language).contains("MLX"))
             XCTAssertTrue(Loc.string("error.espresso_mlx_fallback_unavailable", language: language).contains("MLX"))
+            XCTAssertFalse(Loc.string("model.espresso.auto_fallback", language: language).isEmpty)
         }
     }
 

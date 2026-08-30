@@ -57,14 +57,17 @@ extension VoicePipeline {
         let warmup = await textProcessor.warmUpLLM(
             model: model,
             backend: backend,
-            espressoModelPath: espressoPath
+            espressoModelPath: espressoPath,
+            fallbackToMLXOnEspressoFailure: settings.fallbackToMLXOnEspressoFailure
         )
-        guard preloadGeneration == formattingPreloadGeneration,
+        guard !Task.isCancelled,
+              preloadGeneration == formattingPreloadGeneration,
               formattingSelectionMatches(backend: backend, model: model, espressoPath: espressoPath) else {
             return nil
         }
         let ready = warmup.loaded ? await textProcessor.isLLMReady(for: backend) : false
-        guard preloadGeneration == formattingPreloadGeneration,
+        guard !Task.isCancelled,
+              preloadGeneration == formattingPreloadGeneration,
               formattingSelectionMatches(backend: backend, model: model, espressoPath: espressoPath) else {
             return nil
         }

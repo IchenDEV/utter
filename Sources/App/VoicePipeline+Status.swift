@@ -77,7 +77,7 @@ extension VoicePipeline {
 
     func presentEspressoWarmupOutcomeIfNeeded(_ outcome: EspressoGenerationOutcome?) {
         guard let outcome else { return }
-        if outcome == .unavailable {
+        if outcome != .fallback {
             showErrorHint(outcome.message)
             return
         }

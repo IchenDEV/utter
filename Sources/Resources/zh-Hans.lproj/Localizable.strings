@@ -206,7 +206,9 @@
 "model.espresso.description" = "使用 Espresso 的 Apple 神经网络引擎后端运行兼容的 .esp 模型包。";
 "model.espresso.no_bundle" = "尚未选择 .esp 模型包";
 "model.espresso.choose" = "选择 .esp 模型包…";
-"model.espresso.private_api_warning" = "Espresso 使用 Apple 神经网络引擎私有 API，可能在 macOS 更新后失效。失败时，Utter 会切换到已安装的 MLX 模型。Espresso 也无法通过 Mac App Store 审核。";
+"model.espresso.auto_fallback" = "Espresso 失败时自动切换到 MLX";
+"model.espresso.auto_fallback_help" = "使用已安装且选中的 MLX 模型完成本次请求，并将 MLX 设为当前后端。关闭后会保留 Espresso 并显示错误。";
+"model.espresso.private_api_warning" = "Espresso 使用 Apple 神经网络引擎私有 API，兼容性取决于 Mac 机型和 macOS 版本，无法保证。Espresso 也无法通过 Mac App Store 审核。";
 "model.custom_id_placeholder" = "自定义模型 ID（如 mlx-community/…）";
 "model.active" = "当前";
 "model.use" = "启用";

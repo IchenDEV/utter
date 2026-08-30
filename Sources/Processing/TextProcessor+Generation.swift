@@ -10,6 +10,7 @@ extension TextProcessor {
         temperature: Double
     ) async throws -> String {
         if options.useRemoteLLM {
+            await Self.clearEspressoOutcome()
             return try await remoteLLMClient.generate(
                 prompt: prompt,
                 systemPrompt: systemPrompt,
@@ -26,6 +27,7 @@ extension TextProcessor {
             try Task.checkCancellation()
             switch options.localLLMBackend {
             case .mlx:
+                await Self.clearEspressoOutcome()
                 await ensureModelLoaded(options.llmModel)
                 return try await llm.generate(
                     prompt: prompt,
@@ -36,6 +38,7 @@ extension TextProcessor {
             case .espresso:
                 do {
                     let result = try await Self.runEspressoWithMLXFallback(
+                        fallbackEnabled: options.fallbackToMLXOnEspressoFailure,
                         espresso: {
                             try await self.espressoLLM.loadModel(path: options.espressoModelPath)
                             return try await self.espressoLLM.generate(
@@ -59,13 +62,24 @@ extension TextProcessor {
                         _ = await espressoLLM.consumeLastFailureMessage()
                         await Self.recordEspressoOutcome(.fallback)
                         Log.info("[TextProcessor] Espresso failed; used the selected MLX model")
+                    } else {
+                        await Self.clearEspressoOutcome()
                     }
                     return result.value
+                } catch is CancellationError {
+                    throw CancellationError()
                 } catch let error as EspressoMLXFallbackError {
                     _ = await espressoLLM.consumeLastFailureMessage()
                     await Self.recordEspressoOutcome(.unavailable)
                     Log.sensitive("[TextProcessor] Espresso and MLX fallback failed: \(error.details)")
                     Log.error("[TextProcessor] MLX fallback unavailable")
+                    throw error
+                } catch {
+                    if !options.fallbackToMLXOnEspressoFailure {
+                        _ = await espressoLLM.consumeLastFailureMessage()
+                        await Self.recordEspressoOutcome(.failed)
+                        Log.error("[TextProcessor] Espresso failed; MLX fallback is disabled")
+                    }
                     throw error
                 }
             }
@@ -73,13 +87,17 @@ extension TextProcessor {
     }
 
     static func runEspressoWithMLXFallback<Value>(
+        fallbackEnabled: Bool = true,
         espresso: () async throws -> Value,
         mlx: () async throws -> Value
     ) async throws -> (value: Value, usedMLX: Bool) {
         do {
-            return (try await espresso(), false)
+            let value = try await espresso()
+            try Task.checkCancellation()
+            return (value, false)
         } catch {
             try Task.checkCancellation()
+            guard fallbackEnabled else { throw error }
             let espressoFailure = error.localizedDescription
             do {
                 let value = try await mlx()
@@ -118,6 +136,7 @@ extension TextProcessor {
     ) async throws -> String {
         try await withLocalModelAccess {
             try Task.checkCancellation()
+            await Self.clearEspressoOutcome()
             try await vlm.loadModel(id: model)
             return try await vlm.generate(
                 prompt: prompt,

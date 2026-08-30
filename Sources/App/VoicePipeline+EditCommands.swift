@@ -59,7 +59,7 @@ extension VoicePipeline {
         ) {
             if case .error = appState.phase, espressoOutcome == .fallback {
                 Log.info("[VoicePipeline] preserving edit-command error after Espresso fallback")
-            } else if espressoOutcome == .unavailable {
+            } else if espressoOutcome != .fallback {
                 showErrorHint(espressoOutcome.message)
             } else {
                 appState.completionKind = .espressoFallback

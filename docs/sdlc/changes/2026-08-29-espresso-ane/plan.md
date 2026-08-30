@@ -18,6 +18,10 @@
 - [x] Reproduce retained MLX memory after unload and clear the MLX cache on explicit unload.
 - [x] Share one processor across voice and integration workflows and include benchmarking in its lifecycle.
 - [x] Serialize complete local-model transactions and remove cancelled waiters from the lifecycle queue.
+- [x] Let users disable automatic MLX fallback while preserving it as the default.
+- [x] Keep Espresso selected and surface its runtime error when fallback is disabled.
+- [x] Clarify in-product compatibility copy without claiming an M5-only failure.
+- [x] Resolve independent-review findings for latest-operation outcomes, cancellation, and file size.
 
 ## Verification plan
 
@@ -32,6 +36,9 @@
 - [x] Current full repository gates and release-style app build
 - [x] Repeated real fallback requests and explicit-unload memory regression
 - [x] Independent cancellation, unload-order, shared-ownership, and file-size review
+- [x] Focused disabled-fallback and persistence tests
+- [x] Real settings-window light and dark verification for the fallback control
+- [x] Current repository gates and release-style app build after the follow-up
 
 ## Human gates
 

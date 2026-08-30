@@ -80,7 +80,7 @@ extension InputSessionCoordinator {
 
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             Log.info("[InputSessionCoordinator] refusing to complete session with empty output")
-            if let espressoOutcome, espressoOutcome == .unavailable {
+            if let espressoOutcome, espressoOutcome != .fallback {
                 throw IntegrationError.operationFailedWithMessage(espressoOutcome.message)
             }
             throw IntegrationError.operationFailed

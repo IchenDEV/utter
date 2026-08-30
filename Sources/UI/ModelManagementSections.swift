@@ -221,6 +221,12 @@ extension ModelManagementView {
                 .controlSize(.small)
             }
 
+            Toggle(
+                L("model.espresso.auto_fallback"),
+                isOn: $settings.fallbackToMLXOnEspressoFailure
+            )
+            .help(L("model.espresso.auto_fallback_help"))
+
             Label(L("model.espresso.private_api_warning"), systemImage: "exclamationmark.triangle.fill")
                 .font(.system(size: 10))
                 .foregroundStyle(.orange)

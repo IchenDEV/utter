@@ -84,6 +84,10 @@ extension TextProcessor {
         await espressoGenerationTracker?.record(outcome)
     }
 
+    static func clearEspressoOutcome() async {
+        await espressoGenerationTracker?.clear()
+    }
+
     func consumeEspressoOutcome() async -> EspressoGenerationOutcome? {
         await Self.espressoGenerationTracker?.consume()
     }
@@ -146,7 +150,8 @@ extension TextProcessor {
     func warmUpLLM(
         model: String,
         backend: LocalLLMBackend,
-        espressoModelPath: String
+        espressoModelPath: String,
+        fallbackToMLXOnEspressoFailure: Bool
     ) async -> (loaded: Bool, errorMessage: String?, espressoOutcome: EspressoGenerationOutcome?) {
         do {
             return try await withLocalModelAccess {
@@ -156,6 +161,7 @@ extension TextProcessor {
                         try await llm.loadModel(id: model)
                     case .espresso:
                         let result = try await Self.runEspressoWithMLXFallback(
+                            fallbackEnabled: fallbackToMLXOnEspressoFailure,
                             espresso: { try await self.espressoLLM.loadModel(path: espressoModelPath) },
                             mlx: { try await self.llm.loadModel(id: model) }
                         )
@@ -165,6 +171,8 @@ extension TextProcessor {
                         }
                     }
                     return (true, nil, nil)
+                } catch is CancellationError {
+                    throw CancellationError()
                 } catch let error as EspressoMLXFallbackError {
                     Log.sensitive("[TextProcessor] Espresso and MLX warmup failed: \(error.details)")
                     Log.error("[TextProcessor] MLX fallback unavailable during warmup")
@@ -174,10 +182,15 @@ extension TextProcessor {
                     Log.error("[TextProcessor] LLM warmup failed: \(error.localizedDescription)")
                     if backend == .espresso {
                         _ = await espressoLLM.consumeLastFailureMessage()
+                        if !fallbackToMLXOnEspressoFailure {
+                            return (false, EspressoGenerationOutcome.failed.message, .failed)
+                        }
                     }
                     return (false, error.localizedDescription, nil)
                 }
             }
+        } catch is CancellationError {
+            return (false, nil, nil)
         } catch {
             return (false, error.localizedDescription, nil)
         }
