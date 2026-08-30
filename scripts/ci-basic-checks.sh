@@ -108,5 +108,8 @@ if find . \
     fail "found broken symlinks"
 fi
 
+step "Checking SDLC artifact gates"
+bash "$ROOT_DIR/scripts/sdlc-checks.sh"
+
 echo ""
 echo "Basic CI checks passed."

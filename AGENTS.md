@@ -54,6 +54,15 @@ Utter is a macOS menu bar voice input app built with Swift 6 / SwiftUI / AppKit.
 - Keep repository automation under `scripts/`; do not create another top-level script directory
 - Comments: only non-obvious intent, no narrating code
 
+## SDLC (strict per-stage approval)
+
+Every change follows `Intent -> Spec -> Plan -> Build -> Verification -> Release`, tracked as artifacts under `docs/sdlc/changes/<NNNN>-<slug>/` (see `docs/sdlc/README.md`). Rules:
+
+- **Each stage requires explicit human approval before the next stage starts.** Fill in `intent.md` (or the next needed stage), set `Status: pending approval`, and stop for the user's decision. Never mark a stage `approved` on the user's behalf; only record an approval the user actually gave.
+- `Status` values: `draft | pending approval | approved | rejected | blocked`; `approved` requires `Approved-by` and `Approved-date`. Rejections and blocks stay in the artifact with a reason.
+- Stage order is enforced by `scripts/sdlc-checks.sh`, which runs in PR CI via `scripts/ci-basic-checks.sh`.
+- Build only within the plan's authorized scope; verification records real commands and results (failures included). `docs/superpowers/` is a read-only archive of pre-2026-08 specs/plans — do not add new files there.
+
 ## Common Pitfalls
 
 - **Metal shaders**: `swift build` does NOT bundle `.metallib` files — always use `xcodebuild` for release builds
