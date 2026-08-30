@@ -13,7 +13,10 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/argmaxinc/argmax-oss-swift.git", from: "1.0.0"),
-        .package(url: "https://github.com/christopherkarani/Espresso.git", from: "0.9.0"),
+        .package(
+            url: "https://github.com/IchenDEV/Espresso.git",
+            revision: "f3603c7014b3b82c9df036c2e91185e1e32b2d81"
+        ),
         .package(url: "https://github.com/Blaizzy/mlx-audio-swift.git", exact: "0.1.3"),
         .package(url: "https://github.com/huggingface/swift-transformers", from: "1.3.3"),
         .package(url: "https://github.com/ml-explore/mlx-swift-lm", exact: "3.31.4"),

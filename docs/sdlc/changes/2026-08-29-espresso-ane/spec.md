@@ -21,6 +21,12 @@ engine, verifies that the bundle resolves to the private ANE backend, applies a
 Qwen chat template when appropriate, and returns generated text through the
 existing processing pipeline. Remote LLM behavior is unchanged.
 
+Pin Espresso to the reviewed `v0.9.0` source plus a three-line Swift 6.2
+compatibility patch. The patch gives three internal compiled-kernel holder
+types package visibility so Xcode 26.6 can resolve metadata references emitted
+across the `RealModelInference`, `ESPRuntime`, and app modules. It changes no
+runtime logic or public API and avoids taking unrelated upstream `main` changes.
+
 ## Safety and failure modes
 
 The model and prompt remain on-device. Espresso depends on private ANE APIs, so
@@ -32,6 +38,11 @@ Selecting a missing or malformed bundle does not replace the current setting.
 The UI warning explicitly states the private-API and App Store limitation. No
 attempt is made to silently fall back from Espresso to MLX because that would
 misrepresent the selected execution backend.
+
+The patched dependency is pinned by commit rather than a moving branch. Rollback
+returns the package URL and version requirement to upstream `v0.9.0` once an
+equivalent fix is released there, or removes Espresso with the rest of this
+experimental backend.
 
 ## Test strategy
 

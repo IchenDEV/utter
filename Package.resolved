@@ -1,5 +1,5 @@
 {
-  "originHash" : "df115d1ba7786c21c91c720b1530dcd190051b18e6df521ee04e7a4f435221a5",
+  "originHash" : "113df5803768310e85daa76109055f7d79bff777eab44985d49c77f715d46341",
   "pins" : [
     {
       "identity" : "argmax-oss-swift",
@@ -13,10 +13,9 @@
     {
       "identity" : "espresso",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/christopherkarani/Espresso.git",
+      "location" : "https://github.com/IchenDEV/Espresso.git",
       "state" : {
-        "revision" : "a8629bbcb4d4ae7179b0c3995c36c868e690df87",
-        "version" : "0.9.0"
+        "revision" : "f3603c7014b3b82c9df036c2e91185e1e32b2d81"
       }
     },
     {
