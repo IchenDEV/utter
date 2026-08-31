@@ -232,10 +232,14 @@ actor EspressoLLMEngine {
     }
 
     static func formatPrompt(user: String, system: String, modelName: String) -> String {
-        if modelName.lowercased().contains("qwen") {
+        let normalizedModelName = modelName.lowercased()
+        if normalizedModelName.contains("qwen") {
+            let assistantPrefix = normalizedModelName.contains("qwen3")
+                ? "<|im_start|>assistant\n<think>\n\n</think>\n\n"
+                : "<|im_start|>assistant\n"
             return "<|im_start|>system\n\(system)<|im_end|>\n"
                 + "<|im_start|>user\n\(user)<|im_end|>\n"
-                + "<|im_start|>assistant\n<think>\n\n</think>\n\n"
+                + assistantPrefix
         }
         return "System:\n\(system)\n\nUser:\n\(user)\n\nAssistant:\n"
     }
