@@ -1,6 +1,6 @@
 # Spec: Replace Espresso with a packaged ANE-LM runtime
 
-**Status:** draft
+**Status:** pending approval
 **Approved-by:** —
 **Approved-date:** —
 **Upstream:** [intent.md](intent.md)

@@ -1,6 +1,6 @@
 # Spec: Match the macOS settings background hierarchy
 
-**Status:** draft
+**Status:** pending approval
 **Approved-by:** —
 **Approved-date:** —
 **Upstream:** [intent.md](intent.md)
