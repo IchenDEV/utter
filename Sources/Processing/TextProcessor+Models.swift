@@ -163,10 +163,10 @@ extension TextProcessor {
                         let result = try await Self.runEspressoWithMLXFallback(
                             fallbackEnabled: fallbackToMLXOnEspressoFailure,
                             espresso: { try await self.espressoLLM.loadModel(path: espressoModelPath) },
+                            prepareForMLXFallback: { await self.espressoLLM.unload() },
                             mlx: { try await self.llm.loadModel(id: model) }
                         )
                         if result.usedMLX {
-                            _ = await espressoLLM.consumeLastFailureMessage()
                             return (true, nil, .fallback)
                         }
                     }
@@ -176,7 +176,6 @@ extension TextProcessor {
                 } catch let error as EspressoMLXFallbackError {
                     Log.sensitive("[TextProcessor] ANE-LM and MLX warmup failed: \(error.details)")
                     Log.error("[TextProcessor] MLX fallback unavailable during warmup")
-                    _ = await espressoLLM.consumeLastFailureMessage()
                     return (false, EspressoGenerationOutcome.unavailable.message, .unavailable)
                 } catch {
                     Log.error("[TextProcessor] LLM warmup failed: \(error.localizedDescription)")
