@@ -1,8 +1,8 @@
 # Spec: Match the macOS settings background hierarchy
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** IchenDEV (user)
+**Approved-date:** 2026-08-31
 **Upstream:** [intent.md](intent.md)
 
 ## Context
