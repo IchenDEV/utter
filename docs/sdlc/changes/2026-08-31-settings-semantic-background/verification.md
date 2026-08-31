@@ -1,6 +1,6 @@
 # Verification: Match the macOS settings background hierarchy
 
-**Status:** draft
+**Status:** pending approval
 **Approved-by:** —
 **Approved-date:** —
 **Upstream:** [plan.md](plan.md)

@@ -1,8 +1,8 @@
 # Plan: Replace Espresso with a packaged ANE-LM runtime
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** IchenDEV (user)
+**Approved-date:** 2026-08-31
 **Upstream:** [spec.md](spec.md)
 
 ## Work items
