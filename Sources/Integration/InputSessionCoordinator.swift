@@ -229,7 +229,7 @@ final class InputSessionCoordinator {
         }
         let contextMode = ScreenContextMode.effectiveCaptureMode(
             preference: settings.screenContextMode,
-            useRemoteLLM: settings.useRemoteLLM,
+            useRemoteLLM: settings.useRemoteLLM || settings.localLLMBackend == .espresso,
             modelID: settings.llmModel
         )
         return Task.detached(priority: .utility) {

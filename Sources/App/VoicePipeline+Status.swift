@@ -38,6 +38,12 @@ extension VoicePipeline {
         appState.statusMessage = L("status.ready")
     }
 
+    func recordFormattingDuration(_ started: CFAbsoluteTime, label: String) {
+        let elapsed = CFAbsoluteTimeGetCurrent() - started
+        appState.lastFormattingDurationSeconds = elapsed
+        Log.info("[VoicePipeline] \(label) completed in \(String(format: "%.2f", elapsed))s")
+    }
+
     func hideOverlayAfterDelay() {
         hideOverlayTask?.cancel()
         hideOverlayTask = Task { @MainActor in
@@ -65,6 +71,19 @@ extension VoicePipeline {
         appState.statusMessage = message
         appState.resetDownloadProgress()
         soundPlayer.playStop()
+        showOverlay()
+        hideOverlayAfterDelay()
+    }
+
+    func presentEspressoWarmupOutcomeIfNeeded(_ outcome: EspressoGenerationOutcome?) {
+        guard let outcome else { return }
+        if outcome != .fallback {
+            showErrorHint(outcome.message)
+            return
+        }
+        appState.phase = .done
+        appState.completionKind = .espressoFallback
+        appState.statusMessage = outcome.message
         showOverlay()
         hideOverlayAfterDelay()
     }

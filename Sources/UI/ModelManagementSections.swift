@@ -155,6 +155,8 @@ extension ModelManagementView {
 
             if settings.useRemoteLLM {
                 RemoteLLMConfigView()
+            } else if settings.localLLMBackend == .espresso {
+                espressoLLMSection
             } else {
                 localLLMModelsSection
             }
@@ -195,13 +197,63 @@ extension ModelManagementView {
         }
     }
 
-    func syncSelectedFamilyFromActiveModel() {
-        guard !settings.useRemoteLLM else { return }
-        if let activeModel = catalog.llmModels.first(where: { $0.id == settings.llmModel }) {
-            selectedModelFamily = activeModel.family
-        } else {
-            selectedModelFamily = .qwen
+    var espressoLLMSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("ANE-LM", systemImage: "neural.engine")
+                .font(.system(size: 12, weight: .semibold))
+
+            Text(L("model.espresso.description"))
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                Text(settings.espressoModelPath.isEmpty
+                    ? L("model.espresso.no_bundle")
+                    : settings.espressoModelPath)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(settings.espressoModelPath.isEmpty ? .secondary : .primary)
+                    .lineLimit(2)
+                    .textSelection(.enabled)
+                Spacer()
+                Button(L("model.espresso.choose")) {
+                    chooseANEModel()
+                }
+                .controlSize(.small)
+            }
+
+            Toggle(
+                L("model.espresso.auto_fallback"),
+                isOn: $settings.fallbackToMLXOnEspressoFailure
+            )
+            .help(L("model.espresso.auto_fallback_help"))
+
+            Label(L("model.espresso.private_api_warning"), systemImage: "exclamationmark.triangle.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(.orange)
         }
+    }
+
+    func syncSelectedFamilyFromActiveModel() {
+        guard !settings.useRemoteLLM, settings.localLLMBackend == .mlx else { return }
+        let activeFamily = catalog.llmModels
+            .first(where: { $0.id == settings.llmModel })
+            .map(\.family)
+        selectedModelFamily = FormattingModelType.resolvedLocalSelection(
+            pending: nil,
+            activeFamily: activeFamily
+        ).family
+    }
+
+    func syncSelectedFamilyAfterBackendChange() {
+        guard !settings.useRemoteLLM, settings.localLLMBackend == .mlx else { return }
+        let activeFamily = catalog.llmModels
+            .first(where: { $0.id == settings.llmModel })
+            .map(\.family)
+        selectedModelFamily = FormattingModelType.resolvedLocalSelection(
+            pending: pendingFormattingTypeAfterBackendChange,
+            activeFamily: activeFamily
+        ).family
+        pendingFormattingTypeAfterBackendChange = nil
     }
 
     /// Split a family's models into recommended (top), standard, and legacy (folded) tiers.

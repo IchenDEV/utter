@@ -9,65 +9,126 @@ extension VoicePipeline {
         appState.statusMessage = L("pipeline.whisper_unloaded")
     }
 
-    func unloadLLM() {
-        processingTask?.cancel()
-        processingTask = nil
-        replacementTask?.cancel()
-        replacementTask = nil
-        appState.clearPendingReplacement()
-        if appState.phase == .processing {
-            appState.phase = .idle
-            appState.statusMessage = L("status.ready")
-        }
-        appState.llmModelReady = false
-        Task { await textProcessor.unloadLLM() }
-    }
-
     func unloadLocalASR() {
         qwenSpeechEngine = nil
     }
 
-    func loadLLM() {
-        Task {
-            await preloadFormattingModel(showFailureInStatus: true)
-        }
-    }
-
-    func preloadFormattingModel(showFailureInStatus: Bool) async {
+    @discardableResult
+    func preloadFormattingModelNow(showFailureInStatus: Bool) async -> EspressoGenerationOutcome? {
+        formattingPreloadGeneration += 1
+        let preloadGeneration = formattingPreloadGeneration
         guard !appState.settings.useRemoteLLM else {
             appState.llmModelReady = true
-            return
+            return nil
         }
 
-        let model = appState.settings.llmModel.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !model.isEmpty else { return }
+        let settings = appState.settings
+        let backend = settings.localLLMBackend
+        let model = settings.llmModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        let espressoPath = settings.espressoModelPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        let selectedModel = backend == .espresso ? espressoPath : model
+        guard !selectedModel.isEmpty else { return nil }
 
         let catalog = ModelCatalog.shared
-        catalog.refreshStatus()
-        let modelStatus = catalog.llmModels.first(where: { $0.id == model })?.status
-        guard modelStatus == .downloaded || modelStatus == .ready else {
+        let modelIsAvailable: Bool
+        if backend == .espresso {
+            modelIsAvailable = FileManager.default.fileExists(
+                atPath: NSString(string: espressoPath).expandingTildeInPath
+            )
+        } else {
+            catalog.refreshStatus()
+            let status = catalog.llmModels.first(where: { $0.id == model })?.status
+            modelIsAvailable = status == .downloaded || status == .ready
+        }
+        guard modelIsAvailable else {
             let message = L("model.download_required")
-            catalog.updateLLMStatus(model, status: .error(message))
+            if backend == .mlx {
+                catalog.updateLLMStatus(model, status: .error(message))
+            }
             appState.statusMessage = showFailureInStatus ? message : L("status.ready")
-            return
+            return nil
         }
 
         appState.statusMessage = L("pipeline.loading_llm")
-        catalog.updateLLMStatus(model, status: .loading, detail: L("model.loading"))
+        if backend == .mlx {
+            catalog.updateLLMStatus(model, status: .loading, detail: L("model.loading"))
+        }
 
-        let loaded = await textProcessor.warmUpLLM(model: model)
-        let ready = await textProcessor.isLLMReady
-        appState.llmModelReady = loaded && ready
+        let warmup = await textProcessor.warmUpLLM(
+            model: model,
+            backend: backend,
+            espressoModelPath: espressoPath,
+            fallbackToMLXOnEspressoFailure: settings.fallbackToMLXOnEspressoFailure
+        )
+        guard !Task.isCancelled,
+              preloadGeneration == formattingPreloadGeneration,
+              formattingSelectionMatches(backend: backend, model: model, espressoPath: espressoPath) else {
+            return nil
+        }
+        let ready = warmup.loaded ? await textProcessor.isLLMReady(for: backend) : false
+        guard !Task.isCancelled,
+              preloadGeneration == formattingPreloadGeneration,
+              formattingSelectionMatches(backend: backend, model: model, espressoPath: espressoPath) else {
+            return nil
+        }
+        appState.llmModelReady = warmup.loaded && ready
 
         if appState.llmModelReady {
-            catalog.updateLLMStatus(model, status: .ready)
+            EspressoFallbackPolicy.selectMLXIfNeeded(
+                after: warmup.espressoOutcome,
+                settings: settings,
+                expectedEspressoModelPath: espressoPath
+            )
+            if backend == .mlx {
+                catalog.updateLLMStatus(model, status: .ready)
+            }
             Log.info("[VoicePipeline] LLM model loaded into memory, ready for instant inference")
-            appState.statusMessage = L("status.ready")
+            appState.statusMessage = warmup.espressoOutcome?.message ?? L("status.ready")
+            presentEspressoWarmupOutcomeIfNeeded(warmup.espressoOutcome)
+            return warmup.espressoOutcome
         } else {
-            catalog.updateLLMStatus(model, status: .error(L("pipeline.model_load_failed")))
+            if backend == .mlx {
+                catalog.updateLLMStatus(model, status: .error(L("pipeline.model_load_failed")))
+            }
             Log.info("[VoicePipeline] LLM warmup failed, will retry on demand")
-            appState.statusMessage = showFailureInStatus ? L("pipeline.model_load_failed") : L("status.ready")
+            let message = backend == .espresso
+                ? (warmup.errorMessage ?? L("error.espresso_runtime_failed"))
+                : L("pipeline.model_load_failed")
+            appState.statusMessage = warmup.espressoOutcome != nil || showFailureInStatus
+                ? message
+                : L("status.ready")
+            presentEspressoWarmupOutcomeIfNeeded(warmup.espressoOutcome)
+            return warmup.espressoOutcome
         }
+    }
+
+    private func formattingSelectionMatches(
+        backend: LocalLLMBackend,
+        model: String,
+        espressoPath: String
+    ) -> Bool {
+        let settings = appState.settings
+        guard !settings.useRemoteLLM, settings.localLLMBackend == backend else { return false }
+        switch backend {
+        case .mlx:
+            return settings.llmModel.trimmingCharacters(in: .whitespacesAndNewlines) == model
+        case .espresso:
+            return settings.espressoModelPath.trimmingCharacters(in: .whitespacesAndNewlines) == espressoPath
+        }
+    }
+
+    func consumeEspressoOutcome(
+        settings: AppSettings,
+        expectedEspressoModelPath: String
+    ) async -> EspressoGenerationOutcome? {
+        let outcome = await textProcessor.consumeEspressoOutcome()
+        guard !Task.isCancelled else { return nil }
+        EspressoFallbackPolicy.selectMLXIfNeeded(
+            after: outcome,
+            settings: settings,
+            expectedEspressoModelPath: expectedEspressoModelPath
+        )
+        return outcome
     }
 
     func ensureEngineLoaded(requestPermission: Bool = true) async {

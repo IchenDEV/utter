@@ -16,6 +16,7 @@ enum IntegrationError: Error, Equatable {
     case invalidSessionState
     case noSpeechDetected
     case operationFailed
+    case operationFailedWithMessage(String)
 
     var payload: Payload {
         switch self {
@@ -39,6 +40,8 @@ enum IntegrationError: Error, Equatable {
             return Payload(error: "no_speech_detected", message: "No speech was detected in the recording.")
         case .operationFailed:
             return Payload(error: "operation_failed", message: "Utter could not complete the input session.")
+        case .operationFailedWithMessage(let message):
+            return Payload(error: "operation_failed", message: message)
         }
     }
 }

@@ -13,6 +13,11 @@ enum AppPhase: Equatable {
     case error(String)
 }
 
+enum AppCompletionKind: Equatable {
+    case standard
+    case espressoFallback
+}
+
 @MainActor
 final class AppState: ObservableObject {
     @Published var phase: AppPhase = .idle
@@ -32,6 +37,7 @@ final class AppState: ObservableObject {
     @Published var lastFormattingDurationSeconds: Double = 0
     @Published var pendingReplacement: DeferredReplacement?
     @Published var activeInputMode: VoiceInputMode = .dictation
+    @Published var completionKind: AppCompletionKind = .standard
 
     let settings = AppSettings.shared
 
@@ -54,6 +60,7 @@ final class AppState: ObservableObject {
         resetDownloadProgress()
         pendingReplacement = nil
         activeInputMode = .dictation
+        completionKind = .standard
     }
 
     func clearPendingReplacement() {

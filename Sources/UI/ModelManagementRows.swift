@@ -221,6 +221,7 @@ extension ModelManagementView {
         case .llm:
             onUnloadLLM?()
             settings.useRemoteLLM = false
+            settings.localLLMBackend = .mlx
             settings.llmModel = model.id
             selectedModelFamily = model.family
             onLoadLLM?()
@@ -254,12 +255,13 @@ extension ModelManagementView {
     }
 
     func runBenchmark(_ modelID: String) async {
-        guard let idx = catalog.llmModels.firstIndex(where: { $0.id == modelID }) else { return }
+        guard let idx = catalog.llmModels.firstIndex(where: { $0.id == modelID }),
+              let onBenchmarkLLM else { return }
         catalog.llmModels[idx].isBenchmarking = true
         catalog.llmModels[idx].benchmarkTPS = nil
 
         do {
-            let result = try await benchmarkEngine.benchmark(modelID: modelID)
+            let result = try await onBenchmarkLLM(modelID)
             if let i = catalog.llmModels.firstIndex(where: { $0.id == modelID }) {
                 catalog.llmModels[i].benchmarkTPS = result.tokensPerSecond
                 catalog.llmModels[i].isBenchmarking = false
@@ -272,30 +274,4 @@ extension ModelManagementView {
         }
     }
 
-    func secondaryText(for model: ModelCatalog.ModelEntry) -> String {
-        switch model.status {
-        case .unavailable(let message), .error(let message):
-            return message
-        default:
-            return model.hint
-        }
-    }
-
-    func statusDot(_ status: ModelCatalog.ModelStatus) -> some View {
-        Group {
-            switch status {
-            case .notDownloaded:
-                Circle().fill(.secondary.opacity(0.3))
-            case .downloading, .compiling, .loading:
-                ProgressView().controlSize(.mini)
-            case .downloaded, .ready:
-                Circle().fill(.green)
-            case .unavailable:
-                Circle().fill(.orange)
-            case .error:
-                Circle().fill(.red)
-            }
-        }
-        .frame(width: 8, height: 8)
-    }
 }

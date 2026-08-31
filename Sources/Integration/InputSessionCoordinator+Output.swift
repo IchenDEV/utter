@@ -3,6 +3,12 @@ import Foundation
 @MainActor
 extension InputSessionCoordinator {
     func outputText(for raw: String, active: ActiveSession) async throws -> String {
+        try await TextProcessor.withEspressoOutcomeTracking {
+            try await trackedOutputText(for: raw, active: active)
+        }
+    }
+
+    private func trackedOutputText(for raw: String, active: ActiveSession) async throws -> String {
         let options = TextProcessingOptions(settings: settings, inputLanguage: active.inputLanguage)
         let dictionarySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
         let enableMemory = settings.enableMemory
@@ -63,8 +69,20 @@ extension InputSessionCoordinator {
             )
         }
 
+        let espressoOutcome = await textProcessor.consumeEspressoOutcome()
+        if !Task.isCancelled, EspressoFallbackPolicy.selectMLXIfNeeded(
+            after: espressoOutcome,
+            settings: settings,
+            expectedEspressoModelPath: options.espressoModelPath
+        ) {
+            Log.info("[InputSessionCoordinator] ANE-LM failed; selected MLX as the active backend")
+        }
+
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             Log.info("[InputSessionCoordinator] refusing to complete session with empty output")
+            if let espressoOutcome, espressoOutcome != .fallback {
+                throw IntegrationError.operationFailedWithMessage(espressoOutcome.message)
+            }
             throw IntegrationError.operationFailed
         }
 

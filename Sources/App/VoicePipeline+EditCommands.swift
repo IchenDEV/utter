@@ -8,6 +8,7 @@ extension VoicePipeline {
         settings: AppSettings,
         targetApp: NSRunningApplication?
     ) async -> Bool {
+        let expectedEspressoModelPath = settings.espressoModelPath
         guard let command = await resolvedSpokenEditCommand(
             raw: raw,
             settings: settings,
@@ -24,7 +25,6 @@ extension VoicePipeline {
                 settings: settings,
                 targetApp: targetApp
             )
-            return true
         case .replaceSelection(let replacementRaw):
             await replaceSelectedText(
                 raw: raw,
@@ -32,7 +32,6 @@ extension VoicePipeline {
                 settings: settings,
                 targetApp: targetApp
             )
-            return true
         case .rewriteLast(let intent):
             await rewriteLastInsertion(
                 raw: raw,
@@ -40,7 +39,6 @@ extension VoicePipeline {
                 settings: settings,
                 targetApp: targetApp
             )
-            return true
         case .rewriteSelection(let intent):
             await rewriteSelectedText(
                 raw: raw,
@@ -48,14 +46,29 @@ extension VoicePipeline {
                 settings: settings,
                 targetApp: targetApp
             )
-            return true
         case .deleteSelection:
             await deleteSelectedText(targetApp: targetApp)
-            return true
         case .undoLastInsertion:
             await undoLastInsertion(targetApp: targetApp)
-            return true
         }
+
+        guard !Task.isCancelled else { return true }
+        if let espressoOutcome = await consumeEspressoOutcome(
+            settings: settings,
+            expectedEspressoModelPath: expectedEspressoModelPath
+        ) {
+            if case .error = appState.phase, espressoOutcome == .fallback {
+                Log.info("[VoicePipeline] preserving edit-command error after ANE-LM fallback")
+            } else if espressoOutcome != .fallback {
+                showErrorHint(espressoOutcome.message)
+            } else {
+                appState.completionKind = .espressoFallback
+                appState.statusMessage = espressoOutcome.message
+                showOverlay()
+                hideOverlayAfterDelay()
+            }
+        }
+        return true
     }
 
     private func replaceLastInsertion(
@@ -161,29 +174,6 @@ extension VoicePipeline {
         )
     }
 
-    private func replacementInputContext(
-        settings: AppSettings,
-        targetApp: NSRunningApplication?
-    ) -> InputContext {
-        InputContext.capture(
-            targetApp: targetApp,
-            screenContext: "",
-            outputMode: .command,
-            inputLanguage: settings.inputLanguage,
-            source: .menuBar
-        )
-    }
-
-    private func finalizedReplacementText(
-        _ text: String,
-        settings: AppSettings
-    ) -> String {
-        textProcessor.cleanCommandGeneratedOutput(
-            text,
-            inputLanguage: settings.inputLanguage
-        )
-    }
-
     private func deleteSelectedText(targetApp: NSRunningApplication?) async {
         cancelScreenContextCapture()
 
@@ -236,78 +226,4 @@ extension VoicePipeline {
         hideOverlayAfterDelay()
     }
 
-    private func rewriteSelectedText(
-        raw: String,
-        intent: SelectionRewriteIntent,
-        settings: AppSettings,
-        targetApp: NSRunningApplication?
-    ) async {
-        cancelScreenContextCapture()
-
-        guard let selectedText = await textInserter.selectedText(targetApp: targetApp),
-              !selectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            showErrorHint(L("pipeline.no_selected_text_to_replace"))
-            return
-        }
-
-        let context = InputContext.capture(
-            targetApp: targetApp,
-            screenContext: "",
-            selectedTextOverride: selectedText,
-            outputMode: .command,
-            inputLanguage: settings.inputLanguage,
-            source: .menuBar
-        )
-        var options = TextProcessingOptions(settings: settings)
-        options.llmModel = settings.llmModel
-        let memoryContext = VoicePipelinePolicy.memoryContext(
-            for: .command,
-            settings: settings,
-            currentContext: context
-        )
-
-        appState.phase = .processing
-        appState.statusMessage = L("pipeline.formatting")
-        let rewrittenText = await textProcessor.processSelectionEdit(
-            selectedText: selectedText,
-            intent: intent,
-            options: options,
-            spokenCommand: raw,
-            memoryContext: memoryContext,
-            inputContext: context
-        )
-        guard !rewrittenText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            showNoSpeechDetected(reason: "selection rewrite returned empty text")
-            return
-        }
-
-        appState.processedText = rewrittenText
-        appState.phase = .inserting
-        appState.statusMessage = L("pipeline.replacing")
-
-        let result = await textInserter.replaceSelectedText(text: rewrittenText, targetApp: targetApp)
-        appState.phase = .done
-        appState.statusMessage = L("status.done")
-        hideOverlayAfterDelay()
-
-        if case .probablyFailed(let reason) = result {
-            Log.info("[VoicePipeline] voice edit selection rewrite probably failed: \(reason)")
-            TextInserter.copyToClipboard(rewrittenText)
-            showInsertionFailedAlert(text: rewrittenText, reason: reason)
-            return
-        }
-
-        let recordID = InputHistory.shared.addRecord(
-            rawText: raw,
-            processedText: rewrittenText,
-            wasProcessed: true,
-            context: context
-        )
-        appState.lastInsertedText = rewrittenText
-        beginCorrectionCapture(
-            recordID: recordID,
-            insertedText: rewrittenText,
-            context: context
-        )
-    }
 }

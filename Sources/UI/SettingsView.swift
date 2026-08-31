@@ -27,6 +27,7 @@ struct SettingsView: View {
     var onUnloadWhisper: (() -> Void)?
     var onUnloadLLM: (() -> Void)?
     var onLoadLLM: (() -> Void)?
+    var onBenchmarkLLM: ((String) async throws -> LLMEngine.BenchmarkResult)?
     var onUnloadLocalASR: (() -> Void)?
 
     var body: some View {
@@ -39,6 +40,7 @@ struct SettingsView: View {
                 onUnloadWhisper: onUnloadWhisper,
                 onUnloadLLM: onUnloadLLM,
                 onLoadLLM: onLoadLLM,
+                onBenchmarkLLM: onBenchmarkLLM,
                 onUnloadLocalASR: onUnloadLocalASR
             )
             .tabItem { Label(L("tab.models"), systemImage: "cpu") }
@@ -50,7 +52,7 @@ struct SettingsView: View {
                 .tabItem { Label(L("tab.about"), systemImage: "info.circle") }
         }
         .frame(width: SettingsWindowLayout.width, height: SettingsWindowLayout.height)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Color(nsColor: .underPageBackgroundColor))
         .id(settings.uiLanguage)
     }
 }

@@ -1,6 +1,14 @@
 {
-  "originHash" : "a272f2b5fa2a7a226c6e9fdcf766dbda0afb1e7004e1b2f15f107c99cd5b662b",
+  "originHash" : "3283c962479741ac4c7b0cd4e71ec15275b7d24d82a2182437d9e2ba4d21b27a",
   "pins" : [
+    {
+      "identity" : "ane-lm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/IchenDEV/ANE-LM.git",
+      "state" : {
+        "revision" : "033472ec12ea796fc7ea4f8cefd7ed456f69900b"
+      }
+    },
     {
       "identity" : "argmax-oss-swift",
       "kind" : "remoteSourceControl",

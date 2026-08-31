@@ -4,6 +4,7 @@ enum FormattingModelType: String, CaseIterable {
     case qwen
     case gemma
     case llama
+    case espresso
     case remote
     case custom
 
@@ -12,7 +13,7 @@ enum FormattingModelType: String, CaseIterable {
         case .qwen: .qwen
         case .gemma: .gemma
         case .llama: .llama
-        case .remote, .custom: nil
+        case .espresso, .remote, .custom: nil
         }
     }
 
@@ -24,8 +25,23 @@ enum FormattingModelType: String, CaseIterable {
             "\(ModelCatalog.ModelFamily.qwen.rawValue) · \(L("common.recommended_short"))"
         case .gemma: ModelCatalog.ModelFamily.gemma.rawValue
         case .llama: ModelCatalog.ModelFamily.llama.rawValue
+        case .espresso: "ANE"
         case .remote: L("model.family.remote")
         case .custom: L("common.custom")
+        }
+    }
+
+    static func resolvedLocalSelection(
+        pending: FormattingModelType?,
+        activeFamily: ModelCatalog.ModelFamily??
+    ) -> FormattingModelType {
+        if let pending { return pending }
+        guard let activeFamily else { return .qwen }
+        switch activeFamily {
+        case .qwen: return .qwen
+        case .gemma: return .gemma
+        case .llama: return .llama
+        case nil: return .custom
         }
     }
 }
@@ -45,9 +61,8 @@ extension ModelManagementView {
     private var familySelection: Binding<FormattingModelType> {
         Binding(
             get: {
-                if settings.useRemoteLLM {
-                    return .remote
-                }
+                if settings.useRemoteLLM { return .remote }
+                if settings.localLLMBackend == .espresso { return .espresso }
                 switch selectedModelFamily {
                 case .qwen: return .qwen
                 case .gemma: return .gemma
@@ -63,6 +78,8 @@ extension ModelManagementView {
                     selectLocalFamily(.gemma)
                 case .llama:
                     selectLocalFamily(.llama)
+                case .espresso:
+                    selectEspressoLLM()
                 case .remote:
                     selectRemoteLLM()
                 case .custom:
@@ -74,11 +91,32 @@ extension ModelManagementView {
 
     func selectLocalFamily(_ family: ModelCatalog.ModelFamily) {
         selectedModelFamily = family
-        if settings.useRemoteLLM {
-            settings.useRemoteLLM = false
-            if catalog.llmModels.first(where: { $0.id == settings.llmModel })?.family == family {
-                onLoadLLM?()
+        if settings.localLLMBackend != .mlx {
+            switch family {
+            case .qwen: pendingFormattingTypeAfterBackendChange = .qwen
+            case .gemma: pendingFormattingTypeAfterBackendChange = .gemma
+            case .llama: pendingFormattingTypeAfterBackendChange = .llama
             }
+        }
+        let changedBackend = settings.useRemoteLLM || settings.localLLMBackend != .mlx
+        if changedBackend {
+            onUnloadLLM?()
+            settings.useRemoteLLM = false
+            settings.localLLMBackend = .mlx
+        }
+        if changedBackend,
+           catalog.llmModels.first(where: { $0.id == settings.llmModel })?.family == family {
+            onLoadLLM?()
+        }
+    }
+
+    func selectEspressoLLM() {
+        guard settings.useRemoteLLM || settings.localLLMBackend != .espresso else { return }
+        onUnloadLLM?()
+        settings.useRemoteLLM = false
+        settings.localLLMBackend = .espresso
+        if !settings.espressoModelPath.isEmpty {
+            onLoadLLM?()
         }
     }
 
@@ -91,12 +129,18 @@ extension ModelManagementView {
 
     func selectCustomLLM() {
         selectedModelFamily = nil
-        if settings.useRemoteLLM {
+        if settings.localLLMBackend != .mlx {
+            pendingFormattingTypeAfterBackendChange = .custom
+        }
+        let changedBackend = settings.useRemoteLLM || settings.localLLMBackend != .mlx
+        if changedBackend {
+            onUnloadLLM?()
             settings.useRemoteLLM = false
-            if let activeModel = catalog.llmModels.first(where: { $0.id == settings.llmModel }),
-               activeModel.family == nil {
-                onLoadLLM?()
-            }
+            settings.localLLMBackend = .mlx
+        }
+        if changedBackend,
+           catalog.llmModels.first(where: { $0.id == settings.llmModel })?.family == nil {
+            onLoadLLM?()
         }
     }
 }

@@ -106,6 +106,10 @@ final class IntegrationHTTPTests: XCTestCase {
         XCTAssertEqual(IntegrationHTTPDispatcher.statusCode(for: IntegrationError.modelNotReady), 400)
         XCTAssertEqual(IntegrationHTTPDispatcher.statusCode(for: IntegrationError.noSpeechDetected), 400)
         XCTAssertEqual(IntegrationHTTPDispatcher.statusCode(for: IntegrationError.operationFailed), 500)
+        XCTAssertEqual(
+            IntegrationHTTPDispatcher.statusCode(for: IntegrationError.operationFailedWithMessage("details")),
+            500
+        )
     }
 
     @MainActor

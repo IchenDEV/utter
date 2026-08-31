@@ -9,6 +9,7 @@ struct ModelManagementView: View {
     var onUnloadWhisper: (() -> Void)?
     var onUnloadLLM: (() -> Void)?
     var onLoadLLM: (() -> Void)?
+    var onBenchmarkLLM: ((String) async throws -> LLMEngine.BenchmarkResult)?
     var onUnloadLocalASR: (() -> Void)?
 
     @State var customLLMInput = ""
@@ -17,7 +18,7 @@ struct ModelManagementView: View {
     @State var selectedModelFamily: ModelCatalog.ModelFamily? = .qwen
     @State var showLegacyModels = false
     @State var pendingModelAction: PendingModelAction?
-    let benchmarkEngine = LLMEngine()
+    @State var pendingFormattingTypeAfterBackendChange: FormattingModelType?
 
     var body: some View {
         Form {
@@ -56,6 +57,9 @@ struct ModelManagementView: View {
             syncSelectedFamilyFromActiveModel()
         }
         .onChange(of: settings.llmModel) { _, _ in syncSelectedFamilyFromActiveModel() }
+        .onChange(of: settings.localLLMBackend) { _, _ in
+            syncSelectedFamilyAfterBackendChange()
+        }
         .onChange(of: settings.qwenASRModel) { _, _ in onUnloadLocalASR?() }
         .alert(item: $pendingModelAction, content: modelActionAlert)
     }
@@ -160,6 +164,30 @@ extension ModelManagementView {
             }
             onUnloadLLM?()
             catalog.addLocalLLM(url)
+        }
+    }
+
+    func chooseANEModel() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = false
+        panel.message = L("model.espresso.choose")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        Task { @MainActor in
+            do {
+                try await EspressoLLMEngine.validateModelDirectory(at: url)
+                onUnloadLLM?()
+                settings.espressoModelPath = url.path
+                settings.localLLMBackend = .espresso
+                settings.useRemoteLLM = false
+                onLoadLLM?()
+            } catch {
+                importErrorMessage = error.localizedDescription
+                showImportError = true
+            }
         }
     }
 

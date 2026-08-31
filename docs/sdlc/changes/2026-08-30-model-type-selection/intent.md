@@ -30,7 +30,7 @@ persisted models, inference behavior, and remote-provider configuration.
 
 ## Acceptance criteria
 
-- Formatting order is Qwen recommended, Gemma, Llama, Remote, Custom.
+- Formatting order is Qwen recommended, Gemma, Llama, ANE, Remote, Custom.
 - Custom controls and family-less models appear only under Custom.
 - Active family-less models synchronize to Custom.
 - Speech order is Qwen recommended, Whisper, Apple, Doubao.

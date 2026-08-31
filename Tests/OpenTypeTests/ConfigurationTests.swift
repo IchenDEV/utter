@@ -66,10 +66,45 @@ final class ConfigurationTests: XCTestCase {
     @MainActor
     func testFormattingModelTypesPutRecommendedQwenFirstAndCustomLast() {
         XCTAssertEqual(FormattingModelType.allCases.map(\.rawValue), [
-            "qwen", "gemma", "llama", "remote", "custom",
+            "qwen", "gemma", "llama", "espresso", "remote", "custom",
         ])
         XCTAssertTrue(FormattingModelType.qwen.isRecommended)
         XCTAssertTrue(FormattingModelType.allCases.dropFirst().allSatisfy { !$0.isRecommended })
+    }
+
+    @MainActor
+    func testFormattingModelBackendChangePreservesExplicitTypeSelection() {
+        let activeGemma: ModelCatalog.ModelFamily?? = .some(.gemma)
+        XCTAssertEqual(
+            FormattingModelType.resolvedLocalSelection(
+                pending: .qwen,
+                activeFamily: activeGemma
+            ),
+            .qwen
+        )
+        XCTAssertEqual(
+            FormattingModelType.resolvedLocalSelection(
+                pending: .custom,
+                activeFamily: activeGemma
+            ),
+            .custom
+        )
+
+        let activeCustom: ModelCatalog.ModelFamily?? = .some(nil)
+        XCTAssertEqual(
+            FormattingModelType.resolvedLocalSelection(
+                pending: nil,
+                activeFamily: activeCustom
+            ),
+            .custom
+        )
+        XCTAssertEqual(
+            FormattingModelType.resolvedLocalSelection(
+                pending: nil,
+                activeFamily: nil
+            ),
+            .qwen
+        )
     }
 
     func testQwenASRDefaultUsesNativeCompatibleModel() {
@@ -277,6 +312,46 @@ final class ConfigurationTests: XCTestCase {
         let settings = AppSettings(defaults: defaults)
 
         XCTAssertFalse(settings.developerInterfaceEnabled)
+    }
+
+    func testLocalLLMBackendDefaultsToMLXAndPersistsEspressoSelection() {
+        let (defaults, suiteName) = makeIsolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(settings.localLLMBackend, .mlx)
+        XCTAssertTrue(settings.espressoModelPath.isEmpty)
+
+        settings.localLLMBackend = .espresso
+        settings.espressoModelPath = "/tmp/Qwen3-0.6B"
+
+        let reloaded = AppSettings(defaults: defaults)
+        XCTAssertEqual(reloaded.localLLMBackend, .espresso)
+        XCTAssertEqual(reloaded.espressoModelPath, "/tmp/Qwen3-0.6B")
+    }
+
+    func testEspressoPromptUsesQwenChatTemplate() {
+        let prompt = EspressoLLMEngine.formatPrompt(
+            user: "整理这句话",
+            system: "只输出结果",
+            modelName: "Qwen2.5-0.5B-Instruct"
+        )
+
+        XCTAssertEqual(
+            prompt,
+            "<|im_start|>system\n只输出结果<|im_end|>\n"
+                + "<|im_start|>user\n整理这句话<|im_end|>\n"
+                + "<|im_start|>assistant\n"
+        )
+    }
+
+    func testEspressoRuntimeFailureSuggestsMLXFallback() {
+        XCTAssertTrue(
+            Loc.string("error.espresso_runtime_failed", language: .english).contains("MLX")
+        )
+        XCTAssertTrue(
+            Loc.string("error.espresso_runtime_failed", language: .chinese).contains("MLX")
+        )
     }
 
     func testDeveloperHTTPTokenCanBeReset() {

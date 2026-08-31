@@ -17,6 +17,8 @@ struct OverlayLayout: Equatable {
     @MainActor
     init(appState: AppState) {
         let hasPreview = appState.phase == .recording && !appState.rawTranscription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let showsEspressoFallback = appState.phase == .done
+            && appState.completionKind == .espressoFallback
         isInteractive = appState.isRecording
 
         switch appState.phase {
@@ -45,6 +47,14 @@ struct OverlayLayout: Equatable {
             bottomPadding = 10
             stackSpacing = 6
         case .error:
+            width = 288
+            height = 56
+            outerCornerRadius = 18
+            horizontalPadding = 12
+            topPadding = 8
+            bottomPadding = 8
+            stackSpacing = 6
+        case .done where showsEspressoFallback:
             width = 288
             height = 56
             outerCornerRadius = 18
@@ -89,6 +99,11 @@ struct OverlayContentView: View {
         return false
     }
 
+    private var showsEspressoFallback: Bool {
+        appState.phase == .done
+            && appState.completionKind == .espressoFallback
+    }
+
     var body: some View {
         VStack(spacing: layout.stackSpacing) {
             if layout.isInteractive {
@@ -128,7 +143,7 @@ struct OverlayContentView: View {
             Text(appState.statusMessage)
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.white.opacity(isError ? 0.94 : 0.88))
-                .lineLimit(isError ? 2 : 1)
+                .lineLimit(isError || showsEspressoFallback ? 2 : 1)
                 .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 4)

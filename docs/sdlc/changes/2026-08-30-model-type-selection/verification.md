@@ -2,21 +2,20 @@
 
 ## Evidence
 
-- The focused regression loop initially failed on the old presentation order:
-  formatting exposed no Custom case or recommended Qwen state, and speech put
-  Qwen after Whisper, Apple, and Doubao. After implementation,
-  `swift test --filter ConfigurationTests` passed 34 tests.
-- `swift test` passed 565 tests with 8 intentionally skipped integration tests
-  and no failures.
+- Focused regression tests verify the six presentation types, recommended Qwen
+  state, active Custom synchronization, and preservation of explicit Qwen or
+  Custom selection when the backend changes from ANE to MLX.
+- `swift test` passed 586 tests with 9 intentionally skipped integration tests,
+  plus 1 Swift Testing test, with no failures.
 - `bash scripts/ci-basic-checks.sh` passed, including SDLC validation,
   localization plist linting and key parity, deterministic vocabulary checks,
   conflict-marker checks, and secret-bearing file checks.
-- `bash scripts/build-and-run.sh --verify` built, bundled, signed, launched, and
-  detected the final app after the temporary QA launch hook had been removed.
-- Real-window inspection covered Chinese and English in light and dark
-  appearances. Both selectors stayed within the fixed 760-point window. The
-  initial full English `Recommended` label exposed horizontal overflow; the
-  final localized type marker is `Rec.` in English and `推荐` in Chinese.
+- `bash scripts/build-app.sh --app-only --sign=-` built, bundled, ad-hoc signed,
+  and verified the final app after the temporary QA launch hook had been removed.
+- Real-window rendering covered Chinese and English in light and dark
+  appearances. The six Qwen, Gemma, Llama, ANE, Remote, and Custom segments all
+  stayed within the fixed 760-point window. The localized recommendation marker
+  remains `Rec.` in English and `推荐` in Chinese.
 - In the live Chinese light window, selecting Custom removed all Qwen entries
   and displayed only the custom model ID field, Add button, and local import.
 - `python3 scripts/sdlc.py validate --worktree` and `git diff --check` passed.
@@ -35,7 +34,7 @@
 ## Residual risk
 
 The segmented-control recommendation is deliberately abbreviated to `Rec.` in
-English to fit five equal-width native segments. The full `Recommended` text
+English to fit six equal-width native segments. The full `Recommended` text
 continues to appear on individual recommended model rows. The repository's
 path policy classifies the `AppSettings.swift` order change as high risk, so an
 independent verifier, final visual approval, PR approval, and any protected

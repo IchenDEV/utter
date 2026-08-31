@@ -117,6 +117,7 @@ extension AppDelegate {
     func makeIntegrationSessionCoordinator(service: OpenTypeService) -> InputSessionCoordinator {
         InputSessionCoordinator(
             service: service,
+            textProcessor: textProcessor,
             isUserWorkflowBusy: { [weak self] in
                 self?.appState.isBusy ?? false
             }

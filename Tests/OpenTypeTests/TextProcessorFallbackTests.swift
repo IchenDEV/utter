@@ -191,4 +191,5 @@ final class TextProcessorFallbackTests: XCTestCase {
         XCTAssertFalse(formattingPrompt.contains("A screen image is attached"))
         XCTAssertFalse(commandPrompt.contains("A screen image is attached"))
     }
+
 }

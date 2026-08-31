@@ -9,11 +9,11 @@ custom list and add/import controls after every family. Speech choices use
 
 ## Design
 
-Define one ordered formatting presentation enum with five cases: Qwen, Gemma,
-Llama, Remote, and Custom. The Qwen case exposes a recommendation flag and a
-picker title containing the localized recommended marker. Local-family cases
-map to `ModelCatalog.ModelFamily`; Custom maps to the existing `nil` family;
-Remote maps to `settings.useRemoteLLM`.
+Define one ordered formatting presentation enum with six cases: Qwen, Gemma,
+Llama, ANE, Remote, and Custom. The Qwen case exposes a recommendation flag and
+a picker title containing the localized recommended marker. Local-family cases
+map to `ModelCatalog.ModelFamily`; ANE maps to the Espresso backend; Custom maps
+to the existing `nil` family; Remote maps to `settings.useRemoteLLM`.
 
 The segmented picker remains one row in the grouped form. It uses the full
 available section width, native compact height, and no nested background.
@@ -21,8 +21,11 @@ Custom content uses the same 8/12-point internal rhythm as current model rows.
 
 `syncSelectedFamilyFromActiveModel()` assigns the active entry's family even
 when it is `nil`, making family-less custom/imported models select Custom.
-Browsing types does not change `settings.llmModel`. Leaving Remote preserves
-the existing conditional load callback for the currently active local type.
+An explicit Qwen, Gemma, Llama, or Custom selection survives the asynchronous
+backend change from ANE to MLX instead of being overwritten by the old active
+model family. Browsing types does not change `settings.llmModel`. Leaving
+Remote preserves the existing conditional load callback for the currently
+active local type.
 
 Speech presentation order becomes explicit and independent from persisted enum
 declaration order: Qwen, Whisper, Apple, Doubao. Qwen's title includes the same
@@ -30,7 +33,7 @@ localized recommendation marker.
 
 ## Safety and failure modes
 
-- A fifth formatting segment can clip in English. Real-window verification
+- A sixth formatting segment can clip in English. Real-window verification
   checks both languages; labels remain short and use the native control.
 - `nil` must mean Custom only in this UI selection layer; catalog model-family
   semantics remain unchanged.

@@ -24,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var settingsWindowDelegate: SettingsWindowDelegate?
     private var onboardingWindow: NSWindow?
     private let popoverOutsideClickMonitor = PopoverOutsideClickMonitor()
+    let textProcessor: TextProcessor
     var cancellables = Set<AnyCancellable>()
     var iconTimer: Timer?
     private var previousApp: NSRunningApplication?
@@ -39,6 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let registry = IntegrationClientRegistry()
         integrationClientRegistry = registry
         integrationService = OpenTypeService(registry: registry)
+        textProcessor = TextProcessor()
         super.init()
         integrationSessionCoordinator = makeIntegrationSessionCoordinator(service: integrationService)
     }
@@ -95,7 +97,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     private func setupPipeline() {
-        pipeline = VoicePipeline(appState: appState)
+        pipeline = VoicePipeline(appState: appState, textProcessor: textProcessor)
         Task { await pipeline?.warmUp() }
     }
 
@@ -202,6 +204,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             onUnloadWhisper: { [weak self] in self?.pipeline?.unloadWhisper() },
             onUnloadLLM: { [weak self] in self?.pipeline?.unloadLLM() },
             onLoadLLM: { [weak self] in self?.pipeline?.loadLLM() },
+            onBenchmarkLLM: { [weak self] modelID in
+                guard let self else { throw CancellationError() }
+                return try await self.textProcessor.benchmarkLLM(modelID: modelID)
+            },
             onUnloadLocalASR: { [weak self] in self?.pipeline?.unloadLocalASR() }
         )
         .environmentObject(appState)

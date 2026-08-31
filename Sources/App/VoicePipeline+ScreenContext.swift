@@ -15,7 +15,8 @@ extension VoicePipeline {
         screenOCRStartedAt = CFAbsoluteTimeGetCurrent()
         let mode = ScreenContextMode.effectiveCaptureMode(
             preference: appState.settings.screenContextMode,
-            useRemoteLLM: appState.settings.useRemoteLLM,
+            useRemoteLLM: appState.settings.useRemoteLLM
+                || appState.settings.localLLMBackend == .espresso,
             modelID: appState.settings.llmModel
         )
         screenOCRTask = Task.detached(priority: .utility) {
