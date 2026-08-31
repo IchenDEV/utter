@@ -16,6 +16,8 @@ private func aneLMTokenCallback(_ token: Int32, _ context: UnsafeMutableRawPoint
 }
 
 actor EspressoLLMEngine {
+    static let maximumContextTokens = 2_048
+
     private final class LoadedModel {
         let path: String
         let runtime: OpaquePointer
@@ -90,6 +92,18 @@ actor EspressoLLMEngine {
             .map { Int32(clamping: $0) }
         guard !promptTokens.isEmpty else { throw EspressoLLMError.runtimeFailure }
 
+        let nativeMaxTokens = max(1, maxTokens)
+        guard Self.requestFitsContextWindow(
+            promptTokenCount: promptTokens.count,
+            maxTokens: nativeMaxTokens
+        ) else {
+            let requiredCacheSlots = promptTokens.count + max(0, nativeMaxTokens - 1)
+            throw recordFailure(ANELMNativeError(
+                "ANE-LM request needs \(requiredCacheSlots) KV-cache slots; "
+                    + "the packaged runtime supports \(Self.maximumContextTokens)"
+            ))
+        }
+
         let context = ANELMGenerationContext()
         context.tokens.reserveCapacity(max(0, maxTokens))
         let contextPointer = Unmanaged.passUnretained(context).toOpaque()
@@ -103,7 +117,7 @@ actor EspressoLLMEngine {
                 model.runtime,
                 tokens.baseAddress,
                 tokens.count,
-                Int32(clamping: max(1, maxTokens)),
+                Int32(clamping: nativeMaxTokens),
                 Float(temperature),
                 1.2,
                 Int32(clamping: model.samplerVocabularySize),
@@ -151,6 +165,16 @@ actor EspressoLLMEngine {
 
     static func validateModelDirectory(at url: URL) async throws {
         _ = try await makeValidatedTokenizer(at: url)
+    }
+
+    static func requestFitsContextWindow(
+        promptTokenCount: Int,
+        maxTokens: Int
+    ) -> Bool {
+        guard promptTokenCount > 0, maxTokens > 0 else { return false }
+        let generatedCacheSlots = max(0, maxTokens - 1)
+        guard generatedCacheSlots <= maximumContextTokens else { return false }
+        return promptTokenCount <= maximumContextTokens - generatedCacheSlots
     }
 
     private struct ValidatedTokenizer {
@@ -211,7 +235,7 @@ actor EspressoLLMEngine {
         if modelName.lowercased().contains("qwen") {
             return "<|im_start|>system\n\(system)<|im_end|>\n"
                 + "<|im_start|>user\n\(user)<|im_end|>\n"
-                + "<|im_start|>assistant\n"
+                + "<|im_start|>assistant\n<think>\n\n</think>\n\n"
         }
         return "System:\n\(system)\n\nUser:\n\(user)\n\nAssistant:\n"
     }
