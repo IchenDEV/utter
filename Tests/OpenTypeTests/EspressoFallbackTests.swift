@@ -56,13 +56,38 @@ final class EspressoFallbackTests: XCTestCase {
         XCTAssertTrue(result.usedMLX)
     }
 
+    func testEspressoFailureReleasesANEStateBeforeMLXFallback() async throws {
+        var espressoIsLoaded = true
+        var espressoWasLoadedWhenMLXStarted = true
+
+        let result: (value: String, usedMLX: Bool) = try await TextProcessor.runEspressoWithMLXFallback(
+            espresso: { throw StubError.espresso },
+            prepareForMLXFallback: {
+                espressoIsLoaded = false
+            },
+            mlx: {
+                espressoWasLoadedWhenMLXStarted = espressoIsLoaded
+                return "mlx output"
+            }
+        )
+
+        XCTAssertEqual(result.value, "mlx output")
+        XCTAssertTrue(result.usedMLX)
+        XCTAssertFalse(espressoIsLoaded)
+        XCTAssertFalse(espressoWasLoadedWhenMLXStarted)
+    }
+
     func testDisabledFallbackDoesNotRunMLX() async {
+        var preparedForFallback = false
         var ranMLX = false
 
         do {
             _ = try await TextProcessor.runEspressoWithMLXFallback(
                 fallbackEnabled: false,
                 espresso: { throw StubError.espresso },
+                prepareForMLXFallback: {
+                    preparedForFallback = true
+                },
                 mlx: {
                     ranMLX = true
                     return "mlx output"
@@ -71,6 +96,7 @@ final class EspressoFallbackTests: XCTestCase {
             XCTFail("Expected the Espresso failure")
         } catch {
             XCTAssertEqual(error.localizedDescription, "espresso failed")
+            XCTAssertFalse(preparedForFallback)
             XCTAssertFalse(ranMLX)
         }
     }
@@ -214,11 +240,13 @@ final class EspressoFallbackTests: XCTestCase {
                     temperature: 0
                 )
                 if index == 0 {
+                    outcome = await processor.consumeEspressoOutcome()
+                    let espressoIsLoaded = await processor.espressoLLM.isLoaded
+                    XCTAssertFalse(espressoIsLoaded)
                     baselineFootprint = currentMemoryFootprint()
                     options.localLLMBackend = .mlx
                 }
             }
-            outcome = await processor.consumeEspressoOutcome()
         }
 
         XCTAssertFalse(output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
