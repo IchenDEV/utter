@@ -120,6 +120,41 @@ final class ANELMRuntimeTests: XCTestCase {
         await XCTAssertThrowsErrorAsync(try await EspressoLLMEngine.validateModelDirectory(at: invalidHeads))
     }
 
+    func testQwenPromptDisablesThinkingBeforeGeneration() {
+        let prompt = EspressoLLMEngine.formatPrompt(
+            user: "Return JSON.",
+            system: "Do not explain.",
+            modelName: "Qwen3"
+        )
+
+        XCTAssertTrue(prompt.hasSuffix(
+            "<|im_start|>assistant\n<think>\n\n</think>\n\n"
+        ))
+    }
+
+    func testContextWindowGuardReservesGeneratedCacheSlots() {
+        XCTAssertTrue(EspressoLLMEngine.requestFitsContextWindow(
+            promptTokenCount: 2_048,
+            maxTokens: 1
+        ))
+        XCTAssertTrue(EspressoLLMEngine.requestFitsContextWindow(
+            promptTokenCount: 2_047,
+            maxTokens: 2
+        ))
+        XCTAssertFalse(EspressoLLMEngine.requestFitsContextWindow(
+            promptTokenCount: 2_049,
+            maxTokens: 1
+        ))
+        XCTAssertFalse(EspressoLLMEngine.requestFitsContextWindow(
+            promptTokenCount: 2_048,
+            maxTokens: 2
+        ))
+        XCTAssertFalse(EspressoLLMEngine.requestFitsContextWindow(
+            promptTokenCount: 1,
+            maxTokens: 2_049
+        ))
+    }
+
     func testRealGenerationLifecycleWhenModelIsProvided() async throws {
         guard let modelPath = ProcessInfo.processInfo.environment["UTTER_ANE_TEST_MODEL"],
               !modelPath.isEmpty else {
@@ -142,14 +177,24 @@ final class ANELMRuntimeTests: XCTestCase {
             let requestCount = iterations / lifecycleCount
                 + (lifecycle < iterations % lifecycleCount ? 1 : 0)
             var lifecycleSamples: [Int] = []
-            for _ in 0..<requestCount {
+            for requestIndex in 0..<requestCount {
+                let verifiesStructuredCommandOutput = lifecycle == 0 && requestIndex == 0
                 let output = try await engine.generate(
-                    prompt: "用一句中文回答：苹果神经引擎能运行本地语言模型吗？",
-                    systemPrompt: "只输出简短答案。",
-                    maxTokens: 16,
-                    temperature: 0.2
+                    prompt: verifiesStructuredCommandOutput
+                        ? #"Return exactly this JSON object: {"action":"none","confidence":1}"#
+                        : "用一句中文回答：苹果神经引擎能运行本地语言模型吗？",
+                    systemPrompt: verifiesStructuredCommandOutput
+                        ? "Return only valid JSON."
+                        : "只输出简短答案。",
+                    maxTokens: verifiesStructuredCommandOutput ? 64 : 16,
+                    temperature: verifiesStructuredCommandOutput ? 0 : 0.2
                 )
                 XCTAssertFalse(output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                XCTAssertFalse(output.localizedCaseInsensitiveContains("<think"))
+                XCTAssertFalse(output.localizedCaseInsensitiveContains("</think>"))
+                if verifiesStructuredCommandOutput {
+                    XCTAssertNotNil(SpokenEditCommandLLMResolver.resolution(from: output))
+                }
                 let sample = try residentSizeKB()
                 residentSamples.append(sample)
                 lifecycleSamples.append(sample)
