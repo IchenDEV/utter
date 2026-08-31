@@ -48,6 +48,9 @@ extension TextProcessor {
                                 temperature: temperature
                             )
                         },
+                        prepareForMLXFallback: {
+                            await self.espressoLLM.unload()
+                        },
                         mlx: {
                             try await self.llm.loadModel(id: options.llmModel)
                             return try await self.llm.generate(
@@ -59,9 +62,8 @@ extension TextProcessor {
                         }
                     )
                     if result.usedMLX {
-                        _ = await espressoLLM.consumeLastFailureMessage()
                         await Self.recordEspressoOutcome(.fallback)
-                        Log.info("[TextProcessor] ANE-LM failed; used the selected MLX model")
+                        Log.info("[TextProcessor] ANE-LM failed; unloaded it and used the selected MLX model")
                     } else {
                         await Self.clearEspressoOutcome()
                     }
@@ -69,7 +71,6 @@ extension TextProcessor {
                 } catch is CancellationError {
                     throw CancellationError()
                 } catch let error as EspressoMLXFallbackError {
-                    _ = await espressoLLM.consumeLastFailureMessage()
                     await Self.recordEspressoOutcome(.unavailable)
                     Log.sensitive("[TextProcessor] ANE-LM and MLX fallback failed: \(error.details)")
                     Log.error("[TextProcessor] MLX fallback unavailable")
@@ -89,6 +90,7 @@ extension TextProcessor {
     static func runEspressoWithMLXFallback<Value>(
         fallbackEnabled: Bool = true,
         espresso: () async throws -> Value,
+        prepareForMLXFallback: () async -> Void = {},
         mlx: () async throws -> Value
     ) async throws -> (value: Value, usedMLX: Bool) {
         do {
@@ -99,6 +101,8 @@ extension TextProcessor {
             try Task.checkCancellation()
             guard fallbackEnabled else { throw error }
             let espressoFailure = error.localizedDescription
+            await prepareForMLXFallback()
+            try Task.checkCancellation()
             do {
                 let value = try await mlx()
                 try Task.checkCancellation()
