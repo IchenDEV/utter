@@ -60,7 +60,7 @@ final class EspressoFallbackTests: XCTestCase {
         var espressoIsLoaded = true
         var espressoWasLoadedWhenMLXStarted = true
 
-        let result = try await TextProcessor.runEspressoWithMLXFallback(
+        let result: (value: String, usedMLX: Bool) = try await TextProcessor.runEspressoWithMLXFallback(
             espresso: { throw StubError.espresso },
             prepareForMLXFallback: {
                 espressoIsLoaded = false
