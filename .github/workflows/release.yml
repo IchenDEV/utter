@@ -88,8 +88,14 @@ jobs:
             -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
 
           CERT_PEM="$RUNNER_TEMP/certificate.pem"
-          openssl pkcs12 -in "$CERT_PATH" -clcerts -nokeys \
-            -passin "pass:${APPLE_CERTIFICATE_PASSWORD}" -out "$CERT_PEM"
+          # OpenSSL 3 disables legacy RC2-40-CBC used by older PKCS#12 exports.
+          # Try modern decode first; fall back to -legacy for existing secrets.
+          if ! openssl pkcs12 -in "$CERT_PATH" -clcerts -nokeys \
+            -passin "pass:${APPLE_CERTIFICATE_PASSWORD}" -out "$CERT_PEM" 2>/dev/null
+          then
+            openssl pkcs12 -in "$CERT_PATH" -clcerts -nokeys -legacy \
+              -passin "pass:${APPLE_CERTIFICATE_PASSWORD}" -out "$CERT_PEM"
+          fi
           SIGN_CERT_SHA256="$(openssl x509 -in "$CERT_PEM" -noout \
             -fingerprint -sha256 | cut -d= -f2 | tr -d ':')"
           IDENTITY="$(security find-identity -p codesigning "$KEYCHAIN_PATH" \
