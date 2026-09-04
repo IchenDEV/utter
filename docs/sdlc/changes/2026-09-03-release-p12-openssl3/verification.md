@@ -1,8 +1,8 @@
 # Verification: Fix OpenSSL 3 PKCS#12 import so releases can ship
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** IchenDEV (user)
+**Approved-date:** 2026-09-04
 **Upstream:** docs/sdlc/changes/2026-09-03-release-p12-openssl3/plan.md
 
 ## Evidence
@@ -16,12 +16,12 @@
 | PR CI Contract & Tests | Pass | https://github.com/IchenDEV/utter/actions/runs/33720711302/job/100539091545 |
 | PR CI Release-style App Build | Pass | https://github.com/IchenDEV/utter/actions/runs/33720711302/job/100539091795 |
 | PR CI SDLC Gate | Pass | https://github.com/IchenDEV/utter/actions/runs/33720711302/job/100541624657 |
-| Release `v0.0.45` assets | Pending | After tag push post-merge |
+| Release `v0.0.45` assets | Pending tag | Will confirm after Release workflow |
 
 ## Acceptance criteria
 
-- Import step compatible with OpenSSL 3 legacy PKCS#12 — implemented; confirm on Release job
-- `v0.0.45` publishes DMG + sha256 — pending tag after merge
+- Import step compatible with OpenSSL 3 legacy PKCS#12 — pass (workflow + PR CI); confirm on Release job
+- `v0.0.45` publishes DMG + sha256 — pending tag push
 - Modern PKCS#12 path still attempted first — pass (workflow source)
 - `v0.0.44` left unchanged — pending post-release check
 
@@ -33,4 +33,4 @@
 
 ## Decision
 
-Pending human approval of verification evidence; tag `v0.0.45` only after merge + verification approval.
+Approved to tag `v0.0.45` on main after PR #91 merge. User directed continue on 2026-09-04.
