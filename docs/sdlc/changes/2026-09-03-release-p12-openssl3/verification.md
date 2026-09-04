@@ -16,14 +16,14 @@
 | PR CI Contract & Tests | Pass | https://github.com/IchenDEV/utter/actions/runs/33720711302/job/100539091545 |
 | PR CI Release-style App Build | Pass | https://github.com/IchenDEV/utter/actions/runs/33720711302/job/100539091795 |
 | PR CI SDLC Gate | Pass | https://github.com/IchenDEV/utter/actions/runs/33720711302/job/100541624657 |
-| Release `v0.0.45` assets | Pending tag | Will confirm after Release workflow |
+| Release `v0.0.45` assets | Pass | https://github.com/IchenDEV/utter/releases/tag/v0.0.45 (`Utter-0.0.45.dmg`, `.sha256`); run https://github.com/IchenDEV/utter/actions/runs/33845847256 |
 
 ## Acceptance criteria
 
-- Import step compatible with OpenSSL 3 legacy PKCS#12 — pass (workflow + PR CI); confirm on Release job
-- `v0.0.45` publishes DMG + sha256 — pending tag push
+- Import step compatible with OpenSSL 3 legacy PKCS#12 — pass (Import signing certificate succeeded on Release)
+- `v0.0.45` publishes DMG + sha256 — pass
 - Modern PKCS#12 path still attempted first — pass (workflow source)
-- `v0.0.44` left unchanged — pending post-release check
+- `v0.0.44` left unchanged — pass (still empty assets)
 
 ## Residual risk
 
@@ -33,4 +33,4 @@
 
 ## Decision
 
-Approved to tag `v0.0.45` on main after PR #91 merge. User directed continue on 2026-09-04.
+Released: `v0.0.45` published with DMG + checksum; signing import fix verified on production Release.
