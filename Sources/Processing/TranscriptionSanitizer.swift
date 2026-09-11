@@ -105,6 +105,11 @@ enum TranscriptionSanitizer {
         audioActivity: AudioCaptureActivity?
     ) -> String? {
         guard audioActivity?.hasWeakSpeechEvidence == true else { return text }
+
+        if weakAudioWholeTranscriptHallucinations.contains(normalizedPhrase(text)) {
+            return nil
+        }
+
         var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
         for pattern in trailingHallucinationPatterns {
             let candidate = cleaned.replacingOccurrences(
@@ -171,6 +176,10 @@ enum TranscriptionSanitizer {
         "(blank audio)", "[blank audio]", "<blank audio>",
         "(no speech)", "[no speech]", "<no speech>",
         "[blank_audio]", "<blank_audio>",
+    ]
+
+    private static let weakAudioWholeTranscriptHallucinations: Set<String> = [
+        "do anything",
     ]
 
     private static let trailingHallucinationPatterns = [

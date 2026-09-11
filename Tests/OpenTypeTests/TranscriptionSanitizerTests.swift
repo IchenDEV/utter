@@ -98,4 +98,26 @@ final class TranscriptionSanitizerTests: XCTestCase {
             "Thank you for watching."
         )
     }
+
+    func testDropsDoAnythingHallucinationOnWeakAudio() {
+        var weakAudio = AudioCaptureActivity()
+        weakAudio.record(rms: 0.002, frameCount: 16_000)
+
+        XCTAssertNil(
+            TranscriptionSanitizer.prepare("Do anything.", audioActivity: weakAudio)
+        )
+        XCTAssertNil(
+            TranscriptionSanitizer.prepare("do anything", audioActivity: weakAudio)
+        )
+    }
+
+    func testKeepsDoAnythingWhenAudioIsStrong() {
+        var strongAudio = AudioCaptureActivity()
+        strongAudio.record(rms: 0.02, frameCount: 16_000)
+
+        XCTAssertEqual(
+            TranscriptionSanitizer.prepare("Do anything.", audioActivity: strongAudio),
+            "Do anything."
+        )
+    }
 }
