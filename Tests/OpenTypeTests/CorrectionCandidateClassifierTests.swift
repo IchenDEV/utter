@@ -83,4 +83,36 @@ final class CorrectionCandidateClassifierTests: XCTestCase {
             "Corrected sentence."
         )
     }
+
+    func testRejectsNearTotalReplacementAsNotCorrection() {
+        XCTAssertNil(CorrectionObservationPolicy.associatedFinalText(
+            inserted: "我挺好奇的，这个到底是给种地产生了什么影响",
+            edited: "Follow up"
+        ))
+        XCTAssertNil(CorrectionObservationPolicy.associatedFinalText(
+            inserted: "OpenAI 的第一方声明到底在哪里",
+            edited: "Follow up"
+        ))
+        XCTAssertNil(CorrectionObservationPolicy.associatedFinalText(
+            inserted: "Hello world, how are you?",
+            edited: "Something entirely different."
+        ))
+    }
+
+    func testAcceptsPartialCorrectionWithSufficientOverlap() {
+        XCTAssertEqual(
+            CorrectionObservationPolicy.associatedFinalText(
+                inserted: "不要影响菜单蓝。",
+                edited: "不要影响菜单栏。"
+            ),
+            "不要影响菜单栏。"
+        )
+        XCTAssertEqual(
+            CorrectionObservationPolicy.associatedFinalText(
+                inserted: "Please use OpenTape for dictation.",
+                edited: "Please use OpenType for dictation."
+            ),
+            "Please use OpenType for dictation."
+        )
+    }
 }
