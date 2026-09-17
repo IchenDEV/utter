@@ -6,6 +6,7 @@ final class SpeechEngineProvider {
     private var appleSpeechEngine: AppleSpeechEngine?
     private var volcSpeechEngine: VolcSpeechEngine?
     private var qwenSpeechEngine: QwenNativeASREngine?
+    private var mlxSTTEngine: MLXSTTEngine?
 
     func engine(settings: AppSettings, requestPermission: Bool = true) async -> (any SpeechEngine)? {
         await ensureEngineLoaded(settings: settings, requestPermission: requestPermission)
@@ -18,7 +19,7 @@ final class SpeechEngineProvider {
         case .apple: return appleSpeechEngine
         case .volc: return volcSpeechEngine
         case .qwen3: return qwenSpeechEngine
-        case .mimo: return nil
+        case .firered, .megaASR: return mlxSTTEngine
         }
     }
 
@@ -50,9 +51,15 @@ final class SpeechEngineProvider {
             let modelPath = ModelCatalog.shared.asrModelPath(for: settings.qwenASRModel)
             if qwenSpeechEngine?.usesModel(at: modelPath) == true { return }
             qwenSpeechEngine = QwenNativeASREngine(modelPath: modelPath)
-        case .mimo:
-            settings.speechEngine = .apple
-            await ensureEngineLoaded(settings: settings, requestPermission: requestPermission)
+        case .firered, .megaASR:
+            guard let modelID = settings.speechEngine.asrModelID else { return }
+            guard localASRIsAvailable(modelID) else {
+                mlxSTTEngine = nil
+                Log.info("[SpeechEngineProvider] ASR model requires manual download: \(modelID)")
+                return
+            }
+            if mlxSTTEngine?.modelID == modelID { return }
+            mlxSTTEngine = MLXSTTEngine(modelID: modelID)
         }
     }
 

@@ -7,7 +7,11 @@ final class QwenNativeASREngineTests: XCTestCase {
     func testNativeQwenRemainsTheReleasedLocalASREngine() {
         XCTAssertEqual(
             ModelCatalog.defaultASRModels.map(\.id),
-            [QwenASRModel.defaultID]
+            [
+                QwenASRModel.defaultID,
+                "mlx-community/FireRedASR2-AED-mlx",
+                "mlx-community/Mega-ASR-6bit",
+            ]
         )
     }
 

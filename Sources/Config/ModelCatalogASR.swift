@@ -10,16 +10,34 @@ extension ModelCatalog {
                 QwenASRModel.defaultID,
                 "Qwen3-ASR 1.7B",
                 L("model.qwen3_asr_quality")
-            )
+            ),
+            (
+                "mlx-community/FireRedASR2-AED-mlx",
+                "FireRedASR2-AED",
+                L("model.firered_asr")
+            ),
+            (
+                "mlx-community/Mega-ASR-6bit",
+                "Mega-ASR 6bit",
+                L("model.mega_asr")
+            ),
         ]
     }
+
+    /// All ASR model IDs that use the generic MLX STT engine.
+    static let mlxSTTModelIDs: Set<String> = [
+        "mlx-community/FireRedASR2-AED-mlx",
+        "mlx-community/Mega-ASR-6bit",
+    ]
 
     func asrModels(for engine: SpeechEngineType) -> [ModelEntry] {
         switch engine {
         case .qwen3:
             return asrModels.filter { $0.id == QwenASRModel.defaultID }
-        case .mimo:
-            return []
+        case .firered:
+            return asrModels.filter { $0.id == "mlx-community/FireRedASR2-AED-mlx" }
+        case .megaASR:
+            return asrModels.filter { $0.id == "mlx-community/Mega-ASR-6bit" }
         default:
             return []
         }
@@ -165,7 +183,7 @@ extension ModelCatalog {
         }
     }
 
-    static func asrRequiredFiles(for id: String) -> [String] {
+    nonisolated static func asrRequiredFiles(for id: String) -> [String] {
         switch id {
         case QwenASRModel.defaultID:
             return [
@@ -176,6 +194,16 @@ extension ModelCatalog {
                 "tokenizer_config.json",
                 "vocab.json",
                 "merges.txt",
+            ]
+        case "mlx-community/FireRedASR2-AED-mlx":
+            return [
+                "config.json",
+                "tokenizer.json",
+            ]
+        case "mlx-community/Mega-ASR-6bit":
+            return [
+                "config.json",
+                "tokenizer_config.json",
             ]
         default:
             return ["config.json"]

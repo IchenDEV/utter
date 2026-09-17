@@ -164,9 +164,18 @@ extension VoicePipeline {
             let engine = QwenNativeASREngine(modelPath: modelPath)
             qwenSpeechEngine = engine
             Task { await engine.prepare() }
-        case .mimo:
-            appState.settings.speechEngine = .apple
-            await ensureEngineLoaded(requestPermission: requestPermission)
+        case .firered, .megaASR:
+            let settings = appState.settings
+            guard let modelID = settings.speechEngine.asrModelID else { return }
+            guard localASRIsAvailable(modelID) else {
+                mlxSTTEngine = nil
+                markSpeechModelDownloadRequired(showInStatus: requestPermission)
+                return
+            }
+            if mlxSTTEngine?.modelID == modelID { return }
+            let engine = MLXSTTEngine(modelID: modelID)
+            mlxSTTEngine = engine
+            Task { await engine.prepare() }
         }
     }
 

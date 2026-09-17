@@ -21,7 +21,8 @@ private extension SpeechEngineType {
         case .volc: return L("engine.volc_short")
         case .qwen3:
             return "\(L("engine.qwen3_short")) · \(L("common.recommended_short"))"
-        case .mimo: return L("engine.mimo_short")
+        case .firered: return L("engine.firered_short")
+        case .megaASR: return L("engine.mega_short")
         }
     }
 

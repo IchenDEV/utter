@@ -290,11 +290,13 @@
 "engine.apple_short" = "Apple";
 "engine.volc_short" = "豆包";
 "engine.qwen3_short" = "Qwen";
-"engine.mimo_short" = "MiMo";
+"engine.firered_short" = "FireRed";
+"engine.mega_short" = "Mega";
 "engine.apple_speech" = "Apple 语音识别";
 "engine.volc_asr" = "豆包语音识别";
 "engine.qwen3_asr" = "Qwen3-ASR（本地）";
-"engine.mimo_asr" = "MiMo-V2.5-ASR（本地）";
+"engine.firered_asr" = "FireRedASR2-AED（本地）";
+"engine.mega_asr" = "Mega-ASR（本地）";
 "screen_context_mode.ocr" = "OCR";
 "screen_context_mode.multimodal" = "多模态";
 "style.prompt.concise" = "极简。只保留核心信息，删掉修饰、重复和过渡，长句拆短。";
@@ -490,6 +492,8 @@
 /* ── 本地语音识别 ── */
 "qwen_asr.config_hint" = "Qwen3-ASR 使用原生 Swift 和 MLX 在本机运行。模型下载一次后即可离线识别。";
 "model.qwen3_asr_quality" = "本地 MLX 语音识别，约 4.1 GB";
+"model.firered_asr" = "强鲁棒中文 ASR，约 4.6 GB";
+"model.mega_asr" = "抗噪 ASR（Qwen3-ASR + LoRA），约 2.0 GB";
 "model.asr_incomplete" = "模型只下载了一部分。点击“继续下载”即可接着完成";
 "error.llm_not_loaded" = "模型文件已在本地，但当前尚未加载到内存。请重新执行；Utter 会再次尝试加载";
 "error.llm_not_downloaded" = "模型文件尚未下载。请前往 设置 → 模型，确认流量后下载";
