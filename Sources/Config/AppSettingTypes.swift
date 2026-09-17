@@ -31,10 +31,11 @@ enum SpeechEngineType: String, Codable, CaseIterable {
     case apple = "apple"
     case volc = "volc"
     case qwen3 = "qwen3"
-    case mimo = "mimo"
+    case firered = "firered"
+    case megaASR = "megaASR"
 
     static var selectableCases: [SpeechEngineType] {
-        [.qwen3, .whisper, .apple, .volc]
+        [.qwen3, .firered, .megaASR, .whisper, .apple, .volc]
     }
 
     var label: String {
@@ -43,7 +44,18 @@ enum SpeechEngineType: String, Codable, CaseIterable {
         case .apple: return L("engine.apple_speech")
         case .volc: return L("engine.volc_asr")
         case .qwen3: return L("engine.qwen3_asr")
-        case .mimo: return L("engine.mimo_asr")
+        case .firered: return L("engine.firered_asr")
+        case .megaASR: return L("engine.mega_asr")
+        }
+    }
+
+    /// The ASR model ID associated with this engine, if any.
+    var asrModelID: String? {
+        switch self {
+        case .qwen3: return QwenASRModel.defaultID
+        case .firered: return "mlx-community/FireRedASR2-AED-mlx"
+        case .megaASR: return "mlx-community/Mega-ASR-6bit"
+        default: return nil
         }
     }
 }

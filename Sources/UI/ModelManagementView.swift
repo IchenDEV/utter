@@ -73,10 +73,8 @@ struct ModelManagementView: View {
             volcSection
         case .qwen3:
             qwenASRSection
-        case .mimo:
-            Text(L("model.apple_managed_by_system"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        case .firered, .megaASR:
+            qwenASRSection
         case .apple:
             Text(L("model.apple_managed_by_system"))
                 .font(.caption)

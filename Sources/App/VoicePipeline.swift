@@ -14,6 +14,7 @@ final class VoicePipeline {
     var appleSpeechEngine: AppleSpeechEngine?
     var volcSpeechEngine: VolcSpeechEngine?
     var qwenSpeechEngine: QwenNativeASREngine?
+    var mlxSTTEngine: MLXSTTEngine?
     var screenOCRTask: Task<ScreenContextSnapshot, Never>?
     var screenOCRStartedAt: CFAbsoluteTime?
     var processingTask: Task<Void, Never>?
@@ -29,7 +30,7 @@ final class VoicePipeline {
         case .apple: return appleSpeechEngine
         case .volc: return volcSpeechEngine
         case .qwen3: return qwenSpeechEngine
-        case .mimo: return nil
+        case .firered, .megaASR: return mlxSTTEngine
         }
     }
 

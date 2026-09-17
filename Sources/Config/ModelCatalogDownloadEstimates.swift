@@ -53,6 +53,8 @@ extension ModelCatalog {
         "mlx-community/Llama-4-Scout-17B-16E-Instruct-4bit": 61_143_654_248,
         "mlx-community/Llama-4-Maverick-17B-128E-Instruct-4bit": 225_923_469_800,
         QwenASRModel.defaultID: 4_080_707_826,
+        "mlx-community/FireRedASR2-AED-mlx": 4_570_000_000,
+        "mlx-community/Mega-ASR-6bit": 2_040_000_000,
     ]
 
     private static let downloadEstimateRegex = try! NSRegularExpression(

@@ -120,14 +120,17 @@ extension ModelManagementView {
     }
 
     var qwenASRSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let engineType = settings.speechEngine
+        let models = catalog.asrModels(for: engineType)
+        let activeID = engineType.asrModelID ?? settings.qwenASRModel
+        return VStack(alignment: .leading, spacing: 8) {
             Text(L("qwen_asr.config_hint"))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
 
             modelList(
-                catalog.asrModels(for: .qwen3),
-                activeID: settings.qwenASRModel,
+                models,
+                activeID: activeID,
                 type: .asr
             )
         }

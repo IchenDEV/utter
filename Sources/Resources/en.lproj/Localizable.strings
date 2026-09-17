@@ -290,11 +290,13 @@
 "engine.apple_short" = "Apple";
 "engine.volc_short" = "Doubao";
 "engine.qwen3_short" = "Qwen";
-"engine.mimo_short" = "MiMo";
+"engine.firered_short" = "FireRed";
+"engine.mega_short" = "Mega";
 "engine.apple_speech" = "Apple Speech";
 "engine.volc_asr" = "Doubao ASR";
 "engine.qwen3_asr" = "Qwen3-ASR (Local)";
-"engine.mimo_asr" = "MiMo-V2.5-ASR (Local)";
+"engine.firered_asr" = "FireRedASR2-AED (Local)";
+"engine.mega_asr" = "Mega-ASR (Local)";
 "screen_context_mode.ocr" = "OCR";
 "screen_context_mode.multimodal" = "Multimodal";
 "style.prompt.concise" = "Minimalist. Keep only core information, remove repetition and filler, break long sentences short.";
@@ -490,6 +492,8 @@
 /* ── Local ASR ── */
 "qwen_asr.config_hint" = "Qwen3-ASR runs locally with native Swift and MLX. Download the model once, then recognition works offline.";
 "model.qwen3_asr_quality" = "Local ASR through MLX, ~4.1 GB";
+"model.firered_asr" = "Robust Chinese ASR, ~4.6 GB";
+"model.mega_asr" = "Noise-robust ASR (Qwen3-ASR + LoRA), ~2.0 GB";
 "model.asr_incomplete" = "Only part of the model was downloaded. Select Resume to finish.";
 "error.llm_not_loaded" = "The model is stored locally but is not loaded into memory. Run the action again and Utter will retry.";
 "error.llm_not_downloaded" = "The model files have not been downloaded. Open Settings → Models and confirm the data usage first.";

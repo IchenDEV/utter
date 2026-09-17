@@ -113,8 +113,8 @@ final class AppSettings: ObservableObject {
         let loadedSpeechEngine = SpeechEngineType(rawValue: savedEngine)
             ?? (savedEngine.contains("Whisper") || savedEngine.contains("whisper") ? .whisper : nil)
             ?? .apple
-        speechEngine = loadedSpeechEngine == .mimo ? .apple : loadedSpeechEngine
-        if loadedSpeechEngine == .mimo {
+        speechEngine = savedEngine == "mimo" ? .apple : loadedSpeechEngine
+        if savedEngine == "mimo" {
             ud.set(SpeechEngineType.apple.rawValue, forKey: Key.speechEngine.rawValue)
         }
         [
