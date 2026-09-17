@@ -56,10 +56,10 @@ final class ConfigurationTests: XCTestCase {
 
     func testSpeechEngineCasesIncludeNativeLocalEngines() {
         XCTAssertEqual(SpeechEngineType.allCases.map(\.rawValue), [
-            "whisper", "apple", "volc", "qwen3", "mimo",
+            "whisper", "apple", "volc", "qwen3", "firered", "megaASR",
         ])
         XCTAssertEqual(SpeechEngineType.selectableCases.map(\.rawValue), [
-            "qwen3", "whisper", "apple", "volc",
+            "qwen3", "firered", "megaASR", "whisper", "apple", "volc",
         ])
     }
 
@@ -220,7 +220,11 @@ final class ConfigurationTests: XCTestCase {
     @MainActor
     func testOnlyReleasedNativeASRModelsAreListed() {
         let models = ModelCatalog.defaultASRModels
-        XCTAssertEqual(models.map(\.id), [QwenASRModel.defaultID])
+        XCTAssertEqual(models.map(\.id), [
+            QwenASRModel.defaultID,
+            "mlx-community/FireRedASR2-AED-mlx",
+            "mlx-community/Mega-ASR-6bit",
+        ])
     }
 
     func testUILanguageDisplayNames() {
