@@ -51,6 +51,12 @@ enum CorrectionObservationPolicy {
             && diff.commonPrefixCount == 0
             && diff.commonSuffixCount == insertedCount
         guard !isAppend, !isPrepend else { return nil }
+
+        if insertedCount > 4 {
+            let overlap = diff.commonPrefixCount + diff.commonSuffixCount
+            guard overlap >= max(2, insertedCount / 4) else { return nil }
+        }
+
         return edited
     }
 }
