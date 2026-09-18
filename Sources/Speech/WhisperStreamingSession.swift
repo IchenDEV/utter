@@ -4,6 +4,7 @@ import WhisperKit
 
 final class WhisperStreamingSession: @unchecked Sendable {
     private let whisperKit: WhisperKit
+    private let language: String?
     private let partialHandler: @Sendable (String) -> Void
     private let optionsBuilder: () -> DecodingOptions
     private let queue = DispatchQueue(label: "opentype.whisper-stream")
@@ -23,10 +24,12 @@ final class WhisperStreamingSession: @unchecked Sendable {
 
     init(
         whisperKit: WhisperKit,
+        language: String? = nil,
         partialHandler: @escaping @Sendable (String) -> Void,
         optionsBuilder: @escaping () -> DecodingOptions
     ) {
         self.whisperKit = whisperKit
+        self.language = language
         self.partialHandler = partialHandler
         self.optionsBuilder = optionsBuilder
     }
@@ -134,10 +137,10 @@ final class WhisperStreamingSession: @unchecked Sendable {
                 audioArray: snapshot,
                 decodeOptions: optionsBuilder()
             )
-            let text = results
-                .compactMap(\.text)
-                .joined(separator: " ")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let text = TranscriptSegmentJoiner.joined(
+                results.compactMap(\.text),
+                language: self?.language
+            )
             await self?.finishPartialTask(text: text, submittedSampleCount: submittedSampleCount)
             return text
         }

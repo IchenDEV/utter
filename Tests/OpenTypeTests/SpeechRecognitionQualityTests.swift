@@ -106,6 +106,21 @@ final class SpeechRecognitionQualityTests: XCTestCase {
         XCTAssertEqual(prompt, "Dictation terms: OpenType, MLX.")
     }
 
+    func testWhisperPromptTokensInjectTermsWhenLanguageIsAuto() {
+        let context = SpeechRecognitionContext(phrases: ["OpenType", "MLX"])
+
+        let tokens = context.whisperPromptTokens(
+            language: nil,
+            maximumCount: 160,
+            tokenize: { Array($0.utf8).map(Int.init) }
+        )
+        let prompt = tokens.map { String(decoding: $0.map(UInt8.init), as: UTF8.self) }
+
+        XCTAssertNotNil(tokens)
+        XCTAssertFalse(tokens?.isEmpty ?? true)
+        XCTAssertEqual(prompt, "Dictation terms: OpenType, MLX.")
+    }
+
     func testAppleCompatibleDictationPresetChangesAfterOneMinute() {
         XCTAssertEqual(
             AppleSpeechAnalyzer.dictationPreset(forDuration: 30),

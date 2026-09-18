@@ -117,6 +117,7 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         )
         streamingSession = WhisperStreamingSession(
             whisperKit: whisperKit,
+            language: language,
             partialHandler: onPartialResult,
             optionsBuilder: { options }
         )
@@ -164,10 +165,10 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
             audioPath: url.path,
             decodeOptions: options
         )
-        let text = results
-            .compactMap { $0.text }
-            .joined(separator: " ")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = TranscriptSegmentJoiner.joined(
+            results.compactMap { $0.text },
+            language: language
+        )
 
         let elapsed = CFAbsoluteTimeGetCurrent() - t0
         Log.info("[WhisperEngine] transcribed \(text.count) chars in \(String(format: "%.1f", elapsed))s")
