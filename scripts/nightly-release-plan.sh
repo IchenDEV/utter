@@ -32,7 +32,9 @@ if [ -z "$REPOSITORY" ]; then
     echo "usage: $0 <repository> [branch]" >&2
     exit 2
 fi
-if [ ! -d "$REPOSITORY/.git" ]; then
+# `.git` may be a directory (normal clone) or a file (worktree/submodule), so
+# ask git itself rather than testing for the directory.
+if ! git -C "$REPOSITORY" rev-parse --git-dir >/dev/null 2>&1; then
     echo "error: $REPOSITORY is not a git checkout" >&2
     exit 1
 fi
