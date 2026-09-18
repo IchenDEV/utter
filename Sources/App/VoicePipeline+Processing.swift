@@ -12,6 +12,7 @@ extension VoicePipeline {
         targetApp: NSRunningApplication?
     ) async {
         defer { audioCapture.cleanupLastRecording() }
+        AudioCaptureDiagnostics.log(audioActivity)
 
         do {
             guard audioActivity.hasMeaningfulAudio else {

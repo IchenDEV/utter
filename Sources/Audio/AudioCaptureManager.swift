@@ -3,15 +3,16 @@ import CoreAudio
 import AudioToolbox
 
 struct AudioCaptureActivity: Equatable {
-    private static let minimumAverageRMS: Float = 0.0015
-    private static let minimumPeakRMS: Float = 0.005
-    private static let lowConfidenceAverageRMS: Float = 0.004
-    private static let lowConfidencePeakRMS: Float = 0.012
+    let thresholds: AudioActivityThresholds
 
     private(set) var bufferCount = 0
     private(set) var frameCount = 0
     private(set) var maxRMS: Float = 0
     private var weightedRMSSum: Double = 0
+
+    init(thresholds: AudioActivityThresholds = .default) {
+        self.thresholds = thresholds
+    }
 
     var averageRMS: Float {
         guard frameCount > 0 else { return 0 }
@@ -20,12 +21,14 @@ struct AudioCaptureActivity: Equatable {
 
     var hasMeaningfulAudio: Bool {
         guard frameCount > 0 else { return false }
-        return averageRMS >= Self.minimumAverageRMS || maxRMS >= Self.minimumPeakRMS
+        let gate = thresholds.gate
+        return averageRMS >= gate.minimumAverageRMS || maxRMS >= gate.minimumPeakRMS
     }
 
     var hasWeakSpeechEvidence: Bool {
         guard frameCount > 0 else { return true }
-        return averageRMS < Self.lowConfidenceAverageRMS && maxRMS < Self.lowConfidencePeakRMS
+        let weak = thresholds.weakSpeechEvidence
+        return averageRMS < weak.averageRMS && maxRMS < weak.peakRMS
     }
 
     mutating func record(rms: Float, frameCount: Int) {

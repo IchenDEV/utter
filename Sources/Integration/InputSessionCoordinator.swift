@@ -155,6 +155,7 @@ final class InputSessionCoordinator {
     }
 
     private func processRecording(_ active: ActiveSession) async throws -> (transcript: String, text: String) {
+        AudioCaptureDiagnostics.log(audioCapture.lastActivity)
         guard audioCapture.lastActivity.hasMeaningfulAudio else {
             throw IntegrationError.noSpeechDetected
         }
