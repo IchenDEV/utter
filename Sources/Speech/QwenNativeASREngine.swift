@@ -5,6 +5,8 @@ import MLXAudioSTT
 final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
     private let modelDirectory: URL
     private let runtime = QwenNativeASRRuntime()
+    private let recognitionContextLock = NSLock()
+    private var recognitionContext = SpeechRecognitionContext.empty
 
     init(modelPath: String) {
         modelDirectory = URL(fileURLWithPath: modelPath).standardizedFileURL
@@ -16,6 +18,20 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
 
     func usesModel(at modelPath: String) -> Bool {
         modelDirectory == URL(fileURLWithPath: modelPath).standardizedFileURL
+    }
+
+    func configureRecognition(context: SpeechRecognitionContext) {
+        recognitionContextLock.lock()
+        recognitionContext = context
+        recognitionContextLock.unlock()
+    }
+
+    /// The exact context string handed to `Qwen3ASRModel.generate(context:)`.
+    /// Exposed for tests so vocabulary injection can be asserted without a model.
+    func currentContextPrompt() -> String? {
+        recognitionContextLock.lock()
+        defer { recognitionContextLock.unlock() }
+        return recognitionContext.contextualPrompt()
     }
 
     func prepare() async {
@@ -31,12 +47,14 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
         guard isReady else { throw QwenNativeASRError.notConfigured }
         guard let audioURL else { throw QwenNativeASRError.noAudioFile }
 
+        let contextPrompt = currentContextPrompt()
         let started = CFAbsoluteTimeGetCurrent()
         let result = try await QwenAudioPreprocessor.withPreparedAudio(from: audioURL) { preparedURL in
             try await runtime.transcribe(
                 audioURL: preparedURL,
                 modelDirectory: modelDirectory,
-                language: language
+                language: language,
+                context: contextPrompt
             )
         }
         let elapsed = CFAbsoluteTimeGetCurrent() - started
@@ -92,7 +110,8 @@ private actor QwenNativeASRRuntime {
     func transcribe(
         audioURL: URL,
         modelDirectory: URL,
-        language: String?
+        language: String?,
+        context: String?
     ) async throws -> Result {
         try Task.checkCancellation()
         let model = try await loadModel(from: modelDirectory)
@@ -104,7 +123,11 @@ private actor QwenNativeASRRuntime {
             throw QwenAudioPreprocessorError.conversionFailed
         }
 
-        let output = model.generate(audio: audio, language: language)
+        let output = model.generate(
+            audio: audio,
+            context: context ?? "",
+            language: language
+        )
         try Task.checkCancellation()
         return Result(
             text: output.text,

@@ -9,10 +9,16 @@ final class VolcSpeechEngine: SpeechEngine, @unchecked Sendable {
     private(set) var isReady: Bool
     private typealias Connection = (session: URLSession, task: URLSessionWebSocketTask)
     private var streamingSession: VolcStreamingSession?
+    private let recognitionContextLock = NSLock()
+    private var recognitionContext = SpeechRecognitionContext.empty
 
     private static let endpoint = "wss://openspeech.bytedance.com/api/v3/sauc/bigmodel"
     private static let chunkSize = 6400 // ~200ms at 16kHz 16-bit mono
     private static let timeoutSeconds: UInt64 = 30
+    /// The 双向流式 endpoint's direct hotword context budget is documented as
+    /// 100 tokens, so keep the list short and bounded well below that.
+    static let maximumHotwordCount = 100
+    static let maximumHotwordCharacters = 300
 
     init(appKey: String, accessKey: String, resourceId: String) {
         self.appKey = appKey
@@ -22,6 +28,18 @@ final class VolcSpeechEngine: SpeechEngine, @unchecked Sendable {
     }
 
     var supportsStreaming: Bool { true }
+
+    func configureRecognition(context: SpeechRecognitionContext) {
+        recognitionContextLock.lock()
+        recognitionContext = context
+        recognitionContextLock.unlock()
+    }
+
+    private func recognitionContextSnapshot() -> SpeechRecognitionContext {
+        recognitionContextLock.lock()
+        defer { recognitionContextLock.unlock() }
+        return recognitionContext
+    }
 
     func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
         guard isReady else { return }
@@ -140,6 +158,48 @@ final class VolcSpeechEngine: SpeechEngine, @unchecked Sendable {
     // MARK: - Send full client request
 
     private func sendFullClientRequest(conn: Connection, language: String?) async throws {
+        let hotwords = Self.hotwordContext(
+            for: recognitionContextSnapshot().phrases
+        )
+        let payload = Self.fullClientRequestPayload(
+            language: language,
+            hotwordContext: hotwords
+        )
+
+        let jsonData = try JSONSerialization.data(withJSONObject: payload)
+        let message = buildMessage(type: .fullClientRequest, flags: 0x00, serialization: .json, payload: jsonData)
+        try await sendMessage(conn: conn, data: message)
+    }
+
+    /// Builds the `request.corpus.context` hotword payload. Volc accepts a JSON
+    /// string of `{"hotwords":[{"word": ...}]}`; see the official
+    /// 大模型流式语音识别 API `corpus.context` field.
+    static func hotwordContext(for phrases: [String]) -> String? {
+        var accepted: [String] = []
+        var characterCount = 0
+        for phrase in phrases {
+            let word = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !word.isEmpty, accepted.count < maximumHotwordCount else { continue }
+            guard characterCount + word.count <= maximumHotwordCharacters else { continue }
+            accepted.append(word)
+            characterCount += word.count
+        }
+        guard !accepted.isEmpty else { return nil }
+
+        let payload: [String: Any] = ["hotwords": accepted.map { ["word": $0] }]
+        guard let data = try? JSONSerialization.data(
+            withJSONObject: payload,
+            options: [.sortedKeys]
+        ) else {
+            return nil
+        }
+        return String(data: data, encoding: .utf8)
+    }
+
+    static func fullClientRequestPayload(
+        language: String?,
+        hotwordContext: String?
+    ) -> [String: Any] {
         var audio: [String: Any] = [
             "format": "pcm",
             "rate": 16000,
@@ -147,22 +207,23 @@ final class VolcSpeechEngine: SpeechEngine, @unchecked Sendable {
             "channel": 1,
             "codec": "raw"
         ]
-        if let lang = language { audio["language"] = lang }
+        if let language { audio["language"] = language }
 
-        let payload: [String: Any] = [
+        var request: [String: Any] = [
+            "model_name": "bigmodel",
+            "enable_itn": true,
+            "enable_punc": true,
+            "show_utterances": false
+        ]
+        if let hotwordContext, !hotwordContext.isEmpty {
+            request["corpus"] = ["context": hotwordContext]
+        }
+
+        return [
             "user": ["uid": "opentype_macos"],
             "audio": audio,
-            "request": [
-                "model_name": "bigmodel",
-                "enable_itn": true,
-                "enable_punc": true,
-                "show_utterances": false
-            ]
+            "request": request
         ]
-
-        let jsonData = try JSONSerialization.data(withJSONObject: payload)
-        let message = buildMessage(type: .fullClientRequest, flags: 0x00, serialization: .json, payload: jsonData)
-        try await sendMessage(conn: conn, data: message)
     }
 
     // MARK: - Stream audio

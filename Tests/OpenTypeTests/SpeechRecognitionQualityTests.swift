@@ -121,6 +121,20 @@ final class SpeechRecognitionQualityTests: XCTestCase {
         XCTAssertEqual(prompt, "Dictation terms: OpenType, MLX.")
     }
 
+    func testContextualPromptListsTermsAndRespectsBudget() {
+        XCTAssertNil(SpeechRecognitionContext(phrases: []).contextualPrompt())
+
+        let context = SpeechRecognitionContext(phrases: ["OpenType", "菜单栏"])
+        XCTAssertEqual(context.contextualPrompt(), "Terms: OpenType, 菜单栏")
+        XCTAssertEqual(context.contextualPrompt(maximumCharacters: 15), "Terms: OpenType")
+        XCTAssertNil(context.contextualPrompt(maximumCharacters: 9))
+
+        let longFirst = SpeechRecognitionContext(
+            phrases: [String(repeating: "x", count: 80), "MLX"]
+        )
+        XCTAssertEqual(longFirst.contextualPrompt(maximumCharacters: 20), "Terms: MLX")
+    }
+
     func testAppleCompatibleDictationPresetChangesAfterOneMinute() {
         XCTAssertEqual(
             AppleSpeechAnalyzer.dictationPreset(forDuration: 30),
