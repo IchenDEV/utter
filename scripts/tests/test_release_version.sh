@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 VALIDATOR="$SCRIPT_DIR/release-version.sh"
 REPOSITORY="$(cd "$SCRIPT_DIR/.." && pwd)"
-WORKFLOW="$REPOSITORY/.github/workflows/release.yml"
+WORKFLOW="$REPOSITORY/.github/workflows/release-artifact.yml"
 
 for tag in v0.0.0 v1.2.3 v10.20.300; do
     expected="${tag#v}"
