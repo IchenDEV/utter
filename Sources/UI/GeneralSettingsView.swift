@@ -59,6 +59,18 @@ struct GeneralSettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                Picker(L("settings.audio_sensitivity"), selection: $settings.audioGateSensitivity) {
+                    ForEach(AudioSensitivity.allCases, id: \.self) { sensitivity in
+                        Text(sensitivity.label).tag(sensitivity)
+                    }
+                }
+                .help(L("settings.audio_sensitivity_help"))
+                Picker(L("settings.weak_speech_sensitivity"), selection: $settings.audioWeakSpeechSensitivity) {
+                    ForEach(AudioSensitivity.allCases, id: \.self) { sensitivity in
+                        Text(sensitivity.label).tag(sensitivity)
+                    }
+                }
+                .help(L("settings.weak_speech_sensitivity_help"))
             } header: {
                 SettingsSectionHeader(title: L("settings.audio"))
             }

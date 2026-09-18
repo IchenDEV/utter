@@ -126,6 +126,13 @@
 "settings.beta" = "Beta";
 "settings.streaming_beta" = "Enable streaming recognition";
 "settings.streaming_beta_help" = "Show live transcription while recording and prefer the live result after stop to reduce waiting. Experimental and may be slightly less accurate on long audio.";
+"settings.audio_sensitivity" = "Speech detection sensitivity";
+"settings.audio_sensitivity_help" = "How loud a recording must be to count as speech. Choose Sensitive for quiet microphones or distant speech.";
+"settings.weak_speech_sensitivity" = "Low-volume cleanup sensitivity";
+"settings.weak_speech_sensitivity_help" = "How readily a quiet recording is treated as weak speech, which enables repetition collapsing and hallucinated-tail cleanup.";
+"settings.sensitivity.conservative" = "Conservative";
+"settings.sensitivity.standard" = "Standard";
+"settings.sensitivity.sensitive" = "Sensitive";
 "settings.memory" = "Memory";
 "settings.enable_memory" = "Enable input memory";
 "settings.memory_window" = "Memory window";

@@ -75,6 +75,8 @@ final class InputSessionCoordinator {
             }
         }
 
+        audioCapture.thresholds = settings.audioActivityThresholds
+
         let micStarted = audioCapture.start(
             deviceID: settings.microphoneID,
             levelUpdate: { _ in },

@@ -26,6 +26,8 @@ final class AppSettings: ObservableObject {
     @Published var whisperModel: String
     @Published var llmModel: String
     @Published var microphoneID: String?
+    @Published var audioGateSensitivity: AudioSensitivity
+    @Published var audioWeakSpeechSensitivity: AudioSensitivity
     @Published var outputMode: OutputMode
     @Published var languageStyle: LanguageStyle
     @Published var customStylePrompt: String
@@ -76,6 +78,7 @@ final class AppSettings: ObservableObject {
     private enum Key: String {
         case hotkeyType, translationHotkeyModifier, activationMode, tapInterval, speechEngine, whisperModel, llmModel
         case microphoneID, outputMode, languageStyle, customStylePrompt, playSounds
+        case audioGateSensitivity, audioWeakSpeechSensitivity
         case enableStreamingRecognitionBeta
         case inputLanguage, translationTargetLanguage
         case useScreenContext, screenContextMode, enableInstantInsert, hasCompletedOnboarding, uiLanguage, historyRetention
@@ -127,6 +130,12 @@ final class AppSettings: ObservableObject {
         whisperModel = ud.string(forKey: Key.whisperModel.rawValue) ?? "large-v3"
         llmModel = ud.string(forKey: Key.llmModel.rawValue) ?? Self.defaultLLMModelID
         microphoneID = ud.string(forKey: Key.microphoneID.rawValue)
+        audioGateSensitivity = AudioSensitivity(
+            rawValue: ud.string(forKey: Key.audioGateSensitivity.rawValue) ?? ""
+        ) ?? .standard
+        audioWeakSpeechSensitivity = AudioSensitivity(
+            rawValue: ud.string(forKey: Key.audioWeakSpeechSensitivity.rawValue) ?? ""
+        ) ?? .standard
         let savedOutput = ud.string(forKey: Key.outputMode.rawValue) ?? ""
         outputMode = OutputMode(rawValue: savedOutput)
             ?? (savedOutput.contains("整理") ? .processed : nil)
@@ -208,6 +217,12 @@ final class AppSettings: ObservableObject {
         $whisperModel.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.whisperModel.rawValue) }.store(in: &cancellables)
         $llmModel.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.llmModel.rawValue) }.store(in: &cancellables)
         $microphoneID.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.microphoneID.rawValue) }.store(in: &cancellables)
+        $audioGateSensitivity.dropFirst().sink {
+            [defaults] in defaults.set($0.rawValue, forKey: Key.audioGateSensitivity.rawValue)
+        }.store(in: &cancellables)
+        $audioWeakSpeechSensitivity.dropFirst().sink {
+            [defaults] in defaults.set($0.rawValue, forKey: Key.audioWeakSpeechSensitivity.rawValue)
+        }.store(in: &cancellables)
         $outputMode.dropFirst().sink { [defaults] in defaults.set($0.rawValue, forKey: Key.outputMode.rawValue) }.store(in: &cancellables)
         $languageStyle.dropFirst().sink { [defaults] in defaults.set($0.rawValue, forKey: Key.languageStyle.rawValue) }.store(in: &cancellables)
         $customStylePrompt.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.customStylePrompt.rawValue) }.store(in: &cancellables)
@@ -282,6 +297,16 @@ final class AppSettings: ObservableObject {
 
     private static func defaultTranslationModifier(excluding hotkey: HotkeyType) -> HotkeyType {
         hotkey == .shift ? .option : .shift
+    }
+
+    /// Audio activity thresholds resolved from the sensitivity presets and
+    /// clamped to safe bounds. Read at the start of every recording, so changes
+    /// apply immediately without a restart.
+    var audioActivityThresholds: AudioActivityThresholds {
+        AudioActivityThresholds(
+            gate: audioGateSensitivity.gateThresholds,
+            weakSpeechEvidence: audioWeakSpeechSensitivity.weakSpeechEvidenceThresholds
+        ).clamped
     }
 
     var zh: Bool { uiLanguage == .chinese }

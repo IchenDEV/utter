@@ -252,3 +252,48 @@ enum InputLanguage: String, Codable, CaseIterable {
         }
     }
 }
+
+/// User-facing sensitivity presets for the two independent audio activity
+/// threshold groups. `standard` always resolves to the shipped defaults, so
+/// existing users keep their behavior until they change the setting.
+enum AudioSensitivity: String, Codable, CaseIterable {
+    case conservative
+    case standard
+    case sensitive
+
+    var label: String { L("settings.sensitivity.\(rawValue)") }
+
+    /// Higher = only louder audio counts as speech.
+    var gateThresholds: AudioActivityThresholds.Gate {
+        let base = AudioActivityThresholds.default.gate
+        return AudioActivityThresholds.Gate(
+            minimumAverageRMS: base.minimumAverageRMS * gateMultiplier,
+            minimumPeakRMS: base.minimumPeakRMS * gateMultiplier
+        )
+    }
+
+    /// Higher = quiet recordings are more readily treated as weak speech.
+    var weakSpeechEvidenceThresholds: AudioActivityThresholds.WeakSpeechEvidence {
+        let base = AudioActivityThresholds.default.weakSpeechEvidence
+        return AudioActivityThresholds.WeakSpeechEvidence(
+            averageRMS: base.averageRMS * weakSpeechMultiplier,
+            peakRMS: base.peakRMS * weakSpeechMultiplier
+        )
+    }
+
+    private var gateMultiplier: Float {
+        switch self {
+        case .conservative: return 2.0
+        case .standard: return 1.0
+        case .sensitive: return 0.5
+        }
+    }
+
+    private var weakSpeechMultiplier: Float {
+        switch self {
+        case .conservative: return 0.5
+        case .standard: return 1.0
+        case .sensitive: return 2.0
+        }
+    }
+}

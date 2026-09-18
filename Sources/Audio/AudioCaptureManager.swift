@@ -46,6 +46,9 @@ final class AudioCaptureManager {
     private var audioFile: AVAudioFile?
     private(set) var lastRecordingURL: URL?
     private(set) var lastActivity = AudioCaptureActivity()
+    /// Thresholds used for the next recording. Set from user sensitivity
+    /// presets before `start(...)`; defaults preserve prior behavior.
+    var thresholds = AudioActivityThresholds.default
     private var levelCallback: ((Float) -> Void)?
     private var bufferCallback: ((AVAudioPCMBuffer) -> Void)?
 
@@ -65,7 +68,7 @@ final class AudioCaptureManager {
     ) -> Bool {
         if isRunning { stop() }
         cleanupLastRecording()
-        lastActivity = AudioCaptureActivity()
+        lastActivity = AudioCaptureActivity(thresholds: thresholds)
         levelCallback = levelUpdate
         bufferCallback = bufferUpdate
 
