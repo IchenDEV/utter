@@ -165,7 +165,11 @@ final class TextProcessor {
                 inputLanguage: options.inputLanguage,
                 enforceSemanticFidelity: options.fidelityPolicy == .faithfulCorrection
             ) {
-                Log.error("[TextProcessor] rejected unsafe formatting output: \(violation)")
+                Log.error(
+                    "[TextProcessor] rejected unsafe formatting output: \(violation) "
+                        + "(source \(cleanedText.count) chars, candidate \(output.count) chars); "
+                        + "keeping source transcript"
+                )
                 return rejectedOutputFallback(
                     cleanedText,
                     allowsGuardFallback: allowsGuardFallback
