@@ -92,4 +92,23 @@ struct SpeechRecognitionContext: Equatable, Sendable {
         }
         return bestTokens
     }
+
+    /// Free-text biasing prompt for engines whose API accepts a text context
+    /// (e.g. Qwen3-ASR `context`, injected into the system prompt). Terms are
+    /// added in rank order until the character budget is reached, so a large
+    /// dictionary cannot grow the prompt without bound.
+    func contextualPrompt(maximumCharacters: Int = 600) -> String? {
+        guard maximumCharacters > 0 else { return nil }
+        let prefix = "Terms: "
+        var accepted: [String] = []
+        var characterCount = prefix.count
+        for phrase in phrases {
+            let addition = (accepted.isEmpty ? 0 : 2) + phrase.count
+            guard characterCount + addition <= maximumCharacters else { continue }
+            accepted.append(phrase)
+            characterCount += addition
+        }
+        guard !accepted.isEmpty else { return nil }
+        return prefix + accepted.joined(separator: ", ")
+    }
 }

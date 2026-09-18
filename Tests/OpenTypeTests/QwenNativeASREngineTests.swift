@@ -112,6 +112,19 @@ final class QwenNativeASREngineTests: XCTestCase {
         }
     }
 
+    func testRecognitionContextPromptReachesTheModelCall() {
+        let engine = QwenNativeASREngine(modelPath: "/nonexistent-qwen-model")
+        XCTAssertNil(engine.currentContextPrompt())
+
+        engine.configureRecognition(
+            context: SpeechRecognitionContext(phrases: ["OpenType", "菜单栏"])
+        )
+        XCTAssertEqual(engine.currentContextPrompt(), "Terms: OpenType, 菜单栏")
+
+        engine.configureRecognition(context: .empty)
+        XCTAssertNil(engine.currentContextPrompt())
+    }
+
     private func safetensorsFiles(in directory: URL) throws -> Set<String> {
         let files = try FileManager.default.contentsOfDirectory(
             at: directory,
