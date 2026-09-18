@@ -8,16 +8,18 @@ struct VocabularyReplacementRule: Equatable, Sendable {
 }
 
 enum VocabularyReplacementEngine {
+    /// Applies rules left to right with maximum munch at each position:
+    ///
+    /// - Rules are ranked by longest `original` first, then lower
+    ///   `sourcePriority` (personal before industry), then insertion order.
+    /// - The first — hence longest — matching rule wins at a position, and the
+    ///   cursor advances past the whole match, so replacements never overlap.
+    /// - A match may not be glued to an ASCII word character on either side.
+    ///   Pure ASCII rules keep their previous boundary behavior, while CJK-only
+    ///   and mixed entries (e.g. "Wi-Fi密码") get the same validation, so a
+    ///   short CJK term no longer rewrites the CJK tail of an identifier.
     static func apply(_ rules: [VocabularyReplacementRule], to text: String) -> String {
-        let rankedRules = rules.sorted {
-            if $0.original.count != $1.original.count {
-                return $0.original.count > $1.original.count
-            }
-            if $0.sourcePriority != $1.sourcePriority {
-                return $0.sourcePriority < $1.sourcePriority
-            }
-            return $0.insertionOrder < $1.insertionOrder
-        }
+        let rankedRules = rank(rules)
         guard !rankedRules.isEmpty, !text.isEmpty else { return text }
 
         var result = ""
@@ -37,6 +39,20 @@ enum VocabularyReplacementEngine {
         return result
     }
 
+    private static func rank(_ rules: [VocabularyReplacementRule]) -> [VocabularyReplacementRule] {
+        rules
+            .filter { !$0.original.isEmpty }
+            .sorted {
+                if $0.original.count != $1.original.count {
+                    return $0.original.count > $1.original.count
+                }
+                if $0.sourcePriority != $1.sourcePriority {
+                    return $0.sourcePriority < $1.sourcePriority
+                }
+                return $0.insertionOrder < $1.insertionOrder
+            }
+    }
+
     private static func matches(
         _ original: String,
         in text: String,
@@ -50,14 +66,10 @@ enum VocabularyReplacementEngine {
             return false
         }
 
-        if let first = original.first, isASCIIWord(first),
-           start > text.startIndex,
-           isASCIIWord(text[text.index(before: start)]) {
+        if start > text.startIndex, isASCIIWord(text[text.index(before: start)]) {
             return false
         }
-        if let last = original.last, isASCIIWord(last),
-           end < text.endIndex,
-           isASCIIWord(text[end]) {
+        if end < text.endIndex, isASCIIWord(text[end]) {
             return false
         }
         return true
