@@ -126,6 +126,13 @@
 "settings.beta" = "Beta 功能";
 "settings.streaming_beta" = "启用流式语音识别";
 "settings.streaming_beta_help" = "录音时实时显示识别内容，停止后优先使用实时结果，减少等待。该功能仍在测试中，长音频可能略有误差。";
+"settings.audio_sensitivity" = "语音检测灵敏度";
+"settings.audio_sensitivity_help" = "多大音量的录音才算「有语音」。麦克风偏轻或距离较远时可选「灵敏」。";
+"settings.weak_speech_sensitivity" = "低音量清理灵敏度";
+"settings.weak_speech_sensitivity_help" = "多容易把安静录音判定为弱语音（会启用重复折叠与幻听尾巴清理）。";
+"settings.sensitivity.conservative" = "保守";
+"settings.sensitivity.standard" = "标准";
+"settings.sensitivity.sensitive" = "灵敏";
 "settings.memory" = "记忆";
 "settings.enable_memory" = "启用输入记忆";
 "settings.memory_window" = "记忆时间窗口";

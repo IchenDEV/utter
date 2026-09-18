@@ -151,6 +151,8 @@ final class VoicePipeline {
             }
         }
 
+        audioCapture.thresholds = appState.settings.audioActivityThresholds
+
         let micStarted = audioCapture.start(
             deviceID: micID,
             levelUpdate: { [weak self] level in
