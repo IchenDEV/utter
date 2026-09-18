@@ -1,0 +1,116 @@
+name: Nightly Release
+
+# Releases are built from `main` on a schedule instead of from a manually pushed
+# tag: the job inspects commits since the latest stable release tag, and when
+# there are any it creates the next patch tag and publishes that release. The
+# tag-triggered Release workflow remains available as a manual fallback.
+on:
+  schedule:
+    # 20:00 Asia/Shanghai == 12:00 UTC.
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never let a nightly run overlap itself (a manually dispatched run and the
+# scheduled run, or two slow runs). The newest run does not cancel one that is
+# already publishing a release.
+concurrency:
+  group: nightly-release
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan nightly release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      changed: ${{ steps.plan.outputs.changed }}
+      version: ${{ steps.plan.outputs.version }}
+      tag: ${{ steps.plan.outputs.tag }}
+      reason: ${{ steps.plan.outputs.reason }}
+      commit_count: ${{ steps.plan.outputs.commit_count }}
+      commit_summary: ${{ steps.plan.outputs.commit_summary }}
+      head_sha: ${{ steps.plan.outputs.head_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Decide whether main moved since the latest release
+        id: plan
+        run: |
+          set -euo pipefail
+          ./scripts/nightly-release-plan.sh . origin/main | tee plan.txt
+          while IFS='=' read -r key value; do
+            case "$key" in
+            changed | version | reason | commit_count | commit_summary | head_sha | latest_tag)
+              if [ "$key" = "version" ] && [ -n "$value" ]; then
+                value="v$value"
+              fi
+              echo "$key=$value" >> "$GITHUB_OUTPUT"
+              ;;
+            esac
+          done < plan.txt
+          rm -f plan.txt
+
+      - name: Report decision
+        env:
+          CHANGED: ${{ steps.plan.outputs.changed }}
+          VERSION: ${{ steps.plan.outputs.version }}
+          COMMITS: ${{ steps.plan.outputs.commit_count }}
+          SUMMARY: ${{ steps.plan.outputs.commit_summary }}
+          REASON: ${{ steps.plan.outputs.reason }}
+        run: |
+          if [ "$CHANGED" = "true" ]; then
+            {
+              echo "### Nightly release: ${VERSION}"
+              echo ""
+              echo "- Commits since the last release: ${COMMITS}"
+              echo "- Newest commits: ${SUMMARY}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "Releasing ${VERSION} from ${COMMITS} new commit(s)."
+          else
+            {
+              echo "### Nightly release: skipped"
+              echo ""
+              echo "${REASON}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "Skipping nightly release: ${REASON}"
+          fi
+
+  # Full repository checks + Swift tests before anything is tagged.
+  validate:
+    name: Release Candidate Tests
+    needs: plan
+    if: ${{ needs.plan.outputs.changed == 'true' }}
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run repository checks
+        run: bash ./scripts/ci-basic-checks.sh
+
+      - name: Ensure Metal toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
+
+      - name: Run unit tests
+        run: swift test
+
+  # Creates the tag on the current origin/main tip, then signs, verifies, and
+  # publishes through the same reusable pipeline the manual tag flow uses.
+  release:
+    name: Sign, Verify & Publish
+    needs: [plan, validate]
+    if: ${{ needs.plan.outputs.changed == 'true' }}
+    uses: ./.github/workflows/release-artifact.yml
+    with:
+      version: ${{ needs.plan.outputs.version }}
+      tag: ${{ needs.plan.outputs.tag }}
+      create_tag: true
+    secrets: inherit
