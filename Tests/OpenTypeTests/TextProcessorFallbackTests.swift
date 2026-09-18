@@ -23,7 +23,7 @@ final class TextProcessorFallbackTests: XCTestCase {
         )
     }
 
-    func testRejectedOutputFallbackRespectsPreparedFallbackPolicy() {
+    func testRejectedOutputFallbackAlwaysKeepsSourceTranscript() {
         let processor = TextProcessor()
 
         XCTAssertEqual(
@@ -38,8 +38,85 @@ final class TextProcessorFallbackTests: XCTestCase {
                 "raw transcript",
                 allowsGuardFallback: false
             ),
-            ""
+            "raw transcript"
         )
+        XCTAssertFalse(
+            processor.rejectedOutputFallback(
+                "raw transcript",
+                allowsGuardFallback: false
+            ).isEmpty
+        )
+    }
+
+    func testGuardRejectsExcessiveDeletionAndKeepsSourceTranscript() {
+        let source = "我们下午开会讨论发布方案"
+        let candidate = "明天见"
+
+        XCTAssertEqual(
+            TranscriptFidelityGuard.violation(
+                source: source,
+                candidate: candidate,
+                protectedTerms: [],
+                inputLanguage: .chinese,
+                enforceSemanticFidelity: true
+            ),
+            "excessive_deletion"
+        )
+
+        let fallback = TextProcessor().rejectedOutputFallback(
+            source,
+            allowsGuardFallback: false
+        )
+        XCTAssertEqual(fallback, source)
+        XCTAssertTrue(fallback.contains("讨论发布方案"))
+        XCTAssertFalse(fallback.contains("明天见"))
+    }
+
+    func testGuardRejectsChangedProtectedTokenAndKeepsSourceTranscript() {
+        let source = "第3章的内容需要修改"
+        let candidate = "第4章的内容需要修改"
+
+        XCTAssertEqual(
+            TranscriptFidelityGuard.violation(
+                source: source,
+                candidate: candidate,
+                protectedTerms: [],
+                inputLanguage: .chinese,
+                enforceSemanticFidelity: true
+            ),
+            "protected_token_change"
+        )
+
+        let fallback = TextProcessor().rejectedOutputFallback(
+            source,
+            allowsGuardFallback: false
+        )
+        XCTAssertEqual(fallback, source)
+        XCTAssertTrue(fallback.contains("第3章"))
+        XCTAssertFalse(fallback.contains("第4章"))
+    }
+
+    func testGuardRejectsHallucinatedExpansionAndFallsBackToSource() {
+        let source = "明天开会"
+        let candidate = "明天上午在会议室开会并同步项目目标"
+
+        XCTAssertEqual(
+            TranscriptFidelityGuard.violation(
+                source: source,
+                candidate: candidate,
+                protectedTerms: [],
+                inputLanguage: .chinese,
+                enforceSemanticFidelity: true
+            ),
+            "excessive_expansion"
+        )
+
+        let fallback = TextProcessor().rejectedOutputFallback(
+            source,
+            allowsGuardFallback: false
+        )
+        XCTAssertEqual(fallback, source)
+        XCTAssertFalse(fallback.contains("项目目标"))
     }
 
     func testCustomTransformationUsesNeutralUserPromptAndExplicitPolicy() {
