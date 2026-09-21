@@ -168,6 +168,12 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     /// The latch of the current voice-key session, or nil when idle.
     var currentSessionToken: UInt64? { session.isLive ? session.generation : nil }
 
+    /// True while `token` is still the live voice-key session. Used by the
+    /// pipeline to abort a start whose key was released while the model loaded.
+    static func isSessionCurrent(_ token: UInt64) -> Bool {
+        shared.session.isLive && shared.session.generation == token
+    }
+
     func endCapture() {
         // Close exactly once, whatever the phase: a release during `starting`
         // must still close a microphone this bridge may have opened, and must
@@ -312,7 +318,8 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
 
     // MARK: - Control protocol
 
-    fileprivate func handleControl(_ data: Data) {
+    fileprivate func handleControl(_ data: Data, attempt: UInt64) {
+        guard handshake.accepts(attempt) else { return }
         let bytes = Array(data)
         guard let opcode = bytes.first.flatMap(RemoteMicControlOpcode.init(rawValue:)) else { return }
 
@@ -375,7 +382,8 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         }
     }
 
-    fileprivate func handleAudio(_ data: Data) {
+    fileprivate func handleAudio(_ data: Data, attempt: UInt64) {
+        guard handshake.accepts(attempt) else { return }
         guard handshake.isReady else { return }
         let frames = accumulator.append(data, frameSize: capabilities.frameSize)
         for frame in frames {
@@ -442,7 +450,12 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         peripheral.delegate = self
         central.stopScan()
         state = .connecting
+        // Bind this connection to a fresh attempt; queued callbacks from an
+        // earlier connection on a reused CBPeripheral object carry the old value
+        // and are rejected below.
+        generation &+= 1
         let attempt = generation
+        handshake.beginAttempt(attempt)
         startTimeout(
             seconds: Self.connectionTimeout,
             generation: attempt,
@@ -457,6 +470,13 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         guard peripheral === self.peripheral else { return }
+        let attempt = generation
+        startTimeout(
+            seconds: Self.initializationTimeout,
+            generation: attempt,
+            reason: L("remote_mic.error.initialization_timeout"),
+            isSatisfied: { [weak self] in self?.handshake.isReady ?? false }
+        )
         peripheral.discoverServices([serviceUUID])
     }
 
@@ -477,11 +497,18 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         guard peripheral === self.peripheral else { return }
         handleDisconnect()
     }
+
+    /// True when a delegate callback still belongs to the current connection.
+    /// Peripheral identity alone cannot reject a reused `CBPeripheral`; the
+    /// attempt captured when the callback was raised can.
+    fileprivate func acceptsCallback(for peripheral: CBPeripheral) -> Bool {
+        peripheral === self.peripheral
+    }
 }
 
 extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        guard peripheral === self.peripheral else { return }
+        guard acceptsCallback(for: peripheral) else { return }
         guard let service = peripheral.services?.first(where: { $0.uuid == serviceUUID }) else {
             failAttempt(reason: L("remote_mic.error.service_missing"))
             return
@@ -533,7 +560,7 @@ extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
         didUpdateNotificationStateFor characteristic: CBCharacteristic,
         error: Error?
     ) {
-        guard peripheral === self.peripheral, error == nil else { return }
+        guard acceptsCallback(for: peripheral), error == nil else { return }
         guard characteristic.isNotifying else { return }
         switch characteristic.uuid.uuidString.uppercased() {
         case RemoteMicProtocol.audioUUID.uppercased():
@@ -552,14 +579,15 @@ extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
         error: Error?
     ) {
         // A reused CBPeripheral object can deliver a late value from a previous
-        // attempt; ignore anything that is not the current peripheral.
-        guard peripheral === self.peripheral else { return }
-        guard error == nil, let data = characteristic.value else { return }
+        // attempt; ignore anything that is not the current peripheral or that
+        // carries an attempt this handshake is not tracking.
+        guard acceptsCallback(for: peripheral), error == nil,
+              let data = characteristic.value else { return }
         switch characteristic.uuid.uuidString.uppercased() {
         case RemoteMicProtocol.controlUUID.uppercased():
-            handleControl(data)
+            handleControl(data, attempt: generation)
         case RemoteMicProtocol.audioUUID.uppercased():
-            handleAudio(data)
+            handleAudio(data, attempt: generation)
         default:
             break
         }

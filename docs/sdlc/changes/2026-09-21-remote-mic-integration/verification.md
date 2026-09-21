@@ -12,8 +12,8 @@
 | `bash scripts/ci-basic-checks.sh` | Pass | "Basic CI checks passed." (localization parity, plists, resources) |
 | `bash scripts/sdlc-checks.sh` | Pass | "SDLC checks passed." |
 | `swift build` | Pass | `Build complete!` with the Command Line Tools toolchain |
-| `swift test` (full suite) | Pass | 671 executed, 10 skipped, 0 failures |
-| `swift test --filter RemoteMic` | Pass | 34 tests, 0 failures |
+| `swift test` (full suite) | Pass | 681 executed, 10 skipped, 0 failures |
+| `swift test --filter RemoteMic` | Pass | 42 tests, 0 failures |
 | Real Xiaomi remote end-to-end | Not run | No hardware in this environment |
 
 Test command note: this machine has no downloadable Metal toolchain, so the
@@ -32,6 +32,8 @@ licensing question is a human/CTO item and is untouched here.
 | P0: first audio lost / stop could not close | Fixed | Early audio is held in `RemoteMicPreRoll` and drained on commit; `STREAM_STOP` releases before clearing state so `endCapture` closes the microphone exactly once (`RemoteMicPreRollTests`). |
 | P1: handshake generation isolation missing | Fixed | `RemoteMicHandshake.confirmCapabilities` now requires the request to have been sent, so a late capability frame on a reused peripheral cannot mark a new attempt ready; `didUpdateValueFor` checks peripheral identity (`RemoteMicHandshakeTests`). |
 | P1: closing the feature left a session recording | Fixed | `deactivate()` invalidates the session and fires released/stopped, and `applyRemoteMicSetting(false)` cancels the session before deactivating. |
+| P0: cancellation did not reach the real VoicePipeline start | Fixed | `startRecording` now returns the task that owns the whole `pipeline.start`; the remote path stores and cancels it, and passes the latch into `pipeline.start`, which re-checks it after the model wait via `RemoteMicStartGuard`. A released or cancelled start aborts and never falls back to the system mic. |
+| P1: same-peripheral attempt isolation missing | Fixed | `RemoteMicHandshake.attempt` binds each connection; control/audio callbacks carry the attempt that raised them, and a stale frame is rejected even after the new attempt has requested capabilities. |
 | P0: fallback leaked wanted state | Fixed | `RemoteMicWantedState` holds the want; a failed start calls `tearDownFailedStart()`, clearing the callback, ending capture, and dropping the temp file, so a later readiness cannot open the remote mic mid-system-session. Covered by `RemoteMicWantedStateTests`. |
 | P1: handshake had no state gates | Fixed | `RemoteMicHandshake` requests capabilities only after both notifications are confirmed via `didUpdateNotificationStateFor`, once per attempt; connection and initialization timeouts (`connectionTimeout` 10 s, `initializationTimeout` 8 s) bound each attempt; `didFailToConnect` recovers; a monotonic `generation` rejects late callbacks. Covered by `RemoteMicHandshakeTests`. |
 | P1: only pure protocol tests | Addressed in part | The gate and wanted-state are now pure, injectable types with deterministic tests (20 total). The CoreBluetooth transport itself still needs a real device. |
@@ -48,7 +50,8 @@ licensing question is a human/CTO item and is untouched here.
   is `.ready`), and the failure path now provably leaves no residue.
 - Voice key starts and stops recording — implemented through the control-channel
   adoption path; **not verified on hardware**.
-- Handshake ordering and timeouts covered by deterministic tests — pass.
+- Handshake ordering, attempt isolation, and timeouts covered by deterministic tests — pass (`RemoteMicHandshakeTests`, `RemoteMicAttemptIsolationTests`).
+- Session cancel across the real pipeline path — pass at the unit boundary: `RemoteMicStartGuardTests` mirrors the pipeline's post-model check and fails 3 cases under the old behaviour (mutation check). The live `VoicePipeline.start` await itself still needs a hardware/timing run.
 - Localization parity and check scripts — pass.
 
 ## Residual risk
@@ -57,6 +60,10 @@ licensing question is a human/CTO item and is untouched here.
   subscriptions, the voice key press/release, first and last frame, session
   teardown on disconnect, reconnect, and real 16 kHz audio all still need a
   person with the remote. This is the largest gap.
+- The 10 skipped tests in the full suite are not all the live-download gate:
+  only 4 are gated by `OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`; the other 6 are
+  environment/model-dependent (ANE real-model, Apple Speech sample, chat-template
+  and prompt-dump probes, a frontmost-app condition, Espresso ANE fallback).
 - **Licensing.** `IchenDEV/remote-mic-app` is GPL-3.0-only and the reviewer found
   the protocol implementation structurally close to it. A human must resolve
   attribution/licensing before any distribution; the setting stays default off.

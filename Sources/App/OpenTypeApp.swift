@@ -142,17 +142,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
 
-    func startRecording(action: HotkeyAction) {
+    /// Starts a recording and returns the task that owns the whole pipeline
+    /// start, so a caller that may need to cancel a slow start (the remote voice
+    /// key) can actually cancel it instead of only the layer above.
+    @discardableResult
+    func startRecording(
+        action: HotkeyAction,
+        remoteSessionToken: UInt64? = nil
+    ) -> Task<Void, Never>? {
         if integrationSessionCoordinator.isBusy {
             pipeline?.showBusyHint()
-            return
+            return nil
         }
         savePreviousApp()
         if popover.isShown { closePopover() }
         let mode: VoiceInputMode = action == .translation
             ? .translation(AppSettings.shared.translationTargetLanguage)
             : .dictation
-        Task { await pipeline?.start(mode: mode, targetApp: previousApp) }
+        return Task {
+            await pipeline?.start(
+                mode: mode,
+                targetApp: previousApp,
+                remoteSessionToken: remoteSessionToken
+            )
+        }
     }
 
     func stopRecording() {

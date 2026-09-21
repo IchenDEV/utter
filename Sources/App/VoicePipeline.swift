@@ -86,7 +86,8 @@ final class VoicePipeline {
 
     func start(
         mode: VoiceInputMode = .dictation,
-        targetApp: NSRunningApplication? = nil
+        targetApp: NSRunningApplication? = nil,
+        remoteSessionToken: UInt64? = nil
     ) async {
         if appState.isBusy {
             Log.info("[VoicePipeline] start: busy (\(appState.phase)), ignoring")
@@ -100,6 +101,21 @@ final class VoicePipeline {
 
         if !(currentEngine?.isReady ?? false) {
             await ensureEngineLoaded(requestPermission: true)
+        }
+
+        // Model loading above can take a while. A remote voice-key session may
+        // have been released meanwhile; never commit that start (and never fall
+        // back to the system microphone for a key the user already let go).
+        if let remoteSessionToken,
+           !RemoteMicStartGuard.shouldCommit(
+               remoteSessionToken: remoteSessionToken,
+               isCancelled: Task.isCancelled,
+               isSessionCurrent: XiaomiRemoteMicBridge.isSessionCurrent
+           ) {
+            Log.info("[VoicePipeline] start: remote session superseded before commit; aborting")
+            currentEngine?.cancelListening()
+            cancelScreenContextCapture()
+            return
         }
 
         guard currentEngine?.isReady ?? false else {

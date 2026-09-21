@@ -151,3 +151,67 @@ final class RemoteMicWantedStateTests: XCTestCase {
         XCTAssertTrue(state.isActive, "implicit audio start without an explicit want")
     }
 }
+
+/// Attempt isolation on a reused `CBPeripheral`: CoreBluetooth queues callbacks
+/// per object, so a callback raised during a previous connection can land after a
+/// reconnect has already moved on. Peripheral identity alone cannot reject it;
+/// the attempt stamped when the callback was raised can.
+final class RemoteMicAttemptIsolationTests: XCTestCase {
+    /// The reviewer's exact case: the new attempt has **already requested**
+    /// capabilities when the old attempt's late capability response arrives.
+    func testLateCapabilityFromPreviousAttemptIsRejectedAfterNewRequest() {
+        var handshake = RemoteMicHandshake()
+        handshake.beginAttempt(2)
+        handshake.registerCharacteristic(.transmit)
+        handshake.confirmSubscription(.audio)
+        handshake.confirmSubscription(.control)
+        handshake.markCapabilitiesRequested()
+
+        // A capability that was raised during attempt 1 must be ignored even
+        // though this handshake has now requested its own.
+        XCTAssertFalse(handshake.accepts(1), "attempt 1 is stale")
+        XCTAssertTrue(handshake.accepts(2))
+
+        // The gate the bridge consults is the attempt check, so a stale frame
+        // never reaches confirmCapabilities and cannot mark the attempt ready.
+        XCTAssertFalse(handshake.isReady)
+    }
+
+    /// A late disconnect/control/audio from the previous attempt must be
+    /// rejected by the same gate.
+    func testLateControlAndAudioFromPreviousAttemptAreRejected() {
+        var handshake = RemoteMicHandshake()
+        handshake.beginAttempt(5)
+        XCTAssertFalse(handshake.accepts(4), "stale control/audio attempt")
+        XCTAssertTrue(handshake.accepts(5))
+    }
+
+    /// A new attempt starts from a clean gate even when the old one was ready.
+    func testNewAttemptDoesNotInheritTheOldAttemptsState() {
+        var handshake = RemoteMicHandshake()
+        handshake.beginAttempt(1)
+        handshake.registerCharacteristic(.transmit)
+        handshake.confirmSubscription(.audio)
+        handshake.confirmSubscription(.control)
+        handshake.markCapabilitiesRequested()
+        XCTAssertTrue(handshake.confirmCapabilities(.default))
+        XCTAssertTrue(handshake.isReady)
+
+        handshake.beginAttempt(2)
+        XCTAssertFalse(handshake.isReady, "a new attempt must not start ready")
+        XCTAssertFalse(handshake.hasAllCharacteristics)
+        XCTAssertFalse(handshake.subscriptionsReady)
+        XCTAssertFalse(handshake.shouldRequestCapabilities)
+        XCTAssertFalse(handshake.accepts(1))
+    }
+
+    /// `reset` keeps the current attempt identity, so callbacks already in flight
+    /// for this attempt are still accepted after a transient reset.
+    func testResetKeepsTheCurrentAttemptIdentity() {
+        var handshake = RemoteMicHandshake()
+        handshake.beginAttempt(7)
+        handshake.reset()
+        XCTAssertTrue(handshake.accepts(7), "reset must not invalidate the live attempt")
+        XCTAssertEqual(handshake.attempt, 7)
+    }
+}

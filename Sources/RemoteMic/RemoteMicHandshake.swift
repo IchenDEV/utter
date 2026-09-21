@@ -8,6 +8,12 @@ import Foundation
 /// notifications are confirmed, and readiness requires a parsed 16 kHz
 /// capability response.
 struct RemoteMicHandshake: Equatable {
+    /// Identity of the connection attempt this handshake belongs to. CoreBluetooth
+    /// may deliver a queued callback for a previous attempt on the same
+    /// `CBPeripheral` object after a reconnect; stamping each callback with the
+    /// attempt it belongs to is the only way to reject it once the new attempt
+    /// has already requested capabilities.
+    private(set) var attempt: UInt64 = 0
     private(set) var hasTransmit = false
     private(set) var subscriptions: Set<RemoteMicSubscription> = []
     private(set) var capabilitiesRequested = false
@@ -33,6 +39,17 @@ struct RemoteMicHandshake: Equatable {
     /// Records a confirmed notification subscription.
     mutating func confirmSubscription(_ subscription: RemoteMicSubscription) {
         subscriptions.insert(subscription)
+    }
+
+    /// Starts a new attempt. Every callback carries the attempt it was raised
+    /// for; a mismatch means the callback belongs to a superseded connection.
+    mutating func beginAttempt(_ attempt: UInt64) {
+        self = RemoteMicHandshake(attempt: attempt)
+    }
+
+    /// True when `attempt` is the connection this handshake is tracking.
+    func accepts(_ attempt: UInt64) -> Bool {
+        attempt == self.attempt
     }
 
     /// True exactly when the capability request should be written: all
@@ -65,7 +82,7 @@ struct RemoteMicHandshake: Equatable {
     var isReady: Bool { capabilitiesConfirmed }
 
     mutating func reset() {
-        self = RemoteMicHandshake()
+        self = RemoteMicHandshake(attempt: attempt)
     }
 
     enum CharacteristicKind {

@@ -33,6 +33,12 @@
 - [x] Capability responses require a prior request; `didUpdateValueFor` checks
       peripheral identity.
 - [x] Correct `0x08` to `START_SEARCH` and cite the AOSP ATVV reference firmware.
+- [x] Thread the session latch through the real `VoicePipeline.start` and
+      re-check it after the model wait (`RemoteMicStartGuard`), so a release
+      during a cold start aborts instead of recording or falling back.
+- [x] Bind an attempt identity to the handshake and every control/audio
+      callback, so a stale callback on a reused peripheral is rejected even
+      after the new attempt has requested capabilities.
 
 ## Verification plan
 

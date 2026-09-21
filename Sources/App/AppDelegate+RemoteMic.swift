@@ -64,20 +64,24 @@ extension AppDelegate {
                 self.remoteMicPendingToken = nil
                 return
             }
-            self.remoteMicStartTask = nil
-            self.startRecording(action: .dictation)
+            // Own the whole pipeline start so a later release can cancel it even
+            // while it waits for a cold model. The pipeline checks the token
+            // again before committing, so it never falls back to the system mic.
+            self.remoteMicStartTask = self.startRecording(
+                action: .dictation,
+                remoteSessionToken: token
+            )
         }
     }
 
     private func releaseRemoteMicSession() {
-        let hadPending = remoteMicPendingToken != nil
+        // Release the bridge session first so the pipeline's post-model check
+        // sees a stale token and aborts instead of recording.
         remoteMicPendingToken = nil
+        RemoteMicCaptureManager.shared.cancelSession()
+        // Cancel the task that owns the whole pipeline start.
         remoteMicStartTask?.cancel()
         remoteMicStartTask = nil
-        RemoteMicCaptureManager.shared.cancelSession()
-        // Only stop the pipeline if a session actually reached recording.
-        if !hadPending || RemoteMicCaptureManager.shared.isRunning {
-            stopRecording()
-        }
+        stopRecording()
     }
 }
