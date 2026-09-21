@@ -56,8 +56,8 @@ ignores `performAsCurrentDrawingAppearance` and always renders ambient; an
    Observed result: 4 tests fail across both `.aqua` and `.darkAqua`:
    - `testPageSurfaceRendersAsWindowBackgroundColor`: failed (rendered `#F6F6F6`, expected `#FFFFFF`)
    - `testCardSurfaceRendersAsUnderPageBackgroundColor`: failed (rendered `#FFFFFF`, expected `#F6F6F6`)
-   - `testSurfaceSemanticColorRoles`: failed (identity check)
-   - `testAppearancesProduceDistinctRenderings`: failed (contrast / distinctness)
+   - `testCardDoesNotRenderAsWindowBackgroundColor`: failed (rendered `#FFFFFF`, card must not match window background)
+   - `testSurfaceIdentitiesAreTheTwoSemanticRoles`: failed (identity check)
 
 2. **Mutation 2 (Arbitrary color corruption)**: In `Sources/UI/SettingsSurface.swift`, alter `cardSemanticColor` to an incorrect color:
    ```swift
@@ -69,7 +69,7 @@ ignores `performAsCurrentDrawingAppearance` and always renders ambient; an
    ```
    Observed result: 2 tests fail:
    - `testCardSurfaceRendersAsUnderPageBackgroundColor`: failed (rendered `#FF3B30`, expected `#F6F6F6`)
-   - `testSurfaceSemanticColorRoles`: failed (identity check)
+   - `testSurfaceIdentitiesAreTheTwoSemanticRoles`: failed (identity check)
 
 3. **Restore baseline**: Revert `Sources/UI/SettingsSurface.swift` back to production implementation:
    ```swift
@@ -94,12 +94,12 @@ ignores `performAsCurrentDrawingAppearance` and always renders ambient; an
 ## Scope of verification and remaining human acceptance items
 
 ### Verified evidence (completed)
-- **Production seams & test suite**: `SettingsSurface` routes through `pageSemanticColor` / `cardSemanticColor`. `SettingsSurfaceTests` (6 tests) rasterizes views in `NSHostingView` under `.aqua` and `.darkAqua`, passes deterministically, and catches role-swap and color-corruption regressions. Full suite: 639 tests passed, 0 failures.
+- **Production seams & test suite**: `SettingsSurface` routes through `pageSemanticColor` / `cardSemanticColor`. `SettingsSurfaceTests` (6 tests) rasterizes views in `NSHostingView` under `.aqua` and `.darkAqua`, passes deterministically, and catches role-swap and color-corruption regressions. Full suite: 639 executed, 10 skipped, 0 failures.
 - **Real-window live captures**: `dist/Utter.app` running window Activity tab captured in standard light (`#FFFFFF` page / `#F7F7F7` cards) and dark (`#252525` page / `#303030` cards), matching the user reference screenshot palette.
 - **CI / SDLC gates**: `bash scripts/ci-basic-checks.sh` and `bash scripts/sdlc-checks.sh` pass.
 
 ### Remaining unverified scope (reserved for human acceptance / CTO)
-- **Remaining tabs and onboarding real-device matrix**: Activity tab is verified with real-window captures. The other 5 settings tabs (General, Models, Permissions, Style, About) and the onboarding window share the identical `SettingsSurface` seams and `SettingsPageLayout`, but visual inspection on physical hardware across standard light, standard dark, and increased contrast remains to be completed by a reviewer with interactive desktop control (scripted tab switching is unavailable in headless CLI as SwiftUI tab bars do not expose `NSButton` subviews).
+- **Remaining tabs and onboarding real-device matrix**: Activity tab is verified with real-window captures. The other 5 settings tabs (General, Models, Style, Integrations, About) and the onboarding window share the identical `SettingsSurface` seams and `SettingsPageLayout`, but visual inspection on physical hardware across standard light, standard dark, and increased contrast remains to be completed by a reviewer with interactive desktop control (scripted tab switching is unavailable in headless CLI as SwiftUI tab bars do not expose `NSButton` subviews).
 - **Formal SDLC approvals**: `intent.md`, `spec.md`, and `verification.md` remain in `pending approval` status and must be formally signed off by an authorized human; automated CI passes cannot substitute for human approval.
 
 ## Decision
