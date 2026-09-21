@@ -14,9 +14,9 @@
 | `bash scripts/ci-basic-checks.sh` | Pass | "Basic CI checks passed." on macOS |
 | `bash scripts/sdlc-checks.sh` | Pass | "SDLC checks passed." |
 | `bash -n scripts/ci-basic-checks.sh scripts/sdlc-checks.sh` | Pass | Shell harness syntax is valid |
-| `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --build-system native` (full suite) | Pass | 665 XCTest executed, 14 skipped, 0 failures; 1 swift-testing passed (total 666 executed, 14 skipped, 0 failures) on macOS |
-| `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --build-system native --filter "ModelDownload\|DownloadStallWatchdog\|Utility"` | Pass | 48 executed, 0 failures across DownloadStallWatchdogTests (3), ModelDownloadFailureMessageTests (3), ModelDownloadRecoveryTests (10), ModelDownloadTasksTests (12), and UtilityTests (20) on macOS |
-| Real network interrupted download → Resume → model load & inference (`OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`) | Pass | WhisperKit audio transcription (`en-sample.m4a` in 0.10s) & HubApi 278MB safetensors download + ModelContainer load (0.78s) + real text generation (1.62s) pass with `default.metallib` |
+| `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --build-system native` (full suite) | Pass | 666 total = 652 passed, 14 skipped, 0 failures (651 XCTest passed, 14 skipped; 1 swift-testing passed) on macOS. All 14 skips are live integration tests |
+| `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --build-system native --filter "ModelDownload\|DownloadStallWatchdog\|Utility"` | Pass | 48 executed, 48 passed, 0 skipped, 0 failures across DownloadStallWatchdogTests (3), ModelDownloadFailureMessageTests (3), ModelDownloadRecoveryTests (10), ModelDownloadTasksTests (12), and UtilityTests (20) on macOS |
+| Real network interrupted download → Resume → model load & inference (`OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`) | Pass | WhisperKit audio transcription (`en-sample.m4a` in 0.14s) & HubApi 278MB safetensors download + ModelContainer load (0.78s) + real text generation (1.62s) pass with `default.metallib` |
 
 The focused tests retain the exact Whisper scope, sibling preservation,
 flat-cache completion, duplicate retry deduplication, delete serialization, and
@@ -50,7 +50,7 @@ Tested via `LiveDownloadVerificationTests` on macOS against live HuggingFace CDN
    - **Resume**: Generation 2 started with isolated token `staging2` (`.utter-generations/<token2>/download`). Resumed and completed all model components (AudioEncoder, MelSpectrogram, TextDecoder, config.json, generation_config.json, weight.bin) to 100%.
    - **Atomic commit**: Candidate materialized and rollback prepared via detached task `ModelStorage.prepareGenerationCommitOffMainActor`, then published atomically via `ModelStorage.publishPreparedGeneration` to `/Users/chenli/Library/Application Support/OpenType/huggingface/models/argmaxinc/whisperkit-coreml/openai_whisper-tiny`.
    - **Model loading**: Loaded via `WhisperKit(modelFolder:)`; model state initialized to `Loaded`.
-   - **Real Audio Transcription**: Executed `whisperKit.transcribe(audioPath:)` on `docs/assets/demos/en-sample.m4a` in 0.10s, yielding exact spoken text: `"Hey so I wanted to, I wanted to follow up on the design doc we talked about"`.
+   - **Real Audio Transcription**: Executed `whisperKit.transcribe(audioPath:)` on `docs/assets/demos/en-sample.m4a` in 0.14s, yielding exact spoken text: `"Hey so I wanted to, I wanted to follow up on the design doc we talked about"`.
 
 2. **Hub-backed stack (`mlx-community/Qwen2.5-0.5B-Instruct-4bit`, 278 MB)**:
    - **Interruption**: Task 1 initiated `HubApi.snapshot(matching: ["*.json"])` into `staging1` (`downloadBase` + `hubCache`). Mid-transfer interruption triggered `Task.cancel()`, caught cleanly as `downloadError("已取消")`. `staging1` root remained preserved on disk.
@@ -70,16 +70,17 @@ Tested via `LiveDownloadVerificationTests` on macOS against live HuggingFace CDN
    - `testApplicationModelCatalogResumePath` verified the application-level lifecycle:
      - `ModelCatalog.shared.downloadWhisper("openai_whisper-tiny")` initiated.
      - `ModelCatalog.shared.cancelDownload` transitioned state to `.error("下载已暂停。点击“继续下载”可从现有文件接着下载")`.
+     - Awaited download task settlement.
      - Resuming via `ModelCatalog.shared.downloadWhisper` resumed transfer, completed detached candidate preparation and atomic publication, and transitioned catalog status to `.downloaded`.
+     - *Scope boundary*: strictly verifies graceful cancellation state transition and resumed completion after task settlement; concurrent in-flight writer overlap without awaiting task settlement at the UI facade layer is tracked for follow-up testing.
 
 ### Commit SHA Traceability
 
 Each piece of evidence maps to its originating commit:
-- `0167504`: Baseline P0 implementation (generation token staging, writer drain, watchdog, and initial 46 unit tests).
-- `28a847f`: Live Whisper audio transcription (`en-sample.m4a`), full Hub 278 MB safetensors download, interruption taxonomy, application catalog resume path, and MLX metallib CLI constraint documentation.
-- `a45132f`: P1 promotion refactor (detached candidate preparation off MainActor, rollback restoration on replacement failure, and startup cleanup of orphaned generation staging roots).
-- `6bcc5ad`: P1 integration commit on PR #102.
-- Current commit: Verified Hub MLX ModelContainer loading (0.78s) and real text generation (1.62s) with `default.metallib`, achieving complete end-to-end dual-stack live verification on macOS.
+- `0167504b920de6b36cb36f1b8e703ce486d69e8f`: Baseline P0 implementation (generation token staging, watchdog, and initial 46 unit tests).
+- `28a847f6018871f70210f119c4d650aed1e13040`: Live Whisper audio transcription (`en-sample.m4a`), full Hub 278 MB safetensors download, interruption taxonomy, application catalog resume path, and MLX metallib CLI constraint documentation.
+- `6bcc5adc69c42f21aa905c05b74b6e041fc0b4c7`: Integration commit on PR #102 integrating detached candidate preparation, rollback restoration, and startup cleanup.
+- `522947265e83f07c730b00c2130db5c45727de55`: Verified Hub MLX ModelContainer loading (0.78s) and real text generation (1.62s) with `default.metallib`, achieving complete end-to-end dual-stack live verification on macOS.
 
 ## Acceptance criteria
 
@@ -112,22 +113,19 @@ Each piece of evidence maps to its originating commit:
 - Restart cleanup — **pass on macOS**: `ModelCatalog.init` removes orphaned
   generation roots left by abnormal process termination before starting fresh
   downloads. Verified by `testStartupCleanupRemovesOnlyOrphanedGenerationRoots`.
-- `swift test` execution — **pass on macOS**: 48 focused tests pass (0 failures);
-  full suite passes with 665 XCTest executed, 14 skipped, 0 failures, plus 1
-  swift-testing test.
+- `swift test` execution — **pass on macOS**: 48 focused tests pass (48 passed, 0 skipped, 0 failures);
+  full suite passes with 666 total: 652 passed, 14 skipped, 0 failures (651 XCTest passed, 14 skipped; 1 swift-testing passed).
 - Real network interrupted download → Resume → model load & inference — **pass on macOS**:
-  WhisperKit end-to-end download, resume, model load, and real audio transcription pass 100% (`en-sample.m4a` in 0.10s).
+  WhisperKit end-to-end download, resume, model load, and real audio transcription pass 100% (`en-sample.m4a` in 0.14s).
   HubApi full weights download (278 MB safetensors), symlink materialization, staging purge, tokenizer encode/decode, MLX ModelContainer loading (0.78s), and real text generation (1.62s) pass 100% in test host with `default.metallib`.
   Interruption taxonomy (`Task.cancel` vs transport fault) and application `ModelCatalog` resume path pass 100%.
 
 ## Residual risk
 
-- The 120 s stall threshold is a judgment call; a very slow link with no progress
-  reports for over two minutes would be failed and marked resumable.
-- A transfer that ignores cancellation remains in its generation root until it
-  returns; it can no longer affect model state or share a live path with a
-  replacement. Waiting for old I/O exit addresses write safety, but recovery
-  when old I/O hangs permanently remains unproven (marked as R&D blocker).
+- Write safety is guaranteed by token-scoped isolation and atomic commit rejection; Cancelled downloads immediately start new generations without waiting for old writers to exit.
+- Cancelled transfers retain background Task and staging roots until underlying URLSession/I/O returns; in-process background network/staging resource contention when old I/O hangs permanently remains an R&D concern.
+- The 120 s stall threshold is a judgment call; a very slow link with no progress reports for over two minutes is marked paused and resumable.
+- External CI and PR merge gate remain subject to runner completion and human review approval.
 
 ## Decision
 
