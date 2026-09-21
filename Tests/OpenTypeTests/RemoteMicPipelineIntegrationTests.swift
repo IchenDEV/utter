@@ -189,4 +189,36 @@ final class RemoteMicCallbackRoutingTests: XCTestCase {
         XCTAssertTrue(bridge.isSessionLive, "stale control must not release the live session")
         XCTAssertTrue(bridge.isAttemptActiveForTesting(secondAttempt))
     }
+
+    /// CBCentralManagerDelegate callbacks do not carry an attempt id and a
+    /// reused CBPeripheral can make an object-state lookup look valid. The
+    /// actual production central delegate proxy captures the source attempt;
+    /// an old didConnect and didDisconnect must both be rejected after the
+    /// replacement has connected.
+    func testLateCentralConnectAndDisconnectFromOldSourceCannotInvalidateReplacement() {
+        let bridge = XiaomiRemoteMicBridge()
+        bridge.configureForTesting()
+        defer { bridge.configureForTesting() }
+
+        let firstAttempt = bridge.simulateConnectForTesting()
+        let firstProxy = bridge.centralCallbackProxyForTesting(attempt: firstAttempt)
+        let secondAttempt = bridge.simulateReconnectSamePeripheralForTesting()
+        let secondProxy = bridge.centralCallbackProxyForTesting(attempt: secondAttempt)
+
+        // The replacement reaches the connected phase through the same route
+        // that the real central delegate proxy calls.
+        secondProxy.deliverForTesting(.didConnect)
+        XCTAssertTrue(bridge.isCentralAttemptActiveForTesting(secondAttempt))
+
+        // These are source events from the retired manager, not observations
+        // of the replacement peripheral's mutable state.
+        firstProxy.deliverForTesting(.didConnect)
+        firstProxy.deliverForTesting(.didFailToConnect)
+        firstProxy.deliverForTesting(.didDisconnect)
+
+        XCTAssertTrue(
+            bridge.isCentralAttemptActiveForTesting(secondAttempt),
+            "late central events from the retired manager must not tear down the replacement"
+        )
+    }
 }
