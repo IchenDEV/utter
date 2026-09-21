@@ -14,11 +14,29 @@
 | `swift build` | Skipped | Exit 127: Swift is not installed in this Linux runner. |
 | `swift test` (full suite) | Skipped | Exit 127: Swift is not installed in this Linux runner. |
 | `swift test --filter RemoteMic` | Skipped | Exit 127: Swift is not installed in this Linux runner. |
+| `swift test --filter RemoteMicCallbackRoutingTests` | Skipped | Exit 127: `swift` is not installed in this Linux runner. |
 | Real Xiaomi remote end-to-end | Not run | No hardware in this environment |
 
 Environment note: this verification was run on Linux without Swift,
 Xcode, or a Metal toolchain. The skipped Swift rows are environment skips,
 not passing test results; macOS must rerun the build and test commands.
+
+### This increment's lifecycle evidence
+
+The following tests are the acceptance boundary for the incremental central
+lifecycle patch. They enter through `activate()` and the injectable central
+transport factory, retain the transport-owned delegate proxy, and route every
+event through the same production bridge methods. The fake supplies non-nil
+manager/peripheral identities; it does not call a proxy-only helper.
+
+| Counterexample | Intended result | Current Linux result |
+|---|---|---|
+| `testProductionCentralRetirementCancelsPendingAndDefersFastReactivation` | `cancel` is issued for a still-connecting peripheral; off→on does not create a second transport until the old proxy's terminal failure; old contexts release, then late same-peripheral connect/fail/disconnect events are ignored | **Skipped** — `swift test --filter RemoteMicCallbackRoutingTests` exited 127 because Swift is unavailable |
+| `testScanRetirementUsesNonBlockingFenceBeforeReactivation` | scan-only retirement is retained behind an explicit main-queue completion without blocking reactivation | **Skipped** — same environment gate |
+
+The production guarantee is therefore a code/test contract in this patch, not
+a Linux execution result. macOS must rerun these tests and record their real
+exit code before this row can be marked passed.
 
 ### Changes after the independent review of the first head
 
@@ -33,7 +51,7 @@ licensing question is a human/CTO item and is untouched here.
 | P1: handshake generation isolation missing | Fixed | `RemoteMicHandshake.confirmCapabilities` now requires the request to have been sent, so a late capability frame on a reused peripheral cannot mark a new attempt ready; `didUpdateValueFor` checks peripheral identity (`RemoteMicHandshakeTests`). |
 | P1: closing the feature left a session recording | Fixed | `deactivate()` invalidates the session and fires released/stopped, and `applyRemoteMicSetting(false)` cancels the session before deactivating. |
 | P0: cancellation did not reach the real VoicePipeline start | Fixed | `startRecording` now returns the task that owns the whole `pipeline.start`; the remote path stores and cancels it, and passes the latch into `pipeline.start`, which re-checks it after the model wait via `RemoteMicStartGuard`. A released or cancelled start aborts and never falls back to the system mic. |
-| P1: same-peripheral attempt isolation missing | Fixed in this increment | Each connection lifecycle installs source-bound peripheral and central delegate proxies. A central manager is retired after its lifecycle and a main-queue fence before a replacement manager is installed; every connection/state callback carries the owning proxy's attempt through the production route. `RemoteMicCallbackRoutingTests` retains old peripheral and central proxies and delivers late disconnect/control/didConnect/didFail events from the retired sources. |
+| P1: same-peripheral attempt isolation missing | Fixed in this increment | Each lifecycle is created through `activate()` and a new central transport/delegate proxy. Central routes require the non-nil manager identity, non-nil peripheral identity, captured attempt, and lifecycle phase. A pending or connected peripheral is always passed to `cancelPeripheralConnection`; the old central/peripheral contexts remain retained until `didFailToConnect`/`didDisconnectPeripheral`. Scan-only retirement uses a main-queue fence. `RemoteMicCallbackRoutingTests` drives the production factory/proxy route, asserts non-nil identities, exercises pending-cancel failure completion, fast off→on, context release, and late same-peripheral `didConnect`/`didDisconnect`. |
 | P0: normal release discarded the recording | Fixed | `RemoteMicReleaseDecision.applyRelease` drives the production release path: a committed recording is stopped (its WAV is needed), only an uncommitted start is cancelled (`RemoteMicReleasePathTests`). |
 | P0: disabling the feature left the pipeline recording | Fixed | `RemoteMicShutdownDecision` stops the pipeline when a recording is active, because the bridge's release callback is suppressed once the setting is off. |
 | P1: cold-model counterexample only tested a helper | Fixed | `RemoteMicPipelineIntegrationTests` drives the real `VoicePipeline.start` await through an injected model-load barrier and a capture spy, proving a released/superseded start never reaches recording or capture. |
@@ -58,11 +76,12 @@ licensing question is a human/CTO item and is untouched here.
   deterministic tests (`RemoteMicHandshakeTests`,
   `RemoteMicAttemptIsolationTests`); this Linux run could not execute Swift.
 - Source-bound same-peripheral late-event regression — specified in
-  `swift test --filter RemoteMicCallbackRoutingTests`; the test retains the
-  attempt-1 production peripheral and central delegate proxies, starts attempt
-  2 on the same simulated object, and delivers old disconnect/control/
-  didConnect/didFail events through those proxies. This Linux run could not
-  execute it (exit 127: Swift unavailable); macOS must record the real result.
+  `swift test --filter RemoteMicCallbackRoutingTests`; the test uses the
+  `activate()`/transport-factory production creation path, validates non-nil
+  manager/peripheral identities, holds the attempt-1 transport/proxy through
+  terminal cancellation, then delivers old disconnect/control/didConnect/
+  didFail events through that proxy. This Linux run could not execute it (exit
+  127: Swift unavailable); macOS must record the real result.
 - Session cancel across the real pipeline path — prior unit-boundary evidence exists (`RemoteMicStartGuardTests`); Swift was not rerun on this Linux host. The live `VoicePipeline.start` await itself still needs a hardware/timing run.
 - Localization parity and SDLC checks — pass; the basic CI script and Swift
   tests are skipped here with exit 127 because Swift is unavailable.
@@ -93,18 +112,21 @@ licensing question is a human/CTO item and is untouched here.
 - The bridge assumes CoreBluetooth callbacks on the main queue and main-thread
   callers, matching the existing capture style.
 - **CoreBluetooth callback boundary.** Apple’s API gives central delegate
-  methods a `CBPeripheral`, but no connection-attempt id; `didDisconnect` also
-  ends further peripheral-delegate callbacks for that connection. The bridge
-  therefore creates one central manager/delegate proxy per lifecycle, captures
-  the attempt when discovery starts `connect`, retires that manager, and waits
-  one `.main` queue turn before installing the replacement. Late callbacks
+  methods a `CBPeripheral`, but no connection-attempt id; the bridge therefore
+  creates one central manager/delegate proxy per lifecycle and captures the
+  attempt when discovery starts `connect`. A pending or connected peripheral is
+  explicitly cancelled on retirement, and the manager/peripheral/proxy context
+  is released only after the old manager's terminal `didFailToConnect` or
+  `didDisconnectPeripheral`; a scan-only manager uses an explicit `.main`
+  queue fence because it has no peripheral terminal callback. Late callbacks
   from a retained old manager reach the old proxy and fail the source-attempt,
-  manager-identity, and lifecycle-phase gates; the regression does not infer
-  isolation from the replacement object’s mutable `state`. The guarantee is
-  bounded by CoreBluetooth delivering callbacks through the manager’s `.main`
-  queue and by all connection changes entering this proxy route. A direct
-  unbound `CBCentralManagerDelegate` call is rejected for connection events;
-  hardware validation must confirm the actual manager/proxy lifecycle.
+  manager-identity, peripheral-identity, and lifecycle-phase gates; the
+  regression does not infer isolation from the replacement object’s mutable
+  state. The guarantee is bounded by CoreBluetooth delivering callbacks through
+  the manager’s `.main` queue and by all connection changes entering this proxy
+  route. A direct unbound `CBCentralManagerDelegate` call is rejected for
+  connection events; hardware validation must confirm the actual
+  manager/proxy lifecycle.
 - `AudioCaptureActivity` thresholds were tuned for the built-in mic; the remote
   path uses the same gate with a user-adjustable gain.
 

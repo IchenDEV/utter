@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreBluetooth
 import XCTest
 @testable import OpenType
 
@@ -144,6 +145,39 @@ private final class AsyncGate {
 /// differ. The test retains the old production delegate proxy, starts a second
 /// lifecycle on the same simulated peripheral, and sends the old event through
 /// that proxy's real bridge route.
+private final class RemoteMicCentralTransportFake: XiaomiRemoteMicCentralTransport {
+    let identity: AnyObject = NSObject()
+    let delegateProxy: XiaomiRemoteMicCentralDelegateProxy
+    var state: CBManagerState = .poweredOn
+    private(set) var stopScanCount = 0
+    private(set) var scanCount = 0
+    private(set) var connectCount = 0
+    private(set) var cancelCount = 0
+
+    init(bridge: XiaomiRemoteMicBridge) {
+        let proxy = XiaomiRemoteMicCentralDelegateProxy(bridge: bridge)
+        delegateProxy = proxy
+        proxy.bindManagerIdentity(identity)
+    }
+
+    func stopScan() {
+        stopScanCount += 1
+    }
+
+    func scanForPeripherals(withServices services: [CBUUID], options: [String: Any]?) {
+        scanCount += 1
+    }
+
+    func connect(to peripheral: AnyObject) {
+        connectCount += 1
+        delegateProxy.bindPeripheralIdentity(peripheral)
+    }
+
+    func cancel(peripheral: AnyObject) {
+        cancelCount += 1
+    }
+}
+
 @MainActor
 final class RemoteMicCallbackRoutingTests: XCTestCase {
     func testLateDisconnectFromOldSourceCannotInvalidateNewLifecycle() throws {
@@ -190,35 +224,109 @@ final class RemoteMicCallbackRoutingTests: XCTestCase {
         XCTAssertTrue(bridge.isAttemptActiveForTesting(secondAttempt))
     }
 
-    /// CBCentralManagerDelegate callbacks do not carry an attempt id and a
-    /// reused CBPeripheral can make an object-state lookup look valid. The
-    /// actual production central delegate proxy captures the source attempt;
-    /// an old didConnect and didDisconnect must both be rejected after the
-    /// replacement has connected.
-    func testLateCentralConnectAndDisconnectFromOldSourceCannotInvalidateReplacement() {
+    /// The real activate -> transport initializer -> discover/connect path is
+    /// used here. A pending connection is cancelled even though no connected
+    /// state has been observed; immediate reactivation stays behind the old
+    /// manager's terminal callback; and the old manager/proxy context is
+    /// released only after that callback.
+    func testProductionCentralRetirementCancelsPendingAndDefersFastReactivation() throws {
         let bridge = XiaomiRemoteMicBridge()
         bridge.configureForTesting()
         defer { bridge.configureForTesting() }
 
-        let firstAttempt = bridge.simulateConnectForTesting()
-        let firstProxy = bridge.centralCallbackProxyForTesting(attempt: firstAttempt)
-        let secondAttempt = bridge.simulateReconnectSamePeripheralForTesting()
-        let secondProxy = bridge.centralCallbackProxyForTesting(attempt: secondAttempt)
+        var transports: [RemoteMicCentralTransportFake] = []
+        bridge.installCentralTransportFactoryForTesting {
+            let transport = RemoteMicCentralTransportFake(bridge: bridge)
+            transports.append(transport)
+            return transport
+        }
 
-        // The replacement reaches the connected phase through the same route
-        // that the real central delegate proxy calls.
+        bridge.activate()
+        XCTAssertEqual(transports.count, 1, "activate must create the production transport")
+        bridge.simulateCentralStateForTesting(.poweredOn)
+        XCTAssertEqual(transports[0].scanCount, 1)
+
+        let firstPeripheral = NSObject()
+        let firstAttempt = try XCTUnwrap(
+            bridge.simulateCentralDiscoveryForTesting(peripheralIdentity: firstPeripheral)
+        )
+        XCTAssertEqual(bridge.attemptForCurrentPeripheralForTesting(), firstAttempt)
+        let firstTransport = transports[0]
+        let firstProxy = firstTransport.delegateProxy
+        XCTAssertEqual(firstTransport.connectCount, 1)
+        XCTAssertNotNil(firstProxy.sourceManagerIdentity)
+        XCTAssertNotNil(firstProxy.sourcePeripheralIdentity)
+
+        bridge.deactivate()
+        XCTAssertEqual(firstTransport.cancelCount, 1, "pending connect must be cancelled")
+        XCTAssertTrue(bridge.isCentralQuiescingForTesting())
+        XCTAssertEqual(bridge.retiredCentralContextCountForTesting(), 1)
+        XCTAssertEqual(bridge.retiredPeripheralContextCountForTesting(), 1)
+
+        // Turning the feature on again does not construct a second manager
+        // while the first cancellation is still pending.
+        bridge.activate()
+        XCTAssertEqual(transports.count, 1)
+        XCTAssertTrue(bridge.isCentralQuiescingForTesting())
+
+        // This failure event is delivered through the old production proxy. It
+        // is the cancellation completion, not a Task.yield or a mutable-state
+        // guess; the separate late didDisconnect below must then be harmless.
+        firstProxy.deliverForTesting(.didFailToConnect)
+        XCTAssertEqual(bridge.retiredCentralContextCountForTesting(), 0)
+        XCTAssertEqual(bridge.retiredPeripheralContextCountForTesting(), 0)
+        XCTAssertEqual(transports.count, 2, "replacement starts only after completion")
+
+        let secondTransport = transports[1]
+        bridge.simulateCentralStateForTesting(.poweredOn)
+        let secondAttempt = try XCTUnwrap(
+            bridge.simulateCentralDiscoveryForTesting(peripheralIdentity: firstPeripheral)
+        )
+        let secondProxy = secondTransport.delegateProxy
         secondProxy.deliverForTesting(.didConnect)
         XCTAssertTrue(bridge.isCentralAttemptActiveForTesting(secondAttempt))
 
-        // These are source events from the retired manager, not observations
-        // of the replacement peripheral's mutable state.
+        // The old source has the same peripheral identity, but a different
+        // manager identity and attempt. All late old callbacks must be dropped.
         firstProxy.deliverForTesting(.didConnect)
         firstProxy.deliverForTesting(.didFailToConnect)
         firstProxy.deliverForTesting(.didDisconnect)
 
         XCTAssertTrue(
             bridge.isCentralAttemptActiveForTesting(secondAttempt),
-            "late central events from the retired manager must not tear down the replacement"
+            "late events from the retired manager must not tear down the replacement"
         )
+    }
+
+    /// A scan-only retirement has no peripheral terminal callback. The main
+    /// queue fence is explicit and non-blocking: the old transport remains
+    /// retained until the injected fence completion, and fast reactivation is
+    /// held behind it.
+    func testScanRetirementUsesNonBlockingFenceBeforeReactivation() {
+        let bridge = XiaomiRemoteMicBridge()
+        bridge.configureForTesting()
+        defer { bridge.configureForTesting() }
+
+        var transports: [RemoteMicCentralTransportFake] = []
+        bridge.installCentralTransportFactoryForTesting {
+            let transport = RemoteMicCentralTransportFake(bridge: bridge)
+            transports.append(transport)
+            return transport
+        }
+
+        bridge.activate()
+        bridge.simulateCentralStateForTesting(.poweredOn)
+        XCTAssertEqual(transports[0].scanCount, 1)
+
+        bridge.deactivate()
+        XCTAssertTrue(bridge.isCentralQuiescingForTesting())
+        XCTAssertEqual(bridge.retiredCentralContextCountForTesting(), 1)
+
+        bridge.activate()
+        XCTAssertEqual(transports.count, 1)
+        bridge.completeCentralRetirementForTesting()
+
+        XCTAssertFalse(bridge.isCentralQuiescingForTesting())
+        XCTAssertEqual(transports.count, 2)
     }
 }

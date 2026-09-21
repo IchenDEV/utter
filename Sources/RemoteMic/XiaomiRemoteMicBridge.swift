@@ -127,6 +127,8 @@ final class XiaomiRemoteMicPeripheralDelegateProxy: NSObject, CBPeripheralDelega
 final class XiaomiRemoteMicCentralDelegateProxy: NSObject, CBCentralManagerDelegate {
     weak var bridge: XiaomiRemoteMicBridge?
     private(set) var attempt: UInt64?
+    private(set) var sourceManagerIdentity: AnyObject?
+    private(set) var sourcePeripheralIdentity: AnyObject?
 
     init(bridge: XiaomiRemoteMicBridge) {
         self.bridge = bridge
@@ -138,8 +140,22 @@ final class XiaomiRemoteMicCentralDelegateProxy: NSObject, CBCentralManagerDeleg
         self.attempt = attempt
     }
 
+    func bindManagerIdentity(_ identity: AnyObject) {
+        guard sourceManagerIdentity == nil else { return }
+        sourceManagerIdentity = identity
+    }
+
+    func bindPeripheralIdentity(_ identity: AnyObject) {
+        sourcePeripheralIdentity = identity
+    }
+
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        bridge?.routeCentralManagerDidUpdateState(central, sourceAttempt: attempt)
+        bindManagerIdentity(central)
+        bridge?.routeCentralManagerDidUpdateState(
+            managerIdentity: central,
+            managerState: central.state,
+            sourceAttempt: attempt
+        )
     }
 
     func centralManager(
@@ -148,8 +164,11 @@ final class XiaomiRemoteMicCentralDelegateProxy: NSObject, CBCentralManagerDeleg
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
+        bindManagerIdentity(central)
+        bindPeripheralIdentity(peripheral)
         bridge?.routeCentralDidDiscover(
-            central,
+            managerIdentity: central,
+            peripheralIdentity: peripheral,
             peripheral: peripheral,
             advertisementData: advertisementData,
             rssi: RSSI,
@@ -158,7 +177,14 @@ final class XiaomiRemoteMicCentralDelegateProxy: NSObject, CBCentralManagerDeleg
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        bridge?.routeCentralDidConnect(central, peripheral: peripheral, sourceAttempt: attempt)
+        bindManagerIdentity(central)
+        bindPeripheralIdentity(peripheral)
+        bridge?.routeCentralDidConnect(
+            managerIdentity: central,
+            peripheralIdentity: peripheral,
+            peripheral: peripheral,
+            sourceAttempt: attempt
+        )
     }
 
     func centralManager(
@@ -166,8 +192,11 @@ final class XiaomiRemoteMicCentralDelegateProxy: NSObject, CBCentralManagerDeleg
         didFailToConnect peripheral: CBPeripheral,
         error: Error?
     ) {
+        bindManagerIdentity(central)
+        bindPeripheralIdentity(peripheral)
         bridge?.routeCentralDidFailToConnect(
-            central,
+            managerIdentity: central,
+            peripheralIdentity: peripheral,
             peripheral: peripheral,
             error: error,
             sourceAttempt: attempt
@@ -179,8 +208,11 @@ final class XiaomiRemoteMicCentralDelegateProxy: NSObject, CBCentralManagerDeleg
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: Error?
     ) {
+        bindManagerIdentity(central)
+        bindPeripheralIdentity(peripheral)
         bridge?.routeCentralDidDisconnect(
-            central,
+            managerIdentity: central,
+            peripheralIdentity: peripheral,
             peripheral: peripheral,
             error: error,
             sourceAttempt: attempt
@@ -190,22 +222,90 @@ final class XiaomiRemoteMicCentralDelegateProxy: NSObject, CBCentralManagerDeleg
     /// Test-only entry that uses the same source-bound route as the delegate
     /// methods above, without manufacturing CoreBluetooth objects.
     func deliverForTesting(_ callback: XiaomiRemoteMicCentralTestCallback) {
-        guard let attempt else { return }
-        bridge?.routeCentralCallbackForTesting(callback, attempt: attempt)
+        guard let attempt,
+              let sourceManagerIdentity,
+              let sourcePeripheralIdentity else { return }
+        bridge?.routeCentralCallbackForTesting(
+            callback,
+            attempt: attempt,
+            managerIdentity: sourceManagerIdentity,
+            peripheralIdentity: sourcePeripheralIdentity
+        )
     }
 }
 
-/// Retain both sides of the weak CoreBluetooth delegate relationship after a
-/// lifecycle is retired. A queued callback then still reaches its old proxy,
-/// where the attempt gate can reject it instead of disappearing or being
-/// attributed to the replacement manager.
-private final class XiaomiRemoteMicCentralContext {
-    let manager: CBCentralManager
-    let delegate: XiaomiRemoteMicCentralDelegateProxy
+/// The bridge owns one transport for one central lifecycle. Keeping the
+/// transport behind this seam lets tests exercise the production initializer,
+/// strong manager/proxy ownership, identity gates, and cancellation completion
+/// without manufacturing a CoreBluetooth object.
+protocol XiaomiRemoteMicCentralTransport: AnyObject {
+    var identity: AnyObject { get }
+    var delegateProxy: XiaomiRemoteMicCentralDelegateProxy { get }
+    var state: CBManagerState { get }
 
-    init(manager: CBCentralManager, delegate: XiaomiRemoteMicCentralDelegateProxy) {
-        self.manager = manager
-        self.delegate = delegate
+    func stopScan()
+    func scanForPeripherals(withServices services: [CBUUID], options: [String: Any]?)
+    func connect(to peripheral: AnyObject)
+    func cancel(peripheral: AnyObject)
+}
+
+/// Production transport. The manager and its weak delegate are held together
+/// so an old manager can still deliver a terminal callback to its old proxy
+/// while retirement is waiting for cancellation to complete.
+final class XiaomiRemoteMicCoreBluetoothCentralTransport: XiaomiRemoteMicCentralTransport {
+    let manager: CBCentralManager
+    let delegateProxy: XiaomiRemoteMicCentralDelegateProxy
+
+    var identity: AnyObject { manager }
+    var state: CBManagerState { manager.state }
+
+    init(bridge: XiaomiRemoteMicBridge) {
+        let proxy = XiaomiRemoteMicCentralDelegateProxy(bridge: bridge)
+        delegateProxy = proxy
+        manager = CBCentralManager(
+            delegate: proxy,
+            queue: .main,
+            options: [CBCentralManagerOptionShowPowerAlertKey: true]
+        )
+        proxy.bindManagerIdentity(manager)
+    }
+
+    func stopScan() {
+        manager.stopScan()
+    }
+
+    func scanForPeripherals(withServices services: [CBUUID], options: [String: Any]?) {
+        manager.scanForPeripherals(withServices: services, options: options)
+    }
+
+    func connect(to peripheral: AnyObject) {
+        guard let peripheral = peripheral as? CBPeripheral else { return }
+        manager.connect(peripheral, options: nil)
+    }
+
+    func cancel(peripheral: AnyObject) {
+        guard let peripheral = peripheral as? CBPeripheral else { return }
+        manager.cancelPeripheralConnection(peripheral)
+    }
+}
+
+/// CoreBluetooth keeps a peripheral's delegate weak. Keep the old peripheral
+/// and its source proxy together until the central's cancellation callback has
+/// arrived; otherwise a queued didDisconnect/didFail event can disappear or be
+/// delivered to a replacement lifecycle.
+private final class XiaomiRemoteMicPeripheralContext {
+    let identity: AnyObject
+    let peripheral: CBPeripheral?
+    let delegateProxy: XiaomiRemoteMicPeripheralDelegateProxy
+
+    init(
+        identity: AnyObject,
+        peripheral: CBPeripheral?,
+        delegateProxy: XiaomiRemoteMicPeripheralDelegateProxy
+    ) {
+        self.identity = identity
+        self.peripheral = peripheral
+        self.delegateProxy = delegateProxy
     }
 }
 
@@ -263,17 +363,22 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     /// cancels its in-flight start for the current latch.
     var onVoiceKeyReleased: (() -> Void)?
 
-    private var central: CBCentralManager?
-    private var centralDelegateProxy: XiaomiRemoteMicCentralDelegateProxy?
-    private var centralContext: XiaomiRemoteMicCentralContext?
-    /// Retired managers stay alive long enough for queued callbacks to reach
-    /// their original source proxy. The proxy's captured attempt rejects them
-    /// after a replacement manager becomes current.
-    private var retiredCentralContexts: [XiaomiRemoteMicCentralContext] = []
-    private var centralRetirementTask: Task<Void, Never>?
+    private var centralTransport: XiaomiRemoteMicCentralTransport?
+    private var centralTransportFactory: (() -> XiaomiRemoteMicCentralTransport)?
+    /// Retired transports stay alive until their terminal central callback (or
+    /// a scan queue fence) completes. Keying by manager identity prevents a
+    /// still-pending old context from being evicted by an arbitrary FIFO cap.
+    private var retiredCentralContexts: [ObjectIdentifier: XiaomiRemoteMicCentralTransport] = [:]
+    private var retiredPeripheralContexts: [ObjectIdentifier: XiaomiRemoteMicPeripheralContext] = [:]
+    private var pendingCentralRetirement: (
+        identity: AnyObject,
+        attempt: UInt64,
+        peripheralKey: ObjectIdentifier?
+    )?
     private var centralLifecycle: XiaomiRemoteMicCentralLifecycle = .idle
     private var scanRequestedWhileQuiescing = false
     private var peripheral: CBPeripheral?
+    private var peripheralIdentity: AnyObject?
     /// Attempt of the currently active connection lifecycle. Callback routes
     /// compare their proxy-captured source against this value; no route
     /// derives an old callback's source by looking at the current peripheral.
@@ -318,11 +423,17 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         guard !isActive else { return }
         isActive = true
         reconnectAttempts = 0
-        guard central == nil else {
+        guard centralTransport == nil else {
             beginScan()
             return
         }
-        installCentralManager()
+        if case .quiescing = centralLifecycle {
+            // `deactivate()` has already issued cancellation. Do not create a
+            // new manager until the old context reports terminal completion.
+            scanRequestedWhileQuiescing = true
+            return
+        }
+        installCentralTransport()
     }
 
     func deactivate() {
@@ -394,16 +505,17 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     func configureForTesting() {
         cancelReconnect()
         cancelTimeout()
-        centralRetirementTask?.cancel()
-        centralRetirementTask = nil
-        if let central, let peripheral, peripheral.state == .connected {
-            central.cancelPeripheralConnection(peripheral)
+        if let transport = centralTransport {
+            transport.stopScan()
+            if let peripheralIdentity { transport.cancel(peripheral: peripheralIdentity) }
         }
-        central?.stopScan()
-        central = nil
-        centralDelegateProxy = nil
-        centralContext = nil
+        centralTransport = nil
+        pendingCentralRetirement = nil
+        for context in retiredPeripheralContexts.values {
+            context.peripheral?.delegate = nil
+        }
         retiredCentralContexts.removeAll()
+        retiredPeripheralContexts.removeAll()
         centralLifecycle = .idle
         scanRequestedWhileQuiescing = false
         isActive = false
@@ -411,6 +523,74 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         handshake.reset()
         generation = 0
         state = .idle
+    }
+
+    /// Test-only: the factory is consumed by `activate()`/`installCentralTransport()`
+    /// exactly like the production CoreBluetooth initializer. It is not a
+    /// proxy-only injection seam.
+    func installCentralTransportFactoryForTesting(
+        _ factory: @escaping () -> XiaomiRemoteMicCentralTransport
+    ) {
+        centralTransportFactory = factory
+    }
+
+    /// Test-only: the currently held production transport, including its
+    /// non-nil manager identity and delegate proxy.
+    func centralTransportForTesting() -> XiaomiRemoteMicCentralTransport? {
+        centralTransport
+    }
+
+    /// Test-only: drive the same central state route with a non-nil manager
+    /// identity supplied by the production-created transport.
+    func simulateCentralStateForTesting(_ state: CBManagerState) {
+        guard let transport = centralTransport else { return }
+        routeCentralManagerDidUpdateState(
+            managerIdentity: transport.identity,
+            managerState: state,
+            sourceAttempt: transport.delegateProxy.attempt
+        )
+    }
+
+    /// Test-only: drive discovery through the production route with a
+    /// non-nil peripheral identity. Returns the attempt bound by discovery.
+    @discardableResult
+    func simulateCentralDiscoveryForTesting(peripheralIdentity: AnyObject) -> UInt64? {
+        guard let transport = centralTransport else { return nil }
+        transport.delegateProxy.bindPeripheralIdentity(peripheralIdentity)
+        routeCentralDidDiscover(
+            managerIdentity: transport.identity,
+            peripheralIdentity: peripheralIdentity,
+            peripheral: nil,
+            sourceAttempt: transport.delegateProxy.attempt
+        )
+        return activeConnectionAttempt
+    }
+
+    /// Test-only: explicitly deliver the cancellation completion of the held
+    /// transport. Production gets this signal from didDisconnect/didFail or a
+    /// main-queue scan fence; tests inject it deterministically.
+    func completeCentralRetirementForTesting() {
+        guard let pending = pendingCentralRetirement else { return }
+        finishCentralRetirement(managerIdentity: pending.identity, attempt: pending.attempt)
+    }
+
+    /// Test-only: evidence for the ownership contract: a retired context is
+    /// retained until completion, then released.
+    func retiredCentralContextCountForTesting() -> Int {
+        retiredCentralContexts.count
+    }
+
+    /// Test-only: the old peripheral delegate/proxy is held through terminal
+    /// cancellation, then released with the retired central context.
+    func retiredPeripheralContextCountForTesting() -> Int {
+        retiredPeripheralContexts.count
+    }
+
+    /// Test-only: the production manager may not be created while this gate is
+    /// pending, even when the feature is turned on again immediately.
+    func isCentralQuiescingForTesting() -> Bool {
+        if case .quiescing = centralLifecycle { return true }
+        return false
     }
 
     /// Test-only: simulate a connect and return the attempt it bound.
@@ -440,15 +620,6 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     /// Test-only: retain the source envelope for a simulated lifecycle.
     func callbackProxyForTesting() -> XiaomiRemoteMicPeripheralDelegateProxy? {
         peripheralCallbackProxy
-    }
-
-    /// Test-only: create the same source-bound central delegate proxy that a
-    /// `CBCentralManager` owns for an attempt. Its test delivery method enters
-    /// the production central route, so late-event tests do not bypass it.
-    func centralCallbackProxyForTesting(attempt: UInt64) -> XiaomiRemoteMicCentralDelegateProxy {
-        let proxy = XiaomiRemoteMicCentralDelegateProxy(bridge: self)
-        proxy.bind(to: attempt)
-        return proxy
     }
 
     /// Test-only: whether the lifecycle is still installed after a late event.
@@ -531,9 +702,8 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         guard isActive else { return }
         switch centralLifecycle {
         case .quiescing:
-            // A replacement manager is not created until the old manager has
-            // crossed one main-queue turn. This is the app-level seriality
-            // boundary for CoreBluetooth connection lifecycles.
+            // A replacement transport is not created until the old transport
+            // reports terminal cancellation (or the scan fence completes).
             scanRequestedWhileQuiescing = true
             return
         case .scanning(_), .connecting(_), .connected(_):
@@ -541,11 +711,11 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         case .idle:
             break
         }
-        guard let central else {
-            installCentralManager()
+        guard let transport = centralTransport else {
+            installCentralTransport()
             return
         }
-        guard central.state == .poweredOn else { return }
+        guard transport.state == .poweredOn else { return }
         generation &+= 1
         resetPeripheral()
         resetStream()
@@ -553,75 +723,112 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         capabilities = .default
         centralLifecycle = .scanning(generation)
         state = .scanning
-        central.scanForPeripherals(
+        transport.scanForPeripherals(
             withServices: [serviceUUID],
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
     }
 
-    /// Creates a central manager for the scanning/connection lifecycle that is
-    /// about to own it. A manager is never reused after its connection is
-    /// retired, because its delegate callbacks otherwise carry no source id.
-    private func installCentralManager() {
-        guard central == nil else { return }
-        let proxy = XiaomiRemoteMicCentralDelegateProxy(bridge: self)
-        let manager = CBCentralManager(
-            delegate: proxy,
-            queue: .main,
-            options: [CBCentralManagerOptionShowPowerAlertKey: true]
-        )
-        central = manager
-        centralDelegateProxy = proxy
-        centralContext = XiaomiRemoteMicCentralContext(manager: manager, delegate: proxy)
+    /// Creates the central transport through the same factory used by the
+    /// production CoreBluetooth initializer. A transport is never reused after
+    /// its connection is retired, because its delegate callbacks otherwise
+    /// carry no source id.
+    private func installCentralTransport() {
+        guard centralTransport == nil else { return }
+        let transport = centralTransportFactory?()
+            ?? XiaomiRemoteMicCoreBluetoothCentralTransport(bridge: self)
+        transport.delegateProxy.bindManagerIdentity(transport.identity)
+        centralTransport = transport
     }
 
-    /// Retires the current central manager and waits one main-queue turn
-    /// before allowing a replacement scan. The retained old context means a
-    /// callback that arrives after the fence still carries its old attempt and
-    /// is rejected by the route gate; it can never be rebound to the new
-    /// manager's attempt.
+    /// Retires the current central transport. A pending or connected
+    /// peripheral is always passed to `cancel`; CoreBluetooth documents that
+    /// this cancels pending as well as active local connections. The old
+    /// manager/proxy remains held until didDisconnect/didFail, while a scan-only
+    /// transport uses an explicit main-queue fence.
     private func retireCurrentCentral() {
         let retiredAttempt = centralLifecycle.attempt ?? generation
-        guard central != nil || centralLifecycle != .idle else { return }
+        guard let transport = centralTransport else {
+            // A second deactivate must not turn a still-quiescing lifecycle
+            // back into idle and thereby permit a replacement manager early.
+            guard pendingCentralRetirement == nil else { return }
+            if centralLifecycle != .idle { centralLifecycle = .idle }
+            return
+        }
         centralLifecycle = .quiescing(retiredAttempt)
         scanRequestedWhileQuiescing = false
+        let managerIdentity = transport.identity
+        let peripheralKey: ObjectIdentifier?
+        if let peripheralIdentity, let peripheralCallbackProxy {
+            let key = ObjectIdentifier(peripheralIdentity)
+            retiredPeripheralContexts[key] = XiaomiRemoteMicPeripheralContext(
+                identity: peripheralIdentity,
+                peripheral: peripheral,
+                delegateProxy: peripheralCallbackProxy
+            )
+            peripheralKey = key
+        } else {
+            peripheralKey = nil
+        }
+        retiredCentralContexts[ObjectIdentifier(managerIdentity)] = transport
+        pendingCentralRetirement = (managerIdentity, retiredAttempt, peripheralKey)
+        centralTransport = nil
 
-        if let central {
-            central.stopScan()
-            if let peripheral, peripheral.state == .connected {
-                central.cancelPeripheralConnection(peripheral)
-            }
+        transport.stopScan()
+        if let peripheralIdentity {
+            // Do not gate cancellation on CBPeripheral.state: a connecting
+            // peripheral is a pending local connection and must be cancelled.
+            transport.cancel(peripheral: peripheralIdentity)
+        } else {
+            scheduleCentralRetirementFence(
+                managerIdentity: managerIdentity,
+                attempt: retiredAttempt
+            )
         }
-        if let centralContext {
-            retiredCentralContexts.append(centralContext)
-            // Retain only a small tail; a manager whose context is dropped can
-            // no longer deliver into the bridge, which is a safe cleanup.
-            if retiredCentralContexts.count > 4 {
-                retiredCentralContexts.removeFirst(retiredCentralContexts.count - 4)
-            }
-        }
-        central = nil
-        centralDelegateProxy = nil
-        centralContext = nil
+    }
 
-        centralRetirementTask?.cancel()
-        centralRetirementTask = Task { @MainActor [weak self] in
-            // CBCentralManager was created with .main. Yielding once ensures
-            // the callback that requested retirement has returned before a
-            // replacement manager is installed.
-            await Task.yield()
-            guard let self, !Task.isCancelled else { return }
-            self.centralLifecycle = .idle
-            self.centralRetirementTask = nil
-            guard self.isActive, self.scanRequestedWhileQuiescing else { return }
-            self.scanRequestedWhileQuiescing = false
-            self.beginScan()
+    /// A scan has no didDisconnect/didFail callback. Since the manager was
+    /// created with `.main`, enqueueing this completion on the same queue is the
+    /// explicit scan retirement boundary. Connection retirement uses its
+    /// terminal central callback instead.
+    private func scheduleCentralRetirementFence(managerIdentity: AnyObject, attempt: UInt64) {
+        let managerKey = ObjectIdentifier(managerIdentity)
+        DispatchQueue.main.async { [weak self] in
+            self?.finishCentralRetirement(managerKey: managerKey, attempt: attempt)
         }
+    }
+
+    private func finishCentralRetirement(managerIdentity: AnyObject, attempt: UInt64) {
+        finishCentralRetirement(managerKey: ObjectIdentifier(managerIdentity), attempt: attempt)
+    }
+
+    private func finishCentralRetirement(managerKey: ObjectIdentifier, attempt: UInt64) {
+        guard let pending = pendingCentralRetirement,
+              pending.attempt == attempt,
+              ObjectIdentifier(pending.identity) == managerKey else { return }
+        let managerIdentity = pending.identity
+        pendingCentralRetirement = nil
+        retiredCentralContexts.removeValue(forKey: ObjectIdentifier(managerIdentity))
+        if let peripheralKey = pending.peripheralKey,
+           let context = retiredPeripheralContexts.removeValue(forKey: peripheralKey) {
+            context.peripheral?.delegate = nil
+        }
+        centralLifecycle = .idle
+        guard isActive, scanRequestedWhileQuiescing else { return }
+        scanRequestedWhileQuiescing = false
+        beginScan()
     }
 
     private func resetPeripheral() {
-        peripheral?.delegate = nil
+        // A retired context owns the old peripheral/proxy until the central
+        // terminal callback. For an ordinary reset there is no such context,
+        // so detach immediately.
+        if let peripheralIdentity,
+           retiredPeripheralContexts[ObjectIdentifier(peripheralIdentity)] == nil {
+            peripheral?.delegate = nil
+        }
         peripheral = nil
+        peripheralIdentity = nil
         activeConnectionAttempt = nil
         peripheralCallbackProxy = nil
         transmitCharacteristic = nil
@@ -632,11 +839,16 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     /// Starts a new peripheral lifecycle and installs the source-bound route.
     /// CoreBluetooth itself does not expose the attempt id on delegate events;
     /// this proxy is the lifecycle boundary that supplies it.
-    private func beginPeripheralAttempt(_ attempt: UInt64, peripheral: CBPeripheral? = nil) {
+    private func beginPeripheralAttempt(
+        _ attempt: UInt64,
+        peripheral: CBPeripheral? = nil,
+        peripheralIdentity: AnyObject? = nil
+    ) {
         activeConnectionAttempt = attempt
         handshake.beginAttempt(attempt)
         let proxy = XiaomiRemoteMicPeripheralDelegateProxy(bridge: self, attempt: attempt)
         peripheralCallbackProxy = proxy
+        self.peripheralIdentity = peripheralIdentity ?? peripheral
         if let peripheral {
             self.peripheral = peripheral
             peripheral.delegate = proxy
@@ -817,7 +1029,11 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         // The bridge remains conformant for compatibility, but production
         // managers use XiaomiRemoteMicCentralDelegateProxy. An unbound direct
         // callback is deliberately not accepted for connection events.
-        routeCentralManagerDidUpdateState(central, sourceAttempt: nil)
+        routeCentralManagerDidUpdateState(
+            managerIdentity: central,
+            managerState: central.state,
+            sourceAttempt: nil
+        )
     }
 
     func centralManager(
@@ -827,7 +1043,8 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         rssi RSSI: NSNumber
     ) {
         routeCentralDidDiscover(
-            central,
+            managerIdentity: central,
+            peripheralIdentity: peripheral,
             peripheral: peripheral,
             advertisementData: advertisementData,
             rssi: RSSI,
@@ -836,7 +1053,12 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        routeCentralDidConnect(central, peripheral: peripheral, sourceAttempt: nil)
+        routeCentralDidConnect(
+            managerIdentity: central,
+            peripheralIdentity: peripheral,
+            peripheral: peripheral,
+            sourceAttempt: nil
+        )
     }
 
     func centralManager(
@@ -845,7 +1067,8 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         error: Error?
     ) {
         routeCentralDidFailToConnect(
-            central,
+            managerIdentity: central,
+            peripheralIdentity: peripheral,
             peripheral: peripheral,
             error: error,
             sourceAttempt: nil
@@ -858,7 +1081,8 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         error: Error?
     ) {
         routeCentralDidDisconnect(
-            central,
+            managerIdentity: central,
+            peripheralIdentity: peripheral,
             peripheral: peripheral,
             error: error,
             sourceAttempt: nil
@@ -866,11 +1090,13 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
     }
 
     fileprivate func routeCentralManagerDidUpdateState(
-        _ central: CBCentralManager,
+        managerIdentity: AnyObject,
+        managerState: CBManagerState,
         sourceAttempt: UInt64?
     ) {
-        guard let currentCentral = self.central, currentCentral === central else { return }
-        switch central.state {
+        guard let transport = centralTransport,
+              transport.identity === managerIdentity else { return }
+        switch managerState {
         case .poweredOn:
             // Only the unbound scan manager may begin a scan. A callback from
             // a connection manager never restarts the lifecycle.
@@ -879,35 +1105,36 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
             guard sourceAttempt == nil || sourceAttempt == centralLifecycle.attempt else { return }
             cancelTimeout()
             cancelReconnect()
-            state = .unauthorized
+            self.state = .unauthorized
         case .unsupported:
             guard sourceAttempt == nil || sourceAttempt == centralLifecycle.attempt else { return }
             cancelTimeout()
             cancelReconnect()
-            state = .unsupported
+            self.state = .unsupported
         default:
             guard sourceAttempt == nil || sourceAttempt == centralLifecycle.attempt else { return }
             cancelTimeout()
-            state = .idle
+            self.state = .idle
         }
     }
 
     fileprivate func routeCentralDidDiscover(
-        _ central: CBCentralManager?,
+        managerIdentity: AnyObject,
+        peripheralIdentity: AnyObject,
         peripheral: CBPeripheral?,
         advertisementData: [String: Any],
         rssi RSSI: NSNumber,
         sourceAttempt: UInt64?
     ) {
-        guard let peripheral, let central,
-              sourceAttempt == nil,
+        guard sourceAttempt == nil,
               isActive,
-              let currentCentral = self.central,
-              currentCentral === central,
+              let transport = centralTransport,
+              transport.identity === managerIdentity,
               self.peripheral == nil,
+              self.peripheralIdentity == nil,
               state == .scanning,
               case .scanning(_) = centralLifecycle else { return }
-        central?.stopScan()
+        transport.stopScan()
         state = .connecting
         // Bind this central manager to a fresh lifecycle before issuing the
         // connect. Every later central callback from this manager carries the
@@ -915,8 +1142,13 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         generation &+= 1
         let attempt = generation
         centralLifecycle = .connecting(attempt)
-        centralDelegateProxy?.bind(to: attempt)
-        beginPeripheralAttempt(attempt, peripheral: peripheral)
+        transport.delegateProxy.bind(to: attempt)
+        transport.delegateProxy.bindPeripheralIdentity(peripheralIdentity)
+        beginPeripheralAttempt(
+            attempt,
+            peripheral: peripheral,
+            peripheralIdentity: peripheralIdentity
+        )
         startTimeout(
             seconds: Self.connectionTimeout,
             generation: attempt,
@@ -926,17 +1158,18 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
                 return self.generation != attempt || self.handshake.capabilitiesRequested
             }
         )
-        central?.connect(peripheral, options: nil)
+        transport.connect(to: peripheralIdentity)
     }
 
     fileprivate func routeCentralDidConnect(
-        _ central: CBCentralManager?,
+        managerIdentity: AnyObject,
+        peripheralIdentity: AnyObject,
         peripheral: CBPeripheral?,
         sourceAttempt: UInt64?
     ) {
         guard let attempt = currentCentralAttempt(
-            central: central,
-            peripheral: peripheral,
+            managerIdentity: managerIdentity,
+            peripheralIdentity: peripheralIdentity,
             sourceAttempt: sourceAttempt,
             allowConnected: false
         ) else { return }
@@ -951,33 +1184,59 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
     }
 
     fileprivate func routeCentralDidFailToConnect(
-        _ central: CBCentralManager?,
+        managerIdentity: AnyObject,
+        peripheralIdentity: AnyObject,
         peripheral: CBPeripheral?,
         error: Error?,
         sourceAttempt: UInt64?
     ) {
-        guard currentCentralAttempt(
-            central: central,
-            peripheral: peripheral,
+        if currentCentralAttempt(
+            managerIdentity: managerIdentity,
+            peripheralIdentity: peripheralIdentity,
             sourceAttempt: sourceAttempt,
             allowConnected: false
-        ) != nil else { return }
-        failAttempt(reason: L("remote_mic.error.connect_failed"))
+        ) != nil {
+            failAttempt(reason: L("remote_mic.error.connect_failed"))
+            scheduleCentralRetirementCompletion(
+                managerIdentity: managerIdentity,
+                peripheralIdentity: peripheralIdentity,
+                attempt: sourceAttempt
+            )
+            return
+        }
+        scheduleCentralRetirementCompletion(
+            managerIdentity: managerIdentity,
+            peripheralIdentity: peripheralIdentity,
+            attempt: sourceAttempt
+        )
     }
 
     fileprivate func routeCentralDidDisconnect(
-        _ central: CBCentralManager?,
+        managerIdentity: AnyObject,
+        peripheralIdentity: AnyObject,
         peripheral: CBPeripheral?,
         error: Error?,
         sourceAttempt: UInt64?
     ) {
-        guard currentCentralAttempt(
-            central: central,
-            peripheral: peripheral,
+        if currentCentralAttempt(
+            managerIdentity: managerIdentity,
+            peripheralIdentity: peripheralIdentity,
             sourceAttempt: sourceAttempt,
             allowConnected: true
-        ) != nil else { return }
-        handleDisconnect()
+        ) != nil {
+            handleDisconnect()
+            scheduleCentralRetirementCompletion(
+                managerIdentity: managerIdentity,
+                peripheralIdentity: peripheralIdentity,
+                attempt: sourceAttempt
+            )
+            return
+        }
+        scheduleCentralRetirementCompletion(
+            managerIdentity: managerIdentity,
+            peripheralIdentity: peripheralIdentity,
+            attempt: sourceAttempt
+        )
     }
 
     /// Test-only source injection through the same route used by the central
@@ -986,15 +1245,34 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
     /// by looking at a mutable peripheral state.
     func routeCentralCallbackForTesting(
         _ callback: XiaomiRemoteMicCentralTestCallback,
-        attempt: UInt64
+        attempt: UInt64,
+        managerIdentity: AnyObject,
+        peripheralIdentity: AnyObject
     ) {
         switch callback {
         case .didConnect:
-            routeCentralDidConnect(nil, peripheral: nil, sourceAttempt: attempt)
+            routeCentralDidConnect(
+                managerIdentity: managerIdentity,
+                peripheralIdentity: peripheralIdentity,
+                peripheral: nil,
+                sourceAttempt: attempt
+            )
         case .didFailToConnect:
-            routeCentralDidFailToConnect(nil, peripheral: nil, error: nil, sourceAttempt: attempt)
+            routeCentralDidFailToConnect(
+                managerIdentity: managerIdentity,
+                peripheralIdentity: peripheralIdentity,
+                peripheral: nil,
+                error: nil,
+                sourceAttempt: attempt
+            )
         case .didDisconnect:
-            routeCentralDidDisconnect(nil, peripheral: nil, error: nil, sourceAttempt: attempt)
+            routeCentralDidDisconnect(
+                managerIdentity: managerIdentity,
+                peripheralIdentity: peripheralIdentity,
+                peripheral: nil,
+                error: nil,
+                sourceAttempt: attempt
+            )
         }
     }
 
@@ -1003,14 +1281,15 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
     /// phase to agree. A direct bridge callback has no source envelope and is
     /// rejected for connection events.
     private func currentCentralAttempt(
-        central: CBCentralManager?,
-        peripheral: CBPeripheral?,
+        managerIdentity: AnyObject,
+        peripheralIdentity: AnyObject,
         sourceAttempt: UInt64?,
         allowConnected: Bool
     ) -> UInt64? {
-        if let central {
-            guard let currentCentral = self.central, currentCentral === central else { return nil }
-        }
+        guard let transport = centralTransport,
+              transport.identity === managerIdentity,
+              let activePeripheralIdentity = self.peripheralIdentity,
+              activePeripheralIdentity === peripheralIdentity else { return nil }
         guard let sourceAttempt,
               activeConnectionAttempt == sourceAttempt,
               handshake.accepts(sourceAttempt) else { return nil }
@@ -1023,8 +1302,21 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         default:
             return nil
         }
-        if let peripheral, peripheral !== self.peripheral { return nil }
         return sourceAttempt
+    }
+
+    private func scheduleCentralRetirementCompletion(
+        managerIdentity: AnyObject,
+        peripheralIdentity: AnyObject,
+        attempt: UInt64?
+    ) {
+        guard let attempt,
+              let pending = pendingCentralRetirement,
+              pending.attempt == attempt,
+              pending.identity === managerIdentity,
+              pending.peripheralKey.map({ $0 == ObjectIdentifier(peripheralIdentity) }) ?? true
+        else { return }
+        finishCentralRetirement(managerIdentity: managerIdentity, attempt: attempt)
     }
 }
 
