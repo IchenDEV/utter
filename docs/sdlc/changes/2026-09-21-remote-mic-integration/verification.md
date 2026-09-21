@@ -21,18 +21,44 @@ Environment note: this verification was run on Linux without Swift,
 Xcode, or a Metal toolchain. The skipped Swift rows are environment skips,
 not passing test results; macOS must rerun the build and test commands.
 
-### This increment's lifecycle evidence
+### VEC-4 / #104 lifecycle evidence
 
 The following tests are the acceptance boundary for the incremental central
 lifecycle patch. They enter through `activate()` and the injectable central
 transport factory, retain the transport-owned delegate proxy, and route every
 event through the same production bridge methods. The fake supplies non-nil
-manager/peripheral identities; it does not call a proxy-only helper.
+manager/peripheral identities; it does not call a proxy-only helper. The
+identity tests vary exactly one source field at a time, and the retirement
+tests use weak boxes plus a fake transport `deinit` counter rather than a
+strong transport array. Every injected factory captures the bridge weakly, so
+the fixture cannot keep its subject alive through the bridge → factory → bridge
+cycle. The connection-retirement test asserts transport release and exactly one
+`deinit` immediately after the terminal callback, before creating or driving
+the replacement connection.
 
 | Counterexample | Intended result | Current Linux result |
 |---|---|---|
 | `testProductionCentralRetirementCancelsPendingAndDefersFastReactivation` | `cancel` is issued for a still-connecting peripheral; off→on does not create a second transport until the old proxy's terminal failure; old contexts release, then late same-peripheral connect/fail/disconnect events are ignored | **Skipped** — `swift test --filter RemoteMicCallbackRoutingTests` exited 127 because Swift is unavailable |
-| `testScanRetirementUsesNonBlockingFenceBeforeReactivation` | scan-only retirement is retained behind an explicit main-queue completion without blocking reactivation | **Skipped** — same environment gate |
+| `testScanRetirementUsesNonBlockingFenceBeforeReactivation` | scan-only retirement is retained behind the production `DispatchQueue.main.async` fence; the test awaits a subsequent main-queue turn, then checks replacement creation and weak/deinit release | **Skipped** — same environment gate |
+| `testCentralManagerIdentityGateRejectsWrongManager` | same attempt/peripheral plus wrong manager is ignored | **Skipped** — same environment gate |
+| `testCentralPeripheralIdentityGateRejectsWrongPeripheral` | same manager/attempt plus wrong peripheral is ignored | **Skipped** — same environment gate |
+| `testCentralAttemptIdentityGateRejectsWrongAttempt` | same manager/peripheral plus stale attempt is ignored | **Skipped** — same environment gate |
+
+`review-evidence/vec4-central-gate-mutations.sh` runs the unmutated focused
+suite, then removes only the manager, peripheral, or paired source-attempt
+comparisons in a temporary checkout. Each mutation is accepted only when its
+exact target test and unique assertion marker both appear in the XCTest failure
+record. A zero exit, compile/link/fatal failure, signal, timeout, or unrelated
+test failure is rejected. The default per-run timeout is 1,800 seconds for a
+cold first build. The unified log preserves environment versions, commands,
+complete stdout/stderr, mutation diffs, original test exit codes, elapsed
+times, and the exact clean HEAD/tree/status proof after every restoration.
+
+The harness classifier's `--self-test` is runnable without Swift and verifies
+that simulated compile, signal, timeout, and unrelated-test failures are
+rejected. That classifier self-test is not an XCTest result. On this Linux host
+`swift` is unavailable, so the baseline and three real mutation XCTest runs
+remain pending on macOS.
 
 The production guarantee is therefore a code/test contract in this patch, not
 a Linux execution result. macOS must rerun these tests and record their real
