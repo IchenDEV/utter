@@ -49,11 +49,11 @@ struct PermissionsView: View {
                         action: requestScreenCapture
                     )
                 }
-                .background(Color(nsColor: .controlBackgroundColor))
+                .background(SettingsSurface.card)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
+                        .stroke(SettingsSurface.cardStroke, lineWidth: 0.5)
                 )
 
                 HStack {

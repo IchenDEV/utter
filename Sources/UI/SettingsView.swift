@@ -52,7 +52,7 @@ struct SettingsView: View {
                 .tabItem { Label(L("tab.about"), systemImage: "info.circle") }
         }
         .frame(width: SettingsWindowLayout.width, height: SettingsWindowLayout.height)
-        .background(Color(nsColor: .underPageBackgroundColor))
+        .background(SettingsSurface.page)
         .id(settings.uiLanguage)
     }
 }

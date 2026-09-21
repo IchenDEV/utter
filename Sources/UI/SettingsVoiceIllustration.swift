@@ -10,10 +10,10 @@ struct SettingsCardBackground: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .fill(Color(nsColor: .controlBackgroundColor))
+            .fill(SettingsSurface.card)
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
+                    .stroke(SettingsSurface.cardStroke, lineWidth: 0.5)
             }
     }
 }
@@ -21,6 +21,6 @@ struct SettingsCardBackground: View {
 extension View {
     func settingsPageSurface() -> some View {
         frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(nsColor: .underPageBackgroundColor))
+            .background(SettingsSurface.page)
     }
 }
