@@ -37,7 +37,11 @@
 - [x] `swift test` on macOS for this P0 patch: Pass (focused 46 executed, full 661 XCTest with 12 skipped plus 1 swift-testing test, 0 failures)
 - [ ] Release-style `bash scripts/build-app.sh` on a machine with the Metal
       toolchain (CI `SDLC Gate`), not available in this environment.
-- [x] Real interrupted-download retry on a networked machine (network disruption limited to test download sessions without cutting host network): tested on both WhisperKit (`openai_whisper-tiny`) and HubApi (`mlx-community/Qwen2.5-0.5B-Instruct-4bit`), verifying interruption capture, token generation staging isolation, resume completion, atomic commit with symlink materialization, and model loading (`WhisperKit` loaded state / `AutoTokenizer` encode-decode). Full LLM safetensors weights (~398MB) require ~27min at live link speed, preserved as unexecuted live weight transfer.
+- [x] Real interrupted-download retry on a networked machine (network disruption limited to test download sessions without cutting host network): tested on both WhisperKit (`openai_whisper-tiny`) and HubApi (`mlx-community/Qwen2.5-0.5B-Instruct-4bit`):
+      - WhisperKit: voluntary cancellation (`Task.cancel`) caught cleanly (`downloadError("已取消")`), Generation 2 resumed to 100%, atomic commit succeeded, model initialized, and real audio transcription verified on sample audio (`docs/assets/demos/en-sample.m4a` transcribed in 0.11s: `"Hey so I wanted to, I wanted to follow up on the design doc we talked about"`).
+      - HubApi: voluntary cancellation caught cleanly, Generation 2 resumed to 100% downloading full model weights (`model.safetensors`, 278,064,920 bytes), atomic commit materialized symlinks into regular files in published directory, and `AutoTokenizer` round-trip encode/decode verified ("Hello world"). Note: full MLX ModelContainer loading and real text generation require precompiled Metal kernels (`default.metallib`) from Xcode app bundle packaging (`scripts/build-app.sh`), absent in the SwiftPM CLI test runner bundle; container loading and real generation are preserved as uncompleted in the CLI test environment.
+      - Interruption taxonomy: voluntary `Task.cancel` (`downloadError("已取消")`) vs transport connection failure (`downloadError("无法连接服务器。")`) verified.
+      - Application resume path: `ModelCatalog` download -> pause/cancel -> resume -> `.downloaded` verified.
 
 ## Human gates
 
