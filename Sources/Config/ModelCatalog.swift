@@ -87,6 +87,10 @@ final class ModelCatalog: ObservableObject {
     ]
 
     private init() {
+        // A previous process may have exited before a cancelled writer could
+        // run its cleanup. At this point the singleton has no download
+        // operation in flight, so generation roots are safe to reclaim.
+        ModelStorage.cleanupOrphanedGenerationStaging()
         let rec = WhisperKit.recommendedModels()
         let defaultID = rec.default
         let supported = Set(rec.supported)

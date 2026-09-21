@@ -29,19 +29,29 @@
       MainActor while retaining retired writer staging until operation return.
 - [x] Add the old-writer-never-returns/new-generation-late-arrival regression
       and staging cleanup/readability tests.
+- [x] Run candidate materialization and rollback backup preparation in a detached
+      task (`prepareGenerationCommitOffMainActor`) so MainActor remains responsive.
+- [x] Add replacement failure rollback in `publishPreparedGeneration` restoring
+      the previous model from backup when replacement fails.
+- [x] Add startup cleanup (`cleanupOrphanedGenerationStaging`) in `ModelCatalog`
+      reclaiming orphaned generation roots from previous abnormal process exits.
+- [x] Add regression tests for candidate preparation responsiveness, restart cleanup,
+      and replacement failure rollback in `UtilityTests`.
 
 ## Verification plan
 
 - [x] `bash scripts/ci-basic-checks.sh` on macOS: Pass ("Basic CI checks passed.")
 - [x] `bash scripts/sdlc-checks.sh`: Pass ("SDLC checks passed.")
-- [x] `swift test` on macOS for this P0 patch: Pass (focused 46 executed, full 661 XCTest with 12 skipped plus 1 swift-testing test, 0 failures)
+- [x] `swift test` on macOS for focused tests: Pass (48 executed, 0 failures across `ModelDownload|DownloadStallWatchdog|Utility`)
+- [x] `swift test` on macOS for full suite: Pass (665 XCTest executed, 14 skipped, 0 failures, plus 1 swift-testing test)
 - [ ] Release-style `bash scripts/build-app.sh` on a machine with the Metal
       toolchain (CI `SDLC Gate`), not available in this environment.
 - [x] Real interrupted-download retry on a networked machine (network disruption limited to test download sessions without cutting host network): tested on both WhisperKit (`openai_whisper-tiny`) and HubApi (`mlx-community/Qwen2.5-0.5B-Instruct-4bit`):
-      - WhisperKit: voluntary cancellation (`Task.cancel`) caught cleanly (`downloadError("已取消")`), Generation 2 resumed to 100%, atomic commit succeeded, model initialized, and real audio transcription verified on sample audio (`docs/assets/demos/en-sample.m4a` transcribed in 0.11s: `"Hey so I wanted to, I wanted to follow up on the design doc we talked about"`).
-      - HubApi: voluntary cancellation caught cleanly, Generation 2 resumed to 100% downloading full model weights (`model.safetensors`, 278,064,920 bytes), atomic commit materialized symlinks into regular files in published directory, and `AutoTokenizer` round-trip encode/decode verified ("Hello world"). Note: full MLX ModelContainer loading and real text generation require precompiled Metal kernels (`default.metallib`) from Xcode app bundle packaging (`scripts/build-app.sh`), absent in the SwiftPM CLI test runner bundle; container loading and real generation are preserved as uncompleted in the CLI test environment.
+      - WhisperKit: voluntary cancellation (`Task.cancel`) caught cleanly (`downloadError("已取消")`), Generation 2 resumed to 100%, atomic commit via prepared candidate publisher succeeded, model initialized, and real audio transcription verified on sample audio (`docs/assets/demos/en-sample.m4a` transcribed in 0.10s: `"Hey so I wanted to, I wanted to follow up on the design doc we talked about"`).
+      - HubApi: voluntary cancellation caught cleanly, Generation 2 resumed to 100% downloading full model weights (`model.safetensors`, 278,064,920 bytes), atomic commit via prepared candidate publisher materialized symlinks into regular files in published directory, and `AutoTokenizer` round-trip encode/decode verified ("Hello world"). Note: full MLX ModelContainer loading and real text generation require precompiled Metal kernels (`default.metallib`) from Xcode app bundle packaging (`scripts/build-app.sh`), absent in the SwiftPM CLI test runner bundle; container loading and real generation are preserved as uncompleted in the CLI test environment.
       - Interruption taxonomy: voluntary `Task.cancel` (`downloadError("已取消")`) vs transport connection failure (`downloadError("无法连接服务器。")`) verified.
       - Application resume path: `ModelCatalog` download -> pause/cancel -> resume -> `.downloaded` verified.
+- [ ] Permanent hang recovery: waiting for old I/O exit addresses write safety, but recovery when old I/O hangs permanently remains unproven (marked as R&D blocker).
 
 ## Human gates
 

@@ -14,6 +14,16 @@ struct ModelDownloadStaging: Sendable {
     let hubCache: HubCache
 }
 
+/// A fully materialized candidate and a copy of the currently published
+/// model, if one existed. Preparation is deliberately separate from publish:
+/// copying model-sized trees may take seconds or minutes and must not occupy
+/// the MainActor arbitration point used by Cancel/Delete.
+struct PreparedModelGeneration: Sendable {
+    let candidate: URL
+    let destination: URL
+    let backup: URL?
+}
+
 enum ModelGenerationError: LocalizedError {
     case missingSource(URL)
     case symlinkCycle(URL)
@@ -29,6 +39,8 @@ enum ModelGenerationError: LocalizedError {
 }
 
 enum ModelStorage {
+    static let generationDirectoryName = ".utter-generations"
+
     static var defaultRoot: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
             .appendingPathComponent(ProductBrand.applicationSupportDirectoryName)
@@ -59,7 +71,7 @@ enum ModelStorage {
         storageRoot: URL
     ) -> ModelDownloadStaging {
         let root = storageRoot
-            .appendingPathComponent(".utter-generations", isDirectory: true)
+            .appendingPathComponent(generationDirectoryName, isDirectory: true)
             .appendingPathComponent(token.uuidString, isDirectory: true)
         return ModelDownloadStaging(
             token: token,
@@ -85,6 +97,51 @@ enum ModelStorage {
 
     static func removeGenerationStaging(_ staging: ModelDownloadStaging) {
         try? FileManager.default.removeItem(at: staging.root)
+    }
+
+    /// Removes generation roots left by a process that exited before its
+    /// writer could run its cleanup. This is a startup-only operation: the
+    /// ModelCatalog calls it before it can start a download, so no live writer
+    /// can own one of these roots. Runtime cancellation must continue to use
+    /// removeGenerationStaging after that writer returns instead.
+    @discardableResult
+    static func cleanupOrphanedGenerationStaging() -> Int {
+        cleanupOrphanedGenerationStaging(storageRoot: huggingFaceBase)
+    }
+
+    /// Testable path-scoped implementation used by the startup wrapper.
+    @discardableResult
+    static func cleanupOrphanedGenerationStaging(storageRoot: URL) -> Int {
+        let generations = storageRoot
+            .appendingPathComponent(generationDirectoryName, isDirectory: true)
+        guard let children = try? FileManager.default.contentsOfDirectory(
+            at: generations,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return 0
+        }
+
+        var removed = 0
+        for child in children {
+            var isDirectory = ObjCBool(false)
+            guard FileManager.default.fileExists(
+                atPath: child.path,
+                isDirectory: &isDirectory
+            ), isDirectory.boolValue else {
+                continue
+            }
+            guard (try? FileManager.default.removeItem(at: child)) != nil else { continue }
+            removed += 1
+        }
+        if let remaining = try? FileManager.default.contentsOfDirectory(
+            at: generations,
+            includingPropertiesForKeys: nil,
+            options: []
+        ), remaining.isEmpty {
+            try? FileManager.default.removeItem(at: generations)
+        }
+        return removed
     }
 
     static var hubModelsBase: URL {
@@ -166,15 +223,15 @@ enum ModelStorage {
         hubModelRepoDir(modelID, downloadBase: downloadBase)
     }
 
-    /// Materializes a completed staged repository into the published location.
-    /// Hub snapshots may contain relative symlinks into their blob cache; the
-    /// copy is intentionally resolved before the staging root is removed, so
-    /// the published model never depends on a deleted generation cache.
-    static func commitGeneration(
+    /// Materializes a completed staged repository into a candidate and copies
+    /// the currently published model into a rollback backup. The expensive
+    /// work is safe to run away from the MainActor because neither the staged
+    /// tree nor the published tree is modified during preparation.
+    static func prepareGenerationCommit(
         kind: ModelDownloadKind,
         modelID: String,
         staging: ModelDownloadStaging
-    ) throws {
+    ) throws -> PreparedModelGeneration {
         let source: URL
         let destination: URL
         switch kind {
@@ -197,15 +254,114 @@ enum ModelStorage {
             ".utter-promotion-\(UUID().uuidString)",
             isDirectory: true
         )
-        defer { try? fileManager.removeItem(at: candidate) }
+        var backup: URL? = nil
+        do {
+            var activeSymlinks = Set<String>()
+            try materialize(
+                from: source,
+                to: candidate,
+                activeSymlinks: &activeSymlinks
+            )
 
-        var activeSymlinks = Set<String>()
-        try materialize(
-            from: source,
-            to: candidate,
-            activeSymlinks: &activeSymlinks
+            if fileManager.fileExists(atPath: destination.path) {
+                let backupURL = parent.appendingPathComponent(
+                    ".utter-backup-\(UUID().uuidString)",
+                    isDirectory: true
+                )
+                backup = backupURL
+                var backupSymlinks = Set<String>()
+                try materialize(
+                    from: destination,
+                    to: backupURL,
+                    activeSymlinks: &backupSymlinks
+                )
+            }
+            return PreparedModelGeneration(
+                candidate: candidate,
+                destination: destination,
+                backup: backup
+            )
+        } catch {
+            try? fileManager.removeItem(at: candidate)
+            if let backup {
+                try? fileManager.removeItem(at: backup)
+            }
+            throw error
+        }
+    }
+
+    /// Performs preparation on a detached task so the MainActor remains
+    /// responsive while large model trees are copied and symlinks resolved.
+    static func prepareGenerationCommitOffMainActor(
+        kind: ModelDownloadKind,
+        modelID: String,
+        staging: ModelDownloadStaging
+    ) async throws -> PreparedModelGeneration {
+        try await Task.detached {
+            try prepareGenerationCommit(
+                kind: kind,
+                modelID: modelID,
+                staging: staging
+            )
+        }.value
+    }
+
+    /// Removes an unpublished candidate and any rollback backup. This is
+    /// required when token arbitration rejects a prepared generation.
+    static func discardPreparedGeneration(_ prepared: PreparedModelGeneration) {
+        let fileManager = FileManager.default
+        try? fileManager.removeItem(at: prepared.candidate)
+        if let backup = prepared.backup {
+            try? fileManager.removeItem(at: backup)
+        }
+    }
+
+    /// Commits a prepared generation. Only this short method belongs inside
+    /// the MainActor publication critical section. The replacement parameter
+    /// is an injectable seam used to force the replacement branch in
+    /// regression tests; production calls use the default same-volume
+    /// operation.
+    static func publishPreparedGeneration(
+        _ prepared: PreparedModelGeneration,
+        replacement: ((URL, URL) throws -> Void)? = nil
+    ) throws {
+        let fileManager = FileManager.default
+        let replace = replacement ?? replaceCandidate
+        do {
+            try replace(prepared.candidate, prepared.destination)
+            if let backup = prepared.backup {
+                try? fileManager.removeItem(at: backup)
+            }
+        } catch {
+            if let backup = prepared.backup {
+                // The replacement may have moved the candidate before
+                // reporting an error. Remove that tree, then restore the
+                // complete old model from the same-volume backup.
+                try? fileManager.removeItem(at: prepared.destination)
+                try? fileManager.moveItem(at: backup, to: prepared.destination)
+            } else {
+                // There was no previous model to restore; never leave a
+                // partially replaced tree behind after a failed operation.
+                try? fileManager.removeItem(at: prepared.destination)
+            }
+            throw error
+        }
+    }
+
+    /// Compatibility wrapper for small synchronous callers and existing
+    /// tests. Download paths use the detached preparation API above.
+    static func commitGeneration(
+        kind: ModelDownloadKind,
+        modelID: String,
+        staging: ModelDownloadStaging
+    ) throws {
+        let prepared = try prepareGenerationCommit(
+            kind: kind,
+            modelID: modelID,
+            staging: staging
         )
-        try publish(candidate: candidate, destination: destination)
+        defer { discardPreparedGeneration(prepared) }
+        try publishPreparedGeneration(prepared)
     }
 
     private static func materialize(
@@ -261,47 +417,12 @@ enum ModelStorage {
         }
     }
 
-    /// Build the candidate completely before this point. The only operation
-    /// touching the published directory is the atomic replacement. A regular
-    /// backup is retained until replacement succeeds so a failed commit can
-    /// restore the previous model without exposing a partially copied tree.
-    private static func publish(candidate: URL, destination: URL) throws {
+    private static func replaceCandidate(_ candidate: URL, _ destination: URL) throws {
         let fileManager = FileManager.default
-        let parent = destination.deletingLastPathComponent()
-        let backup = parent.appendingPathComponent(
-            ".utter-backup-\(UUID().uuidString)",
-            isDirectory: true
-        )
-        let hasOriginal = fileManager.fileExists(atPath: destination.path)
-        var backupReady = false
-
-        do {
-            if hasOriginal {
-                var activeSymlinks = Set<String>()
-                try materialize(
-                    from: destination,
-                    to: backup,
-                    activeSymlinks: &activeSymlinks
-                )
-                backupReady = true
-                _ = try fileManager.replaceItemAt(
-                    destination,
-                    withItemAt: candidate
-                )
-            } else {
-                try fileManager.moveItem(at: candidate, to: destination)
-            }
-            if hasOriginal {
-                try? fileManager.removeItem(at: backup)
-            }
-        } catch {
-            if backupReady {
-                try? fileManager.removeItem(at: destination)
-                try? fileManager.moveItem(at: backup, to: destination)
-            } else {
-                try? fileManager.removeItem(at: backup)
-            }
-            throw error
+        if fileManager.fileExists(atPath: destination.path) {
+            _ = try fileManager.replaceItemAt(destination, withItemAt: candidate)
+        } else {
+            try fileManager.moveItem(at: candidate, to: destination)
         }
     }
 

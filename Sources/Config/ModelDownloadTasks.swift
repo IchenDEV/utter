@@ -1,12 +1,12 @@
 import Foundation
 
-enum ModelDownloadKind: Hashable {
+enum ModelDownloadKind: Hashable, Sendable {
     case whisper
     case llm
     case asr
 }
 
-struct ModelDownloadKey: Hashable {
+struct ModelDownloadKey: Hashable, Sendable {
     let kind: ModelDownloadKind
     let modelID: String
 }
@@ -14,9 +14,10 @@ struct ModelDownloadKey: Hashable {
 /// Arbitrates model generations and publication. Each download operation owns
 /// a generation-scoped staging root, so a cancelled writer can finish against
 /// its old absolute paths while a replacement proceeds in a different root.
-/// Publication still has to go through `publishIfCurrent`: the token check and
-/// the synchronous atomic promotion are one MainActor turn, and therefore
-/// cannot race Cancel or Delete.
+/// Publication still has to go through publishIfCurrent: the token check and
+/// the short atomic promotion are one MainActor turn, and therefore cannot
+/// race Cancel or Delete. Large candidate/backup preparation happens before
+/// that turn on a detached task.
 @MainActor
 final class ModelDownloadTasks {
     private struct Entry {
@@ -97,9 +98,10 @@ final class ModelDownloadTasks {
         await start(key: key, operation: operation)
     }
 
-    /// Executes a synchronous commit only while `token` still owns the live
-    /// generation. Because this method is MainActor-isolated, Cancel/Delete
-    /// cannot interleave between validation and the atomic promotion.
+    /// Executes only the short prepared commit while token still owns the live
+    /// generation. Because this method is MainActor-isolated,
+    /// Cancel/Delete cannot interleave between validation and atomic
+    /// promotion; expensive tree preparation must happen before this call.
     @discardableResult
     func publishIfCurrent(
         _ key: ModelDownloadKey,

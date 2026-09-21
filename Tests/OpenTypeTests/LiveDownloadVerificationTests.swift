@@ -104,11 +104,13 @@ final class LiveDownloadVerificationTests: XCTestCase {
         // Commit generation 2 to published storage
         let targetDir = ModelStorage.whisperVariantDir(variant)
         try? FileManager.default.removeItem(at: targetDir)
-        try ModelStorage.commitGeneration(
+        let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
             kind: .whisper,
             modelID: variant,
             staging: staging2
         )
+        defer { ModelStorage.discardPreparedGeneration(prepared) }
+        try ModelStorage.publishPreparedGeneration(prepared)
         print("[LiveTest-Whisper] Generation 2 committed to \(targetDir.path)")
         fflush(stdout)
         XCTAssertTrue(ModelStorage.whisperModelIsComplete(at: targetDir))
@@ -218,11 +220,13 @@ final class LiveDownloadVerificationTests: XCTestCase {
         // Commit generation 2 to published storage
         let targetDir = ModelStorage.hubModelRepoDir(modelID, downloadBase: ModelStorage.huggingFaceBase)
         try? FileManager.default.removeItem(at: targetDir)
-        try ModelStorage.commitGeneration(
+        let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
             kind: .llm,
             modelID: modelID,
             staging: staging2
         )
+        defer { ModelStorage.discardPreparedGeneration(prepared) }
+        try ModelStorage.publishPreparedGeneration(prepared)
         print("[LiveTest-Hub] Generation 2 committed to \(targetDir.path)")
         fflush(stdout)
 

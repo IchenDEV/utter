@@ -146,13 +146,23 @@ extension ModelCatalog {
                 }
                 return
             }
+            var preparedGenerations: [PreparedModelGeneration] = []
+            defer {
+                preparedGenerations.forEach { prepared in
+                    ModelStorage.discardPreparedGeneration(prepared)
+                }
+            }
+            for repositoryID in repositories {
+                let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
+                    kind: .asr,
+                    modelID: repositoryID,
+                    staging: staging
+                )
+                preparedGenerations.append(prepared)
+            }
             let published = try downloadTasks.publishIfCurrent(key, token: token) {
-                for repositoryID in repositories {
-                    try ModelStorage.commitGeneration(
-                        kind: .asr,
-                        modelID: repositoryID,
-                        staging: staging
-                    )
+                for prepared in preparedGenerations {
+                    try ModelStorage.publishPreparedGeneration(prepared)
                 }
             }
             guard published else { return }

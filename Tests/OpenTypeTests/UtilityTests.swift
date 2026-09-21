@@ -3,6 +3,10 @@ import XCTest
 @testable import OpenType
 
 final class UtilityTests: XCTestCase {
+    private enum InjectedReplacementFailure: Error {
+        case replacement
+    }
+
     func testModelStorageMakesStableLocalIDs() {
         XCTAssertEqual(ModelStorage.makeLocalID(
             prefix: "llm",
@@ -137,18 +141,26 @@ final class UtilityTests: XCTestCase {
         )
         try FileManager.default.createDirectory(at: stagedRepo, withIntermediateDirectories: true)
         try Data("new-config".utf8).write(to: stagedRepo.appendingPathComponent("config.json"))
-        let broken = stagedRepo.appendingPathComponent("weights.safetensors")
-        try FileManager.default.createSymbolicLink(
-            at: broken,
-            withDestinationURL: stagedRepo.appendingPathComponent("missing-blob")
+        try Data("new-weights".utf8).write(
+            to: stagedRepo.appendingPathComponent("weights.safetensors")
         )
 
+        let prepared = try ModelStorage.prepareGenerationCommit(
+            kind: .llm,
+            modelID: "org/model",
+            staging: staging
+        )
+        defer { ModelStorage.discardPreparedGeneration(prepared) }
+
         XCTAssertThrowsError(
-            try ModelStorage.commitGeneration(
-                kind: .llm,
-                modelID: "org/model",
-                staging: staging
-            )
+            try ModelStorage.publishPreparedGeneration(prepared) { candidate, destination in
+                // Simulate a replacement that moved the candidate but failed
+                // while returning from the filesystem operation. This enters
+                // the restore branch instead of failing during preparation.
+                try FileManager.default.removeItem(at: destination)
+                try FileManager.default.moveItem(at: candidate, to: destination)
+                throw InjectedReplacementFailure.replacement
+            }
         )
         XCTAssertEqual(
             try Data(contentsOf: previous.appendingPathComponent("config.json")),
@@ -158,6 +170,96 @@ final class UtilityTests: XCTestCase {
             try Data(contentsOf: previous.appendingPathComponent("weights.safetensors")),
             Data("old-weights".utf8)
         )
+    }
+
+    func testStartupCleanupRemovesOnlyOrphanedGenerationRoots() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeRestartCleanup-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let stale = ModelStorage.generationStaging(for: UUID(), storageRoot: root)
+        let secondStale = ModelStorage.generationStaging(for: UUID(), storageRoot: root)
+        try ModelStorage.prepareGeneration(stale)
+        try ModelStorage.prepareGeneration(secondStale)
+        try Data("partial".utf8).write(
+            to: stale.downloadBase.appendingPathComponent("weights.incomplete")
+        )
+        let published = root.appendingPathComponent("models/published", isDirectory: true)
+        try FileManager.default.createDirectory(at: published, withIntermediateDirectories: true)
+        try Data("keep".utf8).write(to: published.appendingPathComponent("config.json"))
+
+        let generationRoot = root.appendingPathComponent(
+            ModelStorage.generationDirectoryName,
+            isDirectory: true
+        )
+        let childrenBefore = try FileManager.default.contentsOfDirectory(
+            at: generationRoot,
+            includingPropertiesForKeys: nil,
+            options: []
+        )
+        XCTAssertEqual(childrenBefore.count, 2)
+
+        // The cleanup helper is called by ModelCatalog before a restarted
+        // process can create any download writer.
+        let removed = ModelStorage.cleanupOrphanedGenerationStaging(storageRoot: root)
+        XCTAssertEqual(removed, 2)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: stale.root.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: secondStale.root.path))
+        XCTAssertEqual(
+            try Data(contentsOf: published.appendingPathComponent("config.json")),
+            Data("keep".utf8)
+        )
+    }
+
+    @MainActor
+    func testGenerationPreparationKeepsMainActorResponsive() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypePreparationResponsiveness-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let staging = ModelStorage.generationStaging(for: UUID(), storageRoot: root)
+        try ModelStorage.prepareGeneration(staging)
+        let stagedRepo = ModelStorage.hubModelRepoDir(
+            "org/model",
+            downloadBase: staging.downloadBase
+        )
+        try FileManager.default.createDirectory(at: stagedRepo, withIntermediateDirectories: true)
+        try Data("{}".utf8).write(to: stagedRepo.appendingPathComponent("config.json"))
+        try Data(repeating: 7, count: 16_000_000).write(
+            to: stagedRepo.appendingPathComponent("weights.safetensors")
+        )
+
+        var heartbeats = 0
+        var preparationFinished = false
+        let preparation = Task { @MainActor in
+            do {
+                let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
+                    kind: .llm,
+                    modelID: "org/model",
+                    staging: staging
+                )
+                preparationFinished = true
+                return prepared
+            } catch {
+                preparationFinished = true
+                throw error
+            }
+        }
+        // Let the preparation task reach its detached await before starting
+        // the probe. A synchronous MainActor copy would keep this probe from
+        // running until preparationFinished became true.
+        await Task.yield()
+        let heartbeat = Task { @MainActor in
+            while !preparationFinished {
+                heartbeats += 1
+                await Task.yield()
+            }
+        }
+        let prepared = try await preparation.value
+        await heartbeat.value
+        ModelStorage.discardPreparedGeneration(prepared)
+
+        XCTAssertGreaterThan(heartbeats, 0, "MainActor should service work while preparation copies files")
     }
 
     func testModelStorageRequiresWeightsBeforeLLMIsComplete() throws {

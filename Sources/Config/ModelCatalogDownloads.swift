@@ -81,12 +81,14 @@ extension ModelCatalog {
                 }
                 return
             }
+            let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
+                kind: .whisper,
+                modelID: id,
+                staging: staging
+            )
+            defer { ModelStorage.discardPreparedGeneration(prepared) }
             let published = try downloadTasks.publishIfCurrent(key, token: token) {
-                try ModelStorage.commitGeneration(
-                    kind: .whisper,
-                    modelID: id,
-                    staging: staging
-                )
+                try ModelStorage.publishPreparedGeneration(prepared)
             }
             guard published else { return }
             if let i = whisperModels.firstIndex(where: { $0.id == id }) {
@@ -233,12 +235,14 @@ extension ModelCatalog {
                 }
                 return
             }
+            let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
+                kind: .llm,
+                modelID: id,
+                staging: staging
+            )
+            defer { ModelStorage.discardPreparedGeneration(prepared) }
             let published = try downloadTasks.publishIfCurrent(key, token: token) {
-                try ModelStorage.commitGeneration(
-                    kind: .llm,
-                    modelID: id,
-                    staging: staging
-                )
+                try ModelStorage.publishPreparedGeneration(prepared)
             }
             guard published else { return }
             // Resolve/download happened in staging. Load again from the
