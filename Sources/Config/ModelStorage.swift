@@ -24,9 +24,39 @@ enum ModelStorage {
     }
 
     static func whisperVariantDir(_ variant: String) -> URL {
-        hubModelsBase
-            .appendingPathComponent("argmaxinc/whisperkit-coreml")
-            .appendingPathComponent(variant)
+        whisperRepoCacheRoot.appendingPathComponent(variant)
+    }
+
+    /// WhisperKit repository root; it also holds the `.cache` tree where the
+    /// CoreML downloader parks `.incomplete` files.
+    static var whisperRepoCacheRoot: URL {
+        hubModelsBase.appendingPathComponent("argmaxinc/whisperkit-coreml")
+    }
+
+    /// Shared Hugging Face hub caches the Swift Hub client may use for blobs.
+    /// The client follows `HF_HUB_CACHE` -> `HF_HOME/hub` -> the per-user cache,
+    /// which sits outside `root` and survives deleting a materialized model.
+    static var huggingFaceCacheRoots: [URL] {
+        var roots: [URL] = []
+        let environment = ProcessInfo.processInfo.environment
+        if let hubCache = environment["HF_HUB_CACHE"], !hubCache.isEmpty {
+            roots.append(URL(fileURLWithPath: NSString(string: hubCache).expandingTildeInPath))
+        }
+        if let hubHome = environment["HF_HOME"], !hubHome.isEmpty {
+            roots.append(
+                URL(fileURLWithPath: NSString(string: hubHome).expandingTildeInPath)
+                    .appendingPathComponent("hub")
+            )
+        }
+        roots.append(
+            URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
+                .appendingPathComponent(".cache/huggingface/hub")
+        )
+        if environment["APP_SANDBOX_CONTAINER_ID"] != nil,
+           let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first {
+            roots.append(caches.appendingPathComponent("huggingface/hub"))
+        }
+        return roots
     }
 
     static func hubModelRepo(_ modelID: String) -> Hub.Repo {

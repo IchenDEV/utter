@@ -61,17 +61,20 @@ extension ModelCatalog {
     }
 
     func downloadASR(_ id: String, onProgress: ((DownloadProgressInfo) -> Void)? = nil) async {
-        await downloadTasks.run(key: ModelDownloadKey(kind: .asr, modelID: id)) { [weak self] in
-            await self?.performASRDownload(id, onProgress: onProgress)
+        await downloadTasks.run(key: ModelDownloadKey(kind: .asr, modelID: id)) { [weak self] token in
+            await self?.performASRDownload(id, token: token, onProgress: onProgress)
         }
     }
 
     private func performASRDownload(
         _ id: String,
+        token: UUID,
         onProgress: ((DownloadProgressInfo) -> Void)?
     ) async {
+        let key = ModelDownloadKey(kind: .asr, modelID: id)
         guard let idx = asrModels.firstIndex(where: { $0.id == id }),
-              !asrModels[idx].status.isDownloading else { return }
+              !asrModels[idx].status.isDownloading,
+              downloadTasks.isCurrent(key, token: token) else { return }
 
         if asrRepoIsComplete(id) {
             asrModels[idx].status = .downloaded
@@ -80,9 +83,18 @@ extension ModelCatalog {
             return
         }
 
+        if asrModels[idx].status.isError {
+            let purged = ModelDownloadRecovery.purgePartialArtifacts(kind: .asr, modelID: id)
+            if !purged.isEmpty {
+                Log.info("[ModelCatalog] Cleared \(purged.removedFiles) stale download file(s) for \(id)")
+            }
+        }
+
         asrModels[idx].status = .downloading
         asrModels[idx].downloadProgress = 0
         asrModels[idx].downloadDetail = ""
+
+        let watchdog = makeStallWatchdog(key: key, token: token, kind: .asr, modelID: id)
 
         do {
             let api = HubApi(downloadBase: Self.asrDownloadBase)
@@ -95,7 +107,9 @@ extension ModelCatalog {
             for (repositoryIndex, repositoryID) in repositories.enumerated() {
                 _ = try await api.snapshot(from: ModelStorage.hubModelRepo(repositoryID)) { [weak self] progress in
                     Task { @MainActor in
+                        watchdog.noteProgress()
                         guard let self,
+                              self.downloadTasks.isCurrent(key, token: token),
                               let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
                         let repositoryFraction =
                             (Double(repositoryIndex) + progress.fractionCompleted) / Double(repositories.count)
@@ -110,7 +124,9 @@ extension ModelCatalog {
                     }
                 }
             }
+            watchdog.stop()
             try Task.checkCancellation()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = asrModels.firstIndex(where: { $0.id == id }) {
                 asrModels[i].status = asrRepoIsComplete(id)
                     ? .downloaded
@@ -119,6 +135,8 @@ extension ModelCatalog {
                 asrModels[i].downloadDetail = ""
             }
         } catch is CancellationError {
+            watchdog.stop()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = asrModels.firstIndex(where: { $0.id == id }) {
                 asrModels[i].status = .error(L("model.download_paused"))
                 asrModels[i].cacheSize = asrRepoSize(id)
@@ -126,6 +144,8 @@ extension ModelCatalog {
                 asrModels[i].downloadDetail = ""
             }
         } catch {
+            watchdog.stop()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = asrModels.firstIndex(where: { $0.id == id }) {
                 Log.error("[ModelCatalog] ASR download failed: \(error.localizedDescription)")
                 asrModels[i].status = .error(ModelDownloadFailureMessage.userFacing(error))
@@ -140,6 +160,7 @@ extension ModelCatalog {
         for repositoryID in asrRequiredRepoIDs(for: id) {
             try? FileManager.default.removeItem(at: ModelStorage.hubModelRepoDir(repositoryID))
         }
+        ModelDownloadRecovery.purgePartialArtifacts(kind: .asr, modelID: id)
         asrModels[idx].cacheSize = 0
         asrModels[idx].status = .notDownloaded
         asrModels[idx].downloadDetail = ""
@@ -160,7 +181,7 @@ extension ModelCatalog {
         size > 0 ? .error(L("model.asr_incomplete")) : .notDownloaded
     }
 
-    private func asrRepoSize(_ id: String) -> Int64 {
+    func asrRepoSize(_ id: String) -> Int64 {
         asrRequiredRepoIDs(for: id).reduce(0) { total, repositoryID in
             guard let directory = ModelStorage.asrRepoDir(repositoryID) else { return total }
             return total + ModelStorage.directorySize(at: directory)

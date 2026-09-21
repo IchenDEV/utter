@@ -270,6 +270,7 @@
 "model.download_required" = "模型文件尚未下载。请前往 设置 → 模型，确认流量后下载";
 "model.download_stalled_help" = "进度长时间不变？可先取消再继续下载，已下载文件会保留。";
 "model.download_failed_timeout" = "下载连接超时。已下载内容会保留，请检查网络后点击“继续下载”";
+"model.download_failed_stalled" = "下载长时间没有进度，已自动暂停。点击“继续下载”会清理残留后重新开始";
 "model.download_failed_network" = "网络连接中断，下载已暂停。请恢复网络后点击“继续下载”";
 "model.download_failed_disk_space" = "模型目录磁盘空间不足。请清理空间或更换存储位置后继续下载";
 "model.download_failed_permission" = "无法写入模型目录。请检查目录权限，或在模型页更换存储位置";

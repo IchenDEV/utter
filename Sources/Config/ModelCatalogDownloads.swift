@@ -8,14 +8,16 @@ extension ModelCatalog {
     static var whisperDownloadBase: URL { ModelStorage.huggingFaceBase }
 
     func downloadWhisper(_ id: String) async {
-        await downloadTasks.run(key: ModelDownloadKey(kind: .whisper, modelID: id)) { [weak self] in
-            await self?.performWhisperDownload(id)
+        await downloadTasks.run(key: ModelDownloadKey(kind: .whisper, modelID: id)) { [weak self] token in
+            await self?.performWhisperDownload(id, token: token)
         }
     }
 
-    private func performWhisperDownload(_ id: String) async {
+    private func performWhisperDownload(_ id: String, token: UUID) async {
+        let key = ModelDownloadKey(kind: .whisper, modelID: id)
         guard let idx = whisperModels.firstIndex(where: { $0.id == id }),
-              !whisperModels[idx].status.isDownloading else { return }
+              !whisperModels[idx].status.isDownloading,
+              downloadTasks.isCurrent(key, token: token) else { return }
 
         if isWhisperDownloaded(id) {
             whisperModels[idx].status = .downloaded
@@ -24,8 +26,12 @@ extension ModelCatalog {
             return
         }
 
+        purgeStalePartialsIfRetrying(kind: .whisper, modelID: id, status: whisperModels[idx].status)
+
         whisperModels[idx].status = .downloading
         whisperModels[idx].downloadProgress = 0
+
+        let watchdog = makeStallWatchdog(key: key, token: token, kind: .whisper, modelID: id)
 
         do {
             let modelDir = ModelStorage.whisperVariantDir(id)
@@ -35,7 +41,9 @@ extension ModelCatalog {
                 downloadBase: Self.whisperDownloadBase,
                 progressCallback: { [weak self] progress in
                     Task { @MainActor in
+                        watchdog.noteProgress()
                         guard let self,
+                              self.downloadTasks.isCurrent(key, token: token),
                               let i = self.whisperModels.firstIndex(where: { $0.id == id }) else { return }
                         let downloadedBytes = ModelStorage.directorySize(at: modelDir)
                         let info = tracker.update(
@@ -50,7 +58,9 @@ extension ModelCatalog {
                     }
                 }
             )
+            watchdog.stop()
             try Task.checkCancellation()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = whisperModels.firstIndex(where: { $0.id == id }) {
                 whisperModels[i].status = isWhisperDownloaded(id)
                     ? .downloaded
@@ -59,6 +69,8 @@ extension ModelCatalog {
                 whisperModels[i].downloadDetail = ""
             }
         } catch is CancellationError {
+            watchdog.stop()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = whisperModels.firstIndex(where: { $0.id == id }) {
                 whisperModels[i].status = .error(L("model.download_paused"))
                 whisperModels[i].cacheSize = whisperVariantSize(id)
@@ -66,7 +78,9 @@ extension ModelCatalog {
                 whisperModels[i].downloadDetail = ""
             }
         } catch {
+            watchdog.stop()
             Log.error("[ModelCatalog] Whisper download failed: \(error.localizedDescription)")
+            guard downloadTasks.isCurrent(key, token: token) else { return }
             whisperModels[idx].status = .error(ModelDownloadFailureMessage.userFacing(error))
             whisperModels[idx].cacheSize = whisperVariantSize(id)
             whisperModels[idx].downloadDetail = ""
@@ -82,6 +96,7 @@ extension ModelCatalog {
             whisperModels.remove(at: idx)
         } else {
             try? FileManager.default.removeItem(at: whisperVariantDir(id))
+            ModelDownloadRecovery.purgePartialArtifacts(kind: .whisper, modelID: id)
             whisperModels[idx].status = .notDownloaded
             whisperModels[idx].cacheSize = 0
         }
@@ -99,14 +114,16 @@ extension ModelCatalog {
     }
 
     func downloadLLM(_ id: String) async {
-        await downloadTasks.run(key: ModelDownloadKey(kind: .llm, modelID: id)) { [weak self] in
-            await self?.performLLMDownload(id)
+        await downloadTasks.run(key: ModelDownloadKey(kind: .llm, modelID: id)) { [weak self] token in
+            await self?.performLLMDownload(id, token: token)
         }
     }
 
-    private func performLLMDownload(_ id: String) async {
+    private func performLLMDownload(_ id: String, token: UUID) async {
+        let key = ModelDownloadKey(kind: .llm, modelID: id)
         guard let idx = llmModels.firstIndex(where: { $0.id == id }),
-              !llmModels[idx].status.isDownloading else { return }
+              !llmModels[idx].status.isDownloading,
+              downloadTasks.isCurrent(key, token: token) else { return }
         if ModelStorage.localLLMURL(id) != nil {
             llmModels[idx].status = llmRepoIsComplete(id)
                 ? .downloaded
@@ -121,8 +138,12 @@ extension ModelCatalog {
             return
         }
 
+        purgeStalePartialsIfRetrying(kind: .llm, modelID: id, status: llmModels[idx].status)
+
         llmModels[idx].status = .downloading
         llmModels[idx].downloadProgress = 0
+
+        let watchdog = makeStallWatchdog(key: key, token: token, kind: .llm, modelID: id)
 
         do {
             let estimatedTotalBytes = estimatedLLMDownloadBytes(id) ?? 0
@@ -136,7 +157,9 @@ extension ModelCatalog {
                 configuration: ModelConfiguration(id: id)
             ) { [weak self] progress in
                 Task { @MainActor in
+                    watchdog.noteProgress()
                     guard let self,
+                          self.downloadTasks.isCurrent(key, token: token),
                           let i = self.llmModels.firstIndex(where: { $0.id == id }) else { return }
                     let info = tracker.update(
                         completedBytes: ModelStorage.directorySize(at: repoDir),
@@ -147,7 +170,9 @@ extension ModelCatalog {
                     self.llmModels[i].downloadDetail = info.detailText
                 }
             }
+            watchdog.stop()
             try Task.checkCancellation()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = llmModels.firstIndex(where: { $0.id == id }) {
                 llmModels[i].status = llmRepoIsComplete(id)
                     ? .downloaded
@@ -156,6 +181,8 @@ extension ModelCatalog {
                 llmModels[i].downloadDetail = ""
             }
         } catch is CancellationError {
+            watchdog.stop()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = llmModels.firstIndex(where: { $0.id == id }) {
                 llmModels[i].status = .error(L("model.download_paused"))
                 llmModels[i].cacheSize = llmRepoSize(id)
@@ -163,6 +190,8 @@ extension ModelCatalog {
                 llmModels[i].downloadDetail = ""
             }
         } catch {
+            watchdog.stop()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = llmModels.firstIndex(where: { $0.id == id }) {
                 Log.error("[ModelCatalog] LLM download failed: \(error.localizedDescription)")
                 llmModels[i].status = .error(ModelDownloadFailureMessage.userFacing(error))
@@ -183,6 +212,7 @@ extension ModelCatalog {
             if let dir = llmRepoDir(id) {
                 try? FileManager.default.removeItem(at: dir)
             }
+            ModelDownloadRecovery.purgePartialArtifacts(kind: .llm, modelID: id)
             llmModels[idx].status = .notDownloaded
             llmModels[idx].cacheSize = 0
         }
@@ -224,5 +254,61 @@ extension ModelCatalog {
     func llmRepoSize(_ modelID: String) -> Int64 {
         guard let dir = llmRepoDir(modelID) else { return 0 }
         return ModelStorage.directorySize(at: dir)
+    }
+
+    // MARK: - Download recovery
+
+    /// A retry starts from a clean slate: dropping only the `.incomplete`
+    /// markers keeps completed files while removing the corrupt partial that
+    /// made the previous attempt fail.
+    func purgeStalePartialsIfRetrying(
+        kind: ModelDownloadKind,
+        modelID: String,
+        status: ModelStatus
+    ) {
+        guard status.isError else { return }
+        let result = ModelDownloadRecovery.purgePartialArtifacts(kind: kind, modelID: modelID)
+        guard !result.isEmpty else { return }
+        Log.info(
+            "[ModelCatalog] Cleared \(result.removedFiles) stale download file(s) for \(modelID)"
+        )
+    }
+
+    func makeStallWatchdog(
+        key: ModelDownloadKey,
+        token: UUID,
+        kind: ModelDownloadKind,
+        modelID: String
+    ) -> DownloadStallWatchdog {
+        let watchdog = DownloadStallWatchdog()
+        watchdog.start { [weak self] in
+            guard let self, self.downloadTasks.isCurrent(key, token: token) else { return }
+            self.downloadTasks.cancel(key)
+            self.markStalled(kind: kind, modelID: modelID)
+        }
+        return watchdog
+    }
+
+    func markStalled(kind: ModelDownloadKind, modelID: String) {
+        switch kind {
+        case .whisper:
+            guard let i = whisperModels.firstIndex(where: { $0.id == modelID }) else { return }
+            whisperModels[i].status = .error(L("model.download_failed_stalled"))
+            whisperModels[i].downloadProgress = 0
+            whisperModels[i].downloadDetail = ""
+            whisperModels[i].cacheSize = whisperVariantSize(modelID)
+        case .llm:
+            guard let i = llmModels.firstIndex(where: { $0.id == modelID }) else { return }
+            llmModels[i].status = .error(L("model.download_failed_stalled"))
+            llmModels[i].downloadProgress = 0
+            llmModels[i].downloadDetail = ""
+            llmModels[i].cacheSize = llmRepoSize(modelID)
+        case .asr:
+            guard let i = asrModels.firstIndex(where: { $0.id == modelID }) else { return }
+            asrModels[i].status = .error(L("model.download_failed_stalled"))
+            asrModels[i].downloadProgress = 0
+            asrModels[i].downloadDetail = ""
+            asrModels[i].cacheSize = asrRepoSize(modelID)
+        }
     }
 }
