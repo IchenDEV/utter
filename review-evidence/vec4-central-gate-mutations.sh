@@ -243,21 +243,21 @@ run_pass "$TEST_CLASS"
 
 restore_source
 apply_mutation \
-    's/(private func currentCentralAttempt\([\s\S]*?guard let transport = centralTransport,\n)\s*transport\.identity === managerIdentity,\n/$1/' \
+    's/(private func currentCentralAttempt\([\s\S]*?guard let transport = centralTransport,\n)\s*transport\.identity === managerIdentity,\n/$1/'
 run_mutation manager \
     testCentralManagerIdentityGateRejectsWrongManager \
     "manager identity gate must reject a same-attempt callback from another manager"
 
 restore_source
 apply_mutation \
-    's/(private func currentCentralAttempt\([\s\S]*?let activePeripheralIdentity = self\.peripheralIdentity,\n)\s*activePeripheralIdentity === peripheralIdentity else/$1true else/' \
+    's/(private func currentCentralAttempt\([\s\S]*?let activePeripheralIdentity = self\.peripheralIdentity,\n)\s*activePeripheralIdentity === peripheralIdentity else/$1true else/'
 run_mutation peripheral \
     testCentralPeripheralIdentityGateRejectsWrongPeripheral \
     "peripheral identity gate must reject a same-attempt callback from another peripheral"
 
 restore_source
 apply_mutation \
-    's/(private func currentCentralAttempt\([\s\S]*?)guard let sourceAttempt,\n\s*activeConnectionAttempt == sourceAttempt,\n\s*handshake\.accepts\(sourceAttempt\) else \{ return nil \}\n\s*guard let active = centralLifecycle\.attempt, active == sourceAttempt else \{ return nil \}/$1guard let sourceAttempt else { return nil }/' \
+    's/(private func currentCentralAttempt\([\s\S]*?)guard let sourceAttempt,\n\s*activeConnectionAttempt == sourceAttempt,\n\s*handshake\.accepts\(sourceAttempt\) else \{ return nil \}\n\s*guard let active = centralLifecycle\.attempt, active == sourceAttempt else \{ return nil \}/$1guard let sourceAttempt else { return nil }/'
 run_mutation attempt \
     testCentralAttemptIdentityGateRejectsWrongAttempt \
     "source attempt gate must reject a stale attempt from the active manager and peripheral"
