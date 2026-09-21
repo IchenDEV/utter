@@ -214,7 +214,7 @@ Measured execution results (`mac-p102-mutation-harness.log`):
 
 - Log SHA-256: `5b6ea6e1d45fec7a56d60513023ab0c3e305e6f152398b98ad3c68660e484240`
 - Mutation A exit / target assertion check / elapsed time: test exit `1`, failed with 5 expected assertion failures at `UtilityTests.swift:409`, `:410`, `:411`, `:412`, `:413`, elapsed 268s (including initial scratch build).
-- Restored A exit / exact-tree check / elapsed time: test exit `0` (passed in 0.026s), restored tree matched exact baseline `d15b2c7b02262bf4823646903730122dba90a56f` (`git diff --exit-code` 0), elapsed 14s.
+- Restored A exit / exact-tree check / elapsed time: test exit `0` (passed in 0.033s), restored tree matched exact baseline `d15b2c7b02262bf4823646903730122dba90a56f` (`git diff --exit-code` 0), elapsed 14s.
 - Mutation B exit / target assertion check / elapsed time: test exit `1`, failed with 2 expected assertion failures at `UtilityTests.swift:411`, `:412`, elapsed 14s.
 - Restored B exit / exact-tree check / elapsed time: test exit `0` (passed in 0.032s), restored tree matched exact baseline `d15b2c7b02262bf4823646903730122dba90a56f` (`git diff --exit-code` 0), elapsed 12s.
 - Final full-tree diff against `1cba5718aef0dd61254838fa77d8181cb4af820a`: exit `0`, 0 harness failures, porcelain status clean.

@@ -82,7 +82,7 @@
       independent checkout fixed at `1cba5718aef0dd61254838fa77d8181cb4af820a`
       and produced `mac-p102-mutation-harness.log` (SHA-256: `5b6ea6e1d45fec7a56d60513023ab0c3e305e6f152398b98ad3c68660e484240`).
       Mutation A test exited 1 (5 targeted failures, elapsed 268s); restored A exited 0
-      (passed in 0.026s, elapsed 14s, tree `d15b2c7b…`); Mutation B test exited 1
+      (passed in 0.033s, elapsed 14s, tree `d15b2c7b…`); Mutation B test exited 1
       (2 targeted failures, elapsed 14s); restored B exited 0 (passed in 0.032s,
       elapsed 12s, tree `d15b2c7b…`). 0 harness failures, clean tree restoration.
 - [x] Preserve the skip taxonomy in the final raw log: of the 14 skips, 4 are
