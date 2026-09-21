@@ -9,17 +9,35 @@
 
 | Check | Result | Evidence |
 |---|---|---|
-| `bash scripts/ci-basic-checks.sh` | Skipped | Exit 127: this Linux runner has no `swift` executable; the script cannot enter its Swift checks. |
-| `bash scripts/sdlc-checks.sh` | Pass | "SDLC checks passed." |
-| `swift build` | Skipped | Exit 127: Swift is not installed in this Linux runner. |
-| `swift test` (full suite) | Skipped | Exit 127: Swift is not installed in this Linux runner. |
-| `swift test --filter RemoteMic` | Skipped | Exit 127: Swift is not installed in this Linux runner. |
-| `swift test --filter RemoteMicCallbackRoutingTests` | Skipped | Exit 127: `swift` is not installed in this Linux runner. |
+| Bundle hash and restoration | Pass | Bundle SHA-256 `021ed0088aaf8db0df1f7d6afc452d7c9115b7a00e65bb87cffcfd6d5b8b2651`; `git bundle verify`, `git fsck --full --strict`, ref `6bdcbb78c4f7091f1225b93ca82306560c9683d7`, tree `0addbb55d3ba9ff0dc7791afec3c012c19b53c42`, and clean restore all passed. |
+| Host and toolchain | Pass | Mac mini `Mac16,10` / Apple M4 / macOS 27.2; Xcode 27.0 (`27A266a`), Swift 6.4 from `/Applications/Xcode.app/Contents/Developer`. |
+| `bash scripts/ci-basic-checks.sh` | Pass | Exit 0 with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` and `SDKROOT=.../MacOSX27.0.sdk`; all static, localization, vocabulary, resource, and secret checks passed. |
+| `bash scripts/sdlc-checks.sh` | Pass | Exit 0: "SDLC checks passed." |
+| `swift test --filter RemoteMic` | Pass | Exit 0; 68 tests, 0 failures. |
+| `swift test --filter RemoteMicCallbackRoutingTests` | Pass | Exit 0; 7 tests, 0 failures. |
+| `review-evidence/vec4-central-gate-mutations.sh` | Pass | Exit 0; baseline 7 tests passed; manager, peripheral, and attempt mutations each exited 1 with the target assertion classified; every restore returned exact head/tree and clean status. |
+| `swift test` (full suite) | Pass | Exit 0; 701 tests executed, 10 environment/model-gated tests skipped, 0 failures. |
+| `bash scripts/build-app.sh --app-only` | Pass | Exit 0; Release arm64 app and CLI helper built, ad-hoc hardened-runtime signed, `verify-release-artifact.sh` reported valid on disk and designated requirement satisfied; app binary SHA-256 `a0965499a77c35f2dfddb1ad1935b566cecae428cc3513cfc0ffad87d86611ad`. |
 | Real Xiaomi remote end-to-end | Not run | No hardware in this environment |
 
-Environment note: this verification was run on Linux without Swift,
-Xcode, or a Metal toolchain. The skipped Swift rows are environment skips,
-not passing test results; macOS must rerun the build and test commands.
+Environment note: the current evidence was collected on the online Mac mini
+above using the full Xcode toolchain. The first CI-basic invocation without an
+explicit SDK failed at the industry vocabulary check because the host target
+was `arm64-apple-macosx27.2.0` while the selected Xcode SDK was 27.0; the
+explicit `SDKROOT` rerun passed and is the recorded result. The earlier Linux
+bundle verification remains historical evidence only.
+
+### 2026-09-22 Mac mini rerun details
+
+The bundle's checked-in mutation script initially had three trailing shell
+continuations that swallowed the following `run_mutation` calls. The minimal
+script repair is commit `58473722ddee842c01218c2fe2ffb8a9cd1ed7f3`; the
+preceding compile repair is commit `f8b135b3cf4498c447f5dd447424b36e82818e01`.
+The final tree is commit `58473722ddee842c01218c2fe2ffb8a9cd1ed7f3`, tree
+`b00cdb9b2e57930a26731496507df70033c1def4`, and the final mutation script
+SHA-256 is
+`52dcad02bc0fbcea2ced082705b0764c004fa73642f0f59c2500b07879da170c`.
+The complete logs are attached to the VEC-4 handoff comment.
 
 ### VEC-4 / #104 lifecycle evidence
 
@@ -36,13 +54,13 @@ cycle. The connection-retirement test asserts transport release and exactly one
 `deinit` immediately after the terminal callback, before creating or driving
 the replacement connection.
 
-| Counterexample | Intended result | Current Linux result |
+| Counterexample | Intended result | Mac mini result |
 |---|---|---|
-| `testProductionCentralRetirementCancelsPendingAndDefersFastReactivation` | `cancel` is issued for a still-connecting peripheral; off→on does not create a second transport until the old proxy's terminal failure; old contexts release, then late same-peripheral connect/fail/disconnect events are ignored | **Skipped** — `swift test --filter RemoteMicCallbackRoutingTests` exited 127 because Swift is unavailable |
-| `testScanRetirementUsesNonBlockingFenceBeforeReactivation` | scan-only retirement is retained behind the production `DispatchQueue.main.async` fence; the test awaits a subsequent main-queue turn, then checks replacement creation and weak/deinit release | **Skipped** — same environment gate |
-| `testCentralManagerIdentityGateRejectsWrongManager` | same attempt/peripheral plus wrong manager is ignored | **Skipped** — same environment gate |
-| `testCentralPeripheralIdentityGateRejectsWrongPeripheral` | same manager/attempt plus wrong peripheral is ignored | **Skipped** — same environment gate |
-| `testCentralAttemptIdentityGateRejectsWrongAttempt` | same manager/peripheral plus stale attempt is ignored | **Skipped** — same environment gate |
+| `testProductionCentralRetirementCancelsPendingAndDefersFastReactivation` | `cancel` is issued for a still-connecting peripheral; off→on does not create a second transport until the old proxy's terminal failure; old contexts release, then late same-peripheral connect/fail/disconnect events are ignored | **Passed** — focused suite and mutation harness on Xcode 27 |
+| `testScanRetirementUsesNonBlockingFenceBeforeReactivation` | scan-only retirement is retained behind the production `DispatchQueue.main.async` fence; the test awaits a subsequent main-queue turn, then checks replacement creation and weak/deinit release | **Passed** — focused suite and mutation harness on Xcode 27 |
+| `testCentralManagerIdentityGateRejectsWrongManager` | same attempt/peripheral plus wrong manager is ignored | **Passed** — baseline and manager mutation assertion both recorded |
+| `testCentralPeripheralIdentityGateRejectsWrongPeripheral` | same manager/attempt plus wrong peripheral is ignored | **Passed** — baseline and peripheral mutation assertion both recorded |
+| `testCentralAttemptIdentityGateRejectsWrongAttempt` | same manager/peripheral plus stale attempt is ignored | **Passed** — baseline and attempt mutation assertion both recorded |
 
 `review-evidence/vec4-central-gate-mutations.sh` runs the unmutated focused
 suite, then removes only the manager, peripheral, or paired source-attempt
@@ -56,13 +74,12 @@ times, and the exact clean HEAD/tree/status proof after every restoration.
 
 The harness classifier's `--self-test` is runnable without Swift and verifies
 that simulated compile, signal, timeout, and unrelated-test failures are
-rejected. That classifier self-test is not an XCTest result. On this Linux host
-`swift` is unavailable, so the baseline and three real mutation XCTest runs
-remain pending on macOS.
+rejected. That classifier self-test is not an XCTest result. On the Mac mini,
+the baseline and all three real mutation XCTest runs completed with the real
+exit codes described above.
 
-The production guarantee is therefore a code/test contract in this patch, not
-a Linux execution result. macOS must rerun these tests and record their real
-exit code before this row can be marked passed.
+The production guarantee is backed by the focused Mac mini XCTest and mutation
+evidence; it remains bounded by the unperformed hardware pass below.
 
 ### Changes after the independent review of the first head
 
@@ -84,13 +101,13 @@ licensing question is a human/CTO item and is untouched here.
 | P1: idle audio polluted the next pre-roll | Fixed | `RemoteMicAudioRouting` (used by the bridge) drops audio with no live session; buffered only while starting (`RemoteMicAudioRoutingTests`). |
 | P0: fallback leaked wanted state | Fixed | `RemoteMicWantedState` holds the want; a failed start calls `tearDownFailedStart()`, clearing the callback, ending capture, and dropping the temp file, so a later readiness cannot open the remote mic mid-system-session. Covered by `RemoteMicWantedStateTests`. |
 | P1: handshake had no state gates | Fixed | `RemoteMicHandshake` requests capabilities only after both notifications are confirmed via `didUpdateNotificationStateFor`, once per attempt; connection and initialization timeouts (`connectionTimeout` 10 s, `initializationTimeout` 8 s) bound each attempt; `didFailToConnect` recovers; a monotonic `generation` rejects late callbacks. Covered by `RemoteMicHandshakeTests`. |
-| P1: only pure protocol tests | Addressed in part | The gate and wanted-state are pure, injectable types with deterministic tests (20 total in the prior evidence set). Those Swift tests were not rerun on this Linux host; the CoreBluetooth transport still needs a real device. |
+| P1: only pure protocol tests | Addressed in part | The gate and wanted-state are pure, injectable types with deterministic tests; the Mac mini run exercised the real bridge factory/proxy route. The CoreBluetooth transport still needs a real device. |
 
 ## Acceptance criteria
 
 - Setting off keeps the existing path — pass by construction
   (`AudioCaptureManager.start` only consults the remote when
-  `remoteMicEnabled`); Swift execution was not available in this Linux run.
+  `remoteMicEnabled`); covered by the full Mac mini suite.
 - Setting on with a connected remote uses the decoded stream — implemented, but
   **not verified**: requires the physical remote.
 - Setting on with no remote falls back to the system input — pass by
@@ -100,17 +117,21 @@ licensing question is a human/CTO item and is untouched here.
   adoption path; **not verified on hardware**.
 - Handshake ordering, attempt isolation, and timeouts are covered by
   deterministic tests (`RemoteMicHandshakeTests`,
-  `RemoteMicAttemptIsolationTests`); this Linux run could not execute Swift.
+  `RemoteMicAttemptIsolationTests`); the RemoteMic Mac mini run passed all 68
+  tests.
 - Source-bound same-peripheral late-event regression — specified in
   `swift test --filter RemoteMicCallbackRoutingTests`; the test uses the
   `activate()`/transport-factory production creation path, validates non-nil
   manager/peripheral identities, holds the attempt-1 transport/proxy through
   terminal cancellation, then delivers old disconnect/control/didConnect/
-  didFail events through that proxy. This Linux run could not execute it (exit
-  127: Swift unavailable); macOS must record the real result.
-- Session cancel across the real pipeline path — prior unit-boundary evidence exists (`RemoteMicStartGuardTests`); Swift was not rerun on this Linux host. The live `VoicePipeline.start` await itself still needs a hardware/timing run.
-- Localization parity and SDLC checks — pass; the basic CI script and Swift
-  tests are skipped here with exit 127 because Swift is unavailable.
+  didFail events through that proxy. The Mac mini run passed all seven focused
+  tests, and the three mutation counterexamples each produced the intended
+  failing assertion before exact restoration.
+- Session cancel across the real pipeline path — `RemoteMicPipelineIntegrationTests`
+  passed in the RemoteMic run, including the real `VoicePipeline.start` await
+  barrier and capture spy. Hardware timing remains unverified.
+- Localization parity and SDLC checks — pass; `ci-basic-checks.sh` and
+  `sdlc-checks.sh` both passed with the explicit Xcode SDK.
 
 ## Residual risk
 
