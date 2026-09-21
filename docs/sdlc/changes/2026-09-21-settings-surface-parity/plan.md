@@ -12,18 +12,21 @@
 - [x] Point `SettingsCardBackground` and the history overview cards at
       `SettingsSurface.card`.
 - [x] Point the onboarding and permissions grouped boxes at the same seams.
-- [x] Add `SettingsSurfaceTests` rendering the seams with `ImageRenderer`.
+- [x] Add `SettingsSurfaceTests` resolving the seams in sRGB and inside explicit
+      light/dark appearances.
+- [x] Capture real-window light and dark rendering from the running app.
 
 ## Verification plan
 
 - [x] `bash scripts/ci-basic-checks.sh`
 - [x] `bash scripts/sdlc-checks.sh`
 - [x] `swift test` (full suite)
-- [ ] Real-window light/dark inspection of every settings tab and onboarding
-      (reviewer), compared against System Settings.
+- [x] Real-window light and dark rendering of the Activity tab captured and
+      inspected against System Settings.
+- [ ] Reviewer confirms the remaining tabs and the onboarding window visually
+      (they share the same seams; only the Activity tab was captured here).
 
 ## Human gates
 
 - Intent, spec, and verification approval before merge.
-- Reviewer confirms light and dark real-window appearance; this environment
-  cannot drive the signed app window for screenshots.
+- Reviewer confirms the remaining tabs and onboarding in light and dark.

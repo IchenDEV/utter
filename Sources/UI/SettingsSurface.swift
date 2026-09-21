@@ -23,4 +23,14 @@ enum SettingsSurface {
     static var cardStroke: Color {
         Color(nsColor: .separatorColor)
     }
+
+    /// Resolved sRGB values for `page` and `card`, for tests and diagnostics that
+    /// need the concrete components of the semantic colors.
+    static var pageSRGB: NSColor {
+        NSColor.windowBackgroundColor.usingColorSpace(.sRGB) ?? .windowBackgroundColor
+    }
+
+    static var cardSRGB: NSColor {
+        NSColor.underPageBackgroundColor.usingColorSpace(.sRGB) ?? .underPageBackgroundColor
+    }
 }
