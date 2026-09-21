@@ -1,6 +1,32 @@
 import Foundation
 import Hub
 
+/// All dependency writes for one download generation live below this root.
+/// The root is deliberately separate from the published model directory so a
+/// cancelled writer can finish (or be abandoned) without touching a newer
+/// generation's files.
+struct ModelDownloadStaging: Sendable {
+    let token: UUID
+    let storageRoot: URL
+    let root: URL
+    let downloadBase: URL
+    let hubCache: HubCache
+}
+
+enum ModelGenerationError: LocalizedError {
+    case missingSource(URL)
+    case symlinkCycle(URL)
+
+    var errorDescription: String? {
+        switch self {
+        case .missingSource(let url):
+            return "Staged model output is missing: \(url.path)"
+        case .symlinkCycle(let url):
+            return "Staged model contains a symbolic-link cycle: \(url.path)"
+        }
+    }
+}
+
 enum ModelStorage {
     static var defaultRoot: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -19,12 +45,60 @@ enum ModelStorage {
         root
     }
 
+    static func generationStaging(for token: UUID) -> ModelDownloadStaging {
+        generationStaging(for: token, storageRoot: huggingFaceBase)
+    }
+
+    /// Returns paths only. Callers prepare the directories immediately before
+    /// starting dependency I/O and remove the root in their operation's
+    /// `defer`, which keeps it alive for the entire lifetime of a cancelled
+    /// writer.
+    static func generationStaging(
+        for token: UUID,
+        storageRoot: URL
+    ) -> ModelDownloadStaging {
+        let root = storageRoot
+            .appendingPathComponent(".utter-generations", isDirectory: true)
+            .appendingPathComponent(token.uuidString, isDirectory: true)
+        return ModelDownloadStaging(
+            token: token,
+            storageRoot: storageRoot,
+            root: root,
+            downloadBase: root.appendingPathComponent("download", isDirectory: true),
+            hubCache: HubCache(
+                cacheDirectory: root.appendingPathComponent("hub", isDirectory: true)
+            )
+        )
+    }
+
+    static func prepareGeneration(_ staging: ModelDownloadStaging) throws {
+        try FileManager.default.createDirectory(
+            at: staging.downloadBase,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: staging.hubCache.cacheDirectory,
+            withIntermediateDirectories: true
+        )
+    }
+
+    static func removeGenerationStaging(_ staging: ModelDownloadStaging) {
+        try? FileManager.default.removeItem(at: staging.root)
+    }
+
     static var hubModelsBase: URL {
         huggingFaceBase.appendingPathComponent("models")
     }
 
     static func whisperVariantDir(_ variant: String) -> URL {
-        whisperRepoCacheRoot.appendingPathComponent(variant)
+        whisperVariantDir(variant, downloadBase: huggingFaceBase)
+    }
+
+    static func whisperVariantDir(_ variant: String, downloadBase: URL) -> URL {
+        downloadBase
+            .appendingPathComponent("models", isDirectory: true)
+            .appendingPathComponent("argmaxinc/whisperkit-coreml", isDirectory: true)
+            .appendingPathComponent(variant, isDirectory: true)
     }
 
     /// WhisperKit repository root; it also holds the `.cache` tree where the
@@ -64,7 +138,11 @@ enum ModelStorage {
     }
 
     static func hubModelRepoDir(_ modelID: String) -> URL {
-        HubApi(downloadBase: huggingFaceBase).localRepoLocation(hubModelRepo(modelID))
+        hubModelRepoDir(modelID, downloadBase: huggingFaceBase)
+    }
+
+    static func hubModelRepoDir(_ modelID: String, downloadBase: URL) -> URL {
+        HubApi(downloadBase: downloadBase, cache: nil).localRepoLocation(hubModelRepo(modelID))
     }
 
     static func llmRepoDir(_ modelID: String) -> URL? {
@@ -81,6 +159,149 @@ enum ModelStorage {
     static func asrRepoDir(_ modelID: String) -> URL? {
         let dir = hubModelRepoDir(modelID)
         return FileManager.default.fileExists(atPath: dir.path) ? dir : nil
+    }
+
+    static func asrRepoDir(_ modelID: String, downloadBase: URL) -> URL {
+        hubModelRepoDir(modelID, downloadBase: downloadBase)
+    }
+
+    /// Materializes a completed staged repository into the published location.
+    /// Hub snapshots may contain relative symlinks into their blob cache; the
+    /// copy is intentionally resolved before the staging root is removed, so
+    /// the published model never depends on a deleted generation cache.
+    static func commitGeneration(
+        kind: ModelDownloadKind,
+        modelID: String,
+        staging: ModelDownloadStaging
+    ) throws {
+        let source: URL
+        let destination: URL
+        switch kind {
+        case .whisper:
+            source = whisperVariantDir(modelID, downloadBase: staging.downloadBase)
+            destination = whisperVariantDir(modelID, downloadBase: staging.storageRoot)
+        case .llm, .asr:
+            source = hubModelRepoDir(modelID, downloadBase: staging.downloadBase)
+            destination = hubModelRepoDir(modelID, downloadBase: staging.storageRoot)
+        }
+
+        let fileManager = FileManager.default
+        guard fileManager.fileExists(atPath: source.path) else {
+            throw ModelGenerationError.missingSource(source)
+        }
+
+        let parent = destination.deletingLastPathComponent()
+        try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
+        let candidate = parent.appendingPathComponent(
+            ".utter-promotion-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        defer { try? fileManager.removeItem(at: candidate) }
+
+        var activeSymlinks = Set<String>()
+        try materialize(
+            from: source,
+            to: candidate,
+            activeSymlinks: &activeSymlinks
+        )
+        try publish(candidate: candidate, destination: destination)
+    }
+
+    private static func materialize(
+        from source: URL,
+        to destination: URL,
+        activeSymlinks: inout Set<String>
+    ) throws {
+        let fileManager = FileManager.default
+        let attributes = try fileManager.attributesOfItem(atPath: source.path)
+        if let type = attributes[.type] as? FileAttributeType,
+           type == .typeSymbolicLink {
+            guard activeSymlinks.insert(source.path).inserted else {
+                throw ModelGenerationError.symlinkCycle(source)
+            }
+            defer { activeSymlinks.remove(source.path) }
+            let target = try fileManager.destinationOfSymbolicLink(atPath: source.path)
+            let resolved = URL(
+                fileURLWithPath: target,
+                relativeTo: source.deletingLastPathComponent()
+            ).standardizedFileURL
+            try materialize(
+                from: resolved,
+                to: destination,
+                activeSymlinks: &activeSymlinks
+            )
+            return
+        }
+
+        var isDirectory = ObjCBool(false)
+        guard fileManager.fileExists(atPath: source.path, isDirectory: &isDirectory) else {
+            throw ModelGenerationError.missingSource(source)
+        }
+        if isDirectory.boolValue {
+            try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
+            let children = try fileManager.contentsOfDirectory(
+                at: source,
+                includingPropertiesForKeys: nil,
+                options: []
+            ).sorted { $0.path < $1.path }
+            for child in children {
+                try materialize(
+                    from: child,
+                    to: destination.appendingPathComponent(child.lastPathComponent),
+                    activeSymlinks: &activeSymlinks
+                )
+            }
+        } else {
+            try fileManager.createDirectory(
+                at: destination.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try fileManager.copyItem(at: source, to: destination)
+        }
+    }
+
+    /// Build the candidate completely before this point. The only operation
+    /// touching the published directory is the atomic replacement. A regular
+    /// backup is retained until replacement succeeds so a failed commit can
+    /// restore the previous model without exposing a partially copied tree.
+    private static func publish(candidate: URL, destination: URL) throws {
+        let fileManager = FileManager.default
+        let parent = destination.deletingLastPathComponent()
+        let backup = parent.appendingPathComponent(
+            ".utter-backup-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        let hasOriginal = fileManager.fileExists(atPath: destination.path)
+        var backupReady = false
+
+        do {
+            if hasOriginal {
+                var activeSymlinks = Set<String>()
+                try materialize(
+                    from: destination,
+                    to: backup,
+                    activeSymlinks: &activeSymlinks
+                )
+                backupReady = true
+                _ = try fileManager.replaceItemAt(
+                    destination,
+                    withItemAt: candidate
+                )
+            } else {
+                try fileManager.moveItem(at: candidate, to: destination)
+            }
+            if hasOriginal {
+                try? fileManager.removeItem(at: backup)
+            }
+        } catch {
+            if backupReady {
+                try? fileManager.removeItem(at: destination)
+                try? fileManager.moveItem(at: backup, to: destination)
+            } else {
+                try? fileManager.removeItem(at: backup)
+            }
+            throw error
+        }
     }
 
     static func localWhisperURL(_ id: String) -> URL? {

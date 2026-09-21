@@ -91,12 +91,18 @@ extension ModelCatalog {
 
         let watchdog = makeStallWatchdog(key: key, token: token, kind: .asr, modelID: id)
         let signal = DownloadProgressSignal()
+        let staging = ModelStorage.generationStaging(for: token)
+        defer { ModelStorage.removeGenerationStaging(staging) }
 
         do {
-            let api = HubApi(downloadBase: Self.asrDownloadBase)
+            try ModelStorage.prepareGeneration(staging)
+            let api = HubApi(
+                downloadBase: staging.downloadBase,
+                cache: staging.hubCache
+            )
             let tracker = DownloadProgressTracker(
                 startDate: Date(),
-                initialBytes: asrRepoSize(id)
+                initialBytes: asrRepoSize(id, downloadBase: staging.downloadBase)
             )
             let estimatedTotalBytes = estimatedASRDownloadBytes(id) ?? 0
             let repositories = asrRequiredRepoIDs(for: id)
@@ -108,7 +114,10 @@ extension ModelCatalog {
                               let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
                         let repositoryFraction =
                             (Double(repositoryIndex) + progress.fractionCompleted) / Double(repositories.count)
-                        let downloadedBytes = self.asrRepoSize(id)
+                        let downloadedBytes = self.asrRepoSize(
+                            id,
+                            downloadBase: staging.downloadBase
+                        )
                         let info = tracker.update(
                             completedBytes: downloadedBytes,
                             totalBytes: estimatedTotalBytes,
@@ -129,6 +138,24 @@ extension ModelCatalog {
             watchdog.stop()
             try Task.checkCancellation()
             guard downloadTasks.isCurrent(key, token: token) else { return }
+            guard asrRepoIsComplete(id, downloadBase: staging.downloadBase) else {
+                if let i = asrModels.firstIndex(where: { $0.id == id }) {
+                    asrModels[i].status = .error(L("model.asr_incomplete"))
+                    asrModels[i].cacheSize = asrRepoSize(id)
+                    asrModels[i].downloadDetail = ""
+                }
+                return
+            }
+            let published = try downloadTasks.publishIfCurrent(key, token: token) {
+                for repositoryID in repositories {
+                    try ModelStorage.commitGeneration(
+                        kind: .asr,
+                        modelID: repositoryID,
+                        staging: staging
+                    )
+                }
+            }
+            guard published else { return }
             if let i = asrModels.firstIndex(where: { $0.id == id }) {
                 let complete = asrRepoIsComplete(id)
                 asrModels[i].status = complete ? .downloaded : .error(L("model.asr_incomplete"))
@@ -182,8 +209,23 @@ extension ModelCatalog {
     }
 
     private func asrRepoIsComplete(_ id: String) -> Bool {
-        asrRequiredRepoIDs(for: id).allSatisfy {
-            Self.asrRepoContainsRequiredFiles($0, at: ModelStorage.asrRepoDir($0))
+        asrRepoIsComplete(id, downloadBase: nil)
+    }
+
+    private func asrRepoIsComplete(_ id: String, downloadBase: URL?) -> Bool {
+        asrRequiredRepoIDs(for: id).allSatisfy { repositoryID in
+            let directory = downloadBase.map { base in
+                ModelStorage.asrRepoDir(repositoryID, downloadBase: base)
+            } ?? ModelStorage.asrRepoDir(repositoryID)
+            return Self.asrRepoContainsRequiredFiles(repositoryID, at: directory)
+        }
+    }
+
+    private func asrRepoSize(_ id: String, downloadBase: URL) -> Int64 {
+        asrRequiredRepoIDs(for: id).reduce(0) { total, repositoryID in
+            total + ModelStorage.directorySize(
+                at: ModelStorage.asrRepoDir(repositoryID, downloadBase: downloadBase)
+            )
         }
     }
 

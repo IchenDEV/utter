@@ -44,6 +44,122 @@ final class UtilityTests: XCTestCase {
         XCTAssertTrue(suffix.hasSuffix("/models/mlx-community/Qwen3-ASR-1.7B-bf16"))
     }
 
+    func testGenerationStagingSeparatesDownloadAndHubCache() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeGeneration-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let staging = ModelStorage.generationStaging(
+            for: UUID(),
+            storageRoot: root
+        )
+        XCTAssertNotEqual(staging.downloadBase, staging.hubCache.cacheDirectory)
+        XCTAssertTrue(staging.downloadBase.path.hasPrefix(staging.root.path))
+        XCTAssertTrue(staging.hubCache.cacheDirectory.path.hasPrefix(staging.root.path))
+
+        try ModelStorage.prepareGeneration(staging)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: staging.downloadBase.path))
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: staging.hubCache.cacheDirectory.path)
+        )
+        ModelStorage.removeGenerationStaging(staging)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: staging.root.path))
+    }
+
+    func testCommitMaterializesHubSymlinkBeforeStagingCleanup() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeCommit-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let staging = ModelStorage.generationStaging(
+            for: UUID(),
+            storageRoot: root
+        )
+        try ModelStorage.prepareGeneration(staging)
+        let stagedRepo = ModelStorage.hubModelRepoDir(
+            "org/model",
+            downloadBase: staging.downloadBase
+        )
+        let blob = staging.hubCache.cacheDirectory
+            .appendingPathComponent("models--org--model/blobs/weights.bin")
+        try FileManager.default.createDirectory(
+            at: stagedRepo,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: blob.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("{}".utf8).write(to: stagedRepo.appendingPathComponent("config.json"))
+        try Data("committed-weights".utf8).write(to: blob)
+        try FileManager.default.createSymbolicLink(
+            at: stagedRepo.appendingPathComponent("weights.safetensors"),
+            withDestinationURL: blob
+        )
+
+        XCTAssertTrue(ModelStorage.llmRepoIsComplete(at: stagedRepo))
+        try ModelStorage.commitGeneration(
+            kind: .llm,
+            modelID: "org/model",
+            staging: staging
+        )
+        ModelStorage.removeGenerationStaging(staging)
+
+        let published = ModelStorage.hubModelRepoDir("org/model", downloadBase: root)
+        XCTAssertEqual(
+            try Data(contentsOf: published.appendingPathComponent("weights.safetensors")),
+            Data("committed-weights".utf8)
+        )
+        let attributes = try FileManager.default.attributesOfItem(
+            atPath: published.appendingPathComponent("weights.safetensors").path
+        )
+        XCTAssertNotEqual(attributes[.type] as? FileAttributeType, .typeSymbolicLink)
+        XCTAssertTrue(ModelStorage.llmRepoIsComplete(at: published))
+    }
+
+    func testFailedCommitKeepsThePreviouslyPublishedModel() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeCommitFailure-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let previous = ModelStorage.hubModelRepoDir("org/model", downloadBase: root)
+        try FileManager.default.createDirectory(at: previous, withIntermediateDirectories: true)
+        try Data("old-config".utf8).write(to: previous.appendingPathComponent("config.json"))
+        try Data("old-weights".utf8).write(
+            to: previous.appendingPathComponent("weights.safetensors")
+        )
+
+        let staging = ModelStorage.generationStaging(for: UUID(), storageRoot: root)
+        try ModelStorage.prepareGeneration(staging)
+        let stagedRepo = ModelStorage.hubModelRepoDir(
+            "org/model",
+            downloadBase: staging.downloadBase
+        )
+        try FileManager.default.createDirectory(at: stagedRepo, withIntermediateDirectories: true)
+        try Data("new-config".utf8).write(to: stagedRepo.appendingPathComponent("config.json"))
+        let broken = stagedRepo.appendingPathComponent("weights.safetensors")
+        try FileManager.default.createSymbolicLink(
+            at: broken,
+            withDestinationURL: stagedRepo.appendingPathComponent("missing-blob")
+        )
+
+        XCTAssertThrowsError(
+            try ModelStorage.commitGeneration(
+                kind: .llm,
+                modelID: "org/model",
+                staging: staging
+            )
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: previous.appendingPathComponent("config.json")),
+            Data("old-config".utf8)
+        )
+        XCTAssertEqual(
+            try Data(contentsOf: previous.appendingPathComponent("weights.safetensors")),
+            Data("old-weights".utf8)
+        )
+    }
+
     func testModelStorageRequiresWeightsBeforeLLMIsComplete() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("OpenTypeTests-\(UUID().uuidString)", isDirectory: true)

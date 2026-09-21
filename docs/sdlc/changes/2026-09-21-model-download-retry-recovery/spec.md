@@ -25,6 +25,13 @@ removes only the materialized directory, so the shared partials outlive a delete
 `HubCache.default` resolves to `HF_HUB_CACHE` → `HF_HOME/hub` → the per-user
 `~/.cache/huggingface/hub` (non-sandboxed) — outside `ModelStorage.root`.
 
+The P0 implementation gives every run a generation root under
+`<modelRoot>/.utter-generations/<token>/`, with separate `download/` and
+`hub/` directories. This root is injected at download creation time into all
+three stacks: `WhisperKit.download(downloadBase:)`, `HubApi(downloadBase:,
+cache:)` for ASR, and a per-run `MLXLMCommon.Downloader` for LLM. The live
+model path is not touched until the run has produced a complete staged result.
+
 The locked dependencies make live-path ownership stricter than a directory
 rename suggests. `swift-huggingface` 0.9.0
 (`b721959445b617d0bf03910b2b4aced345fd93bf`) computes
@@ -54,25 +61,29 @@ been moved; quarantine alone is not a valid writer-isolation proof.
 `ModelDownloadTasks` changes:
 
 - `run` passes a per-run `token` to the operation and keeps one slot per key.
-- A duplicate request joins the in-flight run. `cancel` marks the current entry
-  cancelled but deliberately retains its slot until the dependency operation
-  returns. A Resume request that arrived during that drain claims one restart;
-  concurrent Resume requests join that replacement. A duplicate that joined a
-  run which completes normally still does not restart it.
-- `isCurrent(key:token:)` becomes false as soon as cancellation is requested,
-  preventing late progress or terminal state from reaching the UI, while the
-  entry remains active for disk serialization.
-- `ModelCatalog.cancelDownload` marks the model paused and restores Resume,
-  but the next download reuses live paths only after the old absolute-path I/O
-  has returned. Delete uses the same per-key gate.
+  A duplicate request joins the in-flight run. `cancel` retires the current
+  token immediately while retaining the underlying task until it returns, so a
+  dependency that ignores cancellation can finish in its own staging root.
+  Resume gets a fresh token/root immediately; concurrent Resume requests join
+  that replacement. A duplicate that joined before Cancel does not become an
+  implicit Resume.
+- `publishIfCurrent(key:token:)` performs the token check and synchronous
+  `ModelStorage.commitGeneration` in one MainActor turn. Cancel and Delete
+  cannot interleave with publication, and a retired writer cannot publish after
+  a newer generation has committed.
+- `ModelCatalog.cancelDownload` marks the model paused and restores Resume.
+  Delete arbitrates through the same key while retired staging roots remain
+  owned by their still-running operations; no cleanup infers ownership from a
+  missing current token.
 
-Trade-off: if a library call never returns despite cancellation, retry remains
-visible but waits for that dependency call to drain. This is fail-closed: a
-retry cannot share a path with a writer that may still reopen the original
-absolute URL. That finite-drain safety property does not satisfy the original
-"always retry" acceptance when the dependency never returns; the non-returning
-case remains a研发阻塞 pending the independent per-generation staging/commit
-design.
+`ModelStorage.commitGeneration` first materializes the staged repository into a
+same-volume promotion directory, resolving Hub snapshot symlinks to regular
+files. It atomically replaces the published directory and keeps a regular
+backup until replacement succeeds, preserving the previous model if staging or
+publication fails. Removing a generation root after commit therefore cannot
+make the loaded/downloaded model unreadable. The MLX path reloads from the
+published directory after promotion before reporting success, exercising that
+post-cleanup boundary directly.
 
 `DownloadStallWatchdog` polls a last-activity timestamp and fires once after the
 timeout. A shared `DownloadProgressSignal` only calls `noteProgress()` when the
@@ -88,11 +99,13 @@ status (a user retry) and leaves a fresh download's resumable state alone.
 
 - Deleting only `*.incomplete` files, scoped to the requested model, cannot
   destroy a usable model or another model's in-flight partial.
-- Cancellation keeps the live paths owned by the cancelled task until its I/O
-  returns; no directory move is treated as isolation. The next generation then
-  purges only the requested model's `.incomplete` markers.
-- If a stalled transfer ignores cancellation, its Resume action remains
-  serialized behind that task; its state writes are rejected by `isCurrent`.
+- Cancellation retires the token but keeps its generation root until its I/O
+  returns; no current-token scan removes a still-running writer's staging.
+  The next generation uses a distinct `downloadBase` and Hub cache.
+- If a stalled transfer ignores cancellation, its Resume action can proceed in
+  a new generation; late progress and publication are rejected by `isCurrent`.
+- A failed promotion is built before replacing the live directory, and the
+  previous model remains available if the replacement fails.
 - No network, permission, or privacy boundary changes. No new bundled resources.
 
 ## Test strategy
@@ -102,9 +115,13 @@ status (a user retry) and leaves a fresh download's resumable state alone.
   sibling variant's is kept), materialized + shared cache coverage, missing-file
   tolerance.
 - `ModelDownloadTasksTests`: dedupe, cancellation propagation, retry after a
-  cancellation-ignoring transfer that writes the original live URL after
-  cancellation, single replacement ownership for concurrent Resume requests,
-  delete serialization, and `isCurrent` after cancellation.
+  cancellation-ignoring transfer that retains its staging root, immediate
+  replacement ownership for concurrent Resume requests, late publication
+  rejection after a newer generation commits, Delete arbitration, and
+  `isCurrent` after cancellation.
+- `UtilityTests`: per-generation download/cache roots, Hub symlink
+  materialization after staging cleanup, and preservation of the previous
+  model after a failed commit.
 - `DownloadStallWatchdogTests`: fires on inactivity, stays quiet with progress,
   and the progress signal only advances on new bytes or fraction.
 

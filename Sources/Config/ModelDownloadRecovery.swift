@@ -10,11 +10,11 @@ import Foundation
 /// only the `.incomplete` markers keeps completed files and makes the retry
 /// start from a known-good state.
 ///
-/// The live coordinator deliberately does not use directory relocation for
-/// cancellation: pinned Hub dependencies retain absolute incomplete-file URLs
-/// across awaits. It drains the old operation before reusing live paths. The
-/// relocation helpers below remain useful as explicit path-layout test seams,
-/// but are not a live writer-isolation guarantee.
+/// The live coordinator uses token-scoped staging roots for cancellation:
+/// pinned Hub dependencies may retain absolute incomplete-file URLs across
+/// awaits, but those URLs now point into the retired generation. The relocation
+/// helpers below remain useful as explicit path-layout/test seams for legacy
+/// recovery, but are not the live writer-isolation mechanism.
 enum ModelDownloadRecovery {
     struct CleanupResult: Equatable {
         var removedFiles = 0
@@ -88,9 +88,9 @@ enum ModelDownloadRecovery {
         }
     }
 
-    /// Path-layout helper for a future downloader with injected staging roots.
-    /// The live coordinator must not call this for cancellation because the
-    /// pinned dependencies can reopen their original absolute URLs.
+    /// Legacy path-layout helper for callers that need to quarantine existing
+    /// live artifacts. Normal cancellation now creates a fresh
+    /// `ModelDownloadStaging` root instead of relocating a live directory.
     @discardableResult
     static func beginNewGeneration(kind: ModelDownloadKind, modelID: String) -> RelocationResult {
         relocateStaleGeneration(kind: kind, modelID: modelID)

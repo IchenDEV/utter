@@ -26,6 +26,8 @@ extension ModelCatalog {
             return
         }
 
+        let staging = ModelStorage.generationStaging(for: token)
+        defer { ModelStorage.removeGenerationStaging(staging) }
         prepareCacheForRetry(kind: .whisper, modelID: id, status: whisperModels[idx].status)
 
         whisperModels[idx].status = .downloading
@@ -35,11 +37,15 @@ extension ModelCatalog {
         let signal = DownloadProgressSignal()
 
         do {
-            let modelDir = ModelStorage.whisperVariantDir(id)
+            try ModelStorage.prepareGeneration(staging)
+            let modelDir = ModelStorage.whisperVariantDir(
+                id,
+                downloadBase: staging.downloadBase
+            )
             let tracker = DownloadProgressTracker(initialBytes: ModelStorage.directorySize(at: modelDir))
             _ = try await WhisperKit.download(
                 variant: id,
-                downloadBase: Self.whisperDownloadBase,
+                downloadBase: staging.downloadBase,
                 progressCallback: { [weak self] progress in
                     Task { @MainActor in
                         guard let self,
@@ -67,6 +73,22 @@ extension ModelCatalog {
             watchdog.stop()
             try Task.checkCancellation()
             guard downloadTasks.isCurrent(key, token: token) else { return }
+            guard ModelStorage.whisperModelIsComplete(at: modelDir) else {
+                if let i = whisperModels.firstIndex(where: { $0.id == id }) {
+                    whisperModels[i].status = .error(L("model.download_incomplete"))
+                    whisperModels[i].cacheSize = whisperVariantSize(id)
+                    whisperModels[i].downloadDetail = ""
+                }
+                return
+            }
+            let published = try downloadTasks.publishIfCurrent(key, token: token) {
+                try ModelStorage.commitGeneration(
+                    kind: .whisper,
+                    modelID: id,
+                    staging: staging
+                )
+            }
+            guard published else { return }
             if let i = whisperModels.firstIndex(where: { $0.id == id }) {
                 let complete = isWhisperDownloaded(id)
                 whisperModels[i].status = complete ? .downloaded : .error(L("model.download_incomplete"))
@@ -162,16 +184,23 @@ extension ModelCatalog {
         let watchdog = makeStallWatchdog(key: key, token: token, kind: .llm, modelID: id)
         let signal = DownloadProgressSignal()
 
+        let staging = ModelStorage.generationStaging(for: token)
+        defer { ModelStorage.removeGenerationStaging(staging) }
+
         do {
+            try ModelStorage.prepareGeneration(staging)
             let estimatedTotalBytes = estimatedLLMDownloadBytes(id) ?? 0
-            let repoDir = ModelStorage.hubModelRepoDir(id)
+            let repoDir = ModelStorage.hubModelRepoDir(
+                id,
+                downloadBase: staging.downloadBase
+            )
             let tracker = DownloadProgressTracker(
                 initialBytes: ModelStorage.directorySize(at: repoDir)
             )
-            _ = try await LLMModelFactory.shared.loadContainer(
-                from: MLXModelLoading.downloader,
-                using: MLXModelLoading.tokenizerLoader,
-                configuration: ModelConfiguration(id: id)
+            _ = try await MLXLMCommon.resolve(
+                configuration: ModelConfiguration(id: id),
+                from: MLXModelLoading.downloader(for: staging),
+                useLatest: false
             ) { [weak self] progress in
                 Task { @MainActor in
                     guard let self,
@@ -195,6 +224,30 @@ extension ModelCatalog {
             }
             watchdog.stop()
             try Task.checkCancellation()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
+            guard ModelStorage.llmRepoIsComplete(at: repoDir) else {
+                if let i = llmModels.firstIndex(where: { $0.id == id }) {
+                    llmModels[i].status = .error(L("model.download_incomplete"))
+                    llmModels[i].cacheSize = llmRepoSize(id)
+                    llmModels[i].downloadDetail = ""
+                }
+                return
+            }
+            let published = try downloadTasks.publishIfCurrent(key, token: token) {
+                try ModelStorage.commitGeneration(
+                    kind: .llm,
+                    modelID: id,
+                    staging: staging
+                )
+            }
+            guard published else { return }
+            // Resolve/download happened in staging. Load again from the
+            // published directory so this path proves that removing the Hub
+            // cache and generation root cannot strand a lazy model reader.
+            _ = try await LLMModelFactory.shared.loadContainer(
+                from: ModelStorage.hubModelRepoDir(id),
+                using: MLXModelLoading.tokenizerLoader
+            )
             guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = llmModels.firstIndex(where: { $0.id == id }) {
                 let complete = llmRepoIsComplete(id)
@@ -289,10 +342,10 @@ extension ModelCatalog {
 
     // MARK: - Download recovery
 
-    /// A download starts with concrete, model-scoped roots. On retry, stale
-    /// partial markers from a completed failed transfer are removed. A
-    /// cancelled generation keeps ownership until its dependency I/O returns;
-    /// only then may a retry reuse the live path.
+    /// A download starts with a token-scoped staging root. On retry, stale
+    /// partial markers from a completed failed transfer are removed from the
+    /// published/legacy cache layout, while a cancelled generation retains its
+    /// own staging root until its dependency I/O returns.
     func prepareCacheForRetry(
         kind: ModelDownloadKind,
         modelID: String,
