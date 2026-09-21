@@ -16,9 +16,21 @@
 | `bash -n scripts/ci-basic-checks.sh scripts/sdlc-checks.sh` | Pass | Shell harness syntax is valid |
 | Baseline full suite at `3442f83641869f912247bef796e624efd813605a` | Historical pass | 667 XCTest = 653 passed + 14 skipped, 0 failures; one Swift Testing case also passed. The 14 skips are not all live downloads: 4 are `OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`, while 10 are ANE model (1), Apple Speech (1), template probe (1), foreground bundle identity (1), Espresso fallback (1), prompt dump (1), Qwen native ASR (2), and streaming ASR (2). |
 | Baseline focused filter at `3442f83641869f912247bef796e624efd813605a` | Historical pass | 50 executed, 50 passed, 0 skipped, 0 failures across DownloadStallWatchdogTests (3), ModelDownloadFailureMessageTests (3), ModelDownloadRecoveryTests (10), ModelDownloadTasksTests (13), and UtilityTests (21). The earlier 48 figure is stale. |
-| Final focused/full rerun at `1cba5718aef0dd61254838fa77d8181cb4af820a` | Pass (macOS, Xcode 27) | Focused P1 counterexamples: 3 executed, 0 failures. Full suite: 670 XCTest executed, 14 skipped, 0 failures. Raw log: `mac-p34-1cba5718-verification.log`. |
-| Audit-grade startup mutation transcript at `1cba5718aef0dd61254838fa77d8181cb4af820a` | Pass (macOS, Xcode 27) | Executed `mac-p102-mutation-harness.sh` from independent checkout fixed at `1cba5718`. 4 focused test runs: Mutation A exited 1 (5 expected failures), restored A exited 0 (tree `d15b2c7b…`); Mutation B exited 1 (2 expected failures), restored B exited 0 (tree `d15b2c7b…`). 0 harness failures, final tree clean. Raw log: `mac-p102-mutation-harness.log` (SHA-256: `5b6ea6e1d45fec7a56d60513023ab0c3e305e6f152398b98ad3c68660e484240`). |
+| Final focused/full rerun at `1cba5718aef0dd61254838fa77d8181cb4af820a` | Pass (macOS 27.2, Xcode 27.0, Swift 6.4) | Focused P1 counterexamples: 3 executed, 0 failures. Full suite: 670 XCTest executed, 14 skipped, 0 failures. Raw log: `mac-p34-1cba5718-verification.log`. |
+| Audit-grade startup mutation transcript at `1cba5718aef0dd61254838fa77d8181cb4af820a` | Pass (macOS 27.2, Xcode 27.0, Swift 6.4) | Executed `mac-p102-mutation-harness.sh` from independent checkout fixed at `1cba5718`. 4 focused test runs: Mutation A exited 1 (5 expected failures), restored A exited 0 (tree `d15b2c7b…`); Mutation B exited 1 (2 expected failures), restored B exited 0 (tree `d15b2c7b…`). 0 harness failures, final tree clean. Raw log: `mac-p102-mutation-harness.log` (SHA-256: `5b6ea6e1d45fec7a56d60513023ab0c3e305e6f152398b98ad3c68660e484240`). |
 | Historical real network interrupted download → Resume → model load & inference (`OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`) | Historical pass | WhisperKit audio transcription (`en-sample.m4a` in 0.14s) & HubApi 278MB safetensors download + ModelContainer load (0.78s) + real text generation (1.62s) pass with `default.metallib`; prior raw logs are attributed to `3442f83641869f912247bef796e624efd813605a` (the earlier metallib-only log to `522947265e83f07c730b00c2130db5c45727de55`), not the current continuation SHA. |
+
+Toolchain provenance is taken from the raw logs, not from handoff prose:
+
+- `mac-p34-1cba5718-verification.log` records macOS 27.2, Xcode 27.0
+  (build `27A266a`), and Apple Swift 6.4
+  (`swiftlang-6.4.0.34.1`, `clang-2100.3.34.1`).
+- `mac-p102-mutation-harness.log`, captured later on the same host, records the
+  same macOS 27.2, Xcode 27.0 (`27A266a`), and Swift 6.4 toolchain. The handoff
+  claim of Xcode 16.2 / Swift 6.0.3 is a transcription error and is not execution
+  evidence.
+- Earlier live-download and model-loading results retain their original commit
+  and log attribution below; this correction does not relabel historical runs.
 
 The focused tests retain the exact Whisper scope, sibling preservation,
 flat-cache completion, duplicate retry deduplication, delete serialization, and
@@ -98,6 +110,7 @@ Each piece of evidence maps to its originating commit:
 - `1cba5718aef0dd61254838fa77d8181cb4af820a`: fixed code and test tree used by the final macOS build, focused/full regression, Release build, live Whisper run, and startup mutation harness. Whole tree `d15b2c7b02262bf4823646903730122dba90a56f`; `Sources` tree `ca355f4ff185ece0cc99a3c73cb9921510018ccc`; `Tests` tree `7d69e1226b6a109bffc5ae3c3b0a83dace33c9d3`.
 - `332e38dafabbe46f3514514a21aba5fe7163ce5d`: initial documentation of the measured p3/p4 macOS results; no Sources/Tests changes.
 - `263071e0885fc0e9245c35794e850fca2c76dadb`: documentation-only continuation recording the rerun totals, skip taxonomy, mutation summary, and release-owner resource decision; Sources/Tests remain identical to `1cba5718`.
+- `249eca3fd79df4bced0ec42c55baba7dcb383e47`: documentation-only follow-up recording the audit-grade mutation transcript and measured results; Sources/Tests remain identical to `1cba5718`.
 
 ## Acceptance criteria
 
@@ -135,7 +148,8 @@ Each piece of evidence maps to its originating commit:
   directories are removed) and confirmed by mutation: disabling the
   promotion/backup scan makes it fail (3 vs 5 removed, leftovers remain).
 - Startup scan/delete responsiveness — **pass at
-  `1cba5718aef0dd61254838fa77d8181cb4af820a`** (macOS, Xcode 27): the
+  `1cba5718aef0dd61254838fa77d8181cb4af820a`** (macOS 27.2, Xcode 27.0,
+  Swift 6.4): the
   `ModelCatalog` initializer seam runs the detached helper and the
   enter/exit-barrier counterexample observes a MainActor heartbeat while cleanup
   is inside its window. Mutation A (synchronous initializer cleanup) and
@@ -168,7 +182,8 @@ Each piece of evidence maps to its originating commit:
   `testApplicationCancelAllowsResumeBeforeOldWriterReturns` remains an
   arbitration-level test, not the application-entry proof.
 - `swift test` execution — **pass at
-  `1cba5718aef0dd61254838fa77d8181cb4af820a` (macOS, Xcode 27)**: 670 XCTest
+  `1cba5718aef0dd61254838fa77d8181cb4af820a` (macOS 27.2, Xcode 27.0,
+  Swift 6.4)**: 670 XCTest
   executed, 14 skipped, 0 failures. Historical baseline at
   `3442f83641869f912247bef796e624efd813605a`: the
   `ModelDownloadTasksTests|UtilityTests` run is 34 executed, 0 failures; the
@@ -184,19 +199,16 @@ Each piece of evidence maps to its originating commit:
 
 ### Startup wiring mutation evidence recapture
 
-The original mutation summary records both mutation exits as 1 and both restored
-runs as 0, with final tree `d15b2c7b02262bf4823646903730122dba90a56f`.
-It did not retain the failing XCTest stdout/stderr, so an audit-grade transcript
-is still pending. This is an evidence-quality follow-up, not a product-code or
-full-regression rerun.
-
-Run the attached `mac-p102-mutation-harness.sh`. It creates an independent clean
-checkout fixed at `1cba5718aef0dd61254838fa77d8181cb4af820a`, runs exactly four
-focused invocations (Mutation A, restored A, Mutation B, restored B), and writes
-one `mac-p102-mutation-harness.log` containing the exact commands, diffs, complete
-combined stdout/stderr, original test exit codes, elapsed time, assertion-source
-checks, and before/after status/tree. It exits non-zero if a mutation does not
-fail at its target assertions or either restoration differs from the fixed tree.
+The original mutation summary recorded both mutation exits as 1 and both
+restored runs as 0, but did not retain the failing XCTest stdout/stderr. The
+audit-grade follow-up is now complete: `mac-p102-mutation-harness.sh` ran from an
+independent clean checkout fixed at
+`1cba5718aef0dd61254838fa77d8181cb4af820a`, executed exactly four focused
+invocations (Mutation A, restored A, Mutation B, restored B), and captured the
+commands, diffs, complete combined stdout/stderr, original test exit codes,
+elapsed time, assertion-source checks, and before/after status/tree in one log.
+This was an evidence-quality follow-up, not a product-code or full-regression
+rerun.
 
 Measured execution results (`mac-p102-mutation-harness.log`):
 
@@ -210,7 +222,12 @@ Measured execution results (`mac-p102-mutation-harness.log`):
 ## Residual risk
 
 - Write safety is guaranteed by token-scoped isolation and atomic commit rejection; Cancelled downloads immediately start new generations without waiting for old writers to exit.
-- Cancelled transfers retain background Task and staging roots until underlying URLSession/I/O returns; in-process background network/staging resource contention when old I/O hangs permanently remains an R&D concern.
+- **Release-owner decision still open:** cancelled transfers retain their
+  background Task and staging roots until underlying URLSession/I/O returns.
+  Repeated permanent hangs can accumulate tasks and staging directories until
+  process restart. Write isolation and immediate retry remain intact, but the
+  release owner must either accept this dependency-layer risk or require a
+  resource ceiling/process isolation.
 - The 120 s stall threshold is a judgment call; a very slow link with no progress reports for over two minutes is marked paused and resumable.
 - External CI and PR merge gate remain subject to runner completion and human review approval.
 
