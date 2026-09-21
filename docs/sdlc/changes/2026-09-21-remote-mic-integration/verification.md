@@ -11,44 +11,68 @@
 |---|---|---|
 | `bash scripts/ci-basic-checks.sh` | Pass | "Basic CI checks passed." (localization parity, plists, resources) |
 | `bash scripts/sdlc-checks.sh` | Pass | "SDLC checks passed." |
-| `swift build` | Pass | `Build complete! (32.00s)` with the Command Line Tools toolchain |
-| `swift test` (full suite) | Pass | 643 tests, 10 skipped, 0 failures |
-| `swift test --filter RemoteMicProtocolTests` | Pass | 10 tests, 0 failures |
+| `swift build` | Pass | `Build complete!` with the Command Line Tools toolchain |
+| `swift test` (full suite) | Pass | 653 tests, 10 skipped, 0 failures |
+| `swift test --filter RemoteMic` | Pass | 20 tests, 0 failures |
 | Real Xiaomi remote end-to-end | Not run | No hardware in this environment |
 
 Test command note: this machine has no downloadable Metal toolchain, so the
 Xcode build backend cannot compile `mlx-swift`'s Metal sources; the suite ran
 with the Xcode toolchain and `--build-system native`.
 
+### Changes after the independent review of the first head
+
+The review of the initial implementation raised four code blockers; the
+licensing question is a human/CTO item and is untouched here.
+
+| Finding | Status | What changed |
+|---|---|---|
+| P0: voice key not wired to Utter's hotkey | Fixed | The remote's `MIC_OPEN_REQUEST`/`STREAM_START` on the ATVV control channel now drive `AppDelegate.startRecording`; `STREAM_STOP` and disconnect drive `stopRecording`. No HID F5→Fn remap or Input Monitoring permission is needed. |
+| P0: fallback leaked wanted state | Fixed | `RemoteMicWantedState` holds the want; a failed start calls `tearDownFailedStart()`, clearing the callback, ending capture, and dropping the temp file, so a later readiness cannot open the remote mic mid-system-session. Covered by `RemoteMicWantedStateTests`. |
+| P1: handshake had no state gates | Fixed | `RemoteMicHandshake` requests capabilities only after both notifications are confirmed via `didUpdateNotificationStateFor`, once per attempt; connection and initialization timeouts (`connectionTimeout` 10 s, `initializationTimeout` 8 s) bound each attempt; `didFailToConnect` recovers; a monotonic `generation` rejects late callbacks. Covered by `RemoteMicHandshakeTests`. |
+| P1: only pure protocol tests | Addressed in part | The gate and wanted-state are now pure, injectable types with deterministic tests (20 total). The CoreBluetooth transport itself still needs a real device. |
+
 ## Acceptance criteria
 
 - Setting off keeps the existing path — pass by construction
   (`AudioCaptureManager.start` only consults the remote when
-  `remoteMicEnabled`); the existing 276-line file is otherwise unchanged and the
-  full suite passes.
+  `remoteMicEnabled`); the full suite passes.
 - Setting on with a connected remote uses the decoded stream — implemented, but
   **not verified**: requires the physical remote.
 - Setting on with no remote falls back to the system input — pass by
   construction (`RemoteMicCaptureManager.start` returns false unless the bridge
-  is `.ready`).
-- ATVV parsing/decoding covered by deterministic tests — pass
-  (`RemoteMicProtocolTests`, 10 tests).
+  is `.ready`), and the failure path now provably leaves no residue.
+- Voice key starts and stops recording — implemented through the control-channel
+  adoption path; **not verified on hardware**.
+- Handshake ordering and timeouts covered by deterministic tests — pass.
 - Localization parity and check scripts — pass.
 
 ## Residual risk
 
-- **No hardware verification.** CoreBluetooth scan/connect/handshake, the
-  remote's voice-key timing, and reconnect have not been exercised against a
-  real device. This is the largest gap and must be closed by an independent
-  verifier with the remote before the setting is enabled for users.
-- **Licensing.** remote-mic-app is GPL-3.0-only; this is written as an
-  independent implementation of the open ATVV profile and IMA/DVI ADPCM format,
-  but a human must accept that position.
+- **No hardware verification.** Pairing, scan/connect, the two notification
+  subscriptions, the voice key press/release, first and last frame, session
+  teardown on disconnect, reconnect, and real 16 kHz audio all still need a
+  person with the remote. This is the largest gap.
+- **Licensing.** `IchenDEV/remote-mic-app` is GPL-3.0-only and the reviewer found
+  the protocol implementation structurally close to it. A human must resolve
+  attribution/licensing before any distribution; the setting stays default off.
 - The bridge assumes CoreBluetooth callbacks on the main queue and main-thread
-  callers, matching the existing capture style; a future off-main caller would
-  need the isolation tightened.
+  callers, matching the existing capture style.
 - `AudioCaptureActivity` thresholds were tuned for the built-in mic; the remote
   path uses the same gate with a user-adjustable gain.
+
+### Handover steps for the hardware pass
+
+1. Build and run: `bash scripts/build-and-run.sh --verify`.
+2. Pair the remote in System Settings → Bluetooth.
+3. Settings → General → enable "Xiaomi remote wireless mic"; confirm the state
+   line reaches connected.
+4. Hold the remote's voice key and speak; confirm Utter records and inserts text.
+5. Release the key; confirm recording stops.
+6. Disconnect the remote mid-session; confirm the session ends cleanly and the
+   state returns to scanning/retrying.
+7. Reconnect; confirm a new session works.
+8. Capture the app log and, if possible, a screenshot of the settings state.
 
 ## Decision
 

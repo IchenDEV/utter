@@ -26,7 +26,7 @@ final class RemoteMicCaptureManager {
     private var audioFile: AVAudioFile?
     private var levelCallback: ((Float) -> Void)?
     private var bufferCallback: ((AVAudioPCMBuffer) -> Void)?
-    private var isRunning = false
+    private(set) var isRunning = false
 
     init(bridge: XiaomiRemoteMicBridge = .shared) {
         self.bridge = bridge
@@ -81,13 +81,29 @@ final class RemoteMicCaptureManager {
         bridge.onSamples = { [weak self] samples in
             self?.ingest(samples)
         }
+
+        // If the handshake regressed between the readiness check and here, undo
+        // everything: a half-started session must not leave the bridge wanting
+        // capture, or a later readiness would open the remote microphone after
+        // the caller already fell back to the system input.
         guard bridge.beginCapture() else {
-            audioFile = nil
-            lastRecordingURL = nil
+            tearDownFailedStart()
             return false
         }
         isRunning = true
         return true
+    }
+
+    /// Releases every trace of an attempted start so the bridge cannot adopt a
+    /// session the caller has already replaced with the system input.
+    private func tearDownFailedStart() {
+        bridge.onSamples = nil
+        bridge.endCapture()
+        audioFile = nil
+        lastRecordingURL = nil
+        levelCallback = nil
+        bufferCallback = nil
+        isRunning = false
     }
 
     func stop() {
@@ -99,6 +115,10 @@ final class RemoteMicCaptureManager {
         levelCallback = nil
         bufferCallback = nil
     }
+
+    /// Mirrors `AudioCaptureManager.lastActivity` semantics: an empty session
+    /// must not report meaningful audio.
+    var hasRecordedActivity: Bool { lastActivity.frameCount > 0 }
 
     private func ingest(_ samples: [Int16]) {
         guard isRunning, !samples.isEmpty,

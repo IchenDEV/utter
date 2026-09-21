@@ -28,14 +28,32 @@ enum RemoteMicBridgeState: Equatable {
     }
 }
 
+/// The two CoreBluetooth notifications the ATVV handshake needs before the host
+/// may request capabilities.
+enum RemoteMicSubscription: Hashable {
+    case audio
+    case control
+}
+
 /// CoreBluetooth central that connects a Xiaomi Bluetooth Remote 2 Pro over the
 /// ATVV profile and turns its audio notifications into PCM frames.
 ///
 /// The remote keeps its own microphone stream private to the ATVV channel; this
 /// bridge decodes that stream in-process, so Utter needs neither the vendor's
 /// virtual audio driver nor a second application.
+///
+/// Handshake order is enforced: discover characteristics, subscribe to both the
+/// audio and control notifications, wait for CoreBluetooth to confirm every
+/// subscription, and only then send `GET_CAPABILITIES`. A connection or
+/// initialization that stalls past its timeout is failed and retried instead of
+/// leaving the UI in `.connecting` forever.
 final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     static let shared = XiaomiRemoteMicBridge()
+
+    /// How long a connection, or the initialization sequence after it, may take
+    /// before the attempt is failed and retried.
+    static let connectionTimeout: TimeInterval = 10
+    static let initializationTimeout: TimeInterval = 8
 
     @Published private(set) var state: RemoteMicBridgeState = .idle
 
@@ -43,21 +61,33 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     var onSamples: (([Int16]) -> Void)?
     /// Fired when the remote stops streaming, including unexpected disconnects.
     var onStreamStopped: (() -> Void)?
+    /// Fired when the remote's voice key starts a voice session. The remote
+    /// signals this on the ATVV control channel (`MIC_OPEN_REQUEST`), so the
+    /// voice key drives Utter's recording without a separate HID key remap or an
+    /// Input Monitoring permission.
+    var onVoiceKeyPressed: (() -> Void)?
+    /// Fired when the remote's voice key ends the session.
+    var onVoiceKeyReleased: (() -> Void)?
 
     private var central: CBCentralManager?
     private var peripheral: CBPeripheral?
     private var transmitCharacteristic: CBCharacteristic?
     private var audioCharacteristic: CBCharacteristic?
     private var controlCharacteristic: CBCharacteristic?
+    private var handshake = RemoteMicHandshake()
 
     private var capabilities = RemoteMicCapabilities.default
-    private var capabilitiesConfirmed = false
     private var microphoneOpened = false
-    private var streaming = false
-    private var captureWanted = false
+    private var wanted = RemoteMicWantedState()
     private var reconnectAttempts = 0
     private var reconnectTask: Task<Void, Never>?
+    private var timeoutTask: Task<Void, Never>?
     private var isActive = false
+
+    /// Monotonic attempt counter. Every callback checks that it still belongs to
+    /// the current attempt, so a late callback from a failed attempt cannot
+    /// advance the replacement's handshake.
+    private var generation: UInt64 = 0
 
     private var accumulator = RemoteMicFrameAccumulator()
     private var decoder = RemoteMicADPCMDecoder()
@@ -84,9 +114,10 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
 
     func deactivate() {
         isActive = false
-        captureWanted = false
-        reconnectTask?.cancel()
-        reconnectTask = nil
+        _ = wanted.release()
+        cancelReconnect()
+        cancelTimeout()
+        generation &+= 1
         closeMicrophoneIfNeeded()
         resetStream()
         if let peripheral, peripheral.state == .connected {
@@ -100,18 +131,22 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     /// Audio is only forwarded while a session is wanted.
     @discardableResult
     func beginCapture() -> Bool {
-        captureWanted = true
         if !isActive { activate() }
-        guard peripheral?.state == .connected, capabilitiesConfirmed else { return false }
+        guard peripheral?.state == .connected, handshake.isReady else {
+            // Not usable yet: leave no want behind so a later readiness does not
+            // silently open the remote microphone for a session that fell back
+            // to the system input.
+            return false
+        }
+        wanted.want()
         openMicrophoneIfNeeded()
         return true
     }
 
     func endCapture() {
-        guard captureWanted else { return }
-        captureWanted = false
+        guard wanted.release() else { return }
         closeMicrophoneIfNeeded()
-        if !streaming {
+        if !wanted.isStreaming {
             resetStream()
             onStreamStopped?()
         }
@@ -147,7 +182,7 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     }
 
     private func resetStream() {
-        streaming = false
+        wanted.reset()
         accumulator.reset()
         pendingSync = nil
         decoder.reset()
@@ -157,24 +192,19 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         accumulator.reset()
         pendingSync = nil
         decoder.reset()
-        guard !streaming else { return }
-        streaming = true
+        guard !wanted.isStreaming else { return }
+        wanted.beginStreaming()
     }
 
-    private func stopStreaming() {
-        guard streaming else { return }
-        resetStream()
-        onStreamStopped?()
-    }
-
-    // MARK: - Scanning
+    // MARK: - Scanning and connection
 
     private func beginScan() {
         guard let central else { return }
         guard central.state == .poweredOn else { return }
+        generation &+= 1
         resetPeripheral()
         resetStream()
-        capabilitiesConfirmed = false
+        handshake.reset()
         capabilities = .default
         state = .scanning
         central.scanForPeripherals(
@@ -190,9 +220,47 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         controlCharacteristic = nil
     }
 
+    private func cancelReconnect() {
+        reconnectTask?.cancel()
+        reconnectTask = nil
+    }
+
+    private func cancelTimeout() {
+        timeoutTask?.cancel()
+        timeoutTask = nil
+    }
+
+    /// Fails the current attempt after `seconds` unless `isSatisfied` says the
+    /// step completed. Runs on the main actor so the check races nothing.
+    private func startTimeout(
+        seconds: TimeInterval,
+        generation expected: UInt64,
+        reason: @escaping @autoclosure () -> String,
+        isSatisfied: @escaping () -> Bool
+    ) {
+        cancelTimeout()
+        timeoutTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            guard let self, !Task.isCancelled, self.generation == expected else { return }
+            guard !isSatisfied() else { return }
+            self.failAttempt(reason: reason())
+        }
+    }
+
+    private func failAttempt(reason: String) {
+        state = .failed(reason: reason)
+        resetStream()
+        closeMicrophoneIfNeeded()
+        if let peripheral, peripheral.state == .connected {
+            central?.cancelPeripheralConnection(peripheral)
+        }
+        resetPeripheral()
+        scheduleReconnect()
+    }
+
     private func scheduleReconnect() {
         guard isActive else { return }
-        reconnectTask?.cancel()
+        cancelReconnect()
         reconnectAttempts += 1
         let delay = min(30.0, pow(2.0, Double(min(reconnectAttempts, 5))))
         reconnectTask = Task { @MainActor [weak self] in
@@ -206,15 +274,20 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     }
 
     fileprivate func handleDisconnect() {
-        if streaming || captureWanted {
+        let wasStreaming = wanted.isActive
+        if wasStreaming {
             resetStream()
             onStreamStopped?()
+            onVoiceKeyReleased?()
         }
-        capabilitiesConfirmed = false
+        handshake.reset()
         microphoneOpened = false
+        cancelTimeout()
         resetPeripheral()
         if isActive { scheduleReconnect() }
     }
+
+    // MARK: - Control protocol
 
     fileprivate func handleControl(_ data: Data) {
         let bytes = Array(data)
@@ -223,36 +296,49 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         switch opcode {
         case .capabilities:
             guard let parsed = RemoteMicCapabilities.parse(data) else {
-                state = .failed(reason: L("remote_mic.error.invalid_response"))
+                failAttempt(reason: L("remote_mic.error.invalid_response"))
                 return
             }
             capabilities = parsed
             guard RemoteMicProtocol.supportsAudio(sampleRate: parsed.sampleRate) else {
-                state = .failed(reason: L("remote_mic.error.unsupported_codec"))
-                closeMicrophoneIfNeeded()
+                failAttempt(reason: L("remote_mic.error.unsupported_codec"))
                 return
             }
-            capabilitiesConfirmed = true
+            guard handshake.confirmCapabilities(parsed) else {
+                failAttempt(reason: L("remote_mic.error.unsupported_codec"))
+                return
+            }
+            cancelTimeout()
             reconnectAttempts = 0
             state = .ready(deviceName: peripheral?.name ?? "MI RC")
-            if captureWanted { openMicrophoneIfNeeded() }
+            if wanted.isWanted { openMicrophoneIfNeeded() }
         case .microphoneOpenRequest:
+            guard handshake.isReady else { return }
+            // The remote is asking to open its microphone because the user
+            // pressed the voice key; the session is only adopted while the
+            // feature is active.
+            guard isActive else { return }
+            onVoiceKeyPressed?()
             openMicrophoneIfNeeded()
         case .streamStart:
-            guard captureWanted else { return }
             if bytes.count >= 3 {
                 let codec = bytes[2]
                 capabilities.selectedCodec = codec
                 capabilities.sampleRate = codec == 0x02 ? 16_000 : 8_000
             }
             guard RemoteMicProtocol.supportsAudio(sampleRate: capabilities.sampleRate) else {
-                state = .failed(reason: L("remote_mic.error.unsupported_codec"))
+                failAttempt(reason: L("remote_mic.error.unsupported_codec"))
                 return
             }
+            // Audio can start without the host having asked (a race between the
+            // voice key and the open request); still adopt the session.
+            if !wanted.isWanted { onVoiceKeyPressed?() }
+            guard wanted.isWanted else { return }
             startStreaming()
         case .streamStop:
             resetStream()
-            if captureWanted { openMicrophoneIfNeeded() }
+            onVoiceKeyReleased?()
+            if wanted.isWanted { openMicrophoneIfNeeded() }
         case .sync:
             guard bytes.count >= 7 else { return }
             let bits = UInt16(bytes[4]) << 8 | UInt16(bytes[5])
@@ -262,8 +348,8 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     }
 
     fileprivate func handleAudio(_ data: Data) {
-        guard captureWanted, capabilitiesConfirmed else { return }
-        if !streaming { startStreaming() }
+        guard wanted.isActive, handshake.isReady else { return }
+        if !wanted.isStreaming { startStreaming() }
         let frames = accumulator.append(data, frameSize: capabilities.frameSize)
         for frame in frames {
             if let pendingSync {
@@ -277,6 +363,20 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
             onSamples?(samples)
         }
     }
+
+    /// Sends the capability request only once both notify subscriptions are
+    /// confirmed, and only once per attempt.
+    fileprivate func requestCapabilitiesIfReady() {
+        guard handshake.shouldRequestCapabilities else { return }
+        handshake.markCapabilitiesRequested()
+        startTimeout(
+            seconds: Self.initializationTimeout,
+            generation: generation,
+            reason: L("remote_mic.error.initialization_timeout"),
+            isSatisfied: { [weak self] in self?.handshake.isReady ?? false }
+        )
+        _ = write(RemoteMicProtocol.getCapabilities)
+    }
 }
 
 extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
@@ -285,10 +385,15 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         case .poweredOn:
             beginScan()
         case .unauthorized:
+            cancelTimeout()
+            cancelReconnect()
             state = .unauthorized
         case .unsupported:
+            cancelTimeout()
+            cancelReconnect()
             state = .unsupported
         default:
+            cancelTimeout()
             state = .idle
         }
     }
@@ -304,12 +409,31 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         peripheral.delegate = self
         central.stopScan()
         state = .connecting
+        let attempt = generation
+        startTimeout(
+            seconds: Self.connectionTimeout,
+            generation: attempt,
+            reason: L("remote_mic.error.connection_timeout"),
+            isSatisfied: { [weak self] in
+                guard let self else { return true }
+                return self.generation != attempt || self.handshake.capabilitiesRequested
+            }
+        )
         central.connect(peripheral, options: nil)
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         guard peripheral === self.peripheral else { return }
         peripheral.discoverServices([serviceUUID])
+    }
+
+    func centralManager(
+        _ central: CBCentralManager,
+        didFailToConnect peripheral: CBPeripheral,
+        error: Error?
+    ) {
+        guard peripheral === self.peripheral else { return }
+        failAttempt(reason: L("remote_mic.error.connect_failed"))
     }
 
     func centralManager(
@@ -326,7 +450,7 @@ extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard peripheral === self.peripheral else { return }
         guard let service = peripheral.services?.first(where: { $0.uuid == serviceUUID }) else {
-            state = .failed(reason: L("remote_mic.error.service_missing"))
+            failAttempt(reason: L("remote_mic.error.service_missing"))
             return
         }
         peripheral.discoverCharacteristics(
@@ -350,6 +474,7 @@ extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
             switch characteristic.uuid.uuidString.uppercased() {
             case transmit:
                 transmitCharacteristic = characteristic
+                handshake.registerCharacteristic(.transmit)
             case audio:
                 audioCharacteristic = characteristic
                 peripheral.setNotifyValue(true, for: characteristic)
@@ -363,10 +488,29 @@ extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
         guard transmitCharacteristic != nil,
               audioCharacteristic != nil,
               controlCharacteristic != nil else {
-            state = .failed(reason: L("remote_mic.error.characteristic_missing"))
+            failAttempt(reason: L("remote_mic.error.characteristic_missing"))
             return
         }
-        _ = write(RemoteMicProtocol.getCapabilities)
+        // Capabilities wait for didUpdateNotificationStateFor on both channels.
+        requestCapabilitiesIfReady()
+    }
+
+    func peripheral(
+        _ peripheral: CBPeripheral,
+        didUpdateNotificationStateFor characteristic: CBCharacteristic,
+        error: Error?
+    ) {
+        guard peripheral === self.peripheral, error == nil else { return }
+        guard characteristic.isNotifying else { return }
+        switch characteristic.uuid.uuidString.uppercased() {
+        case RemoteMicProtocol.audioUUID.uppercased():
+            handshake.confirmSubscription(.audio)
+        case RemoteMicProtocol.controlUUID.uppercased():
+            handshake.confirmSubscription(.control)
+        default:
+            return
+        }
+        requestCapabilitiesIfReady()
     }
 
     func peripheral(

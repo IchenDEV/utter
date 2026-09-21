@@ -15,6 +15,7 @@ extension AppDelegate {
                 self?.applyRemoteMicSetting(enabled)
             }
             .store(in: &cancellables)
+        observeRemoteMicVoiceKey()
     }
 
     private func applyRemoteMicSetting(_ enabled: Bool) {
@@ -22,6 +23,21 @@ extension AppDelegate {
             RemoteMicCaptureManager.shared.activate()
         } else {
             RemoteMicCaptureManager.shared.deactivate()
+        }
+    }
+
+    /// The remote's voice key arrives on the ATVV control channel while the
+    /// feature is active, so it drives the same recording path as the configured
+    /// hotkey. Holding the key records; releasing it stops.
+    private func observeRemoteMicVoiceKey() {
+        let bridge = XiaomiRemoteMicBridge.shared
+        bridge.onVoiceKeyPressed = { [weak self] in
+            guard let self, AppSettings.shared.remoteMicEnabled else { return }
+            self.startRecording(action: .dictation)
+        }
+        bridge.onVoiceKeyReleased = { [weak self] in
+            guard let self, AppSettings.shared.remoteMicEnabled else { return }
+            self.stopRecording()
         }
     }
 }

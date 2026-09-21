@@ -179,6 +179,9 @@
 "remote_mic.error.service_missing" = "The remote does not expose the wireless-mic service";
 "remote_mic.error.characteristic_missing" = "The remote is missing a wireless-mic channel";
 "remote_mic.error.unsupported_codec" = "The remote did not offer 16 kHz voice audio";
+"remote_mic.error.connection_timeout" = "Connecting to the remote timed out; retrying";
+"remote_mic.error.initialization_timeout" = "The remote voice channel did not finish initializing; retrying";
+"remote_mic.error.connect_failed" = "Could not connect to the remote; retrying";
 "settings.permissions" = "Permissions";
 "settings.history_retention" = "History retention";
 "settings.developer_interface" = "Developer interface";

@@ -179,6 +179,9 @@
 "remote_mic.error.service_missing" = "遥控器缺少无线麦服务";
 "remote_mic.error.characteristic_missing" = "遥控器缺少无线麦通道";
 "remote_mic.error.unsupported_codec" = "遥控器未提供 16 kHz 语音编码";
+"remote_mic.error.connection_timeout" = "连接遥控器超时，正在重试";
+"remote_mic.error.initialization_timeout" = "遥控器语音通道初始化超时，正在重试";
+"remote_mic.error.connect_failed" = "无法连接遥控器，正在重试";
 "settings.permissions" = "权限管理";
 "settings.history_retention" = "历史保留时长";
 "settings.developer_interface" = "开发者接口";

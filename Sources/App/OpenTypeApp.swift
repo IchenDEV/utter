@@ -139,7 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
 
-    private func startRecording(action: HotkeyAction) {
+    func startRecording(action: HotkeyAction) {
         if integrationSessionCoordinator.isBusy {
             pipeline?.showBusyHint()
             return
@@ -152,7 +152,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         Task { await pipeline?.start(mode: mode, targetApp: previousApp) }
     }
 
-    private func stopRecording() {
+    func stopRecording() {
         Task { await pipeline?.stop(targetApp: previousApp) }
     }
 

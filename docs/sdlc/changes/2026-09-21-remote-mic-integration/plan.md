@@ -9,6 +9,10 @@
 
 - [x] `RemoteMicProtocol`: UUIDs, opcodes, capability parsing, ADPCM decoder,
       frame accumulator, PCM smoothing/gain.
+- [x] `RemoteMicHandshake`: subscription gate, request-once, readiness.
+- [x] `RemoteMicWantedState`: no residue after a failed start.
+- [x] Voice key on the ATVV control channel drives Utter's recording path.
+- [x] Connection/initialization timeouts, `didFailToConnect`, generation guard.
 - [x] `XiaomiRemoteMicBridge`: CoreBluetooth central, ATVV handshake, streaming,
       reconnect, observable state.
 - [x] `RemoteMicCaptureManager`: WAV/activity/level/buffer capture surface.
@@ -18,7 +22,8 @@
 - [x] `AppSettings.remoteMicEnabled` / `remoteMicGainDB` with persistence.
 - [x] Settings toggle, live state, gain; `AppDelegate` activate/deactivate.
 - [x] `NSBluetoothAlwaysUsageDescription` and the Bluetooth entitlement.
-- [x] en/zh-Hans strings and `RemoteMicProtocolTests`.
+- [x] en/zh-Hans strings, `RemoteMicProtocolTests`, `RemoteMicHandshakeTests`,
+      `RemoteMicWantedStateTests`.
 
 ## Verification plan
 

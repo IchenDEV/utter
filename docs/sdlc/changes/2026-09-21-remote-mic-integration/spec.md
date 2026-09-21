@@ -33,6 +33,14 @@ size. Audio notifications are IMA/DVI ADPCM nibbles that decode to 16 kHz mono
   audio, and republishes state through `ObservableObject`. Reconnects with
   exponential backoff while the feature is active. All callbacks arrive on the
   main thread, which matches the codebase's existing non-isolated capture style.
+  The handshake is ordered and bounded: `RemoteMicHandshake` only allows the
+  capability request after both notifications are confirmed by
+  `didUpdateNotificationStateFor`, a connection and an initialization timeout
+  bound each attempt, `didFailToConnect` recovers, and a monotonic `generation`
+  rejects late callbacks from a failed attempt.
+- `RemoteMicWantedState` — the "does a session want audio" invariant, shared by
+  the bridge and the capture manager so a failed start cannot leave a latent
+  want that a later readiness would act on.
 - `RemoteMicCaptureManager` — mirrors the capture surface of
   `AudioCaptureManager`: temp 16 kHz mono WAV, `AudioCaptureActivity`, level
   callback, streamed `AVAudioPCMBuffer`s.
@@ -51,6 +59,13 @@ the bridge; `applicationWillTerminate` deactivates it. The General tab adds the
 toggle, a live connection state, and the gain slider, and disables the system
 device picker while the remote is enabled.
 
+The remote's voice key arrives on the ATVV control channel
+(`MIC_OPEN_REQUEST`/`STREAM_START`), so `AppDelegate` maps it onto the same
+`startRecording`/`stopRecording` path the configured hotkey uses. Holding the
+remote key records through Utter; releasing it stops. This avoids a separate
+device-level HID F5→Fn remap and the Input Monitoring permission such a remap
+would need.
+
 ## Safety and failure modes
 
 - Default off. Bluetooth is only touched once the user enables the setting, so
@@ -64,14 +79,21 @@ device picker while the remote is enabled.
   `AudioCaptureManager` falls back to the system input.
 - Disconnect or stream stop clears the decoder/accumulator and drops the
   partial frame, so a later session cannot inherit stale ADPCM state.
+- A start that fails after wanting audio tears down the callback, the want, and
+  the temp file, so a system-input fallback cannot be hijacked by a later
+  readiness.
 
 ## Test strategy
 
 `RemoteMicProtocolTests` covers capability parsing (v1.0 and 8 kHz rejection),
 control command construction, ADPCM nibble order and cross-frame predictor
 continuity with sync reset, Int16 clamping, frame accumulation, and PCM
-smoothing/gain. Bridge and CoreBluetooth behavior need a real remote; the
-verification artifact records that as residual risk.
+smoothing/gain. `RemoteMicHandshakeTests` covers the subscription gate (no
+capability request before both notifications are confirmed), the
+request-once-per-attempt rule, 8 kHz rejection, reset isolation, and readiness.
+`RemoteMicWantedStateTests` covers the fallback invariant. CoreBluetooth
+transport behavior still needs a real remote; the verification artifact records
+that as residual risk.
 
 ## Rollout and rollback
 
