@@ -130,7 +130,7 @@ extension ModelManagementView {
                         action.model.displayName
                     )),
                     primaryButton: .destructive(Text(L("common.delete"))) {
-                        delete(action.model, isActive: action.isActive, type: action.type)
+                        Task { await delete(action.model, isActive: action.isActive, type: action.type) }
                     },
                     secondaryButton: .cancel()
                 )
@@ -143,7 +143,7 @@ extension ModelManagementView {
                     ModelCatalog.formatBytes(action.model.cacheSize)
                 )),
                 primaryButton: .destructive(Text(L("common.delete"))) {
-                    delete(action.model, isActive: action.isActive, type: action.type)
+                    Task { await delete(action.model, isActive: action.isActive, type: action.type) }
                 },
                 secondaryButton: .cancel()
             )

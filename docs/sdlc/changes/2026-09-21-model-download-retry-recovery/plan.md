@@ -9,22 +9,24 @@
 
 - [x] Add `ModelDownloadRecovery` with the pure path seam and marker cleanup.
 - [x] Add Hugging Face cache-root resolution to `ModelStorage`.
-- [x] Give `ModelDownloadTasks` a run token, `isCurrent`, and forgetting cancel.
+- [x] Give `ModelDownloadTasks` a run token, `isCurrent`, and generation-aware
+      cancellation.
 - [x] Purge stale markers on retry; keep resume for a fresh download.
 - [x] Make `cancelDownload` immediately mark the model paused.
 - [x] Add `DownloadStallWatchdog` and wire it into all three download paths.
 - [x] Purge partial markers when deleting a model.
 - [x] Add `model.download_failed_stalled` to both localizations.
 - [x] Add unit tests for recovery, the retry gate, and the watchdog.
-- [x] Keep one writer per model: a retry waits for a cancelled transfer to exit.
+- [x] Keep one live writer per model and isolate cancelled generations before an
+      immediate retry; defer quarantine cleanup until retired I/O exits.
 - [x] Scope Whisper partial cleanup to the requested variant.
 - [x] Treat only real byte/fraction growth as download progress.
 
 ## Verification plan
 
-- [x] `bash scripts/ci-basic-checks.sh`
+- [ ] `bash scripts/ci-basic-checks.sh` (requires the macOS Swift toolchain)
 - [x] `bash scripts/sdlc-checks.sh`
-- [x] `swift test` (full suite)
+- [ ] `swift test` (full suite; requires the macOS Swift toolchain)
 - [ ] Release-style `bash scripts/build-app.sh` on a machine with the Metal
       toolchain (CI `SDLC Gate`), not available in this environment.
 - [ ] Real interrupted-download retry on a networked machine. Recipe: start a

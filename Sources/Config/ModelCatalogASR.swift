@@ -83,12 +83,7 @@ extension ModelCatalog {
             return
         }
 
-        if asrModels[idx].status.isError {
-            let purged = ModelDownloadRecovery.purgePartialArtifacts(kind: .asr, modelID: id)
-            if !purged.isEmpty {
-                Log.info("[ModelCatalog] Cleared \(purged.removedFiles) stale download file(s) for \(id)")
-            }
-        }
+        prepareCacheForRetry(kind: .asr, modelID: id, status: asrModels[idx].status)
 
         asrModels[idx].status = .downloading
         asrModels[idx].downloadProgress = 0
@@ -135,9 +130,8 @@ extension ModelCatalog {
             try Task.checkCancellation()
             guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = asrModels.firstIndex(where: { $0.id == id }) {
-                asrModels[i].status = asrRepoIsComplete(id)
-                    ? .downloaded
-                    : .error(L("model.asr_incomplete"))
+                let complete = asrRepoIsComplete(id)
+                asrModels[i].status = complete ? .downloaded : .error(L("model.asr_incomplete"))
                 asrModels[i].cacheSize = asrRepoSize(id)
                 asrModels[i].downloadDetail = ""
             }
@@ -162,7 +156,16 @@ extension ModelCatalog {
         }
     }
 
-    func deleteASR(_ id: String) {
+    /// Removes a local ASR model. Serialized against any download for it.
+    func deleteASR(_ id: String) async {
+        guard asrModels.contains(where: { $0.id == id }) else { return }
+        await downloadTasks.runExclusive(key: ModelDownloadKey(kind: .asr, modelID: id)) { [weak self] _ in
+            guard let self else { return }
+            self.removeASRFiles(id)
+        }
+    }
+
+    private func removeASRFiles(_ id: String) {
         guard let idx = asrModels.firstIndex(where: { $0.id == id }) else { return }
         for repositoryID in asrRequiredRepoIDs(for: id) {
             try? FileManager.default.removeItem(at: ModelStorage.hubModelRepoDir(repositoryID))

@@ -26,7 +26,7 @@ extension ModelCatalog {
             return
         }
 
-        purgeStalePartialsIfRetrying(kind: .whisper, modelID: id, status: whisperModels[idx].status)
+        prepareCacheForRetry(kind: .whisper, modelID: id, status: whisperModels[idx].status)
 
         whisperModels[idx].status = .downloading
         whisperModels[idx].downloadProgress = 0
@@ -68,9 +68,8 @@ extension ModelCatalog {
             try Task.checkCancellation()
             guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = whisperModels.firstIndex(where: { $0.id == id }) {
-                whisperModels[i].status = isWhisperDownloaded(id)
-                    ? .downloaded
-                    : .error(L("model.download_incomplete"))
+                let complete = isWhisperDownloaded(id)
+                whisperModels[i].status = complete ? .downloaded : .error(L("model.download_incomplete"))
                 whisperModels[i].cacheSize = whisperVariantSize(id)
                 whisperModels[i].downloadDetail = ""
             }
@@ -93,7 +92,18 @@ extension ModelCatalog {
         }
     }
 
-    func deleteWhisper(_ id: String) {
+    /// Removes a Whisper model. Serialized against any download for the same
+    /// model so a transfer that is still winding down cannot write into the
+    /// directory being deleted.
+    func deleteWhisper(_ id: String) async {
+        guard whisperModels.contains(where: { $0.id == id }) else { return }
+        await downloadTasks.runExclusive(key: ModelDownloadKey(kind: .whisper, modelID: id)) { [weak self] _ in
+            guard let self else { return }
+            self.removeWhisperFiles(id)
+        }
+    }
+
+    private func removeWhisperFiles(_ id: String) {
         guard let idx = whisperModels.firstIndex(where: { $0.id == id }) else { return }
         if ModelStorage.localWhisperURL(id) != nil {
             var paths = settings.localWhisperModelPaths
@@ -144,7 +154,7 @@ extension ModelCatalog {
             return
         }
 
-        purgeStalePartialsIfRetrying(kind: .llm, modelID: id, status: llmModels[idx].status)
+        prepareCacheForRetry(kind: .llm, modelID: id, status: llmModels[idx].status)
 
         llmModels[idx].status = .downloading
         llmModels[idx].downloadProgress = 0
@@ -187,9 +197,8 @@ extension ModelCatalog {
             try Task.checkCancellation()
             guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = llmModels.firstIndex(where: { $0.id == id }) {
-                llmModels[i].status = llmRepoIsComplete(id)
-                    ? .downloaded
-                    : .error(L("model.download_incomplete"))
+                let complete = llmRepoIsComplete(id)
+                llmModels[i].status = complete ? .downloaded : .error(L("model.download_incomplete"))
                 llmModels[i].cacheSize = llmRepoSize(id)
                 llmModels[i].downloadDetail = ""
             }
@@ -214,7 +223,16 @@ extension ModelCatalog {
         }
     }
 
-    func deleteLLM(_ id: String) {
+    /// Removes an LLM model. Serialized against any download for the same model.
+    func deleteLLM(_ id: String) async {
+        guard llmModels.contains(where: { $0.id == id }) else { return }
+        await downloadTasks.runExclusive(key: ModelDownloadKey(kind: .llm, modelID: id)) { [weak self] _ in
+            guard let self else { return }
+            self.removeLLMFiles(id)
+        }
+    }
+
+    private func removeLLMFiles(_ id: String) {
         guard let idx = llmModels.firstIndex(where: { $0.id == id }) else { return }
         if ModelStorage.localLLMURL(id) != nil {
             var paths = settings.localLLMModelPaths
@@ -271,20 +289,24 @@ extension ModelCatalog {
 
     // MARK: - Download recovery
 
-    /// A retry starts from a clean slate: dropping only the `.incomplete`
-    /// markers keeps completed files while removing the corrupt partial that
-    /// made the previous attempt fail.
-    func purgeStalePartialsIfRetrying(
+    /// A download starts with concrete, model-scoped roots. On retry, stale
+    /// partial markers from a completed failed transfer are removed. A
+    /// cancelled generation is moved to its own quarantine before this method
+    /// is reached, so its late writer cannot touch the new live path.
+    func prepareCacheForRetry(
         kind: ModelDownloadKind,
         modelID: String,
         status: ModelStatus
     ) {
-        guard status.isError else { return }
-        let result = ModelDownloadRecovery.purgePartialArtifacts(kind: kind, modelID: modelID)
-        guard !result.isEmpty else { return }
-        Log.info(
-            "[ModelCatalog] Cleared \(result.removedFiles) stale download file(s) for \(modelID)"
-        )
+        if status.isError {
+            let purged = ModelDownloadRecovery.purgePartialArtifacts(kind: kind, modelID: modelID)
+            if !purged.isEmpty {
+                Log.info(
+                    "[ModelCatalog] Cleared \(purged.removedFiles) stale download file(s) for \(modelID)"
+                )
+            }
+        }
+        ModelDownloadRecovery.ensureLiveArtifactRoots(kind: kind, modelID: modelID)
     }
 
     func makeStallWatchdog(
@@ -296,8 +318,9 @@ extension ModelCatalog {
         let watchdog = DownloadStallWatchdog()
         watchdog.start { [weak self] in
             guard let self, self.downloadTasks.isCurrent(key, token: token) else { return }
-            self.downloadTasks.cancel(key)
-            self.markStalled(kind: kind, modelID: modelID)
+            if self.abandonStalledDownload(modelID, kind: kind) {
+                self.markStalled(kind: kind, modelID: modelID)
+            }
         }
         return watchdog
     }
