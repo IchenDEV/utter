@@ -27,8 +27,22 @@ final class VoicePipeline {
     var formattingModelLifecycleTask: Task<EspressoGenerationOutcome?, Never>?
     var recordingTargetApp: NSRunningApplication?
     var formattingPreloadGeneration = 0
+    /// Injectable engine used by tests to drive the real `start` await through a
+    /// controlled model-load barrier. `nil` in production.
+    var engineOverride: (any SpeechEngine)?
+    /// Injectable capture used by tests to observe whether a recording began.
+    var captureOverride: AudioCaptureManager?
+
+    /// The capture the pipeline uses; tests inject a spy.
+    var activeCapture: AudioCaptureManager { captureOverride ?? audioCapture }
+    /// Test-only stand-in for a slow model load, awaited before the readiness
+    /// check so a counterexample can release the key mid-start.
+    var engineLoadBarrier: (() async -> Void)?
+    /// Test-only observation point for whether the remote capture path is used.
+    var remoteCaptureSpy: RemoteMicCaptureSpy?
 
     var currentEngine: (any SpeechEngine)? {
+        if let engineOverride { return engineOverride }
         switch appState.settings.speechEngine {
         case .whisper: return whisperEngine
         case .apple: return appleSpeechEngine
@@ -98,6 +112,10 @@ final class VoicePipeline {
         if appState.isDownloading { return }
 
         correctionCapture.finishCurrentSession()
+
+        if let engineLoadBarrier {
+            await engineLoadBarrier()
+        }
 
         if !(currentEngine?.isReady ?? false) {
             await ensureEngineLoaded(requestPermission: true)
@@ -171,9 +189,25 @@ final class VoicePipeline {
             }
         }
 
-        audioCapture.thresholds = appState.settings.audioActivityThresholds
+        if let remoteCaptureSpy {
+            let token = remoteCaptureSpy.currentToken
+            let startedSpy = token.map { remoteCaptureSpy.start(token: $0) } ?? false
+            guard startedSpy else {
+                currentEngine?.cancelListening()
+                cancelScreenContextCapture()
+                recordingTargetApp = nil
+                appState.phase = .error(L("pipeline.mic_failed_permissions"))
+                appState.statusMessage = L("pipeline.mic_unavailable")
+                overlay.hide()
+                return
+            }
+            commitRecording(mode: mode, targetApp: targetApp)
+            return
+        }
 
-        let micStarted = audioCapture.start(
+        activeCapture.thresholds = appState.settings.audioActivityThresholds
+
+        let micStarted = activeCapture.start(
             deviceID: micID,
             levelUpdate: { [weak self] level in
                 Task { @MainActor in
@@ -196,6 +230,16 @@ final class VoicePipeline {
         }
     }
 
+    /// Marks the pipeline as committed and recording. Extracted so the
+    /// test-only capture seam and the real capture path share one commit point.
+    private func commitRecording(mode: VoiceInputMode, targetApp: NSRunningApplication?) {
+        appState.phase = .recording
+        appState.statusMessage = mode.isTranslation
+            ? L("pipeline.recording_translation")
+            : L("pipeline.recording")
+        recordingTargetApp = targetApp
+    }
+
     func stop(targetApp: NSRunningApplication? = nil) async {
         guard appState.isRecording else {
             Log.info("[VoicePipeline] stop: not recording (\(appState.phase)), ignoring")
@@ -205,14 +249,14 @@ final class VoicePipeline {
         let resolvedTargetApp = targetApp ?? recordingTargetApp
         recordingTargetApp = nil
         soundPlayer.playStop()
-        audioCapture.stop()
+        activeCapture.stop()
 
         appState.phase = .transcribing
         appState.statusMessage = L("pipeline.transcribing")
 
         let language = appState.settings.inputLanguage.whisperCode
-        let audioURL = audioCapture.lastRecordingURL
-        let audioActivity = audioCapture.lastActivity
+        let audioURL = activeCapture.lastRecordingURL
+        let audioActivity = activeCapture.lastActivity
         let settings = appState.settings
         let inputMode = appState.activeInputMode
 

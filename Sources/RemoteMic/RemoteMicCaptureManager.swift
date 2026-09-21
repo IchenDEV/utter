@@ -63,10 +63,17 @@ final class RemoteMicCaptureManager {
 
     /// Abandons an in-flight or latched session, releasing every trace so the
     /// pipeline can fall back or stay idle without a latent want.
+    ///
+    /// This discards the recording, so it must only be used *before* the
+    /// pipeline commits to recording — never on a normal stop, where the WAV is
+    /// still needed for transcription. Use `stop()` for a committed recording.
     func cancelSession() {
         guard isRunning || bridge.isSessionLive else { return }
         tearDownFailedStart()
     }
+
+    /// True when capture has committed and a recording file exists.
+    var hasActiveRecording: Bool { isRunning && audioFile != nil }
 
     /// The synchronous startup body shared by the session and direct paths.
     @discardableResult

@@ -19,12 +19,23 @@ extension AppDelegate {
     }
 
     /// Enabling or disabling the feature must not leave a recording running.
+    ///
+    /// Disabling ends a live session explicitly: the bridge's release callback
+    /// is suppressed once the setting is off, so this must stop the pipeline
+    /// itself rather than rely on that callback.
     private func applyRemoteMicSetting(_ enabled: Bool) {
-        if enabled {
+        guard !enabled else {
             RemoteMicCaptureManager.shared.activate()
-        } else {
-            RemoteMicCaptureManager.shared.cancelSession()
-            RemoteMicCaptureManager.shared.deactivate()
+            return
+        }
+        let capture = RemoteMicCaptureManager.shared
+        let decision = RemoteMicShutdownDecision.decide(hasActiveRecording: capture.hasActiveRecording)
+        remoteMicPendingToken = nil
+        remoteMicStartTask?.cancel()
+        remoteMicStartTask = nil
+        capture.deactivate()
+        if decision.shouldStopPipeline {
+            stopRecording()
         }
     }
 
@@ -75,13 +86,12 @@ extension AppDelegate {
     }
 
     private func releaseRemoteMicSession() {
-        // Release the bridge session first so the pipeline's post-model check
-        // sees a stale token and aborts instead of recording.
         remoteMicPendingToken = nil
-        RemoteMicCaptureManager.shared.cancelSession()
-        // Cancel the task that owns the whole pipeline start.
         remoteMicStartTask?.cancel()
         remoteMicStartTask = nil
-        stopRecording()
+        RemoteMicReleaseDecision.applyRelease(
+            to: RemoteMicCaptureManager.shared,
+            stopPipeline: { [weak self] in self?.stopRecording() }
+        )
     }
 }

@@ -42,3 +42,24 @@ struct RemoteMicPreRoll {
         chunkCount = 0
     }
 }
+
+/// Where a decoded audio chunk belongs, given the session phase.
+///
+/// Extracted so the bridge's routing is the exact rule a test exercises: audio
+/// with no live session (before a press, or late after a stop) is dropped so it
+/// cannot pollute the next session's pre-roll.
+enum RemoteMicAudioRouting {
+    enum Destination: Equatable {
+        case forward
+        case preRoll
+        case drop
+    }
+
+    static func destination(for phase: RemoteMicSession.Phase) -> Destination {
+        switch phase {
+        case .recording: return .forward
+        case .starting: return .preRoll
+        case .idle: return .drop
+        }
+    }
+}
