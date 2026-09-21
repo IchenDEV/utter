@@ -17,6 +17,7 @@
 | Baseline full suite at `3442f83641869f912247bef796e624efd813605a` | Historical pass | 667 XCTest = 653 passed + 14 skipped, 0 failures; one Swift Testing case also passed. The 14 skips are not all live downloads: 4 are `OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`, while 10 are ANE model (1), Apple Speech (1), template probe (1), foreground bundle identity (1), Espresso fallback (1), prompt dump (1), Qwen native ASR (2), and streaming ASR (2). |
 | Baseline focused filter at `3442f83641869f912247bef796e624efd813605a` | Historical pass | 50 executed, 50 passed, 0 skipped, 0 failures across DownloadStallWatchdogTests (3), ModelDownloadFailureMessageTests (3), ModelDownloadRecoveryTests (10), ModelDownloadTasksTests (13), and UtilityTests (21). The earlier 48 figure is stale. |
 | Final focused/full rerun at `1cba5718aef0dd61254838fa77d8181cb4af820a` | Pass (macOS, Xcode 27) | Focused P1 counterexamples: 3 executed, 0 failures. Full suite: 670 XCTest executed, 14 skipped, 0 failures. Raw log: `mac-p34-1cba5718-verification.log`. |
+| Audit-grade startup mutation transcript at `1cba5718aef0dd61254838fa77d8181cb4af820a` | Pass (macOS, Xcode 27) | Executed `mac-p102-mutation-harness.sh` from independent checkout fixed at `1cba5718`. 4 focused test runs: Mutation A exited 1 (5 expected failures), restored A exited 0 (tree `d15b2c7b…`); Mutation B exited 1 (2 expected failures), restored B exited 0 (tree `d15b2c7b…`). 0 harness failures, final tree clean. Raw log: `mac-p102-mutation-harness.log` (SHA-256: `5b6ea6e1d45fec7a56d60513023ab0c3e305e6f152398b98ad3c68660e484240`). |
 | Historical real network interrupted download → Resume → model load & inference (`OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`) | Historical pass | WhisperKit audio transcription (`en-sample.m4a` in 0.14s) & HubApi 278MB safetensors download + ModelContainer load (0.78s) + real text generation (1.62s) pass with `default.metallib`; prior raw logs are attributed to `3442f83641869f912247bef796e624efd813605a` (the earlier metallib-only log to `522947265e83f07c730b00c2130db5c45727de55`), not the current continuation SHA. |
 
 The focused tests retain the exact Whisper scope, sibling preservation,
@@ -29,9 +30,10 @@ Hub-style symlink is materialized as a regular readable file before its staging
 cache is removed, that a replacement failure after candidate movement restores
 the previous live model, that preparation leaves the MainActor responsive, and
 that a restart cleanup removes all managed orphaned artifacts. The historical
-baseline focused run has 50 passing tests; this continuation adds startup
-scan/delete responsiveness, an initializer-wiring startup counterexample, and
-a Catalog-facade Resume overlap test, which require a new macOS rerun.
+baseline focused run has 50 passing tests. The continuation's startup
+scan/delete responsiveness, initializer-wiring startup counterexample, and
+Catalog-facade Resume overlap test all passed in the final macOS run at
+`1cba5718aef0dd61254838fa77d8181cb4af820a`.
 
 The dependency path audit is reproducible from the pinned `Package.resolved`:
 
@@ -82,7 +84,7 @@ Historical execution via `LiveDownloadVerificationTests` on macOS against live H
      - Awaited download task settlement.
      - Resuming via `ModelCatalog.shared.downloadWhisper` resumed transfer, completed detached candidate preparation and atomic publication, and transitioned catalog status to `.downloaded`.
      - *Scope boundary*: this existing live test verifies graceful cancellation state transition and resumed completion after task settlement only; it is not evidence for concurrent in-flight writer overlap.
-     - *New unit counterexample*: `testApplicationCatalogResumeEntryStartsBeforeOldDependencyReturns` now uses the public `ModelCatalog.downloadWhisper` entry twice with an injected suspended first dependency call. Its final macOS result is pending and must be recorded in the same exact-SHA raw log as the other P1 tests.
+     - *In-flight unit counterexample*: `testApplicationCatalogResumeEntryStartsBeforeOldDependencyReturns` uses the public `ModelCatalog.downloadWhisper` entry twice with an injected suspended first dependency call. It passed in the final macOS run at `1cba5718aef0dd61254838fa77d8181cb4af820a`.
 
 ### Commit SHA Traceability
 
@@ -92,7 +94,10 @@ Each piece of evidence maps to its originating commit:
 - `6bcc5adc69c42f21aa905c05b74b6e041fc0b4c7`: Integration commit on PR #102 integrating detached candidate preparation, rollback restoration, and startup cleanup.
 - `522947265e83f07c730b00c2130db5c45727de55`: Verified Hub MLX ModelContainer loading (0.78s) and real text generation (1.62s) with `default.metallib`, achieving complete end-to-end dual-stack live verification on macOS.
 - `3442f83641869f912247bef796e624efd813605a`: historical macOS code/test run containing the managed-cleanup increment; its logs are not exact-head evidence for the later material-only `eb4c08a3` commit.
-- `eb4c08a39b2104cbb1045fe0cd7eb589bd1c8e3f`: material baseline from which the startup and Catalog-facade P1 continuation is made; final evidence must use the new continuation SHA.
+- `eb4c08a39b2104cbb1045fe0cd7eb589bd1c8e3f`: material baseline from which the startup and Catalog-facade P1 continuation was made.
+- `1cba5718aef0dd61254838fa77d8181cb4af820a`: fixed code and test tree used by the final macOS build, focused/full regression, Release build, live Whisper run, and startup mutation harness. Whole tree `d15b2c7b02262bf4823646903730122dba90a56f`; `Sources` tree `ca355f4ff185ece0cc99a3c73cb9921510018ccc`; `Tests` tree `7d69e1226b6a109bffc5ae3c3b0a83dace33c9d3`.
+- `332e38dafabbe46f3514514a21aba5fe7163ce5d`: initial documentation of the measured p3/p4 macOS results; no Sources/Tests changes.
+- `263071e0885fc0e9245c35794e850fca2c76dadb`: documentation-only continuation recording the rerun totals, skip taxonomy, mutation summary, and release-owner resource decision; Sources/Tests remain identical to `1cba5718`.
 
 ## Acceptance criteria
 
@@ -143,8 +148,9 @@ Each piece of evidence maps to its originating commit:
   the production path-scoped helper through `ModelCatalog.init`, holds an
   entered/not-exited barrier, and requires a MainActor heartbeat between those
   barriers. Its independent detached timeout releases the gate on failure.
-  Two planned mutations must fail this test: synchronous initializer wiring and
-  replacing `Task.detached` with `Task { @MainActor in ... }`.
+  Both targeted mutations were run: synchronous initializer wiring and replacing
+  `Task.detached` with `Task { @MainActor in ... }` each made this test exit 1;
+  restoring the fixed tree made the same test exit 0.
 - Runtime cleanup responsiveness — **pass on macOS**: retiring a staged or
   superseded tree moves it into the managed cleanup root in O(1) on the
   MainActor and deletes it in a detached task, so a model-sized copy never
@@ -166,38 +172,40 @@ Each piece of evidence maps to its originating commit:
   executed, 14 skipped, 0 failures. Historical baseline at
   `3442f83641869f912247bef796e624efd813605a`: the
   `ModelDownloadTasksTests|UtilityTests` run is 34 executed, 0 failures; the
-  full suite is 667 XCTest with 14 skips and 0 failures. Final P1 counts are
-  pending a rerun at the new continuation SHA and must not be inferred from the
-  baseline.
+  full suite is 667 XCTest with 14 skips and 0 failures. Those historical counts
+  remain provenance only; the accepted continuation result is the measured
+  670 XCTest, 14 skipped, 0 failures at `1cba5718`.
 - Real network interrupted download → Resume → model load & inference — **pass on macOS**:
   WhisperKit end-to-end download, resume, model load, and real audio transcription pass 100% (`en-sample.m4a` in 0.14s).
   HubApi full weights download (278 MB safetensors), symlink materialization, staging purge, tokenizer encode/decode, MLX ModelContainer loading (0.78s), and real text generation (1.62s) pass 100% in test host with `default.metallib`.
   Interruption taxonomy (`Task.cancel` vs transport fault) and the settled-task
-  application `ModelCatalog` resume path pass within that recorded scope; the
-  in-flight Catalog facade counterexample is tracked separately below.
+  application `ModelCatalog` resume path pass within that recorded scope. The
+  separate in-flight Catalog facade counterexample also passed at `1cba5718`.
 
-### Startup wiring mutation commands
+### Startup wiring mutation evidence recapture
 
-Run these from the fixed continuation checkout, one at a time, and restore the
-file from the saved copy after each command. Both mutations are expected to
-make the initializer-level test exit non-zero; the unmutated test must pass.
+The original mutation summary records both mutation exits as 1 and both restored
+runs as 0, with final tree `d15b2c7b02262bf4823646903730122dba90a56f`.
+It did not retain the failing XCTest stdout/stderr, so an audit-grade transcript
+is still pending. This is an evidence-quality follow-up, not a product-code or
+full-regression rerun.
 
-```sh
-cp Sources/Config/ModelCatalog.swift "$TMPDIR/ModelCatalog.swift.p3-orig"
-perl -0pi -e 's/startupCleanupTask = startupCleanup\(startupStorageRoot\)/let cleanupCount = ModelStorage.cleanupOrphanedGenerationStaging(storageRoot: startupStorageRoot)\n        startupCleanupTask = Task { cleanupCount }/' Sources/Config/ModelCatalog.swift
-swift test --filter 'UtilityTests/testModelCatalogInitializerStartupCleanupKeepsMainActorResponsive'
-cp "$TMPDIR/ModelCatalog.swift.p3-orig" Sources/Config/ModelCatalog.swift
+Run the attached `mac-p102-mutation-harness.sh`. It creates an independent clean
+checkout fixed at `1cba5718aef0dd61254838fa77d8181cb4af820a`, runs exactly four
+focused invocations (Mutation A, restored A, Mutation B, restored B), and writes
+one `mac-p102-mutation-harness.log` containing the exact commands, diffs, complete
+combined stdout/stderr, original test exit codes, elapsed time, assertion-source
+checks, and before/after status/tree. It exits non-zero if a mutation does not
+fail at its target assertions or either restoration differs from the fixed tree.
 
-cp Sources/Config/ModelStorage.swift "$TMPDIR/ModelStorage.swift.p3-orig"
-perl -0pi -e 's/Task\.detached\(priority: \.utility\) \{/Task { @MainActor in/' Sources/Config/ModelStorage.swift
-swift test --filter 'UtilityTests/testModelCatalogInitializerStartupCleanupKeepsMainActorResponsive'
-cp "$TMPDIR/ModelStorage.swift.p3-orig" Sources/Config/ModelStorage.swift
-```
+Measured execution results (`mac-p102-mutation-harness.log`):
 
-The test's detached timeout calls `StartupCleanupGate.release()` independently
-of MainActor scheduling, so either a missing initializer factory call or a
-MainActor child task cannot leave the test permanently blocked. The exact
-mutation output and exit codes remain pending the macOS rerun.
+- Log SHA-256: `5b6ea6e1d45fec7a56d60513023ab0c3e305e6f152398b98ad3c68660e484240`
+- Mutation A exit / target assertion check / elapsed time: test exit `1`, failed with 5 expected assertion failures at `UtilityTests.swift:409`, `:410`, `:411`, `:412`, `:413`, elapsed 268s (including initial scratch build).
+- Restored A exit / exact-tree check / elapsed time: test exit `0` (passed in 0.026s), restored tree matched exact baseline `d15b2c7b02262bf4823646903730122dba90a56f` (`git diff --exit-code` 0), elapsed 14s.
+- Mutation B exit / target assertion check / elapsed time: test exit `1`, failed with 2 expected assertion failures at `UtilityTests.swift:411`, `:412`, elapsed 14s.
+- Restored B exit / exact-tree check / elapsed time: test exit `0` (passed in 0.032s), restored tree matched exact baseline `d15b2c7b02262bf4823646903730122dba90a56f` (`git diff --exit-code` 0), elapsed 12s.
+- Final full-tree diff against `1cba5718aef0dd61254838fa77d8181cb4af820a`: exit `0`, 0 harness failures, porcelain status clean.
 
 ## Residual risk
 
@@ -208,9 +216,10 @@ mutation output and exit codes remain pending the macOS rerun.
 
 ## Decision
 
-The baseline implementation and live evidence pass within their recorded scope,
-but this continuation is not ready for final acceptance until macOS reruns the
-two new P1 counterexamples. The final raw log must contain one complete
-continuation SHA, each exact command, environment gates, and the real exit code;
-prior logs remain historical evidence at their recorded source commit rather
-than proof for `eb4c08a3` or its continuation.
+The implementation and final macOS regression pass within their recorded scope
+at `1cba5718aef0dd61254838fa77d8181cb4af820a`; no product-code or full-suite
+rerun is required by this documentation follow-up. Final materials acceptance is
+complete with the audit-grade mutation transcript captured (`mac-p102-mutation-harness.log`,
+SHA-256: `5b6ea6e1d45fec7a56d60513023ab0c3e305e6f152398b98ad3c68660e484240`). Release remains subject
+to the separate background-I/O resource-risk decision and the recorded human,
+CI, and publication gates.

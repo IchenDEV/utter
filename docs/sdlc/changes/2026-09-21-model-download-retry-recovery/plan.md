@@ -71,11 +71,20 @@
       - Existing application resume path: `testApplicationModelCatalogResumePath` verified Catalog download -> cancelDownload -> awaited task settlement -> resume -> `.downloaded`; it does not cover overlap.
       - New in-flight Catalog facade counterexample `testApplicationCatalogResumeEntryStartsBeforeOldDependencyReturns` passed on macOS at `1cba5718aef0dd61254838fa77d8181cb4af820a`.
 - [x] Startup-path mutation rerun at `1cba5718aef0dd61254838fa77d8181cb4af820a`:
-      Mutation A (synchronous initializer cleanup) test exit **1**, tree
-      `ef44458b…`; Mutation B (`Task { @MainActor in }`) test exit **1**, tree
-      `6ad3e9e6…`; both restored with `git diff --exit-code` **0** and the exact
-      baseline tree `d15b2c7b…`; unmutated test exit **0** after each restore.
-      Audit trail in `mac-p102-mutation-harness.log`.
+      the original summary records Mutation A (synchronous initializer cleanup)
+      and Mutation B (`Task { @MainActor in }`) test exits as **1**; both restored
+      with `git diff --exit-code` **0** and the exact baseline tree `d15b2c7b…`;
+      the unmutated test exited **0** after each restore.
+      The original summary log records the diffs, commands, exit codes, and tree
+      restoration but omits the failing XCTest stdout/stderr.
+- [x] Capture the audit-grade startup mutation transcript with the attached
+      `mac-p102-mutation-harness.sh`: ran four focused invocations from an
+      independent checkout fixed at `1cba5718aef0dd61254838fa77d8181cb4af820a`
+      and produced `mac-p102-mutation-harness.log` (SHA-256: `5b6ea6e1d45fec7a56d60513023ab0c3e305e6f152398b98ad3c68660e484240`).
+      Mutation A test exited 1 (5 targeted failures, elapsed 268s); restored A exited 0
+      (passed in 0.026s, elapsed 14s, tree `d15b2c7b…`); Mutation B test exited 1
+      (2 targeted failures, elapsed 14s); restored B exited 0 (passed in 0.032s,
+      elapsed 12s, tree `d15b2c7b…`). 0 harness failures, clean tree restoration.
 - [x] Preserve the skip taxonomy in the final raw log: of the 14 skips, 4 are
       gated by `OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`; the other 10 are ANE model
       (1), Apple Speech (1), template probe (1), foreground bundle identity (1),
