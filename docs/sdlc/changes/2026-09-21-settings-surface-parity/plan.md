@@ -12,8 +12,9 @@
 - [x] Point `SettingsCardBackground` and the history overview cards at
       `SettingsSurface.card`.
 - [x] Point the onboarding and permissions grouped boxes at the same seams.
-- [x] Add `SettingsSurfaceTests` resolving the seams in sRGB and inside explicit
-      light/dark appearances.
+- [x] Add `SettingsSurfaceTests` rasterizing the production seams against the
+      semantic references inside explicit light/dark appearances.
+- [x] Prove the tests fail on a page/card swap and on a wrong card color.
 - [x] Capture real-window light and dark rendering from the running app.
 
 ## Verification plan

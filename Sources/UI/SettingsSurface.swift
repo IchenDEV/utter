@@ -9,28 +9,23 @@ import SwiftUI
 /// gray. These seams keep every surface on the system palette, so light, dark,
 /// and increased-contrast appearances adapt without fixed colors.
 enum SettingsSurface {
+    /// The AppKit semantic colors the two seams are defined by. Kept as the
+    /// single source of truth so the surfaces cannot drift from their roles.
+    static var pageSemanticColor: NSColor { .windowBackgroundColor }
+    static var cardSemanticColor: NSColor { .underPageBackgroundColor }
+
     /// Window and page background, matching the System Settings content pane.
     static var page: Color {
-        Color(nsColor: .windowBackgroundColor)
+        Color(nsColor: pageSemanticColor)
     }
 
     /// Grouped box and card background, subtly separated from the page.
     static var card: Color {
-        Color(nsColor: .underPageBackgroundColor)
+        Color(nsColor: cardSemanticColor)
     }
 
     /// Hairline used to outline grouped boxes.
     static var cardStroke: Color {
         Color(nsColor: .separatorColor)
-    }
-
-    /// Resolved sRGB values for `page` and `card`, for tests and diagnostics that
-    /// need the concrete components of the semantic colors.
-    static var pageSRGB: NSColor {
-        NSColor.windowBackgroundColor.usingColorSpace(.sRGB) ?? .windowBackgroundColor
-    }
-
-    static var cardSRGB: NSColor {
-        NSColor.underPageBackgroundColor.usingColorSpace(.sRGB) ?? .underPageBackgroundColor
     }
 }
