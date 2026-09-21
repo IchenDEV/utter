@@ -16,24 +16,31 @@ final class ModelDownloadTasks {
     private struct Entry {
         let token: UUID
         let task: Task<Void, Never>
+        var cancelled: Bool
     }
 
     private var entries: [ModelDownloadKey: Entry] = [:]
 
+    /// Runs `operation` as the single writer for `key`.
+    ///
+    /// A duplicate request joins the in-flight run. A retry after `cancel` waits
+    /// for the cancelled run to fully exit before starting, so the old transfer
+    /// and its replacement never touch the same cache paths at the same time.
     func run(
         key: ModelDownloadKey,
         operation: @escaping @MainActor (UUID) async -> Void
     ) async {
         if let existing = entries[key] {
+            let wasCancelled = existing.cancelled
             await existing.task.value
-            return
+            guard wasCancelled else { return }
         }
 
         let token = UUID()
         let task = Task { @MainActor in
             await operation(token)
         }
-        entries[key] = Entry(token: token, task: task)
+        entries[key] = Entry(token: token, task: task, cancelled: false)
         await task.value
 
         if entries[key]?.token == token {
@@ -41,22 +48,26 @@ final class ModelDownloadTasks {
         }
     }
 
-    /// True while `token` still owns `key`. A superseded run must check this
-    /// before writing a terminal status, otherwise an abandoned transfer that
-    /// only notices cancellation late could overwrite the state of its retry.
+    /// True while `token` still owns `key` and has not been cancelled. A
+    /// superseded or cancelled run must check this before writing a terminal
+    /// status, so it cannot overwrite the state of the retry that replaced it.
     func isCurrent(_ key: ModelDownloadKey, token: UUID) -> Bool {
-        entries[key]?.token == token
+        guard let entry = entries[key] else { return false }
+        return entry.token == token && !entry.cancelled
     }
 
     func isActive(_ key: ModelDownloadKey) -> Bool {
         entries[key] != nil
     }
 
-    /// Cancels the run and forgets it immediately. Dropping the entry lets a
-    /// retry start even when the underlying transfer never observes cancellation.
+    /// Requests cancellation without releasing the single-writer slot. A retry
+    /// is serialized behind the cancelled run, so a transfer that ignores
+    /// cancellation can only delay the retry, never race it on disk.
     func cancel(_ key: ModelDownloadKey) {
-        entries[key]?.task.cancel()
-        entries.removeValue(forKey: key)
+        guard var entry = entries[key] else { return }
+        entry.cancelled = true
+        entries[key] = entry
+        entry.task.cancel()
     }
 }
 

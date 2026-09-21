@@ -13,7 +13,7 @@
 | `bash scripts/sdlc-checks.sh` | Pass | "SDLC checks passed." |
 | `swift test` (full suite) | Pass | 642 tests, 10 skipped, 0 failures |
 | `swift build` | Pass | `Build complete! (83.00s)` with the Command Line Tools toolchain |
-| `swift test --filter "ModelDownload\|DownloadStallWatchdog"` | Pass | 14 tests, 0 failures |
+| `swift test --filter "ModelDownload\|DownloadStallWatchdog"` | Pass | 16 tests, 0 failures |
 
 Note on the test command: this machine has no downloadable Metal toolchain, so
 the Xcode build backend cannot compile `mlx-swift`'s Metal sources. The suite was
@@ -24,22 +24,26 @@ Command Line Tools toolchain also succeeds.
 ## Acceptance criteria
 
 - Retry purges `.incomplete` markers — pass. `ModelDownloadRecoveryTests`
-  covers hidden `.cache` traversal, whisper-repo scoping, and coverage of the
-  materialized repo plus the shared Hub cache.
-- Cancel makes the model resumable — pass.
-  `testCancelLetsRetryStartEvenIfTransferIgnoresCancellation` (a second run
-  starts after cancel) and `testCancelledRunNoLongerReportsCurrent`.
+  covers hidden `.cache` traversal, whisper-variant scoping (a sibling variant's
+  partial is preserved), and coverage of the materialized repo plus the shared
+  Hub cache.
+- Cancel makes the model resumable without racing the old transfer — pass.
+  `testRetryAfterCancelNeverOverlapsTheCancelledWriter` asserts a maximum of one
+  active writer and the order cancelled-start → cancelled-end → retry-start →
+  retry-end; `testCancelledRunNoLongerReportsCurrent` covers the state guard.
 - Stalled download resolves — pass. `DownloadStallWatchdogTests` (fires on
-  inactivity, stays quiet while progress arrives) plus the `isCurrent` guards
-  ensuring a late run cannot overwrite the retry's state.
+  inactivity, stays quiet while progress arrives), the progress-signal test that
+  a repeated unchanged callback does not count as progress, plus the `isCurrent`
+  guards ensuring a late run cannot overwrite the retry's state.
 - Delete removes partial markers — implemented in `deleteWhisper`,
   `deleteLLM`, and `deleteASR`; covered indirectly by the recovery path tests.
 - `swift test` passes — pass (642 tests, 0 failures).
 
 ## Residual risk
 
-- No end-to-end interrupted-network retry was performed; verification is unit
-  level plus code inspection. Owner: reviewer / release validation.
+- No end-to-end interrupted-network retry (fail mid-transfer → resume → load the
+  model) was performed; verification is unit level plus code inspection. Owner:
+  reviewer / release validation. A manual recipe is in `plan.md`.
 - The 120 s stall threshold is a judgment call; a very slow link with no progress
   reports for over two minutes would be failed and marked resumable.
 - A transfer that ignores cancellation may leave a background task running until

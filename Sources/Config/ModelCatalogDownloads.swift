@@ -32,6 +32,7 @@ extension ModelCatalog {
         whisperModels[idx].downloadProgress = 0
 
         let watchdog = makeStallWatchdog(key: key, token: token, kind: .whisper, modelID: id)
+        let signal = DownloadProgressSignal()
 
         do {
             let modelDir = ModelStorage.whisperVariantDir(id)
@@ -41,7 +42,6 @@ extension ModelCatalog {
                 downloadBase: Self.whisperDownloadBase,
                 progressCallback: { [weak self] progress in
                     Task { @MainActor in
-                        watchdog.noteProgress()
                         guard let self,
                               self.downloadTasks.isCurrent(key, token: token),
                               let i = self.whisperModels.firstIndex(where: { $0.id == id }) else { return }
@@ -53,6 +53,12 @@ extension ModelCatalog {
                             totalBytes: progress.totalUnitCount,
                             fraction: progress.fractionCompleted
                         )
+                        if signal.advanced(
+                            completedBytes: max(downloadedBytes, progress.completedUnitCount),
+                            fraction: info.fraction
+                        ) {
+                            watchdog.noteProgress()
+                        }
                         self.whisperModels[i].downloadProgress = info.fraction
                         self.whisperModels[i].downloadDetail = info.detailText
                     }
@@ -144,6 +150,7 @@ extension ModelCatalog {
         llmModels[idx].downloadProgress = 0
 
         let watchdog = makeStallWatchdog(key: key, token: token, kind: .llm, modelID: id)
+        let signal = DownloadProgressSignal()
 
         do {
             let estimatedTotalBytes = estimatedLLMDownloadBytes(id) ?? 0
@@ -157,15 +164,21 @@ extension ModelCatalog {
                 configuration: ModelConfiguration(id: id)
             ) { [weak self] progress in
                 Task { @MainActor in
-                    watchdog.noteProgress()
                     guard let self,
                           self.downloadTasks.isCurrent(key, token: token),
                           let i = self.llmModels.firstIndex(where: { $0.id == id }) else { return }
+                    let downloadedBytes = ModelStorage.directorySize(at: repoDir)
                     let info = tracker.update(
-                        completedBytes: ModelStorage.directorySize(at: repoDir),
+                        completedBytes: downloadedBytes,
                         totalBytes: estimatedTotalBytes,
                         fraction: progress.fractionCompleted
                     )
+                    if signal.advanced(
+                        completedBytes: max(downloadedBytes, progress.completedUnitCount),
+                        fraction: info.fraction
+                    ) {
+                        watchdog.noteProgress()
+                    }
                     self.llmModels[i].downloadProgress = info.fraction
                     self.llmModels[i].downloadDetail = info.detailText
                 }

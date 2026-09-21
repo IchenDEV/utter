@@ -51,33 +51,54 @@ final class ModelDownloadTasksTests: XCTestCase {
         XCTAssertTrue(observedCancellation)
     }
 
-    func testCancelLetsRetryStartEvenIfTransferIgnoresCancellation() async {
+    func testRetryAfterCancelNeverOverlapsTheCancelledWriter() async {
         let downloads = ModelDownloadTasks()
         let key = ModelDownloadKey(kind: .llm, modelID: "test/model")
-        var starts = 0
+        var firstToken: UUID?
+        var activeWriters = 0
+        var maxConcurrentWriters = 0
+        var writeOrder: [String] = []
 
-        let stuck = Task { @MainActor in
-            await downloads.run(key: key) { _ in
-                starts += 1
-                try? await Task.sleep(nanoseconds: 200_000_000)
+        func beginWrite(_ label: String) {
+            activeWriters += 1
+            maxConcurrentWriters = max(maxConcurrentWriters, activeWriters)
+            writeOrder.append("\(label)-start")
+        }
+        func endWrite(_ label: String) {
+            writeOrder.append("\(label)-end")
+            activeWriters -= 1
+        }
+
+        let cancelled = Task { @MainActor in
+            await downloads.run(key: key) { token in
+                firstToken = token
+                beginWrite("cancelled")
+                try? await Task.sleep(nanoseconds: 120_000_000)
+                endWrite("cancelled")
             }
         }
-        for _ in 0..<200 where !downloads.isActive(key) {
+        for _ in 0..<200 where activeWriters == 0 {
             try? await Task.sleep(nanoseconds: 1_000_000)
         }
-        XCTAssertTrue(downloads.isActive(key))
+        XCTAssertEqual(activeWriters, 1)
+
         downloads.cancel(key)
-        XCTAssertFalse(downloads.isActive(key))
+        XCTAssertTrue(downloads.isActive(key), "cancel keeps the single-writer slot")
+        if let token = firstToken {
+            XCTAssertFalse(downloads.isCurrent(key, token: token))
+        }
 
         let retry = Task { @MainActor in
             await downloads.run(key: key) { _ in
-                starts += 1
+                beginWrite("retry")
+                endWrite("retry")
             }
         }
         await retry.value
-        await stuck.value
+        await cancelled.value
 
-        XCTAssertEqual(starts, 2)
+        XCTAssertEqual(maxConcurrentWriters, 1, "the retry must wait for the cancelled writer to exit")
+        XCTAssertEqual(writeOrder, ["cancelled-start", "cancelled-end", "retry-start", "retry-end"])
     }
 
     func testCancelledRunNoLongerReportsCurrent() async {

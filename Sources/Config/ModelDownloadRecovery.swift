@@ -43,9 +43,14 @@ enum ModelDownloadRecovery {
     ) -> [URL] {
         switch kind {
         case .whisper:
+            // All Whisper variants share one repository, and the downloader
+            // writes partials under `<variant>/…` inside its `.cache` tree, so a
+            // retry must only touch files whose path names this variant.
             let whisperRepo = storageRoot
                 .appendingPathComponent("models/argmaxinc/whisperkit-coreml")
-            return incompleteFiles(under: whisperRepo)
+            return incompleteFiles(under: whisperRepo).filter {
+                $0.path.contains(modelID)
+            }
         case .llm, .asr:
             let repositoryName = hubCacheRepoName(modelID)
             var roots = [

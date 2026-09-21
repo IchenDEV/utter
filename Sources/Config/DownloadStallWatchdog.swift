@@ -39,3 +39,21 @@ final class DownloadStallWatchdog {
         pollTask = nil
     }
 }
+
+/// Tracks download progress so stall detection reacts to real movement.
+///
+/// Download libraries can keep firing their progress callback with an unchanged
+/// value while a socket is dead. Only a higher byte count or fraction counts as
+/// progress, so a frozen callback can no longer keep a dead transfer alive.
+@MainActor
+final class DownloadProgressSignal {
+    private var lastBytes: Int64 = -1
+    private var lastFraction: Double = -1
+
+    func advanced(completedBytes: Int64, fraction: Double) -> Bool {
+        let moved = completedBytes > lastBytes || fraction > lastFraction + 0.000_1
+        lastBytes = max(lastBytes, completedBytes)
+        lastFraction = max(lastFraction, fraction)
+        return moved
+    }
+}

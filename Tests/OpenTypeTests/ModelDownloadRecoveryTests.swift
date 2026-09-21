@@ -38,11 +38,13 @@ final class ModelDownloadRecoveryTests: XCTestCase {
         let whisperRepo = storage.appendingPathComponent("models/argmaxinc/whisperkit-coreml")
         let downloadCache = whisperRepo.appendingPathComponent(".cache/huggingface/download")
         let variant = whisperRepo.appendingPathComponent("openai_whisper-base")
-        try FileManager.default.createDirectory(at: downloadCache, withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(at: variant, withIntermediateDirectories: true)
-        try Data(repeating: 3, count: 32).write(
-            to: downloadCache.appendingPathComponent("TextDecoder.mlmodelc.etag.incomplete")
+        let variantPartial = downloadCache.appendingPathComponent("openai_whisper-base/TextDecoder.mlmodelc.etag.incomplete")
+        try FileManager.default.createDirectory(
+            at: variantPartial.deletingLastPathComponent(),
+            withIntermediateDirectories: true
         )
+        try FileManager.default.createDirectory(at: variant, withIntermediateDirectories: true)
+        try Data(repeating: 3, count: 32).write(to: variantPartial)
         try Data("x".utf8).write(to: variant.appendingPathComponent("config.json"))
 
         let unrelated = storage.appendingPathComponent("models/other/thing")
@@ -93,6 +95,41 @@ final class ModelDownloadRecoveryTests: XCTestCase {
         XCTAssertEqual(result.removedBytes, 12)
     }
 
+    func testWhisperArtifactsAreScopedToTheRequestedVariant() throws {
+        let storage = makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: storage) }
+
+        let downloadCache = storage
+            .appendingPathComponent("models/argmaxinc/whisperkit-coreml/.cache/huggingface/download")
+        let target = downloadCache.appendingPathComponent(
+            "openai_whisper-large-v3-turbo/TextDecoder.mlmodelc.etag.incomplete"
+        )
+        let otherVariant = downloadCache.appendingPathComponent(
+            "openai_whisper-base/AudioEncoder.mlmodelc.etag.incomplete"
+        )
+        for url in [target, otherVariant] {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try Data("partial".utf8).write(to: url)
+        }
+
+        let urls = ModelDownloadRecovery.incompleteArtifactURLs(
+            kind: .whisper,
+            modelID: "openai_whisper-large-v3-turbo",
+            storageRoot: storage,
+            cacheRoots: []
+        )
+        XCTAssertEqual(
+            urls.map { $0.resolvingSymlinksInPath().path },
+            [target.resolvingSymlinksInPath().path]
+        )
+        XCTAssertEqual(ModelDownloadRecovery.purge(urls).removedFiles, 1)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: target.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: otherVariant.path))
+    }
+
     func testPurgeIgnoresAlreadyRemovedFiles() {
         let missing = makeTemporaryDirectory().appendingPathComponent("gone.incomplete")
         let result = ModelDownloadRecovery.purge([missing])
@@ -113,6 +150,16 @@ final class DownloadStallWatchdogTests: XCTestCase {
         watchdog.start { stalled.fulfill() }
         await fulfillment(of: [stalled], timeout: 2)
         watchdog.stop()
+    }
+
+    func testProgressSignalOnlyAdvancesOnNewBytesOrFraction() {
+        let signal = DownloadProgressSignal()
+        XCTAssertTrue(signal.advanced(completedBytes: 10, fraction: 0.1))
+        XCTAssertFalse(signal.advanced(completedBytes: 10, fraction: 0.1))
+        XCTAssertFalse(signal.advanced(completedBytes: 10, fraction: 0.05))
+        XCTAssertTrue(signal.advanced(completedBytes: 11, fraction: 0.1))
+        XCTAssertTrue(signal.advanced(completedBytes: 11, fraction: 0.2))
+        XCTAssertFalse(signal.advanced(completedBytes: 11, fraction: 0.2))
     }
 
     func testProgressKeepsDownloadAlive() async {

@@ -16,6 +16,9 @@
 - [x] Purge partial markers when deleting a model.
 - [x] Add `model.download_failed_stalled` to both localizations.
 - [x] Add unit tests for recovery, the retry gate, and the watchdog.
+- [x] Keep one writer per model: a retry waits for a cancelled transfer to exit.
+- [x] Scope Whisper partial cleanup to the requested variant.
+- [x] Treat only real byte/fraction growth as download progress.
 
 ## Verification plan
 
@@ -24,7 +27,10 @@
 - [x] `swift test` (full suite)
 - [ ] Release-style `bash scripts/build-app.sh` on a machine with the Metal
       toolchain (CI `SDLC Gate`), not available in this environment.
-- [ ] Real interrupted-download retry on a networked machine.
+- [ ] Real interrupted-download retry on a networked machine. Recipe: start a
+      model download and cut the network mid-transfer; confirm the row shows a
+      failure, press Resume, and confirm the download completes and the model
+      then loads (Settings → Models → Use / a dictation round-trip).
 
 ## Human gates
 

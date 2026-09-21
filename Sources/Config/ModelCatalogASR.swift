@@ -95,6 +95,7 @@ extension ModelCatalog {
         asrModels[idx].downloadDetail = ""
 
         let watchdog = makeStallWatchdog(key: key, token: token, kind: .asr, modelID: id)
+        let signal = DownloadProgressSignal()
 
         do {
             let api = HubApi(downloadBase: Self.asrDownloadBase)
@@ -107,17 +108,23 @@ extension ModelCatalog {
             for (repositoryIndex, repositoryID) in repositories.enumerated() {
                 _ = try await api.snapshot(from: ModelStorage.hubModelRepo(repositoryID)) { [weak self] progress in
                     Task { @MainActor in
-                        watchdog.noteProgress()
                         guard let self,
                               self.downloadTasks.isCurrent(key, token: token),
                               let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
                         let repositoryFraction =
                             (Double(repositoryIndex) + progress.fractionCompleted) / Double(repositories.count)
+                        let downloadedBytes = self.asrRepoSize(id)
                         let info = tracker.update(
-                            completedBytes: self.asrRepoSize(id),
+                            completedBytes: downloadedBytes,
                             totalBytes: estimatedTotalBytes,
                             fraction: repositoryFraction
                         )
+                        if signal.advanced(
+                            completedBytes: max(downloadedBytes, progress.completedUnitCount),
+                            fraction: info.fraction
+                        ) {
+                            watchdog.noteProgress()
+                        }
                         self.asrModels[i].downloadProgress = info.fraction
                         self.asrModels[i].downloadDetail = info.detailText
                         onProgress?(info)
