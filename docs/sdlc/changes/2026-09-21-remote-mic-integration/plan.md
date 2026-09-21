@@ -23,7 +23,16 @@
 - [x] Settings toggle, live state, gain; `AppDelegate` activate/deactivate.
 - [x] `NSBluetoothAlwaysUsageDescription` and the Bluetooth entitlement.
 - [x] en/zh-Hans strings, `RemoteMicProtocolTests`, `RemoteMicHandshakeTests`,
-      `RemoteMicWantedStateTests`.
+      `RemoteMicWantedStateTests`, `RemoteMicSessionTests`,
+      `RemoteMicPreRollTests`.
+- [x] Session latch (`RemoteMicSession`) so a release beating the start cancels
+      it, and a bounded pre-roll (`RemoteMicPreRoll`) so the opening word is not
+      clipped.
+- [x] `endCapture` closes the microphone once in every phase; `deactivate`
+      invalidates the session.
+- [x] Capability responses require a prior request; `didUpdateValueFor` checks
+      peripheral identity.
+- [x] Correct `0x08` to `START_SEARCH` and cite the AOSP ATVV reference firmware.
 
 ## Verification plan
 

@@ -85,10 +85,19 @@ struct RemoteMicCapabilities: Equatable {
 }
 
 /// Control opcodes on the ATVV control characteristic.
+///
+/// Host -> device: `GET_CAPABILITIES` (0x0A), `MIC_OPEN` (0x0C), `MIC_CLOSE`
+/// (0x0D). Device -> host: `AUDIO_STOP` (0x00), `AUDIO_START` (0x04),
+/// `START_SEARCH` (0x08), capabilities (0x0B), sync (0x0A).
+///
+/// `0x08` is the device's `START_SEARCH`, not a microphone-open request; per the
+/// AOSP ATVV reference firmware a PTT press sends `AUDIO_START` (0x04) directly
+/// and does not require the host to open the microphone first. The session is
+/// therefore latched on `AUDIO_START`.
 enum RemoteMicControlOpcode: UInt8 {
     case streamStop = 0x00
     case streamStart = 0x04
-    case microphoneOpenRequest = 0x08
+    case startSearch = 0x08
     case capabilities = 0x0B
     case sync = 0x0A
 }

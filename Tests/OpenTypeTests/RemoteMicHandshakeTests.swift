@@ -41,6 +41,10 @@ final class RemoteMicHandshakeTests: XCTestCase {
     func testReadinessRequiresParsed16kHzCapabilities() {
         var handshake = RemoteMicHandshake()
         XCTAssertFalse(handshake.isReady)
+        handshake.registerCharacteristic(.transmit)
+        handshake.confirmSubscription(.audio)
+        handshake.confirmSubscription(.control)
+        handshake.markCapabilitiesRequested()
 
         let eightKilohertz = RemoteMicCapabilities(
             version: 0x0100,
@@ -74,7 +78,27 @@ final class RemoteMicHandshakeTests: XCTestCase {
         XCTAssertFalse(handshake.subscriptionsReady)
     }
 
-    /// A late subscription confirmation from a previous attempt must not let the
+    /// A capability frame that arrives before this attempt requested one (a late
+    /// frame from a previous attempt on a reused peripheral) must not mark the
+    /// new attempt ready.
+    func testUnrequestedCapabilityResponseIsRejected() {
+        var handshake = RemoteMicHandshake()
+        handshake.registerCharacteristic(.transmit)
+        handshake.confirmSubscription(.audio)
+        handshake.confirmSubscription(.control)
+
+        XCTAssertFalse(
+            handshake.confirmCapabilities(.default),
+            "a response before the request must be ignored"
+        )
+        XCTAssertFalse(handshake.isReady)
+
+        handshake.markCapabilitiesRequested()
+        XCTAssertTrue(handshake.confirmCapabilities(.default))
+        XCTAssertTrue(handshake.isReady)
+    }
+
+    /// A late subscription confirmation from an old attempt must not let the
     /// next attempt skip its own gate; this models the reset between attempts.
     func testSubscriptionFromPreviousAttemptDoesNotLeakAfterReset() {
         var handshake = RemoteMicHandshake()

@@ -91,9 +91,11 @@ final class AudioCaptureManager {
         levelCallback = levelUpdate
         bufferCallback = bufferUpdate
 
-        if AppSettings.shared.remoteMicEnabled, let remoteMicSource {
+        if AppSettings.shared.remoteMicEnabled,
+           let remoteMicSource,
+           let token = remoteMicSource.currentSessionToken {
             remoteMicSource.thresholds = thresholds
-            if remoteMicSource.start(levelUpdate: levelUpdate, bufferUpdate: bufferUpdate) {
+            if remoteMicSource.start(token: token, levelUpdate: levelUpdate, bufferUpdate: bufferUpdate) {
                 usesRemoteMic = true
                 isRunning = true
                 return true

@@ -61,12 +61,15 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     var onSamples: (([Int16]) -> Void)?
     /// Fired when the remote stops streaming, including unexpected disconnects.
     var onStreamStopped: (() -> Void)?
-    /// Fired when the remote's voice key starts a voice session. The remote
-    /// signals this on the ATVV control channel (`MIC_OPEN_REQUEST`), so the
-    /// voice key drives Utter's recording without a separate HID key remap or an
-    /// Input Monitoring permission.
-    var onVoiceKeyPressed: (() -> Void)?
-    /// Fired when the remote's voice key ends the session.
+    /// Fired when the remote's voice key starts a voice session, with the latch
+    /// token the caller must commit when its asynchronous start completes. The
+    /// remote signals this on the ATVV control channel (`AUDIO_START` for the
+    /// no-`START_SEARCH` interaction model), so the voice key drives Utter's
+    /// recording without a separate HID key remap or an Input Monitoring
+    /// permission.
+    var onVoiceKeyPressed: ((UInt64) -> Void)?
+    /// Fired when the remote's voice key ends the session. The caller stops or
+    /// cancels its in-flight start for the current latch.
     var onVoiceKeyReleased: (() -> Void)?
 
     private var central: CBCentralManager?
@@ -78,7 +81,13 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
 
     private var capabilities = RemoteMicCapabilities.default
     private var microphoneOpened = false
-    private var wanted = RemoteMicWantedState()
+    /// Latches the voice-key session synchronously, so a release or disconnect
+    /// that arrives while the pipeline is still starting cancels the pending
+    /// start instead of being ignored.
+    private var session = RemoteMicSession()
+    /// Audio that arrives before the capture pipeline is ready, so the opening
+    /// word is not clipped.
+    private var preRoll = RemoteMicPreRoll()
     private var reconnectAttempts = 0
     private var reconnectTask: Task<Void, Never>?
     private var timeoutTask: Task<Void, Never>?
@@ -114,7 +123,12 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
 
     func deactivate() {
         isActive = false
-        _ = wanted.release()
+        // Closing the feature must end a live session, not leave Utter recording.
+        let wasLive = session.invalidate()
+        if wasLive {
+            onStreamStopped?()
+            onVoiceKeyReleased?()
+        }
         cancelReconnect()
         cancelTimeout()
         generation &+= 1
@@ -127,28 +141,46 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         state = .idle
     }
 
-    /// Marks the session as wanted and asks the remote to open its microphone.
-    /// Audio is only forwarded while a session is wanted.
-    @discardableResult
-    func beginCapture() -> Bool {
+    /// Commits the latched voice-key session to the capture pipeline and returns
+    /// any audio buffered before it was ready, in order.
+    ///
+    /// `token` is the latch the caller observed when it started; if the session
+    /// was released or superseded meanwhile this returns `nil`, and the caller
+    /// must not begin recording.
+    func beginCapture(token: UInt64) -> [Int16]? {
         if !isActive { activate() }
+        guard session.commitStart(token: token) else { return nil }
         guard peripheral?.state == .connected, handshake.isReady else {
-            // Not usable yet: leave no want behind so a later readiness does not
-            // silently open the remote microphone for a session that fell back
-            // to the system input.
-            return false
+            // Not usable yet: drop the latched session so a later readiness does
+            // not open the remote microphone for a session that fell back.
+            _ = session.release()
+            preRoll.reset()
+            return nil
         }
-        wanted.want()
-        openMicrophoneIfNeeded()
-        return true
+        if !microphoneOpened { openMicrophoneIfNeeded() }
+        let buffered = preRoll.drain().flatMap { $0 }
+        return buffered
     }
 
+    /// True while a voice-key session is latched or recording.
+    var isSessionLive: Bool { session.isLive }
+
+    /// The latch of the current voice-key session, or nil when idle.
+    var currentSessionToken: UInt64? { session.isLive ? session.generation : nil }
+
     func endCapture() {
-        guard wanted.release() else { return }
-        closeMicrophoneIfNeeded()
-        if !wanted.isStreaming {
-            resetStream()
-            onStreamStopped?()
+        // Close exactly once, whatever the phase: a release during `starting`
+        // must still close a microphone this bridge may have opened, and must
+        // not leave `microphoneOpened` set for the next attempt.
+        let wasLive = session.release()
+        if microphoneOpened || wasLive {
+            closeMicrophoneIfNeeded()
+        }
+        if !session.isLive {
+            preRoll.reset()
+            accumulator.reset()
+            pendingSync = nil
+            decoder.reset()
         }
     }
 
@@ -182,18 +214,10 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     }
 
     private func resetStream() {
-        wanted.reset()
+        preRoll.reset()
         accumulator.reset()
         pendingSync = nil
         decoder.reset()
-    }
-
-    private func startStreaming() {
-        accumulator.reset()
-        pendingSync = nil
-        decoder.reset()
-        guard !wanted.isStreaming else { return }
-        wanted.beginStreaming()
     }
 
     // MARK: - Scanning and connection
@@ -274,12 +298,11 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     }
 
     fileprivate func handleDisconnect() {
-        let wasStreaming = wanted.isActive
-        if wasStreaming {
-            resetStream()
+        if session.invalidate() {
             onStreamStopped?()
             onVoiceKeyReleased?()
         }
+        resetStream()
         handshake.reset()
         microphoneOpened = false
         cancelTimeout()
@@ -311,16 +334,16 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
             cancelTimeout()
             reconnectAttempts = 0
             state = .ready(deviceName: peripheral?.name ?? "MI RC")
-            if wanted.isWanted { openMicrophoneIfNeeded() }
-        case .microphoneOpenRequest:
-            guard handshake.isReady else { return }
-            // The remote is asking to open its microphone because the user
-            // pressed the voice key; the session is only adopted while the
-            // feature is active.
-            guard isActive else { return }
-            onVoiceKeyPressed?()
+            if session.isLive { openMicrophoneIfNeeded() }
+        case .startSearch:
+            guard handshake.isReady, isActive else { return }
+            // `START_SEARCH` (0x08) is the device announcing itself, not a
+            // host-side microphone open. A device-driven session needs no host
+            // request, so keep the channel open; the session latches on
+            // AUDIO_START so a short press is not lost.
             openMicrophoneIfNeeded()
         case .streamStart:
+            guard handshake.isReady, isActive else { return }
             if bytes.count >= 3 {
                 let codec = bytes[2]
                 capabilities.selectedCodec = codec
@@ -330,15 +353,20 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
                 failAttempt(reason: L("remote_mic.error.unsupported_codec"))
                 return
             }
-            // Audio can start without the host having asked (a race between the
-            // voice key and the open request); still adopt the session.
-            if !wanted.isWanted { onVoiceKeyPressed?() }
-            guard wanted.isWanted else { return }
-            startStreaming()
+            // Latch synchronously: the pipeline start is asynchronous, and a
+            // stop or disconnect may arrive before it commits.
+            let token = session.press()
+            onVoiceKeyPressed?(token)
         case .streamStop:
-            resetStream()
-            onVoiceKeyReleased?()
-            if wanted.isWanted { openMicrophoneIfNeeded() }
+            // Release before clearing state so endCapture can still close the
+            // microphone; previously the reset ran first and made that
+            // unreachable, leaving microphoneOpened set.
+            let wasLive = session.release()
+            preRoll.reset()
+            accumulator.reset()
+            pendingSync = nil
+            decoder.reset()
+            if wasLive { onVoiceKeyReleased?() }
         case .sync:
             guard bytes.count >= 7 else { return }
             let bits = UInt16(bytes[4]) << 8 | UInt16(bytes[5])
@@ -348,8 +376,7 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     }
 
     fileprivate func handleAudio(_ data: Data) {
-        guard wanted.isActive, handshake.isReady else { return }
-        if !wanted.isStreaming { startStreaming() }
+        guard handshake.isReady else { return }
         let frames = accumulator.append(data, frameSize: capabilities.frameSize)
         for frame in frames {
             if let pendingSync {
@@ -360,7 +387,13 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
                 decoder.decode(frame),
                 gainDB: AppSettings.shared.remoteMicGainDB
             )
-            onSamples?(samples)
+            // Buffer while the pipeline is still starting so the opening word is
+            // kept; forward directly once it is recording.
+            if session.isRecording {
+                onSamples?(samples)
+            } else {
+                preRoll.append(samples)
+            }
         }
     }
 
@@ -518,6 +551,9 @@ extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
         didUpdateValueFor characteristic: CBCharacteristic,
         error: Error?
     ) {
+        // A reused CBPeripheral object can deliver a late value from a previous
+        // attempt; ignore anything that is not the current peripheral.
+        guard peripheral === self.peripheral else { return }
         guard error == nil, let data = characteristic.value else { return }
         switch characteristic.uuid.uuidString.uppercased() {
         case RemoteMicProtocol.controlUUID.uppercased():

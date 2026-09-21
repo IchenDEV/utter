@@ -38,6 +38,10 @@ size. Audio notifications are IMA/DVI ADPCM nibbles that decode to 16 kHz mono
   `didUpdateNotificationStateFor`, a connection and an initialization timeout
   bound each attempt, `didFailToConnect` recovers, and a monotonic `generation`
   rejects late callbacks from a failed attempt.
+- `RemoteMicSession` — the press → start → release → stop latch, so a release
+  that beats the asynchronous start cancels it instead of being ignored.
+- `RemoteMicPreRoll` — a bounded buffer for audio that arrives before the
+  pipeline commits.
 - `RemoteMicWantedState` — the "does a session want audio" invariant, shared by
   the bridge and the capture manager so a failed start cannot leave a latent
   want that a later readiness would act on.
@@ -59,12 +63,22 @@ the bridge; `applicationWillTerminate` deactivates it. The General tab adds the
 toggle, a live connection state, and the gain slider, and disables the system
 device picker while the remote is enabled.
 
-The remote's voice key arrives on the ATVV control channel
-(`MIC_OPEN_REQUEST`/`STREAM_START`), so `AppDelegate` maps it onto the same
-`startRecording`/`stopRecording` path the configured hotkey uses. Holding the
-remote key records through Utter; releasing it stops. This avoids a separate
-device-level HID F5→Fn remap and the Input Monitoring permission such a remap
-would need.
+The remote's voice key arrives on the ATVV control channel. Per the AOSP ATVV
+reference firmware, a PTT press sends `AUDIO_START` (0x04) directly and the host
+does not have to open the microphone first, so the session is latched on
+`AUDIO_START`; `0x08` is the device's `START_SEARCH`, not a microphone-open
+request. `AppDelegate` maps the latch onto the same `startRecording` /
+`stopRecording` path the configured hotkey uses, but with an explicit latch:
+
+- the bridge latches the session synchronously and hands over a token;
+- audio that arrives before the pipeline commits is held in a bounded pre-roll
+  and drained on commit, so the opening word is not clipped;
+- a release, disconnect, or feature shutdown that arrives before the commit
+  cancels the pending start, so a short press cannot begin a recording; and
+- `endCapture` closes the microphone exactly once, in every phase.
+
+This avoids a separate device-level HID F5→Fn remap and the Input Monitoring
+permission such a remap would need.
 
 ## Safety and failure modes
 

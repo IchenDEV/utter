@@ -35,6 +35,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var integrationXPCServer: IntegrationXPCServer?
     var integrationHTTPPort: Int?
     var integrationHTTPToken: String?
+    /// Latched voice-key session whose asynchronous start is in flight.
+    var remoteMicPendingToken: UInt64?
+    var remoteMicStartTask: Task<Void, Never>?
 
     override init() {
         let registry = IntegrationClientRegistry()

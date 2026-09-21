@@ -34,6 +34,8 @@ final class RemoteMicCaptureManager {
 
     var isAvailable: Bool { bridge.state.isReady }
     var state: RemoteMicBridgeState { bridge.state }
+    /// The latched voice-key session this source would commit, if any.
+    var currentSessionToken: UInt64? { bridge.currentSessionToken }
 
     func activate() {
         bridge.activate()
@@ -49,8 +51,43 @@ final class RemoteMicCaptureManager {
         lastRecordingURL = nil
     }
 
+    /// Prepares capture for a latched voice-key session.
+    ///
+    /// Returns `false` when the session was released or the remote is not usable,
+    /// in which case the caller must not record. The preparatory work (temp file,
+    /// readiness) is synchronous today, but is awaited so a future model load on
+    /// this path does not change the caller's contract.
+    func startSession(token: UInt64) async -> Bool {
+        prepareCapture(token: token)
+    }
+
+    /// Abandons an in-flight or latched session, releasing every trace so the
+    /// pipeline can fall back or stay idle without a latent want.
+    func cancelSession() {
+        guard isRunning || bridge.isSessionLive else { return }
+        tearDownFailedStart()
+    }
+
+    /// The synchronous startup body shared by the session and direct paths.
+    @discardableResult
+    func prepareCapture(token: UInt64) -> Bool {
+        if isRunning { stop() }
+        cleanupLastRecording()
+        lastActivity = AudioCaptureActivity(thresholds: thresholds)
+        levelCallback = nil
+        bufferCallback = nil
+        return true
+    }
+
+    /// Starts a capture for the latched voice-key session.
+    ///
+    /// `token` is the latch the caller observed; if the session was released or
+    /// superseded while the pipeline was starting, this returns `false` and the
+    /// caller must not begin recording (and must not fall back either, because
+    /// the user already let go).
     @discardableResult
     func start(
+        token: UInt64,
         levelUpdate: @escaping (Float) -> Void,
         bufferUpdate: ((AVAudioPCMBuffer) -> Void)? = nil
     ) -> Bool {
@@ -82,15 +119,17 @@ final class RemoteMicCaptureManager {
             self?.ingest(samples)
         }
 
-        // If the handshake regressed between the readiness check and here, undo
-        // everything: a half-started session must not leave the bridge wanting
-        // capture, or a later readiness would open the remote microphone after
-        // the caller already fell back to the system input.
-        guard bridge.beginCapture() else {
+        // Commits the latched session and hands back any audio buffered before
+        // the pipeline was ready. If the session was released meanwhile, undo
+        // everything so a later readiness cannot adopt it.
+        guard let preRolled = bridge.beginCapture(token: token) else {
             tearDownFailedStart()
             return false
         }
         isRunning = true
+        if !preRolled.isEmpty {
+            ingest(preRolled)
+        }
         return true
     }
 

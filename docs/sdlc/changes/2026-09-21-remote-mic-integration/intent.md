@@ -17,9 +17,12 @@ the user then has to point each target app at the virtual device.
 
 When enabled, Utter connects to the remote over Bluetooth, decodes the remote's
 ATVV voice stream in-process, and uses those samples as its recording input.
-The remote's voice key still drives Utter's existing global hotkey; while a
-recording is active the audio comes from the remote instead of a CoreAudio
-device. No virtual audio driver and no second app are required.
+The remote's voice key drives Utter's recording directly through the ATVV
+control channel (`AUDIO_START`/`AUDIO_STOP`), which is the interaction model the
+device uses when the host has not opened the microphone itself; no HID key remap
+or Input Monitoring permission is involved. While a recording is active the
+audio comes from the remote instead of a CoreAudio device. No virtual audio
+driver and no second app are required.
 
 ## Scope
 

@@ -46,9 +46,15 @@ struct RemoteMicHandshake: Equatable {
         capabilitiesRequested = true
     }
 
-    /// Records the capability response, rejecting a non-16 kHz codec.
+    /// Records the capability response.
+    ///
+    /// Rejects a response that arrives before this attempt asked for one, and a
+    /// non-16 kHz codec. The request gate matters: a late capability frame from a
+    /// previous attempt on a reused peripheral must not mark the new attempt
+    /// ready.
     @discardableResult
     mutating func confirmCapabilities(_ capabilities: RemoteMicCapabilities) -> Bool {
+        guard capabilitiesRequested else { return false }
         guard RemoteMicProtocol.supportsAudio(sampleRate: capabilities.sampleRate) else {
             return false
         }

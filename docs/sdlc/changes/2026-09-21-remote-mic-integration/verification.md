@@ -12,8 +12,8 @@
 | `bash scripts/ci-basic-checks.sh` | Pass | "Basic CI checks passed." (localization parity, plists, resources) |
 | `bash scripts/sdlc-checks.sh` | Pass | "SDLC checks passed." |
 | `swift build` | Pass | `Build complete!` with the Command Line Tools toolchain |
-| `swift test` (full suite) | Pass | 653 tests, 10 skipped, 0 failures |
-| `swift test --filter RemoteMic` | Pass | 20 tests, 0 failures |
+| `swift test` (full suite) | Pass | 671 executed, 10 skipped, 0 failures |
+| `swift test --filter RemoteMic` | Pass | 34 tests, 0 failures |
 | Real Xiaomi remote end-to-end | Not run | No hardware in this environment |
 
 Test command note: this machine has no downloadable Metal toolchain, so the
@@ -27,7 +27,11 @@ licensing question is a human/CTO item and is untouched here.
 
 | Finding | Status | What changed |
 |---|---|---|
-| P0: voice key not wired to Utter's hotkey | Fixed | The remote's `MIC_OPEN_REQUEST`/`STREAM_START` on the ATVV control channel now drive `AppDelegate.startRecording`; `STREAM_STOP` and disconnect drive `stopRecording`. No HID F5→Fn remap or Input Monitoring permission is needed. |
+| P0: voice key not wired to Utter's hotkey | Fixed | The remote's `AUDIO_START` (0x04) on the ATVV control channel latches the session and drives `AppDelegate.startRecording`; `AUDIO_STOP` (0x00) and disconnect stop it. `0x08` is `START_SEARCH`, not a microphone-open request, per the AOSP ATVV reference firmware. No HID F5→Fn remap or Input Monitoring permission is needed. |
+| P0: short press / cold start recorded after release | Fixed | `RemoteMicSession` latches press → starting → recording; a release or disconnect before the commit cancels the pending start (`RemoteMicSessionTests`, `RemoteMicSessionOrderingTests`). |
+| P0: first audio lost / stop could not close | Fixed | Early audio is held in `RemoteMicPreRoll` and drained on commit; `STREAM_STOP` releases before clearing state so `endCapture` closes the microphone exactly once (`RemoteMicPreRollTests`). |
+| P1: handshake generation isolation missing | Fixed | `RemoteMicHandshake.confirmCapabilities` now requires the request to have been sent, so a late capability frame on a reused peripheral cannot mark a new attempt ready; `didUpdateValueFor` checks peripheral identity (`RemoteMicHandshakeTests`). |
+| P1: closing the feature left a session recording | Fixed | `deactivate()` invalidates the session and fires released/stopped, and `applyRemoteMicSetting(false)` cancels the session before deactivating. |
 | P0: fallback leaked wanted state | Fixed | `RemoteMicWantedState` holds the want; a failed start calls `tearDownFailedStart()`, clearing the callback, ending capture, and dropping the temp file, so a later readiness cannot open the remote mic mid-system-session. Covered by `RemoteMicWantedStateTests`. |
 | P1: handshake had no state gates | Fixed | `RemoteMicHandshake` requests capabilities only after both notifications are confirmed via `didUpdateNotificationStateFor`, once per attempt; connection and initialization timeouts (`connectionTimeout` 10 s, `initializationTimeout` 8 s) bound each attempt; `didFailToConnect` recovers; a monotonic `generation` rejects late callbacks. Covered by `RemoteMicHandshakeTests`. |
 | P1: only pure protocol tests | Addressed in part | The gate and wanted-state are now pure, injectable types with deterministic tests (20 total). The CoreBluetooth transport itself still needs a real device. |
