@@ -35,6 +35,78 @@ enum RemoteMicSubscription: Hashable {
     case control
 }
 
+/// The delegate callbacks below do not contain a CoreBluetooth connection id.
+/// A proxy is therefore installed for each connection lifecycle and captures
+/// the attempt at the point where CoreBluetooth is wired to the bridge. The
+/// bridge never looks up an attempt from the current peripheral when routing a
+/// callback; the proxy is the callback's source envelope.
+enum XiaomiRemoteMicTestCallback: Equatable {
+    case disconnect
+    case control(Data)
+    case audio(Data)
+}
+
+final class XiaomiRemoteMicPeripheralDelegateProxy: NSObject, CBPeripheralDelegate {
+    weak var bridge: XiaomiRemoteMicBridge?
+    let attempt: UInt64
+
+    init(bridge: XiaomiRemoteMicBridge, attempt: UInt64) {
+        self.bridge = bridge
+        self.attempt = attempt
+        super.init()
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        bridge?.routeDidDiscoverServices(peripheral, error: error, attempt: attempt)
+    }
+
+    func peripheral(
+        _ peripheral: CBPeripheral,
+        didDiscoverCharacteristicsFor service: CBService,
+        error: Error?
+    ) {
+        bridge?.routeDidDiscoverCharacteristics(
+            peripheral,
+            service: service,
+            error: error,
+            attempt: attempt
+        )
+    }
+
+    func peripheral(
+        _ peripheral: CBPeripheral,
+        didUpdateNotificationStateFor characteristic: CBCharacteristic,
+        error: Error?
+    ) {
+        bridge?.routeDidUpdateNotificationState(
+            peripheral,
+            characteristic: characteristic,
+            error: error,
+            attempt: attempt
+        )
+    }
+
+    func peripheral(
+        _ peripheral: CBPeripheral,
+        didUpdateValueFor characteristic: CBCharacteristic,
+        error: Error?
+    ) {
+        bridge?.routeDidUpdateValue(
+            peripheral,
+            characteristic: characteristic,
+            error: error,
+            attempt: attempt
+        )
+    }
+
+    /// Drives the same bridge route as the CoreBluetooth delegate methods, but
+    /// without manufacturing CoreBluetooth objects. This is the test entry for
+    /// a callback that was raised by this particular lifecycle proxy.
+    func deliverForTesting(_ callback: XiaomiRemoteMicTestCallback) {
+        bridge?.routeTestCallback(callback, attempt: attempt)
+    }
+}
+
 /// CoreBluetooth central that connects a Xiaomi Bluetooth Remote 2 Pro over the
 /// ATVV profile and turns its audio notifications into PCM frames.
 ///
@@ -74,11 +146,15 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
 
     private var central: CBCentralManager?
     private var peripheral: CBPeripheral?
-    /// Attempt the current `peripheral` object was connected for. A reused
-    /// `CBPeripheral` keeps this tag, so a callback that arrives after a
-    /// reconnect is attributed to the attempt that raised it, not to whatever
-    /// attempt is current when it is delivered.
-    private var peripheralAttempt: UInt64 = 0
+    /// Attempt of the currently active connection lifecycle. This is used only
+    /// by central-manager lifecycle callbacks, which CoreBluetooth delivers
+    /// without a source attempt. Peripheral data callbacks carry their attempt
+    /// in `peripheralCallbackProxy` instead of reading this mutable value.
+    private var activeConnectionAttempt: UInt64?
+    /// Retained so CoreBluetooth can call the source-bound proxy. An old proxy
+    /// may still deliver a queued callback, but its captured attempt will fail
+    /// the bridge's current-lifecycle gate.
+    private var peripheralCallbackProxy: XiaomiRemoteMicPeripheralDelegateProxy?
     private var transmitCharacteristic: CBCharacteristic?
     private var audioCharacteristic: CBCharacteristic?
     private var controlCharacteristic: CBCharacteristic?
@@ -98,9 +174,10 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     private var timeoutTask: Task<Void, Never>?
     private var isActive = false
 
-    /// Monotonic attempt counter. Every callback checks that it still belongs to
-    /// the current attempt, so a late callback from a failed attempt cannot
-    /// advance the replacement's handshake.
+    /// Monotonic attempt counter. Peripheral callbacks carry their source
+    /// attempt through the delegate proxy; central callbacks are checked at the
+    /// current connection-state boundary because CoreBluetooth supplies no
+    /// central source id.
     private var generation: UInt64 = 0
 
     private var accumulator = RemoteMicFrameAccumulator()
@@ -198,28 +275,40 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         resetPeripheral()
         handshake.reset()
         generation = 0
+        state = .idle
     }
 
     /// Test-only: simulate a connect and return the attempt it bound.
     @discardableResult
     func simulateConnectForTesting() -> UInt64 {
         generation &+= 1
-        peripheralAttempt = generation
-        handshake.beginAttempt(generation)
-        return generation
+        let attempt = generation
+        beginPeripheralAttempt(attempt)
+        state = .connecting
+        return attempt
     }
 
-    /// Test-only: simulate a reconnect on the same peripheral object; the new
-    /// attempt replaces the tracked one while the old tag is retained for the
-    /// queued callbacks that still carry it.
+    /// Test-only: simulate a reconnect on the same peripheral object. The new
+    /// lifecycle gets a new source proxy; callers can retain the old proxy and
+    /// deliver a late event through the production route.
     @discardableResult
     func simulateReconnectSamePeripheralForTesting() -> UInt64 {
         simulateConnectForTesting()
     }
 
-    /// Test-only: the attempt the current peripheral was connected for.
-    func attemptForCurrentPeripheralForTesting(raisedAt: UInt64? = nil) -> UInt64? {
-        raisedAt ?? peripheralAttempt
+    /// Test-only: the attempt currently accepted for the lifecycle.
+    func attemptForCurrentPeripheralForTesting() -> UInt64? {
+        activeConnectionAttempt
+    }
+
+    /// Test-only: retain the source envelope for a simulated lifecycle.
+    func callbackProxyForTesting() -> XiaomiRemoteMicPeripheralDelegateProxy? {
+        peripheralCallbackProxy
+    }
+
+    /// Test-only: whether the lifecycle is still installed after a late event.
+    func isAttemptActiveForTesting(_ attempt: UInt64) -> Bool {
+        activeConnectionAttempt == attempt && peripheralCallbackProxy?.attempt == attempt
     }
 
     /// Test-only: whether the handshake still tracks `attempt`.
@@ -302,11 +391,27 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     }
 
     private func resetPeripheral() {
+        peripheral?.delegate = nil
         peripheral = nil
-        peripheralAttempt = 0
+        activeConnectionAttempt = nil
+        peripheralCallbackProxy = nil
         transmitCharacteristic = nil
         audioCharacteristic = nil
         controlCharacteristic = nil
+    }
+
+    /// Starts a new peripheral lifecycle and installs the source-bound route.
+    /// CoreBluetooth itself does not expose the attempt id on delegate events;
+    /// this proxy is the lifecycle boundary that supplies it.
+    private func beginPeripheralAttempt(_ attempt: UInt64, peripheral: CBPeripheral? = nil) {
+        activeConnectionAttempt = attempt
+        handshake.beginAttempt(attempt)
+        let proxy = XiaomiRemoteMicPeripheralDelegateProxy(bridge: self, attempt: attempt)
+        peripheralCallbackProxy = proxy
+        if let peripheral {
+            self.peripheral = peripheral
+            peripheral.delegate = proxy
+        }
     }
 
     private func cancelReconnect() {
@@ -507,18 +612,15 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
-        guard isActive, self.peripheral == nil else { return }
-        self.peripheral = peripheral
-        peripheral.delegate = self
+        guard isActive, self.peripheral == nil, state == .scanning else { return }
         central.stopScan()
         state = .connecting
-        // Bind this connection to a fresh attempt; queued callbacks from an
-        // earlier connection on a reused CBPeripheral object are attributed to
-        // the old attempt via `peripheralAttempt`.
+        // Bind this connection to a fresh lifecycle proxy. A reused
+        // CBPeripheral may still have an old proxy callback queued; that proxy
+        // carries its old attempt and cannot pass the route gate below.
         generation &+= 1
         let attempt = generation
-        peripheralAttempt = attempt
-        handshake.beginAttempt(attempt)
+        beginPeripheralAttempt(attempt, peripheral: peripheral)
         startTimeout(
             seconds: Self.connectionTimeout,
             generation: attempt,
@@ -532,8 +634,12 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        guard attempt(for: peripheral) != nil else { return }
-        let attempt = generation
+        // Central callbacks have no attempt token. CoreBluetooth serializes
+        // them on the main delegate queue, so only accept a connected state for
+        // the currently installed lifecycle. A late disconnect/failure after a
+        // replacement has connected is rejected by the state checks below.
+        guard let attempt = currentCentralAttempt(for: peripheral),
+              peripheral.state == .connected else { return }
         startTimeout(
             seconds: Self.initializationTimeout,
             generation: attempt,
@@ -548,7 +654,11 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         didFailToConnect peripheral: CBPeripheral,
         error: Error?
     ) {
-        guard attempt(for: peripheral) != nil else { return }
+        // A failed connection is terminal only while this lifecycle is
+        // actually disconnected. This rejects an old failure delivered while a
+        // reused object is already connecting/connected for its replacement.
+        guard currentCentralAttempt(for: peripheral) != nil,
+              peripheral.state == .disconnected else { return }
         failAttempt(reason: L("remote_mic.error.connect_failed"))
     }
 
@@ -558,26 +668,34 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
         error: Error?
     ) {
         // A disconnect raised for a superseded attempt must not tear down the
-        // connection that replaced it.
-        guard let callbackAttempt = attempt(for: peripheral),
-              handshake.accepts(callbackAttempt) else { return }
+        // connection that replaced it. CoreBluetooth exposes no source id, so
+        // the lifecycle boundary is the current object + disconnected state;
+        // all data/handshake callbacks use the stronger proxy envelope below.
+        guard currentCentralAttempt(for: peripheral) != nil,
+              peripheral.state == .disconnected else { return }
         handleDisconnect()
     }
 
-    /// The attempt a callback from `peripheral` belongs to, or nil when the
-    /// object is not the current one. Using the tag captured at connect time —
-    /// rather than the live `generation` — is what rejects a late callback on a
-    /// reused `CBPeripheral` even after a new attempt has started.
-    fileprivate func attempt(for peripheral: CBPeripheral) -> UInt64? {
-        guard peripheral === self.peripheral else { return nil }
-        return peripheralAttempt
+    /// Returns the current lifecycle for a central callback. Central delegate
+    /// events do not carry a source attempt; state checks at their lifecycle
+    /// boundary keep an old disconnect/failure from invalidating a replacement.
+    private func currentCentralAttempt(for peripheral: CBPeripheral) -> UInt64? {
+        guard peripheral === self.peripheral,
+              let attempt = activeConnectionAttempt,
+              handshake.accepts(attempt) else { return nil }
+        return attempt
     }
 }
 
-extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        guard let callbackAttempt = attempt(for: peripheral),
-              handshake.accepts(callbackAttempt) else { return }
+// MARK: - Source-bound peripheral callback routes
+
+extension XiaomiRemoteMicBridge {
+    fileprivate func routeDidDiscoverServices(
+        _ peripheral: CBPeripheral,
+        error: Error?,
+        attempt: UInt64
+    ) {
+        guard acceptsPeripheralCallback(peripheral, attempt: attempt), error == nil else { return }
         guard let service = peripheral.services?.first(where: { $0.uuid == serviceUUID }) else {
             failAttempt(reason: L("remote_mic.error.service_missing"))
             return
@@ -590,12 +708,13 @@ extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
         )
     }
 
-    func peripheral(
+    fileprivate func routeDidDiscoverCharacteristics(
         _ peripheral: CBPeripheral,
-        didDiscoverCharacteristicsFor service: CBService,
-        error: Error?
+        service: CBService,
+        error: Error?,
+        attempt: UInt64
     ) {
-        guard peripheral === self.peripheral else { return }
+        guard acceptsPeripheralCallback(peripheral, attempt: attempt), error == nil else { return }
         let transmit = RemoteMicProtocol.transmitUUID.uppercased()
         let audio = RemoteMicProtocol.audioUUID.uppercased()
         let control = RemoteMicProtocol.controlUUID.uppercased()
@@ -624,13 +743,13 @@ extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
         requestCapabilitiesIfReady()
     }
 
-    func peripheral(
+    fileprivate func routeDidUpdateNotificationState(
         _ peripheral: CBPeripheral,
-        didUpdateNotificationStateFor characteristic: CBCharacteristic,
-        error: Error?
+        characteristic: CBCharacteristic,
+        error: Error?,
+        attempt: UInt64
     ) {
-        guard let callbackAttempt = attempt(for: peripheral),
-              handshake.accepts(callbackAttempt), error == nil else { return }
+        guard acceptsPeripheralCallback(peripheral, attempt: attempt), error == nil else { return }
         guard characteristic.isNotifying else { return }
         switch characteristic.uuid.uuidString.uppercased() {
         case RemoteMicProtocol.audioUUID.uppercased():
@@ -643,24 +762,55 @@ extension XiaomiRemoteMicBridge: CBPeripheralDelegate {
         requestCapabilitiesIfReady()
     }
 
-    func peripheral(
+    fileprivate func routeDidUpdateValue(
         _ peripheral: CBPeripheral,
-        didUpdateValueFor characteristic: CBCharacteristic,
-        error: Error?
+        characteristic: CBCharacteristic,
+        error: Error?,
+        attempt: UInt64
     ) {
         // A reused CBPeripheral object can deliver a late value from a previous
         // attempt; attribute it to the attempt that raised it and drop it when
         // this handshake no longer tracks that attempt.
-        guard let callbackAttempt = attempt(for: peripheral),
-              handshake.accepts(callbackAttempt), error == nil,
+        guard acceptsPeripheralCallback(peripheral, attempt: attempt), error == nil,
               let data = characteristic.value else { return }
         switch characteristic.uuid.uuidString.uppercased() {
         case RemoteMicProtocol.controlUUID.uppercased():
-            handleControl(data, attempt: callbackAttempt)
+            handleControl(data, attempt: attempt)
         case RemoteMicProtocol.audioUUID.uppercased():
-            handleAudio(data, attempt: callbackAttempt)
+            handleAudio(data, attempt: attempt)
         default:
             break
+        }
+    }
+
+    /// The common gate for every CBPeripheralDelegate callback. Unlike the old
+    /// `attempt(for:)` lookup, the attempt here came from the delegate proxy
+    /// that was installed for the connection lifecycle.
+    private func acceptsPeripheralCallback(_ peripheral: CBPeripheral?, attempt: UInt64) -> Bool {
+        guard activeConnectionAttempt == attempt,
+              peripheralCallbackProxy?.attempt == attempt,
+              handshake.accepts(attempt) else { return false }
+        if let peripheral {
+            guard peripheral === self.peripheral else { return false }
+        }
+        return true
+    }
+
+    /// Test-only event route used by `XiaomiRemoteMicPeripheralDelegateProxy`.
+    /// It intentionally enters the same attempt gate and handlers as production
+    /// delegate callbacks; it only omits unavailable CoreBluetooth value types.
+    fileprivate func routeTestCallback(
+        _ callback: XiaomiRemoteMicTestCallback,
+        attempt: UInt64
+    ) {
+        guard acceptsPeripheralCallback(nil, attempt: attempt) else { return }
+        switch callback {
+        case .disconnect:
+            handleDisconnect()
+        case let .control(data):
+            handleControl(data, attempt: attempt)
+        case let .audio(data):
+            handleAudio(data, attempt: attempt)
         }
     }
 }

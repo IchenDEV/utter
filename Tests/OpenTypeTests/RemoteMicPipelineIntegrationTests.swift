@@ -141,41 +141,52 @@ private final class AsyncGate {
 
 /// The attempt must be captured at callback *source*, not read as the live
 /// generation when the callback is delivered. On a reused `CBPeripheral` the two
-/// differ, and only the source binding rejects a stale callback after the new
-/// attempt has started.
+/// differ. The test retains the old production delegate proxy, starts a second
+/// lifecycle on the same simulated peripheral, and sends the old event through
+/// that proxy's real bridge route.
 @MainActor
 final class RemoteMicCallbackRoutingTests: XCTestCase {
-    func testAttemptIsBoundAtSourceNotAtDelivery() {
+    func testLateDisconnectFromOldSourceCannotInvalidateNewLifecycle() throws {
         let bridge = XiaomiRemoteMicBridge()
         bridge.configureForTesting()
 
-        // Attempt 1 connects.
+        // Attempt 1 installs a source-bound production delegate proxy.
         let firstAttempt = bridge.simulateConnectForTesting()
         XCTAssertEqual(bridge.attemptForCurrentPeripheralForTesting(), firstAttempt)
+        let firstProxy = try XCTUnwrap(bridge.callbackProxyForTesting())
 
-        // A new attempt begins on the same peripheral object.
+        // A new attempt begins on the same peripheral object and replaces only
+        // the active lifecycle; the old proxy remains a valid queued-event
+        // source carrying attempt 1.
         let secondAttempt = bridge.simulateReconnectSamePeripheralForTesting()
         XCTAssertGreaterThan(secondAttempt, firstAttempt)
 
-        // A callback raised for attempt 1 must still be attributed to attempt 1,
-        // even though the live generation is now attempt 2.
-        XCTAssertEqual(
-            bridge.attemptForCurrentPeripheralForTesting(raisedAt: firstAttempt),
-            firstAttempt,
-            "a stale callback must carry the attempt that raised it"
+        // This is the production proxy -> bridge route, not a direct helper
+        // assertion. A live-generation lookup would tear down attempt 2 here.
+        firstProxy.deliverForTesting(.disconnect)
+
+        XCTAssertTrue(
+            bridge.isAttemptActiveForTesting(secondAttempt),
+            "a stale disconnect must not invalidate the replacement lifecycle"
         )
     }
 
-    /// A stale callback for attempt 1 must not be accepted once attempt 2 is the
-    /// tracked one, even after attempt 2 has requested capabilities.
-    func testStaleCallbackIsRejectedAfterNewAttemptRequestedCapabilities() {
+    /// A stale control event must not release the live voice-key session after
+    /// the replacement attempt has become the tracked handshake.
+    func testLateControlFromOldSourceCannotReleaseNewSession() throws {
         let bridge = XiaomiRemoteMicBridge()
         bridge.configureForTesting()
-        let firstAttempt = bridge.simulateConnectForTesting()
+        _ = bridge.simulateConnectForTesting()
+        let firstProxy = try XCTUnwrap(bridge.callbackProxyForTesting())
         let secondAttempt = bridge.simulateReconnectSamePeripheralForTesting()
         bridge.simulateCapabilitiesRequestedForTesting()
+        _ = bridge.beginSimulatedSessionForTesting()
 
-        XCTAssertFalse(bridge.acceptsAttemptForTesting(firstAttempt), "stale attempt must be rejected")
-        XCTAssertTrue(bridge.acceptsAttemptForTesting(secondAttempt))
+        // STREAM_STOP is 0x00. If the old proxy were routed by the live
+        // generation, it would release this attempt-2 session.
+        firstProxy.deliverForTesting(.control(Data([0x00])))
+
+        XCTAssertTrue(bridge.isSessionLive, "stale control must not release the live session")
+        XCTAssertTrue(bridge.isAttemptActiveForTesting(secondAttempt))
     }
 }

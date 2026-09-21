@@ -33,7 +33,7 @@ licensing question is a human/CTO item and is untouched here.
 | P1: handshake generation isolation missing | Fixed | `RemoteMicHandshake.confirmCapabilities` now requires the request to have been sent, so a late capability frame on a reused peripheral cannot mark a new attempt ready; `didUpdateValueFor` checks peripheral identity (`RemoteMicHandshakeTests`). |
 | P1: closing the feature left a session recording | Fixed | `deactivate()` invalidates the session and fires released/stopped, and `applyRemoteMicSetting(false)` cancels the session before deactivating. |
 | P0: cancellation did not reach the real VoicePipeline start | Fixed | `startRecording` now returns the task that owns the whole `pipeline.start`; the remote path stores and cancels it, and passes the latch into `pipeline.start`, which re-checks it after the model wait via `RemoteMicStartGuard`. A released or cancelled start aborts and never falls back to the system mic. |
-| P1: same-peripheral attempt isolation missing | Fixed | The bridge tags the peripheral with the attempt it was connected for (`peripheralAttempt`) and attributes every callback to that tag, not to the live `generation` read at delivery. A stale callback is rejected even after the new attempt has requested capabilities (`RemoteMicCallbackRoutingTests`). |
+| P1: same-peripheral attempt isolation missing | Fixed in this increment | Each connection lifecycle installs a source-bound `XiaomiRemoteMicPeripheralDelegateProxy`; every peripheral callback carries the proxy's captured attempt through the production route. Central callbacks have no source id in CoreBluetooth and are limited to the current object plus disconnected/connected state boundary. `RemoteMicCallbackRoutingTests` retains the old proxy and delivers late disconnect/control events through the production route. |
 | P0: normal release discarded the recording | Fixed | `RemoteMicReleaseDecision.applyRelease` drives the production release path: a committed recording is stopped (its WAV is needed), only an uncommitted start is cancelled (`RemoteMicReleasePathTests`). |
 | P0: disabling the feature left the pipeline recording | Fixed | `RemoteMicShutdownDecision` stops the pipeline when a recording is active, because the bridge's release callback is suppressed once the setting is off. |
 | P1: cold-model counterexample only tested a helper | Fixed | `RemoteMicPipelineIntegrationTests` drives the real `VoicePipeline.start` await through an injected model-load barrier and a capture spy, proving a released/superseded start never reaches recording or capture. |
@@ -55,6 +55,12 @@ licensing question is a human/CTO item and is untouched here.
 - Voice key starts and stops recording — implemented through the control-channel
   adoption path; **not verified on hardware**.
 - Handshake ordering, attempt isolation, and timeouts covered by deterministic tests — pass (`RemoteMicHandshakeTests`, `RemoteMicAttemptIsolationTests`).
+- Source-bound same-peripheral late-event regression — run
+  `swift test --filter RemoteMicCallbackRoutingTests`; the test retains the
+  attempt-1 production delegate proxy, starts attempt 2 on the same simulated
+  object, and delivers disconnect/control through that proxy. A mutation that
+  replaces the proxy's captured attempt with the live attempt must fail this
+  test.
 - Session cancel across the real pipeline path — pass at the unit boundary: `RemoteMicStartGuardTests` mirrors the pipeline's post-model check and fails 3 cases under the old behaviour (mutation check). The live `VoicePipeline.start` await itself still needs a hardware/timing run.
 - Localization parity and check scripts — pass.
 
@@ -83,6 +89,15 @@ licensing question is a human/CTO item and is untouched here.
   attribution/licensing before any distribution; the setting stays default off.
 - The bridge assumes CoreBluetooth callbacks on the main queue and main-thread
   callers, matching the existing capture style.
+- **CoreBluetooth callback boundary.** `CBPeripheralDelegate` callbacks are
+  source-bound by a lifecycle proxy, so a queued service/characteristic/
+  notification/value event from an old lifecycle cannot use the replacement's
+  handshake. `CBCentralManagerDelegate` callbacks do not carry an attempt id;
+  the bridge accepts them only for the current peripheral and compatible
+  connected/disconnected state. This protects a late failure/disconnect after
+  a replacement is connected, but cannot identify two simultaneous central
+  events for the same object beyond CoreBluetooth's serialized main delegate
+  queue; reconnects must remain serialized through this lifecycle.
 - `AudioCaptureActivity` thresholds were tuned for the built-in mic; the remote
   path uses the same gate with a user-adjustable gain.
 
