@@ -291,8 +291,8 @@ extension ModelCatalog {
 
     /// A download starts with concrete, model-scoped roots. On retry, stale
     /// partial markers from a completed failed transfer are removed. A
-    /// cancelled generation is moved to its own quarantine before this method
-    /// is reached, so its late writer cannot touch the new live path.
+    /// cancelled generation keeps ownership until its dependency I/O returns;
+    /// only then may a retry reuse the live path.
     func prepareCacheForRetry(
         kind: ModelDownloadKind,
         modelID: String,
@@ -318,7 +318,7 @@ extension ModelCatalog {
         let watchdog = DownloadStallWatchdog()
         watchdog.start { [weak self] in
             guard let self, self.downloadTasks.isCurrent(key, token: token) else { return }
-            if self.abandonStalledDownload(modelID, kind: kind) {
+            if self.cancelStalledDownload(modelID, kind: kind) {
                 self.markStalled(kind: kind, modelID: modelID)
             }
         }

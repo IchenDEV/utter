@@ -1,7 +1,7 @@
 import Foundation
 
 /// Clears the stale partial-file artifacts an interrupted download leaves behind
-/// and gives each download generation its own isolated staging.
+/// and provides path-scoped recovery seams for tests and future staged clients.
 ///
 /// Both download stacks resume by appending to an `.incomplete` file. When a
 /// transfer dies mid-file the remaining partial can desynchronize with the
@@ -10,10 +10,11 @@ import Foundation
 /// only the `.incomplete` markers keeps completed files and makes the retry
 /// start from a known-good state.
 ///
-/// A transfer that ignores cancellation cannot be forcibly stopped, so before a
-/// retry starts the previous generation's cache is *relocated* to a quarantine
-/// directory. The abandoned writer keeps writing into the quarantined copy while
-/// the retry works in the live path; nothing they touch overlaps.
+/// The live coordinator deliberately does not use directory relocation for
+/// cancellation: pinned Hub dependencies retain absolute incomplete-file URLs
+/// across awaits. It drains the old operation before reusing live paths. The
+/// relocation helpers below remain useful as explicit path-layout test seams,
+/// but are not a live writer-isolation guarantee.
 enum ModelDownloadRecovery {
     struct CleanupResult: Equatable {
         var removedFiles = 0
@@ -87,9 +88,9 @@ enum ModelDownloadRecovery {
         }
     }
 
-    /// Moves the previous generation's live cache into quarantine so an
-    /// abandoned writer cannot corrupt the retry. The quarantine is cleaned
-    /// after that writer returns.
+    /// Path-layout helper for a future downloader with injected staging roots.
+    /// The live coordinator must not call this for cancellation because the
+    /// pinned dependencies can reopen their original absolute URLs.
     @discardableResult
     static func beginNewGeneration(kind: ModelDownloadKind, modelID: String) -> RelocationResult {
         relocateStaleGeneration(kind: kind, modelID: modelID)
@@ -147,8 +148,8 @@ enum ModelDownloadRecovery {
         }
     }
 
-    /// Materializes the exact roots before a transfer starts. This gives a
-    /// cancellation quarantine something concrete to move even when the
+    /// Materializes the exact roots before a transfer starts so status and
+    /// partial-file scans observe the same model-scoped layout even when the
     /// network fails before the downloader creates its first file.
     static func ensureLiveArtifactRoots(kind: ModelDownloadKind, modelID: String) {
         for root in liveArtifactRoots(

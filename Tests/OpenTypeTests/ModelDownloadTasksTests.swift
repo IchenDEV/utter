@@ -85,21 +85,20 @@ final class ModelDownloadTasksTests: XCTestCase {
         XCTAssertTrue(downloads.isCurrent(key, token: token))
 
         downloads.cancel(key)
-        // Cancel alone keeps the slot; the owner is still the same token.
+        // Cancel keeps the slot until the dependency operation returns, but
+        // stops the cancelled generation from publishing UI state.
         XCTAssertTrue(downloads.isActive(key))
 
-        downloads.abandon(key)
         XCTAssertFalse(downloads.isCurrent(key, token: token))
-        XCTAssertFalse(downloads.isActive(key))
         await task.value
+        XCTAssertFalse(downloads.isActive(key))
     }
 
     // MARK: - Retry serialization
 
     /// Cancellation alone keeps the current generation as the owner. A retry
-    /// cannot start a second operation until the caller explicitly abandons the
-    /// generation after isolating its files.
-    func testRetryAfterCancelDoesNotStartASecondWriter() async {
+    /// waits for that operation to return, then starts exactly one replacement.
+    func testRetryAfterCancelWaitsForTheOriginalWriter() async {
         let downloads = ModelDownloadTasks()
         let key = ModelDownloadKey(kind: .llm, modelID: "test/model")
         var starts = 0
@@ -128,59 +127,77 @@ final class ModelDownloadTasksTests: XCTestCase {
                 starts += 1
             }
         }
-        await retry.value
         await first.value
+        await retry.value
 
-        XCTAssertEqual(starts, 1)
+        XCTAssertEqual(starts, 2)
         XCTAssertTrue(observedCancellation)
     }
 
-    /// A transfer that ignores cancellation is abandoned, not awaited: the retry
-    /// starts immediately, so the user is never blocked. Disk safety comes from
-    /// the caller having relocated the previous generation first.
-    func testAbandonedWriterDoesNotBlockRetry() async {
+    /// Regression for the pinned Hub clients: they retain an absolute live URL
+    /// over an async network wait. The replacement must not start until the old
+    /// operation returns, because a late continuation may write that same URL.
+    func testCancelledWriterUsingOriginalPathMustDrainBeforeRetry() async throws {
         let downloads = ModelDownloadTasks()
-        let key = ModelDownloadKey(kind: .whisper, modelID: "test/model")
-        var retryStarted = false
-        var stuckReturned = false
-        var cleanupCalled = false
-        var releaseStuck: (() -> Void)?
+        let key = ModelDownloadKey(kind: .asr, modelID: "test/model")
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeOriginalPath-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let liveFile = root.appendingPathComponent("models/test/model/blob.incomplete")
+        try FileManager.default.createDirectory(
+            at: liveFile.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("before-cancel".utf8).write(to: liveFile)
 
-        let stuck = Task { @MainActor in
+        var retryStarted = false
+        var oldReturned = false
+        var releaseOld: (() -> Void)?
+
+        let old = Task { @MainActor in
             await downloads.run(key: key) { _ in
                 await withCheckedContinuation {
                     (continuation: CheckedContinuation<Void, Never>) in
-                    releaseStuck = { continuation.resume() }
+                    // This is intentionally the original URL, not a moved
+                    // staging URL. It mirrors the dependency's saved
+                    // `incompleteBlobPath`/`incompleteDestination` behavior.
+                    releaseOld = {
+                        try? Data("old-late-write".utf8).write(to: liveFile)
+                        continuation.resume()
+                    }
                 }
-                stuckReturned = true
+                oldReturned = true
             }
         }
-        for _ in 0..<200 where releaseStuck == nil {
+        for _ in 0..<200 where releaseOld == nil {
             try? await Task.sleep(nanoseconds: 1_000_000)
         }
-        XCTAssertNotNil(releaseStuck, "stuck writer did not reach its continuation")
+        XCTAssertNotNil(releaseOld, "old writer did not reach its continuation")
 
         downloads.cancel(key)
-        // The caller has already quarantined the stale cache at this point.
-        XCTAssertTrue(downloads.abandon(key) { cleanupCalled = true })
 
         let retry = Task { @MainActor in
             await downloads.run(key: key) { _ in
                 retryStarted = true
+                try? Data("replacement".utf8).write(to: liveFile)
             }
         }
+        await Task.yield()
+
+        XCTAssertFalse(retryStarted, "retry must wait for the original-path writer")
+        XCTAssertFalse(oldReturned)
+        releaseOld?()
+        await old.value
         await retry.value
 
-        XCTAssertTrue(retryStarted, "the retry must not wait for the abandoned writer")
-        XCTAssertFalse(stuckReturned, "the abandoned writer is still running")
-        XCTAssertFalse(cleanupCalled, "old-generation cleanup must wait for old I/O")
-        releaseStuck?()
-        await stuck.value
-        XCTAssertTrue(cleanupCalled)
+        XCTAssertTrue(retryStarted)
+        XCTAssertTrue(oldReturned)
+        XCTAssertEqual(try Data(contentsOf: liveFile), Data("replacement".utf8))
     }
 
     /// Counterexample the reviewer asked for: two retries racing a cancelled
-    /// writer must start the replacement exactly once.
+    /// writer must start the replacement exactly once, after the old writer
+    /// has drained.
     func testTwoConcurrentRetriesAfterCancelStartOnlyOneWriter() async {
         let downloads = ModelDownloadTasks()
         let key = ModelDownloadKey(kind: .llm, modelID: "test/model")
@@ -205,7 +222,6 @@ final class ModelDownloadTasksTests: XCTestCase {
         }
         XCTAssertNotNil(releaseStuck, "stuck writer did not reach its continuation")
         downloads.cancel(key)
-        downloads.abandon(key)
 
         let retryA = Task { @MainActor in
             await downloads.run(key: key) { _ in
@@ -226,12 +242,15 @@ final class ModelDownloadTasksTests: XCTestCase {
             }
         }
 
+        await Task.yield()
+        XCTAssertEqual(starts, 0, "retries must wait for the original writer")
+        XCTAssertEqual(maxConcurrentWriters, 1)
+        releaseStuck?()
         await retryA.value
         await retryB.value
 
         XCTAssertEqual(starts, 1, "exactly one retry may start its operation")
-        XCTAssertEqual(maxConcurrentWriters, 2, "the old writer and replacement use isolated generations")
-        releaseStuck?()
+        XCTAssertEqual(maxConcurrentWriters, 1, "the replacement must wait for the old writer")
         await stuck.value
     }
 
@@ -305,9 +324,9 @@ final class ModelDownloadTasksTests: XCTestCase {
         XCTAssertEqual(maxConcurrentWriters, 1, "delete must not overlap the cancelled writer")
     }
 
-    /// Delete after an abandon still waits for the abandoned writer, so it never
-    /// deletes the quarantine directory out from under an active writer.
-    func testDeleteWaitsForAbandonedWriter() async {
+    /// Delete waits for a cancelled writer that still owns its original live
+    /// path, so it cannot remove that path during late dependency I/O.
+    func testDeleteWaitsForCancelledWriter() async {
         let downloads = ModelDownloadTasks()
         let key = ModelDownloadKey(kind: .llm, modelID: "test/model")
         var activeWriters = 0
@@ -330,7 +349,6 @@ final class ModelDownloadTasksTests: XCTestCase {
         }
         XCTAssertNotNil(releaseStuck, "stuck writer did not reach its continuation")
         downloads.cancel(key)
-        downloads.abandon(key)
 
         let deleteTask = Task { @MainActor in
             await downloads.runExclusive(key: key) { _ in
@@ -359,10 +377,10 @@ final class ModelDownloadTasksTests: XCTestCase {
         XCTAssertFalse(downloads.isActive(key), "the exclusive slot is released afterwards")
     }
 
-    /// File-level counterexample for cancel -> retry -> delete: the retired
-    /// writer keeps writing in quarantine, while delete waits and only removes
-    /// the replacement's live path after the retired I/O exits.
-    func testDeleteWaitsForRetiredGenerationBeforeRemovingLivePath() async throws {
+    /// File-level counterexample for cancel -> retry -> delete: the old
+    /// dependency writer keeps its original live URL, so retry and delete must
+    /// both wait for it instead of relying on a directory move.
+    func testDeleteWaitsForCancelledOriginalPathWriter() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("OpenTypeDownloadGeneration-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -371,20 +389,27 @@ final class ModelDownloadTasksTests: XCTestCase {
         try FileManager.default.createDirectory(at: live, withIntermediateDirectories: true)
         let oldPartial = live.appendingPathComponent("weights.incomplete")
         try Data("old-partial".utf8).write(to: oldPartial)
+        let latePayload = root.appendingPathComponent("old-late-payload")
 
         let downloads = ModelDownloadTasks()
         let key = ModelDownloadKey(kind: .llm, modelID: "org/model")
         var releaseOld: (() -> Void)?
-        var quarantinedPartial: URL?
 
         let old = Task { @MainActor in
             await downloads.run(key: key) { _ in
                 await withCheckedContinuation {
                     (continuation: CheckedContinuation<Void, Never>) in
                     releaseOld = {
-                        if let quarantinedPartial {
-                            try? Data("old-writer".utf8).write(to: quarantinedPartial)
-                        }
+                        // This intentionally writes the original live path,
+                        // matching a dependency continuation that retained
+                        // its absolute `.incomplete` URL before cancellation.
+                        try? Data("old-writer".utf8).write(to: latePayload)
+                        try? FileManager.default.createDirectory(
+                            at: oldPartial.deletingLastPathComponent(),
+                            withIntermediateDirectories: true
+                        )
+                        try? FileManager.default.removeItem(at: oldPartial)
+                        try? FileManager.default.moveItem(at: latePayload, to: oldPartial)
                         continuation.resume()
                     }
                 }
@@ -395,22 +420,27 @@ final class ModelDownloadTasksTests: XCTestCase {
         }
         XCTAssertNotNil(releaseOld, "old writer did not reach its continuation")
 
-        let relocation = ModelDownloadRecovery.relocate([live], into: root.appendingPathComponent("quarantine"))
-        quarantinedPartial = try XCTUnwrap(
-            ModelDownloadRecovery.incompleteFiles(under: try XCTUnwrap(relocation.quarantineURL)).first
-        )
         downloads.cancel(key)
-        XCTAssertTrue(downloads.abandon(key) {
-            ModelDownloadRecovery.clearQuarantine(relocation)
-        })
+
+        // Reproduce the rejected quarantine-only design: the old writer still
+        // owns the URL it captured before this directory move, while Resume
+        // reconstructs the original live path. The coordinator must keep
+        // both operations serialized despite the move.
+        let relocation = ModelDownloadRecovery.relocate(
+            [live],
+            into: root.appendingPathComponent("quarantine", isDirectory: true)
+        )
+        XCTAssertNotNil(relocation.quarantineURL)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: live.path))
 
         let retry = Task { @MainActor in
             await downloads.run(key: key) { _ in
-                try? FileManager.default.createDirectory(at: live, withIntermediateDirectories: true)
                 try? Data("new-writer".utf8).write(to: live.appendingPathComponent("weights.incomplete"))
             }
         }
-        await retry.value
+        await Task.yield()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: live.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: live.appendingPathComponent("weights.incomplete").path))
 
         var deleteRan = false
         let delete = Task { @MainActor in
@@ -420,11 +450,15 @@ final class ModelDownloadTasksTests: XCTestCase {
             }
         }
         await Task.yield()
-        XCTAssertFalse(deleteRan)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: live.path))
+        XCTAssertFalse(deleteRan, "delete must wait for the original-path writer")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: live.path))
 
+        // The replacement is still waiting for the old writer. Releasing the
+        // old writer first proves that the same live URL is never shared.
         releaseOld?()
         await old.value
+        await retry.value
+
         await delete.value
 
         XCTAssertTrue(deleteRan)

@@ -9,16 +9,16 @@
 
 - [x] Add `ModelDownloadRecovery` with the pure path seam and marker cleanup.
 - [x] Add Hugging Face cache-root resolution to `ModelStorage`.
-- [x] Give `ModelDownloadTasks` a run token, `isCurrent`, and generation-aware
-      cancellation.
+- [x] Give `ModelDownloadTasks` a run token, `isCurrent`, and cancellation-aware
+      single-writer draining.
 - [x] Purge stale markers on retry; keep resume for a fresh download.
 - [x] Make `cancelDownload` immediately mark the model paused.
 - [x] Add `DownloadStallWatchdog` and wire it into all three download paths.
 - [x] Purge partial markers when deleting a model.
 - [x] Add `model.download_failed_stalled` to both localizations.
 - [x] Add unit tests for recovery, the retry gate, and the watchdog.
-- [x] Keep one live writer per model and isolate cancelled generations before an
-      immediate retry; defer quarantine cleanup until retired I/O exits.
+- [x] Keep one live writer per model; hold the cancelled generation's slot until
+      dependency I/O returns before admitting a retry.
 - [x] Scope Whisper partial cleanup to the requested variant.
 - [x] Treat only real byte/fraction growth as download progress.
 

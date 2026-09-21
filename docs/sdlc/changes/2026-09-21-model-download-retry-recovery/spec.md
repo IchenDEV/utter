@@ -25,6 +25,16 @@ removes only the materialized directory, so the shared partials outlive a delete
 `HubCache.default` resolves to `HF_HUB_CACHE` → `HF_HOME/hub` → the per-user
 `~/.cache/huggingface/hub` (non-sandboxed) — outside `ModelStorage.root`.
 
+The locked dependencies make live-path ownership stricter than a directory
+rename suggests. `swift-huggingface` 0.9.0
+(`b721959445b617d0bf03910b2b4aced345fd93bf`) computes
+`incompleteBlobPath` before its network await and later appends/replaces that
+same absolute URL. `swift-transformers` 1.3.3
+(`2fa33e1f5e7131a7fc64c28e6d161dcec0d24820`) likewise computes
+`incompleteDestination` before its async client download. A cancelled
+continuation can therefore reopen the original live path after a directory has
+been moved; quarantine alone is not a valid writer-isolation proof.
+
 ## Design
 
 `ModelDownloadRecovery` computes and removes partial markers:
@@ -44,25 +54,22 @@ removes only the materialized directory, so the shared partials outlive a delete
 `ModelDownloadTasks` changes:
 
 - `run` passes a per-run `token` to the operation and keeps one slot per key.
-- A duplicate request joins the in-flight run. A retry after `cancel` is
-  **isolates the cancelled generation**: the live materialized repository and
-  model-specific Hub cache roots are moved into a unique quarantine before the
-  old entry is abandoned. The replacement can start immediately in fresh live
-  paths, while the retired task remains tracked until its I/O returns. A
-  duplicate that joined a run which then completes normally still does not
-  restart it.
-- `isCurrent(key:token:)` is false once a generation is abandoned, so a late
-  transfer cannot write a terminal status over the replacement.
-- Quarantine cleanup is deferred until every generation for the model has
-  stopped writing. Completed files are merged back only when their live target
-  is still absent; `.incomplete` markers are never restored.
-- `ModelCatalog.cancelDownload` marks the model paused after isolating the old
-  generation, restoring the Resume affordance. Delete waits for retired I/O
-  before removing live files and partial markers.
+- A duplicate request joins the in-flight run. `cancel` marks the current entry
+  cancelled but deliberately retains its slot until the dependency operation
+  returns. A Resume request that arrived during that drain claims one restart;
+  concurrent Resume requests join that replacement. A duplicate that joined a
+  run which completes normally still does not restart it.
+- `isCurrent(key:token:)` becomes false as soon as cancellation is requested,
+  preventing late progress or terminal state from reaching the UI, while the
+  entry remains active for disk serialization.
+- `ModelCatalog.cancelDownload` marks the model paused and restores Resume,
+  but the next download reuses live paths only after the old absolute-path I/O
+  has returned. Delete uses the same per-key gate.
 
 Trade-off: if a library call never returns despite cancellation, retry remains
-available because its paths are isolated, while delete waits for the retired
-writer before performing destructive cleanup.
+visible but waits for that dependency call to drain. This is fail-closed: a
+retry cannot share a path with a writer that may still reopen the original
+absolute URL.
 
 `DownloadStallWatchdog` polls a last-activity timestamp and fires once after the
 timeout. A shared `DownloadProgressSignal` only calls `noteProgress()` when the
@@ -78,11 +85,11 @@ status (a user retry) and leaves a fresh download's resumable state alone.
 
 - Deleting only `*.incomplete` files, scoped to the requested model, cannot
   destroy a usable model or another model's in-flight partial.
-- Cancellation quarantine is temporary: completed files are restored into a
-  still-missing live path after all retired I/O exits, while partial markers are
-  discarded with the quarantine.
-- If a stalled transfer ignores cancellation, its generation is quarantined and
-  the retry uses fresh paths; its state writes are rejected by `isCurrent`.
+- Cancellation keeps the live paths owned by the cancelled task until its I/O
+  returns; no directory move is treated as isolation. The next generation then
+  purges only the requested model's `.incomplete` markers.
+- If a stalled transfer ignores cancellation, its Resume action remains
+  serialized behind that task; its state writes are rejected by `isCurrent`.
 - No network, permission, or privacy boundary changes. No new bundled resources.
 
 ## Test strategy
@@ -92,8 +99,9 @@ status (a user retry) and leaves a fresh download's resumable state alone.
   sibling variant's is kept), materialized + shared cache coverage, missing-file
   tolerance.
 - `ModelDownloadTasksTests`: dedupe, cancellation propagation, retry after a
-  cancellation-ignoring transfer with a generation-isolation assertion,
-  deferred cleanup, delete serialization, and `isCurrent` after abandon.
+  cancellation-ignoring transfer that writes the original live URL after
+  cancellation, single replacement ownership for concurrent Resume requests,
+  delete serialization, and `isCurrent` after cancellation.
 - `DownloadStallWatchdogTests`: fires on inactivity, stays quiet with progress,
   and the progress signal only advances on new bytes or fraction.
 
