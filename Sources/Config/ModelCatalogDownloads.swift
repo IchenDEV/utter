@@ -8,10 +8,22 @@ extension ModelCatalog {
     static var whisperDownloadBase: URL { ModelStorage.huggingFaceBase }
 
     func downloadWhisper(_ id: String) async {
+        await awaitStartupCleanup()
         await downloadTasks.run(key: ModelDownloadKey(kind: .whisper, modelID: id)) { [weak self] token in
             await self?.performWhisperDownload(id, token: token)
         }
     }
+
+    /// Internal test seam: it replaces only the dependency call while still
+    /// exercising the public ModelCatalog download entry point, generation
+    /// setup, cancellation arbitration, and cleanup path.
+    typealias WhisperDownloadOverride = @MainActor (
+        String,
+        URL,
+        @Sendable (Progress) -> Void
+    ) async throws -> Bool
+
+    static var whisperDownloadOverride: WhisperDownloadOverride?
 
     private func performWhisperDownload(_ id: String, token: UUID) async {
         let key = ModelDownloadKey(kind: .whisper, modelID: id)
@@ -43,33 +55,45 @@ extension ModelCatalog {
                 downloadBase: staging.downloadBase
             )
             let tracker = DownloadProgressTracker(initialBytes: ModelStorage.directorySize(at: modelDir))
-            _ = try await WhisperKit.download(
-                variant: id,
-                downloadBase: staging.downloadBase,
-                progressCallback: { [weak self] progress in
-                    Task { @MainActor in
-                        guard let self,
-                              self.downloadTasks.isCurrent(key, token: token),
-                              let i = self.whisperModels.firstIndex(where: { $0.id == id }) else { return }
-                        let downloadedBytes = ModelStorage.directorySize(at: modelDir)
-                        let info = tracker.update(
-                            completedBytes: downloadedBytes > 0
-                                ? downloadedBytes
-                                : progress.completedUnitCount,
-                            totalBytes: progress.totalUnitCount,
-                            fraction: progress.fractionCompleted
-                        )
-                        if signal.advanced(
-                            completedBytes: max(downloadedBytes, progress.completedUnitCount),
-                            fraction: info.fraction
-                        ) {
-                            watchdog.noteProgress()
-                        }
-                        self.whisperModels[i].downloadProgress = info.fraction
-                        self.whisperModels[i].downloadDetail = info.detailText
+            let progressCallback: @Sendable (Progress) -> Void = { [weak self] progress in
+                let completedUnitCount = progress.completedUnitCount
+                let totalUnitCount = progress.totalUnitCount
+                let fractionCompleted = progress.fractionCompleted
+                Task { @MainActor in
+                    guard let self,
+                          self.downloadTasks.isCurrent(key, token: token),
+                          let i = self.whisperModels.firstIndex(where: { $0.id == id }) else { return }
+                    let downloadedBytes = ModelStorage.directorySize(at: modelDir)
+                    let info = tracker.update(
+                        completedBytes: downloadedBytes > 0
+                            ? downloadedBytes
+                            : completedUnitCount,
+                        totalBytes: totalUnitCount,
+                        fraction: fractionCompleted
+                    )
+                    if signal.advanced(
+                        completedBytes: max(downloadedBytes, completedUnitCount),
+                        fraction: info.fraction
+                    ) {
+                        watchdog.noteProgress()
                     }
+                    self.whisperModels[i].downloadProgress = info.fraction
+                    self.whisperModels[i].downloadDetail = info.detailText
                 }
-            )
+            }
+            let handledByOverride: Bool
+            if let override = Self.whisperDownloadOverride {
+                handledByOverride = try await override(id, staging.downloadBase, progressCallback)
+            } else {
+                handledByOverride = false
+            }
+            if !handledByOverride {
+                _ = try await WhisperKit.download(
+                    variant: id,
+                    downloadBase: staging.downloadBase,
+                    progressCallback: progressCallback
+                )
+            }
             watchdog.stop()
             try Task.checkCancellation()
             guard downloadTasks.isCurrent(key, token: token) else { return }
@@ -160,6 +184,7 @@ extension ModelCatalog {
     }
 
     func downloadLLM(_ id: String) async {
+        await awaitStartupCleanup()
         await downloadTasks.run(key: ModelDownloadKey(kind: .llm, modelID: id)) { [weak self] token in
             await self?.performLLMDownload(id, token: token)
         }

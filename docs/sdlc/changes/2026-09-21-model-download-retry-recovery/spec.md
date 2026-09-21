@@ -85,6 +85,27 @@ make the loaded/downloaded model unreadable. The MLX path reloads from the
 published directory after promotion before reporting success, exercising that
 post-cleanup boundary directly.
 
+Startup recovery creates a detached orphan sweep for the generation,
+promotion, backup, and retired-cleanup roots. `ModelCatalog` retains that task
+and awaits it at each public Whisper, LLM, and ASR download entry point before
+admitting a new writer; the MainActor can therefore continue servicing UI and
+Cancel/Delete while model-sized abandoned trees are scanned and removed. The
+synchronous path remains a path-scoped test seam for deterministic cleanup
+assertions. `ModelCatalog` also has an internal initializer factory that accepts
+the path-scoped cleanup task; the startup regression injects entry/exit
+barriers through the same production background helper, so it exercises the
+initializer wiring rather than only calling the helper directly.
+
+The Whisper dependency call has an internal test-only override seam. It does
+not change production behavior; an override returns `true` only when it has
+handled the requested variant and all other variants use the real dependency.
+This lets the regression test enter through
+`ModelCatalog.downloadWhisper`, suspend the first dependency writer, call
+`cancelDownload`, and invoke the same Catalog entry for Resume before the old
+dependency returns. This is distinct from the settled-task live integration
+case, whose scope remains explicitly limited to cancellation followed by
+Resume after the first task returns.
+
 `DownloadStallWatchdog` polls a last-activity timestamp and fires once after the
 timeout. A shared `DownloadProgressSignal` only calls `noteProgress()` when the
 reported bytes or fraction actually increase, so a downloader that keeps firing
@@ -102,6 +123,8 @@ status (a user retry) and leaves a fresh download's resumable state alone.
 - Cancellation retires the token but keeps its generation root until its I/O
   returns; no current-token scan removes a still-running writer's staging.
   The next generation uses a distinct `downloadBase` and Hub cache.
+- Startup orphan scanning and recursive deletion run off the MainActor, and a
+  download cannot begin until that startup task has completed.
 - If a stalled transfer ignores cancellation, its Resume action can proceed in
   a new generation; late progress and publication are rejected by `isCurrent`.
 - A failed promotion is built before replacing the live directory, and the
@@ -117,11 +140,16 @@ status (a user retry) and leaves a fresh download's resumable state alone.
 - `ModelDownloadTasksTests`: dedupe, cancellation propagation, retry after a
   cancellation-ignoring transfer that retains its staging root, immediate
   replacement ownership for concurrent Resume requests, late publication
-  rejection after a newer generation commits, Delete arbitration, and
-  `isCurrent` after cancellation.
+  rejection after a newer generation commits, Delete arbitration,
+  `isCurrent` after cancellation, and the real Catalog download entry
+  overlap with an injected suspended Whisper dependency.
 - `UtilityTests`: per-generation download/cache roots, Hub symlink
   materialization after staging cleanup, and preservation of the previous
-  model after a failed commit.
+  model after a failed commit, plus detached startup scan/delete responsiveness.
+  The initializer-level startup test holds an entered/not-exited barrier while
+  a MainActor heartbeat runs; its independent detached timeout releases the
+  barrier on failure. Its mutation commands cover both synchronous initializer
+  wiring and a `Task { @MainActor in ... }` cleanup implementation.
 - `DownloadStallWatchdogTests`: fires on inactivity, stays quiet with progress,
   and the progress signal only advances on new bytes or fraction.
 

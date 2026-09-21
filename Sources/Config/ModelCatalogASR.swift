@@ -61,6 +61,7 @@ extension ModelCatalog {
     }
 
     func downloadASR(_ id: String, onProgress: ((DownloadProgressInfo) -> Void)? = nil) async {
+        await awaitStartupCleanup()
         await downloadTasks.run(key: ModelDownloadKey(kind: .asr, modelID: id)) { [weak self] token in
             await self?.performASRDownload(id, token: token, onProgress: onProgress)
         }

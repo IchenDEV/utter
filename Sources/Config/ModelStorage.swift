@@ -105,13 +105,32 @@ enum ModelStorage {
 
     /// Removes all managed generation, promotion, backup, and cleanup roots
     /// left by a process that exited before its writer could run its cleanup.
-    /// This is a startup-only operation: the ModelCatalog calls it before it
-    /// can start a download, so no live writer can own one of these roots.
-    /// Runtime cancellation uses the O(1) retirement path below instead of
-    /// recursively deleting a model-sized tree on the MainActor.
+    /// This synchronous form is kept for non-actor callers and deterministic
+    /// path-scoped tests. ModelCatalog startup uses the background entry point
+    /// below so recursive removal never occupies the MainActor.
     @discardableResult
     static func cleanupOrphanedGenerationStaging() -> Int {
         cleanupOrphanedGenerationStaging(storageRoot: huggingFaceBase)
+    }
+
+    /// Starts the startup sweep away from the MainActor. The returned task is
+    /// retained by ModelCatalog and awaited before a new download generation
+    /// is admitted, so a fresh writer cannot race orphan reclamation.
+    static func cleanupOrphanedGenerationStagingInBackground() -> Task<Int, Never> {
+        cleanupOrphanedGenerationStagingInBackground(storageRoot: huggingFaceBase)
+    }
+
+    /// Path-scoped background seam used by the responsiveness regression test.
+    static func cleanupOrphanedGenerationStagingInBackground(
+        storageRoot: URL,
+        onEnter: (@Sendable () -> Void)? = nil,
+        onExit: (@Sendable () -> Void)? = nil
+    ) -> Task<Int, Never> {
+        Task.detached(priority: .utility) {
+            onEnter?()
+            defer { onExit?() }
+            return cleanupOrphanedGenerationStaging(storageRoot: storageRoot)
+        }
     }
 
     /// Testable path-scoped implementation used by the startup wrapper.

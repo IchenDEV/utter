@@ -187,6 +187,86 @@ final class ModelDownloadTasksTests: XCTestCase {
         await replacement.value
     }
 
+    /// End-to-end application facade counterexample: both generations enter
+    /// through ModelCatalog.downloadWhisper, while the dependency call for
+    /// generation one remains suspended after Catalog Cancel. The replacement
+    /// must reach the same public entry and start before the old call returns.
+    func testApplicationCatalogResumeEntryStartsBeforeOldDependencyReturns() async {
+        let catalog = ModelCatalog.shared
+        await catalog.awaitStartupCleanup()
+        let modelID = "test/catalog-resume-\(UUID().uuidString)"
+        catalog.whisperModels.append(
+            ModelCatalog.ModelEntry(
+                id: modelID,
+                displayName: modelID,
+                hint: "",
+                family: nil
+            )
+        )
+        let previousOverride = ModelCatalog.whisperDownloadOverride
+        defer {
+            ModelCatalog.whisperDownloadOverride = previousOverride
+            catalog.whisperModels.removeAll { $0.id == modelID }
+        }
+
+        var dependencyCalls = 0
+        var oldStarted = false
+        var oldReturned = false
+        var replacementStarted = false
+        var releaseOld: (() -> Void)?
+        ModelCatalog.whisperDownloadOverride = { variant, _, _ in
+            guard variant == modelID else { return false }
+            dependencyCalls += 1
+            if dependencyCalls == 1 {
+                oldStarted = true
+                await withCheckedContinuation {
+                    (continuation: CheckedContinuation<Void, Never>) in
+                    releaseOld = {
+                        continuation.resume()
+                        oldReturned = true
+                    }
+                }
+                return true
+            } else {
+                replacementStarted = true
+                throw CancellationError()
+            }
+        }
+
+        let old = Task { @MainActor in
+            await catalog.downloadWhisper(modelID)
+        }
+        for _ in 0..<200 where !oldStarted {
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
+        XCTAssertTrue(oldStarted, "catalog did not enter the injected dependency")
+        XCTAssertNotNil(releaseOld, "old dependency did not reach its suspension point")
+
+        catalog.cancelDownload(modelID, kind: .whisper)
+        XCTAssertFalse(catalog.downloadTasks.isActive(
+            ModelDownloadKey(kind: .whisper, modelID: modelID)
+        ))
+
+        let replacement = Task { @MainActor in
+            await catalog.downloadWhisper(modelID)
+        }
+        for _ in 0..<200 where !replacementStarted {
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
+        XCTAssertTrue(
+            replacementStarted,
+            "the real catalog Resume entry must start before the old dependency returns"
+        )
+        XCTAssertFalse(oldReturned, "old dependency must still be suspended")
+
+        let release = releaseOld
+        releaseOld = nil
+        release?()
+        await old.value
+        await replacement.value
+        XCTAssertEqual(dependencyCalls, 2)
+    }
+
     /// A duplicate that joined before Cancel is not a user Resume. It must
     /// complete with the cancelled generation and must not claim the restart
     /// replacement after the old writer drains.

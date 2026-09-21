@@ -2,6 +2,47 @@ import Foundation
 import XCTest
 @testable import OpenType
 
+private final class StartupCleanupGate: @unchecked Sendable {
+    private let lock = NSLock()
+    private let releaseSignal = DispatchSemaphore(value: 0)
+    private var entered = false
+    private var exited = false
+    private var released = false
+
+    func enterAndWait() {
+        lock.lock()
+        entered = true
+        let wasReleased = released
+        lock.unlock()
+        if !wasReleased {
+            releaseSignal.wait()
+        }
+    }
+
+    func exit() {
+        lock.lock()
+        exited = true
+        lock.unlock()
+    }
+
+    func release() {
+        lock.lock()
+        guard !released else {
+            lock.unlock()
+            return
+        }
+        released = true
+        lock.unlock()
+        releaseSignal.signal()
+    }
+
+    func snapshot() -> (entered: Bool, exited: Bool) {
+        lock.lock()
+        defer { lock.unlock() }
+        return (entered, exited)
+    }
+}
+
 final class UtilityTests: XCTestCase {
     private enum InjectedReplacementFailure: Error {
         case replacement
@@ -245,6 +286,132 @@ final class UtilityTests: XCTestCase {
             try Data(contentsOf: published.appendingPathComponent("config.json")),
             Data("old-config".utf8)
         )
+    }
+
+    @MainActor
+    func testStartupCleanupKeepsMainActorResponsive() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeStartupCleanupResponsiveness-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let staging = ModelStorage.generationStaging(for: UUID(), storageRoot: root)
+        try ModelStorage.prepareGeneration(staging)
+        let debris = staging.downloadBase.appendingPathComponent("orphaned-files", isDirectory: true)
+        try FileManager.default.createDirectory(at: debris, withIntermediateDirectories: true)
+        // A synchronous startup removeItem on the MainActor must remain busy
+        // long enough for this probe to observe the regression. The new
+        // background entry point performs the same real recursive deletion
+        // away from the actor.
+        for index in 0..<2_048 {
+            try Data(repeating: UInt8(index % 251), count: 32_768).write(
+                to: debris.appendingPathComponent("chunk-\(index).bin")
+            )
+        }
+
+        var cleanupStarted = false
+        var cleanupFinished = false
+        let cleanup = Task { @MainActor in
+            cleanupStarted = true
+            _ = await ModelStorage.cleanupOrphanedGenerationStagingInBackground(
+                storageRoot: root
+            ).value
+            cleanupFinished = true
+        }
+        while !cleanupStarted {
+            await Task.yield()
+        }
+
+        var heartbeats = 0
+        let heartbeat = Task { @MainActor in
+            while !cleanupFinished {
+                heartbeats += 1
+                await Task.yield()
+            }
+        }
+        await cleanup.value
+        await heartbeat.value
+
+        XCTAssertGreaterThan(
+            heartbeats,
+            0,
+            "MainActor should service work while startup cleanup removes orphaned files"
+        )
+        XCTAssertFalse(FileManager.default.fileExists(atPath: staging.root.path))
+    }
+
+    @MainActor
+    func testModelCatalogInitializerStartupCleanupKeepsMainActorResponsive() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeCatalogStartupCleanup-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let staging = ModelStorage.generationStaging(for: UUID(), storageRoot: root)
+        try ModelStorage.prepareGeneration(staging)
+        let debris = staging.downloadBase.appendingPathComponent("orphaned-files", isDirectory: true)
+        try FileManager.default.createDirectory(at: debris, withIntermediateDirectories: true)
+        for index in 0..<128 {
+            try Data(repeating: UInt8(index % 251), count: 8_192).write(
+                to: debris.appendingPathComponent("chunk-\(index).bin")
+            )
+        }
+
+        let gate = StartupCleanupGate()
+        var factoryCalls = 0
+        let catalog = ModelCatalog(
+            startupStorageRoot: root,
+            startupCleanup: { storageRoot in
+                factoryCalls += 1
+                return ModelStorage.cleanupOrphanedGenerationStagingInBackground(
+                    storageRoot: storageRoot,
+                    onEnter: { gate.enterAndWait() },
+                    onExit: { gate.exit() }
+                )
+            }
+        )
+
+        // A detached watchdog releases the gate even if a MainActor child-task
+        // mutation blocks the test actor before its heartbeat can run.
+        let timeoutRelease = Task.detached(priority: .utility) {
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            gate.release()
+        }
+        defer {
+            gate.release()
+            timeoutRelease.cancel()
+        }
+
+        let entryDeadline = Date().addingTimeInterval(1)
+        while !gate.snapshot().entered && Date() < entryDeadline {
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
+
+        var heartbeats = 0
+        var heartbeatObservedBeforeExit = false
+        let heartbeat = Task { @MainActor in
+            let deadline = Date().addingTimeInterval(1)
+            while Date() < deadline {
+                let state = gate.snapshot()
+                if state.entered, !state.exited {
+                    heartbeats += 1
+                    heartbeatObservedBeforeExit = true
+                    gate.release()
+                    return
+                }
+                if state.exited { return }
+                await Task.yield()
+            }
+        }
+
+        await catalog.awaitStartupCleanup()
+        await heartbeat.value
+
+        let state = gate.snapshot()
+        XCTAssertEqual(factoryCalls, 1, "ModelCatalog.init must invoke the injected startup factory")
+        XCTAssertTrue(state.entered, "startup cleanup must enter the path-scoped barrier")
+        XCTAssertTrue(heartbeatObservedBeforeExit, "MainActor heartbeat must occur after entry and before exit")
+        XCTAssertGreaterThan(heartbeats, 0)
+        XCTAssertTrue(state.exited, "startup cleanup must release its exit barrier")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: staging.root.path))
     }
 
     @MainActor
