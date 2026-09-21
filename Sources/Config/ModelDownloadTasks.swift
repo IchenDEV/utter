@@ -46,6 +46,11 @@ final class ModelDownloadTasks {
     ) async {
         if let existing = entries[key] {
             let observedToken = existing.token
+            // A request that joined before cancellation is only a duplicate;
+            // it must not turn the cancellation marker into an implicit
+            // Resume. Only a request that arrived after cancellation may
+            // claim the replacement slot once this task drains.
+            let cancellationWasRequested = existing.cancelRequested
             await existing.task.value
             // Another waiter may have claimed the cancelled generation and
             // already started the replacement while this waiter was waking.
@@ -54,7 +59,8 @@ final class ModelDownloadTasks {
                 await replacement.task.value
                 return
             }
-            if restartAfterCancellation[key] == observedToken {
+            if cancellationWasRequested,
+               restartAfterCancellation[key] == observedToken {
                 restartAfterCancellation.removeValue(forKey: key)
                 await start(key: key, operation: operation)
             }

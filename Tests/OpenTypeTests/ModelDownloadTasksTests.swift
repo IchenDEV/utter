@@ -134,6 +134,45 @@ final class ModelDownloadTasksTests: XCTestCase {
         XCTAssertTrue(observedCancellation)
     }
 
+    /// A duplicate that joined before Cancel is not a user Resume. It must
+    /// complete with the cancelled generation and must not claim the restart
+    /// marker after the old writer drains.
+    func testDuplicateJoinedBeforeCancelDoesNotRestart() async {
+        let downloads = ModelDownloadTasks()
+        let key = ModelDownloadKey(kind: .llm, modelID: "test/model")
+        var starts = 0
+        var releaseOld: (() -> Void)?
+
+        let first = Task { @MainActor in
+            await downloads.run(key: key) { _ in
+                starts += 1
+                await withCheckedContinuation {
+                    (continuation: CheckedContinuation<Void, Never>) in
+                    releaseOld = { continuation.resume() }
+                }
+            }
+        }
+        for _ in 0..<200 where releaseOld == nil {
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
+        XCTAssertNotNil(releaseOld, "original writer did not reach its continuation")
+
+        let duplicate = Task { @MainActor in
+            await downloads.run(key: key) { _ in
+                starts += 1
+            }
+        }
+        await Task.yield()
+        XCTAssertEqual(starts, 1, "the duplicate must join the original writer")
+
+        downloads.cancel(key)
+        releaseOld?()
+        await first.value
+        await duplicate.value
+
+        XCTAssertEqual(starts, 1, "a pre-cancel duplicate must not restart after drain")
+    }
+
     /// Regression for the pinned Hub clients: they retain an absolute live URL
     /// over an async network wait. The replacement must not start until the old
     /// operation returns, because a late continuation may write that same URL.

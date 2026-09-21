@@ -69,7 +69,10 @@ been moved; quarantine alone is not a valid writer-isolation proof.
 Trade-off: if a library call never returns despite cancellation, retry remains
 visible but waits for that dependency call to drain. This is fail-closed: a
 retry cannot share a path with a writer that may still reopen the original
-absolute URL.
+absolute URL. That finite-drain safety property does not satisfy the original
+"always retry" acceptance when the dependency never returns; the non-returning
+case remains a研发阻塞 pending the independent per-generation staging/commit
+design.
 
 `DownloadStallWatchdog` polls a last-activity timestamp and fires once after the
 timeout. A shared `DownloadProgressSignal` only calls `noteProgress()` when the

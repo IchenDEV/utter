@@ -24,9 +24,9 @@
 
 ## Verification plan
 
-- [ ] `bash scripts/ci-basic-checks.sh` (requires the macOS Swift toolchain)
+- [x] `bash scripts/ci-basic-checks.sh` (exact `4fc4ee4` macOS baseline passed; rerun after this cancel-fix)
 - [x] `bash scripts/sdlc-checks.sh`
-- [ ] `swift test` (full suite; requires the macOS Swift toolchain)
+- [x] `swift test` (exact `4fc4ee4` macOS baseline passed; rerun after this cancel-fix)
 - [ ] Release-style `bash scripts/build-app.sh` on a machine with the Metal
       toolchain (CI `SDLC Gate`), not available in this environment.
 - [ ] Real interrupted-download retry on a networked machine. Recipe: start a

@@ -10,11 +10,11 @@
 | Check | Result | Evidence |
 |---|---|---|
 | `git diff --check` | Pass | No whitespace errors in the recovery implementation or tests |
-| `bash scripts/ci-basic-checks.sh` | Pass | "Basic CI checks passed." on macOS |
+| `bash scripts/ci-basic-checks.sh` | Blocked in this checkout | Current Linux image has no `swift`; exact `4fc4ee4` macOS baseline passed, but this patch needs a rerun |
 | `bash scripts/sdlc-checks.sh` | Pass | "SDLC checks passed." |
 | `bash -n scripts/ci-basic-checks.sh scripts/sdlc-checks.sh` | Pass | Shell harness syntax is valid |
-| `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --build-system native` (full suite) | Pass | 656 XCTest executed, 10 skipped, 0 failures; 1 swift-testing passed (total 657 executed, 10 skipped, 0 failures) on macOS |
-| `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --build-system native --filter "ModelDownload\|DownloadStallWatchdog"` | Pass | 28 executed, 0 failures across DownloadStallWatchdogTests (3), ModelDownloadFailureMessageTests (3), ModelDownloadRecoveryTests (10), and ModelDownloadTasksTests (12) on macOS |
+| `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --build-system native` (full suite) | Not rerun for this patch | Exact `4fc4ee4` baseline: 656 XCTest executed, 10 skipped, 0 failures; 1 swift-testing passed; the cancel-fix adds one XCTest |
+| `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --build-system native --filter "ModelDownload\|DownloadStallWatchdog"` | Not rerun for this patch | Exact `4fc4ee4` baseline: 28 executed, 0 failures; this patch adds `testDuplicateJoinedBeforeCancelDoesNotRestart` |
 
 The focused tests retain the exact Whisper scope, sibling preservation,
 flat-cache completion, duplicate retry deduplication, delete serialization, and
@@ -23,8 +23,9 @@ counterexample with `testCancelledWriterUsingOriginalPathMustDrainBeforeRetry`
 and `testDeleteWaitsForCancelledOriginalPathWriter`: both keep the writer's
 original live URL after cancellation. The cancel → relocation → retry → delete
 counterexample also has the old continuation recreate and rename into its
-captured original URL; the retry and delete are held behind the drain. All 28
-focused tests pass on macOS.
+captured original URL; the retry and delete are held behind the drain. The exact
+`4fc4ee4` baseline had all 28 focused tests passing on macOS; the new regression
+test requires a fresh macOS run and is not claimed as executed here.
 
 The dependency path audit is reproducible from the pinned `Package.resolved`:
 
@@ -44,21 +45,24 @@ isolation; the new file-level tests mirror the same original-URL behavior.
   partial is preserved), and coverage of the materialized repo plus the shared
   Hub cache.
 - Cancel makes the model resumable without sharing paths with the old transfer —
-  implemented by retaining the per-key slot until dependency I/O returns and
-  covered by `testCancelledWriterUsingOriginalPathMustDrainBeforeRetry`,
+  **partial /研发阻塞**: retaining the per-key slot prevents path sharing and
+  is covered by `testCancelledWriterUsingOriginalPathMustDrainBeforeRetry`,
+  `testDuplicateJoinedBeforeCancelDoesNotRestart`,
   `testTwoConcurrentRetriesAfterCancelStartOnlyOneWriter`, and
   `testDeleteWaitsForCancelledOriginalPathWriter`. Late UI writes are rejected
-  by the token guard even while the cancelled task drains. 等待旧 I/O 退出解决
-  了写入安全，但永久不退出时的恢复能力仍未证明，不能据此宣称完整重试验收通过。
-- Stalled download resolves — pass. `DownloadStallWatchdogTests` (fires on
-  inactivity, stays quiet while progress arrives), the progress-signal test that
-  a repeated unchanged callback does not count as progress, plus the `isCurrent`
-  guards ensuring a late run cannot overwrite the retry's state.
+  by the token guard. A dependency call that never returns still prevents a
+  replacement from starting, so the original "always retry" acceptance is not
+  complete; independent per-generation staging/commit is the remaining P0.
+- Stalled download detection — **pass; recovery remains研发阻塞**.
+  `DownloadStallWatchdogTests` fires on inactivity and stays quiet while
+  progress arrives; the progress-signal test rejects unchanged callbacks, and
+  `isCurrent` prevents late state writes. The watchdog cannot make a permanently
+  hung dependency return, so it does not establish complete Resume recovery.
 - Delete removes partial markers — implemented in `deleteWhisper`,
   `deleteLLM`, and `deleteASR`; covered indirectly by the recovery path tests.
-- `swift test` execution — pass on macOS for both the focused suite (28 executed,
-  0 failures) and the full suite (656 executed, 10 skipped, 0 failures + 1 swift-testing
-  test passed).
+- `swift test` execution — the exact `4fc4ee4` baseline passed on macOS (focused
+  28 executed, full 656 XCTest with 10 skipped plus 1 swift-testing test); this
+  cancel-fix adds one focused XCTest and awaits a fresh macOS rerun.
 
 ## Residual risk
 
@@ -72,4 +76,7 @@ isolation; the new file-level tests mirror the same original-URL behavior.
 
 ## Decision
 
-Ready for review. Human approval is recorded separately.
+Blocked pending both a fresh macOS run for this cancel-fix and the independent
+per-generation staging/commit P0 design. The `4fc4ee4` macOS results prove the
+finite-drain safety fix, not the original always-retry acceptance or the real
+interrupted-download/load flow. Human approval is not recorded.
