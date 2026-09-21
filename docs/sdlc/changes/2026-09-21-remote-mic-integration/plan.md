@@ -47,13 +47,15 @@
 - [x] `swift test` (full suite)
 - [ ] Real Xiaomi Bluetooth Remote 2 Pro: pair, enable, record via the remote's
       voice key, then disconnect and reconnect mid-session.
-- [ ] Independent reviewer confirms the GPL/MIT licensing position and the
-      permission/privacy path.
+- [ ] Human licensing owner records the GPL/MIT provenance, attribution, and
+      distribution decision; the development review makes no licensing finding.
+- [ ] Human reviewer confirms the permission/privacy path.
 
 ## Human gates
 
-- Licensing decision on reusing the ATVV capability from the GPL-3.0 project
-  (this implementation is independent, but a human must accept it).
+- Licensing decision on the GPL-3.0/MIT provenance, attribution, and
+  distribution position. No acceptance or independence conclusion is recorded
+  by the development review.
 - Independent verification on real hardware before enabling the setting for
   users.
 - Merge approval for a change that adds a device permission.

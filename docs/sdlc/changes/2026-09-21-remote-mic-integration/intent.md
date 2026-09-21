@@ -58,8 +58,9 @@ the speech engines.
 ## Open questions
 
 - Licensing: remote-mic-app's app code is GPL-3.0-only while Utter is MIT. This
-  change is written as an independent implementation of the open ATVV profile and
-  IMA/DVI ADPCM specification, without copying that project's source. A human
-  must confirm this is acceptable before the feature is enabled for users.
+  SDLC record makes no determination about whether the implementation,
+  attribution, or distribution position is acceptable. A human licensing owner
+  must review the provenance and decide whether to accept, attribute, rework, or
+  reject the change before the feature is enabled or distributed.
 - Hardware: the remote's firmware behavior (voice-key timing, reconnect) can only
   be confirmed on a real device by someone with the remote.

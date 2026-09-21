@@ -153,9 +153,12 @@ licensing question is a human/CTO item and is untouched here.
   `StreamingASRIntegrationTests.testWhisperStreamingSessionEmitsPartialCallbackFromSampleAudio`.
   An earlier revision of this file wrongly attributed 4 of them to a
   live-download gate borrowed from the #102 tree.
-- **Licensing.** `IchenDEV/remote-mic-app` is GPL-3.0-only and the reviewer found
-  the protocol implementation structurally close to it. A human must resolve
-  attribution/licensing before any distribution; the setting stays default off.
+- **Licensing is pending human determination.** `IchenDEV/remote-mic-app` is
+  GPL-3.0-only while Utter is MIT. This development verification makes no
+  finding that the implementation is independent, derivative, adequately
+  attributed, or distributable. A human licensing owner must record the
+  provenance, attribution, and distribution decision before any release; the
+  setting stays default off.
 - The bridge assumes CoreBluetooth callbacks on the main queue and main-thread
   callers, matching the existing capture style.
 - **CoreBluetooth callback boundary.** Apple’s API gives central delegate
@@ -192,6 +195,7 @@ licensing question is a human/CTO item and is untouched here.
 
 ## Decision
 
-Blocked on independent hardware verification and the licensing decision. Do not
-enable the setting for users until both are resolved. Human approval is recorded
+Development verification passed. Release remains blocked on independent
+hardware verification and the pending human licensing decision. Do not enable
+or distribute the feature until both are resolved; human approval is recorded
 separately.
