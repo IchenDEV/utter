@@ -46,10 +46,14 @@ and review of light/dark appearances cover.
 
 ## Test strategy
 
-`SettingsSurfaceTests` renders each seam with `ImageRenderer` and asserts the
-pixel matches the intended `NSColor` (sRGB, within color-management tolerance),
-plus a distinctness assertion so boxes stay visible. Full `swift test`, and the
-two check scripts.
+`SettingsSurfaceTests` rasterizes the production `SettingsSurface.page` / `card`
+and the semantic reference `Color(nsColor:)` in an `NSHostingView` with an explicit
+`NSAppearance` (`.aqua` / `.darkAqua`), ensuring both sides share the exact same
+rendering pipeline and that dynamic colors resolve deterministically regardless of
+ambient process appearance (addressing `ImageRenderer`'s limitation of ignoring
+`performAsCurrentDrawingAppearance`). It asserts pixel equality in sRGB (within
+color-management tolerance) plus a page/card distinctness assertion so boxes stay
+visible. Full `swift test`, and the two check scripts.
 
 ## Rollout and rollback
 
