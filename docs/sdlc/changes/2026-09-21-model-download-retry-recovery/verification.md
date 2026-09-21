@@ -16,7 +16,7 @@
 | `bash -n scripts/ci-basic-checks.sh scripts/sdlc-checks.sh` | Pass | Shell harness syntax is valid |
 | Baseline full suite at `3442f83641869f912247bef796e624efd813605a` | Historical pass | 667 XCTest = 653 passed + 14 skipped, 0 failures; one Swift Testing case also passed. The 14 skips are not all live downloads: 4 are `OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`, while 10 are ANE model (1), Apple Speech (1), template probe (1), foreground bundle identity (1), Espresso fallback (1), prompt dump (1), Qwen native ASR (2), and streaming ASR (2). |
 | Baseline focused filter at `3442f83641869f912247bef796e624efd813605a` | Historical pass | 50 executed, 50 passed, 0 skipped, 0 failures across DownloadStallWatchdogTests (3), ModelDownloadFailureMessageTests (3), ModelDownloadRecoveryTests (10), ModelDownloadTasksTests (13), and UtilityTests (21). The earlier 48 figure is stale. |
-| Final focused/full rerun after startup/Catalog P1 additions | Pending | Three new XCTest cases are present; expected counts are 53 in the broad focused filter, 37 in `ModelDownloadTasksTests|UtilityTests`, and 670 XCTest in the full suite, subject to the raw log. |
+| Final focused/full rerun at `1cba5718aef0dd61254838fa77d8181cb4af820a` | Pass (macOS, Xcode 27) | Focused P1 counterexamples: 3 executed, 0 failures. Full suite: 670 XCTest executed, 14 skipped, 0 failures. Raw log: `mac-p34-1cba5718-verification.log`. |
 | Historical real network interrupted download → Resume → model load & inference (`OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`) | Historical pass | WhisperKit audio transcription (`en-sample.m4a` in 0.14s) & HubApi 278MB safetensors download + ModelContainer load (0.78s) + real text generation (1.62s) pass with `default.metallib`; prior raw logs are attributed to `3442f83641869f912247bef796e624efd813605a` (the earlier metallib-only log to `522947265e83f07c730b00c2130db5c45727de55`), not the current continuation SHA. |
 
 The focused tests retain the exact Whisper scope, sibling preservation,
@@ -35,6 +35,12 @@ a Catalog-facade Resume overlap test, which require a new macOS rerun.
 
 The dependency path audit is reproducible from the pinned `Package.resolved`:
 
+- Release-style build — **pass at `1cba5718aef0dd61254838fa77d8181cb4af820a`**:
+  `bash scripts/build-app.sh --app-only` exited 0 and produced a signed
+  `dist/Utter.app` containing a 3.7 MB `default.metallib`.
+- Live Whisper end-to-end — **pass at `1cba5718aef0dd61254838fa77d8181cb4af820a`**:
+  interrupted download → resume → atomic commit → model load → real
+  transcription of `docs/assets/demos/en-sample.m4a` in 0.15s.
 - `swift-huggingface` `b7219594`, `HubClient+Files.swift:520-522` computes the
   absolute `incompleteBlobPath` before network I/O and `:665-672` appends then
   moves/replaces it.
@@ -123,7 +129,13 @@ Each piece of evidence maps to its originating commit:
   `testStartupCleanupRemovesAllOrphanedGenerationArtifacts` (asserts all five
   directories are removed) and confirmed by mutation: disabling the
   promotion/backup scan makes it fail (3 vs 5 removed, leftovers remain).
-- Startup scan/delete responsiveness — **pending final macOS rerun**:
+- Startup scan/delete responsiveness — **pass at
+  `1cba5718aef0dd61254838fa77d8181cb4af820a`** (macOS, Xcode 27): the
+  `ModelCatalog` initializer seam runs the detached helper and the
+  enter/exit-barrier counterexample observes a MainActor heartbeat while cleanup
+  is inside its window. Mutation A (synchronous initializer cleanup) and
+  Mutation B (MainActor child task) each exit non-zero (1) and fail the test;
+  restoring the detached helper exits 0. Original notes:
   `testStartupCleanupKeepsMainActorResponsive` exercises the same background
   startup sweep with a model-sized orphan tree and must fail if recursive
   scan/delete is moved back onto the MainActor. The initializer-level
@@ -138,14 +150,21 @@ Each piece of evidence maps to its originating commit:
   MainActor and deletes it in a detached task, so a model-sized copy never
   blocks Cancel/Delete arbitration. Verified by
   `testGenerationCleanupKeepsMainActorResponsive`.
-- Application-layer Resume before the old writer returns — **pending final
+- Application-layer Resume before the old writer returns — **pass at
+  `1cba5718aef0dd61254838fa77d8181cb4af820a`**: the counterexample enters through
+  the real `ModelCatalog.downloadWhisper` twice with the first dependency
+  suspended, and the replacement starts before the old writer returns.
+  Original notes:
   macOS rerun**: `testApplicationCatalogResumeEntryStartsBeforeOldDependencyReturns`
   drives both generations through `ModelCatalog.downloadWhisper`, cancels while
   the first dependency call is suspended, and asserts the replacement enters
   before the old dependency is released. The older
   `testApplicationCancelAllowsResumeBeforeOldWriterReturns` remains an
   arbitration-level test, not the application-entry proof.
-- `swift test` execution — **historical baseline only** at `3442f83641869f912247bef796e624efd813605a`: the
+- `swift test` execution — **pass at
+  `1cba5718aef0dd61254838fa77d8181cb4af820a` (macOS, Xcode 27)**: 670 XCTest
+  executed, 14 skipped, 0 failures. Historical baseline at
+  `3442f83641869f912247bef796e624efd813605a`: the
   `ModelDownloadTasksTests|UtilityTests` run is 34 executed, 0 failures; the
   full suite is 667 XCTest with 14 skips and 0 failures. Final P1 counts are
   pending a rerun at the new continuation SHA and must not be inferred from the
