@@ -16,7 +16,7 @@
 | `bash -n scripts/ci-basic-checks.sh scripts/sdlc-checks.sh` | Pass | Shell harness syntax is valid |
 | `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --build-system native` (full suite) | Pass | 665 XCTest executed, 14 skipped, 0 failures; 1 swift-testing passed (total 666 executed, 14 skipped, 0 failures) on macOS |
 | `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --build-system native --filter "ModelDownload\|DownloadStallWatchdog\|Utility"` | Pass | 48 executed, 0 failures across DownloadStallWatchdogTests (3), ModelDownloadFailureMessageTests (3), ModelDownloadRecoveryTests (10), ModelDownloadTasksTests (12), and UtilityTests (20) on macOS |
-| Real network interrupted download → Resume → model load / transcription (`OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`) | Partial / Documented | WhisperKit full transcription (`en-sample.m4a` in 0.10s) & HubApi 278MB safetensors download + AutoTokenizer pass; MLX container loading requires Xcode app bundle metallib |
+| Real network interrupted download → Resume → model load & inference (`OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1`) | Pass | WhisperKit audio transcription (`en-sample.m4a` in 0.10s) & HubApi 278MB safetensors download + ModelContainer load (0.78s) + real text generation (1.62s) pass with `default.metallib` |
 
 The focused tests retain the exact Whisper scope, sibling preservation,
 flat-cache completion, duplicate retry deduplication, delete serialization, and
@@ -58,7 +58,7 @@ Tested via `LiveDownloadVerificationTests` on macOS against live HuggingFace CDN
    - **Atomic commit & symlink materialization**: Candidate materialized and symlinks resolved via `ModelStorage.prepareGenerationCommitOffMainActor`, then published atomically via `ModelStorage.publishPreparedGeneration` to `/Users/chenli/Library/Application Support/OpenType/huggingface/models/mlx-community/Qwen2.5-0.5B-Instruct-4bit`. Verified `model.safetensors` is a regular file with exact size 278,064,920 bytes.
    - **Staging cleanup**: Generation staging root was removed; verified published files remain independent and readable.
    - **Tokenizer verification**: Loaded via `AutoTokenizer.from(modelFolder:)`; verified round-trip encode and decode ("Hello world").
-   - **MLX Container Loading & Inference Scope**: In the SwiftPM CLI test runner (`swift test`), `LLMModelFactory.shared.loadContainer` invokes MLX C++ stream initialization which fails with `std::runtime_error: Failed to load the default metallib` because Metal kernels (`default.metallib`) are only compiled into resource bundles during Xcode application packaging (`scripts/build-app.sh:5-7`). Therefore, container loading and real text generation are documented as uncompleted in the CLI test runner environment.
+   - **MLX Container Loading & Real Text Generation**: Built application Metal shader bundle (`mlx-swift_Cmlx.bundle` containing `default.metallib`, 3.7 MB) via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer bash scripts/build-app.sh --app-only`. With `default.metallib` available in the test runner host bundle resources, `LLMModelFactory.shared.loadContainer(from:using:)` loaded the published model container in **0.78s**. Real text generation via `ChatSession(container, instructions: "You are a helpful assistant.", generateParameters: GenerateParameters(maxTokens: 50, temperature: 0.3)).respond(to: "Hello! Tell me in one sentence what open source is.")` completed in **1.62s** with coherent response: `"Open source is a collaborative process of sharing code and data with the community for the benefit of everyone."`. Full weights download, atomic commit, ModelContainer loading, and text generation 100% verified.
 
 3. **Interruption Taxonomy (`Task.cancel` vs Transport Fault)**:
    - `testTransportFailureVsTaskCancelTaxonomy` verified distinct error signatures:
@@ -78,7 +78,8 @@ Each piece of evidence maps to its originating commit:
 - `0167504`: Baseline P0 implementation (generation token staging, writer drain, watchdog, and initial 46 unit tests).
 - `28a847f`: Live Whisper audio transcription (`en-sample.m4a`), full Hub 278 MB safetensors download, interruption taxonomy, application catalog resume path, and MLX metallib CLI constraint documentation.
 - `a45132f`: P1 promotion refactor (detached candidate preparation off MainActor, rollback restoration on replacement failure, and startup cleanup of orphaned generation staging roots).
-- Current commit: Unified continuation integrating P1 promotion with verified live execution paths, 48 focused tests, 665 full tests, and passing CI/SDLC checks.
+- `6bcc5ad`: P1 integration commit on PR #102.
+- Current commit: Verified Hub MLX ModelContainer loading (0.78s) and real text generation (1.62s) with `default.metallib`, achieving complete end-to-end dual-stack live verification on macOS.
 
 ## Acceptance criteria
 
@@ -114,13 +115,13 @@ Each piece of evidence maps to its originating commit:
 - `swift test` execution — **pass on macOS**: 48 focused tests pass (0 failures);
   full suite passes with 665 XCTest executed, 14 skipped, 0 failures, plus 1
   swift-testing test.
-- Real network interrupted download → Resume → model load — **partially verified with scope boundary on macOS**:
-  WhisperKit end-to-end download, resume, model load, and real audio transcription pass 100%. HubApi full weights download (278 MB safetensors), symlink materialization, staging purge, and tokenizer encode/decode pass 100%. MLX container loading and text generation remain uncompleted due to Xcode metallib bundling requirement.
+- Real network interrupted download → Resume → model load & inference — **pass on macOS**:
+  WhisperKit end-to-end download, resume, model load, and real audio transcription pass 100% (`en-sample.m4a` in 0.10s).
+  HubApi full weights download (278 MB safetensors), symlink materialization, staging purge, tokenizer encode/decode, MLX ModelContainer loading (0.78s), and real text generation (1.62s) pass 100% in test host with `default.metallib`.
   Interruption taxonomy (`Task.cancel` vs transport fault) and application `ModelCatalog` resume path pass 100%.
 
 ## Residual risk
 
-- MLX container loading and LLM text generation require precompiled `default.metallib` from `xcodebuild` app bundle packaging, which cannot run in `swift test` CLI test runner; verified scope covers full weights (278 MB) download, symlink materialization, staging isolation, and AutoTokenizer.
 - The 120 s stall threshold is a judgment call; a very slow link with no progress
   reports for over two minutes would be failed and marked resumable.
 - A transfer that ignores cancellation remains in its generation root until it
@@ -130,4 +131,4 @@ Each piece of evidence maps to its originating commit:
 
 ## Decision
 
-Implementation and verification are complete on macOS within the verified scope. Acceptance criteria, real audio transcription on Whisper, full 278 MB weights download, tokenizer verification, interruption taxonomy, ModelCatalog resume, candidate preparation responsiveness, restart cleanup, and replacement rollback pass. Ready for review.
+Implementation and verification are complete on macOS. Acceptance criteria, real audio transcription on Whisper, full 278 MB weights download, tokenizer verification, MLX ModelContainer loading & real text generation, interruption taxonomy, ModelCatalog resume, candidate preparation responsiveness, restart cleanup, and replacement rollback pass. Ready for review.

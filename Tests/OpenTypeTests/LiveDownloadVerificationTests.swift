@@ -259,14 +259,34 @@ final class LiveDownloadVerificationTests: XCTestCase {
         print("[LiveTest-Hub] AutoTokenizer successfully encoded and decoded: \(decoded)")
         fflush(stdout)
 
-        // MLX ModelContainer loading in CLI test runner requires bundled default.metallib:
-        // As documented in scripts/build-app.sh:5-7, mlx-swift requires default.metallib compiled via xcodebuild.
-        // In the SwiftPM CLI test runner (swift test), Cmlx stream initialization throws a C++ std::runtime_error
-        // ("Failed to load the default metallib") because default.metallib is only assembled into the app bundle.
-        // Therefore, we verify full weights download (278MB safetensors), symlink materialization to regular file,
-        // and AutoTokenizer encode/decode, while recording container loading/inference as an Xcode app-bundle requirement.
-        print("[LiveTest-Hub] Note: MLX ModelContainer loading and inference in CLI environment requires Xcode app bundle with compiled default.metallib (see scripts/build-app.sh).")
-        print("[LiveTest-Hub] Published model weights (\(safetensorsSize) bytes safetensors), atomic commit, symlink materialization, and AutoTokenizer are 100% verified.")
+        // 6. MLX ModelContainer loading & real text generation
+        print("[LiveTest-Hub] Loading MLX ModelContainer from published directory...")
+        fflush(stdout)
+        let tLoad0 = CFAbsoluteTimeGetCurrent()
+        let container = try await LLMModelFactory.shared.loadContainer(
+            from: targetDir,
+            using: MLXModelLoading.tokenizerLoader
+        )
+        let loadElapsed = CFAbsoluteTimeGetCurrent() - tLoad0
+        print("[LiveTest-Hub] MLX ModelContainer successfully loaded in \(String(format: "%.2f", loadElapsed))s!")
+        fflush(stdout)
+
+        print("[LiveTest-Hub] Running real text generation with loaded model...")
+        fflush(stdout)
+        let tGen0 = CFAbsoluteTimeGetCurrent()
+        let params = GenerateParameters(maxTokens: 50, temperature: 0.3)
+        let session = ChatSession(
+            container,
+            instructions: "You are a helpful assistant.",
+            generateParameters: params
+        )
+        let generatedText = try await session.respond(to: "Hello! Tell me in one sentence what open source is.")
+        let genElapsed = CFAbsoluteTimeGetCurrent() - tGen0
+        print("[LiveTest-Hub] Generation complete in \(String(format: "%.2f", genElapsed))s:")
+        print("[LiveTest-Hub] Response: \(generatedText)")
+        fflush(stdout)
+        XCTAssertFalse(generatedText.isEmpty, "Generated text must not be empty")
+        print("[LiveTest-Hub] Full weights download, atomic commit, ModelContainer loading, and text generation 100% verified!")
         fflush(stdout)
     }
 
