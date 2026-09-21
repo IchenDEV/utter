@@ -138,6 +138,55 @@ final class ModelDownloadTasksTests: XCTestCase {
         XCTAssertTrue(oldReturned)
     }
 
+    /// Application-level counterexample: cancel through ModelCatalog while
+    /// its registered writer is still suspended, then start the replacement
+    /// through the same catalog-owned task registry before the old writer
+    /// returns. This deliberately does not await the first request as the
+    /// live download test does.
+    func testApplicationCancelAllowsResumeBeforeOldWriterReturns() async {
+        let catalog = ModelCatalog.shared
+        let key = ModelDownloadKey(kind: .llm, modelID: "test/application-old-writer")
+        var oldStarted = false
+        var oldReturned = false
+        var replacementStarted = false
+        var releaseOld: (() -> Void)?
+
+        let old = Task { @MainActor in
+            await catalog.downloadTasks.run(key: key) { _ in
+                oldStarted = true
+                await withCheckedContinuation {
+                    (continuation: CheckedContinuation<Void, Never>) in
+                    releaseOld = {
+                        continuation.resume()
+                        oldReturned = true
+                    }
+                }
+            }
+        }
+        for _ in 0..<200 where !oldStarted {
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
+        XCTAssertTrue(oldStarted, "application writer did not start")
+
+        catalog.cancelDownload(key.modelID, kind: key.kind)
+        XCTAssertFalse(catalog.downloadTasks.isActive(key))
+
+        let replacement = Task { @MainActor in
+            await catalog.downloadTasks.run(key: key) { _ in
+                replacementStarted = true
+            }
+        }
+        for _ in 0..<200 where !replacementStarted {
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
+        XCTAssertTrue(replacementStarted, "Resume must start before old writer returns")
+        XCTAssertFalse(oldReturned, "old application writer must still be suspended")
+
+        releaseOld?()
+        await old.value
+        await replacement.value
+    }
+
     /// A duplicate that joined before Cancel is not a user Resume. It must
     /// complete with the cancelled generation and must not claim the restart
     /// replacement after the old writer drains.

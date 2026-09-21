@@ -109,3 +109,4 @@ playground.xcworkspace
 *.tmp
 .claude/
 .build-test/
+.build-p2/

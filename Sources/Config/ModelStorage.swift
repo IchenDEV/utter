@@ -19,6 +19,7 @@ struct ModelDownloadStaging: Sendable {
 /// copying model-sized trees may take seconds or minutes and must not occupy
 /// the MainActor arbitration point used by Cancel/Delete.
 struct PreparedModelGeneration: Sendable {
+    let storageRoot: URL
     let candidate: URL
     let destination: URL
     let backup: URL?
@@ -40,6 +41,9 @@ enum ModelGenerationError: LocalizedError {
 
 enum ModelStorage {
     static let generationDirectoryName = ".utter-generations"
+    static let cleanupDirectoryName = ".utter-cleanup"
+    static let promotionDirectoryPrefix = ".utter-promotion-"
+    static let backupDirectoryPrefix = ".utter-backup-"
 
     static var defaultRoot: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -96,14 +100,15 @@ enum ModelStorage {
     }
 
     static func removeGenerationStaging(_ staging: ModelDownloadStaging) {
-        try? FileManager.default.removeItem(at: staging.root)
+        retireManagedDirectory(at: staging.root, storageRoot: staging.storageRoot)
     }
 
-    /// Removes generation roots left by a process that exited before its
-    /// writer could run its cleanup. This is a startup-only operation: the
-    /// ModelCatalog calls it before it can start a download, so no live writer
-    /// can own one of these roots. Runtime cancellation must continue to use
-    /// removeGenerationStaging after that writer returns instead.
+    /// Removes all managed generation, promotion, backup, and cleanup roots
+    /// left by a process that exited before its writer could run its cleanup.
+    /// This is a startup-only operation: the ModelCatalog calls it before it
+    /// can start a download, so no live writer can own one of these roots.
+    /// Runtime cancellation uses the O(1) retirement path below instead of
+    /// recursively deleting a model-sized tree on the MainActor.
     @discardableResult
     static func cleanupOrphanedGenerationStaging() -> Int {
         cleanupOrphanedGenerationStaging(storageRoot: huggingFaceBase)
@@ -112,35 +117,44 @@ enum ModelStorage {
     /// Testable path-scoped implementation used by the startup wrapper.
     @discardableResult
     static func cleanupOrphanedGenerationStaging(storageRoot: URL) -> Int {
-        let generations = storageRoot
-            .appendingPathComponent(generationDirectoryName, isDirectory: true)
-        guard let children = try? FileManager.default.contentsOfDirectory(
-            at: generations,
+        let fileManager = FileManager.default
+        var managedDirectories: [URL] = []
+
+        if let enumerator = fileManager.enumerator(
+            at: storageRoot,
             includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return 0
+            options: []
+        ) {
+            for case let url as URL in enumerator {
+                let name = url.lastPathComponent
+                if name == generationDirectoryName {
+                    managedDirectories.append(contentsOf: generationChildren(at: url))
+                    enumerator.skipDescendants()
+                    continue
+                }
+                if name == cleanupDirectoryName {
+                    managedDirectories.append(contentsOf: cleanupChildren(at: url))
+                    enumerator.skipDescendants()
+                    continue
+                }
+                if isManagedTemporaryDirectoryName(name), isDirectory(url) {
+                    managedDirectories.append(url)
+                    enumerator.skipDescendants()
+                }
+            }
         }
 
         var removed = 0
-        for child in children {
-            var isDirectory = ObjCBool(false)
-            guard FileManager.default.fileExists(
-                atPath: child.path,
-                isDirectory: &isDirectory
-            ), isDirectory.boolValue else {
-                continue
-            }
-            guard (try? FileManager.default.removeItem(at: child)) != nil else { continue }
+        for directory in managedDirectories.sorted(by: { $0.path.count > $1.path.count }) {
+            guard (try? fileManager.removeItem(at: directory)) != nil else { continue }
             removed += 1
         }
-        if let remaining = try? FileManager.default.contentsOfDirectory(
-            at: generations,
-            includingPropertiesForKeys: nil,
-            options: []
-        ), remaining.isEmpty {
-            try? FileManager.default.removeItem(at: generations)
-        }
+        removeEmptyManagedRoot(
+            storageRoot.appendingPathComponent(generationDirectoryName, isDirectory: true)
+        )
+        removeEmptyManagedRoot(
+            storageRoot.appendingPathComponent(cleanupDirectoryName, isDirectory: true)
+        )
         return removed
     }
 
@@ -251,7 +265,7 @@ enum ModelStorage {
         let parent = destination.deletingLastPathComponent()
         try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
         let candidate = parent.appendingPathComponent(
-            ".utter-promotion-\(UUID().uuidString)",
+            "\(promotionDirectoryPrefix)\(UUID().uuidString)",
             isDirectory: true
         )
         var backup: URL? = nil
@@ -265,7 +279,7 @@ enum ModelStorage {
 
             if fileManager.fileExists(atPath: destination.path) {
                 let backupURL = parent.appendingPathComponent(
-                    ".utter-backup-\(UUID().uuidString)",
+                    "\(backupDirectoryPrefix)\(UUID().uuidString)",
                     isDirectory: true
                 )
                 backup = backupURL
@@ -277,6 +291,7 @@ enum ModelStorage {
                 )
             }
             return PreparedModelGeneration(
+                storageRoot: staging.storageRoot,
                 candidate: candidate,
                 destination: destination,
                 backup: backup
@@ -306,14 +321,116 @@ enum ModelStorage {
         }.value
     }
 
-    /// Removes an unpublished candidate and any rollback backup. This is
-    /// required when token arbitration rejects a prepared generation.
+    /// Retires an unpublished candidate and any rollback backup. The source
+    /// directories are renamed into the managed cleanup root synchronously
+    /// and their recursive deletion is detached, so a token rejection never
+    /// blocks the MainActor on model-sized I/O.
     static func discardPreparedGeneration(_ prepared: PreparedModelGeneration) {
-        let fileManager = FileManager.default
-        try? fileManager.removeItem(at: prepared.candidate)
+        retireManagedDirectory(at: prepared.candidate, storageRoot: prepared.storageRoot)
         if let backup = prepared.backup {
-            try? fileManager.removeItem(at: backup)
+            retireManagedDirectory(at: backup, storageRoot: prepared.storageRoot)
         }
+    }
+
+    /// Awaits the detached cleanup when a caller needs deterministic cleanup
+    /// before returning (for example a focused regression test). Production
+    /// download paths use this async form after publication as well.
+    static func discardPreparedGenerationOffMainActor(
+        _ prepared: PreparedModelGeneration
+    ) async {
+        await Task.detached {
+            removeManagedDirectoryImmediately(at: prepared.candidate)
+            if let backup = prepared.backup {
+                removeManagedDirectoryImmediately(at: backup)
+            }
+        }.value
+    }
+
+    static func discardPreparedGenerationsOffMainActor(
+        _ prepared: [PreparedModelGeneration]
+    ) async {
+        await Task.detached {
+            for generation in prepared {
+                removeManagedDirectoryImmediately(at: generation.candidate)
+                if let backup = generation.backup {
+                    removeManagedDirectoryImmediately(at: backup)
+                }
+            }
+        }.value
+    }
+
+    /// Moves a managed directory out of the live model tree without walking
+    /// its contents. The detached removal is best effort; a later startup
+    /// sweep covers a process that exits before it completes.
+    private static func retireManagedDirectory(at url: URL, storageRoot: URL) {
+        guard isDirectory(url) else { return }
+        let cleanupRoot = storageRoot
+            .appendingPathComponent(cleanupDirectoryName, isDirectory: true)
+        let retired = cleanupRoot.appendingPathComponent(
+            UUID().uuidString,
+            isDirectory: true
+        )
+        let fileManager = FileManager.default
+        try? fileManager.createDirectory(at: cleanupRoot, withIntermediateDirectories: true)
+        if (try? fileManager.moveItem(at: url, to: retired)) == nil {
+            Task.detached {
+                removeManagedDirectoryImmediately(at: url)
+            }
+            return
+        }
+        Task.detached {
+            removeManagedDirectoryImmediately(at: retired)
+        }
+    }
+
+    private static func removeManagedDirectoryImmediately(at url: URL) {
+        try? FileManager.default.removeItem(at: url)
+    }
+
+    private static func isDirectory(_ url: URL) -> Bool {
+        var directory = ObjCBool(false)
+        return FileManager.default.fileExists(atPath: url.path, isDirectory: &directory)
+            && directory.boolValue
+    }
+
+    private static func isManagedTemporaryDirectoryName(_ name: String) -> Bool {
+        if name.hasPrefix(promotionDirectoryPrefix) {
+            return UUID(uuidString: String(name.dropFirst(promotionDirectoryPrefix.count))) != nil
+        }
+        if name.hasPrefix(backupDirectoryPrefix) {
+            return UUID(uuidString: String(name.dropFirst(backupDirectoryPrefix.count))) != nil
+        }
+        return false
+    }
+
+    private static func generationChildren(at root: URL) -> [URL] {
+        guard let children = try? FileManager.default.contentsOfDirectory(
+            at: root,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: []
+        ) else { return [] }
+        return children.filter { child in
+            UUID(uuidString: child.lastPathComponent) != nil && isDirectory(child)
+        }
+    }
+
+    private static func cleanupChildren(at root: URL) -> [URL] {
+        guard let children = try? FileManager.default.contentsOfDirectory(
+            at: root,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: []
+        ) else { return [] }
+        return children.filter(isDirectory)
+    }
+
+    private static func removeEmptyManagedRoot(_ root: URL) {
+        guard isDirectory(root),
+              let contents = try? FileManager.default.contentsOfDirectory(
+                  at: root,
+                  includingPropertiesForKeys: nil,
+                  options: []
+              ), contents.isEmpty else { return }
+        try? FileManager.default.removeItem(at: root)
     }
 
     /// Commits a prepared generation. Only this short method belongs inside
@@ -325,24 +442,26 @@ enum ModelStorage {
         _ prepared: PreparedModelGeneration,
         replacement: ((URL, URL) throws -> Void)? = nil
     ) throws {
-        let fileManager = FileManager.default
         let replace = replacement ?? replaceCandidate
         do {
             try replace(prepared.candidate, prepared.destination)
-            if let backup = prepared.backup {
-                try? fileManager.removeItem(at: backup)
-            }
         } catch {
             if let backup = prepared.backup {
                 // The replacement may have moved the candidate before
-                // reporting an error. Remove that tree, then restore the
-                // complete old model from the same-volume backup.
-                try? fileManager.removeItem(at: prepared.destination)
-                try? fileManager.moveItem(at: backup, to: prepared.destination)
+                // reporting an error. Retire that tree in O(1), then restore
+                // the complete old model from the same-volume backup.
+                retireManagedDirectory(
+                    at: prepared.destination,
+                    storageRoot: prepared.storageRoot
+                )
+                try? FileManager.default.moveItem(at: backup, to: prepared.destination)
             } else {
                 // There was no previous model to restore; never leave a
                 // partially replaced tree behind after a failed operation.
-                try? fileManager.removeItem(at: prepared.destination)
+                retireManagedDirectory(
+                    at: prepared.destination,
+                    storageRoot: prepared.storageRoot
+                )
             }
             throw error
         }

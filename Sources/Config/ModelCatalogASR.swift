@@ -147,25 +147,32 @@ extension ModelCatalog {
                 return
             }
             var preparedGenerations: [PreparedModelGeneration] = []
-            defer {
-                preparedGenerations.forEach { prepared in
-                    ModelStorage.discardPreparedGeneration(prepared)
+            do {
+                for repositoryID in repositories {
+                    let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
+                        kind: .asr,
+                        modelID: repositoryID,
+                        staging: staging
+                    )
+                    preparedGenerations.append(prepared)
                 }
+            } catch {
+                await ModelStorage.discardPreparedGenerationsOffMainActor(preparedGenerations)
+                throw error
             }
-            for repositoryID in repositories {
-                let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
-                    kind: .asr,
-                    modelID: repositoryID,
-                    staging: staging
-                )
-                preparedGenerations.append(prepared)
-            }
-            let published = try downloadTasks.publishIfCurrent(key, token: token) {
-                for prepared in preparedGenerations {
-                    try ModelStorage.publishPreparedGeneration(prepared)
+            let published: Bool
+            do {
+                published = try downloadTasks.publishIfCurrent(key, token: token) {
+                    for prepared in preparedGenerations {
+                        try ModelStorage.publishPreparedGeneration(prepared)
+                    }
                 }
+            } catch {
+                await ModelStorage.discardPreparedGenerationsOffMainActor(preparedGenerations)
+                throw error
             }
-            guard published else { return }
+            await ModelStorage.discardPreparedGenerationsOffMainActor(preparedGenerations)
+            guard published, downloadTasks.isCurrent(key, token: token) else { return }
             if let i = asrModels.firstIndex(where: { $0.id == id }) {
                 let complete = asrRepoIsComplete(id)
                 asrModels[i].status = complete ? .downloaded : .error(L("model.asr_incomplete"))

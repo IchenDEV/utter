@@ -86,11 +86,17 @@ extension ModelCatalog {
                 modelID: id,
                 staging: staging
             )
-            defer { ModelStorage.discardPreparedGeneration(prepared) }
-            let published = try downloadTasks.publishIfCurrent(key, token: token) {
-                try ModelStorage.publishPreparedGeneration(prepared)
+            let published: Bool
+            do {
+                published = try downloadTasks.publishIfCurrent(key, token: token) {
+                    try ModelStorage.publishPreparedGeneration(prepared)
+                }
+            } catch {
+                await ModelStorage.discardPreparedGenerationOffMainActor(prepared)
+                throw error
             }
-            guard published else { return }
+            await ModelStorage.discardPreparedGenerationOffMainActor(prepared)
+            guard published, downloadTasks.isCurrent(key, token: token) else { return }
             if let i = whisperModels.firstIndex(where: { $0.id == id }) {
                 let complete = isWhisperDownloaded(id)
                 whisperModels[i].status = complete ? .downloaded : .error(L("model.download_incomplete"))
@@ -240,11 +246,17 @@ extension ModelCatalog {
                 modelID: id,
                 staging: staging
             )
-            defer { ModelStorage.discardPreparedGeneration(prepared) }
-            let published = try downloadTasks.publishIfCurrent(key, token: token) {
-                try ModelStorage.publishPreparedGeneration(prepared)
+            let published: Bool
+            do {
+                published = try downloadTasks.publishIfCurrent(key, token: token) {
+                    try ModelStorage.publishPreparedGeneration(prepared)
+                }
+            } catch {
+                await ModelStorage.discardPreparedGenerationOffMainActor(prepared)
+                throw error
             }
-            guard published else { return }
+            await ModelStorage.discardPreparedGenerationOffMainActor(prepared)
+            guard published, downloadTasks.isCurrent(key, token: token) else { return }
             // Resolve/download happened in staging. Load again from the
             // published directory so this path proves that removing the Hub
             // cache and generation root cannot strand a lazy model reader.
