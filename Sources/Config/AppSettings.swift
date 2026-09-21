@@ -26,6 +26,8 @@ final class AppSettings: ObservableObject {
     @Published var whisperModel: String
     @Published var llmModel: String
     @Published var microphoneID: String?
+    @Published var remoteMicEnabled: Bool
+    @Published var remoteMicGainDB: Double
     @Published var audioGateSensitivity: AudioSensitivity
     @Published var audioWeakSpeechSensitivity: AudioSensitivity
     @Published var outputMode: OutputMode
@@ -77,7 +79,7 @@ final class AppSettings: ObservableObject {
 
     private enum Key: String {
         case hotkeyType, translationHotkeyModifier, activationMode, tapInterval, speechEngine, whisperModel, llmModel
-        case microphoneID, outputMode, languageStyle, customStylePrompt, playSounds
+        case microphoneID, remoteMicEnabled, remoteMicGainDB, outputMode, languageStyle, customStylePrompt, playSounds
         case audioGateSensitivity, audioWeakSpeechSensitivity
         case enableStreamingRecognitionBeta
         case inputLanguage, translationTargetLanguage
@@ -130,6 +132,9 @@ final class AppSettings: ObservableObject {
         whisperModel = ud.string(forKey: Key.whisperModel.rawValue) ?? "large-v3"
         llmModel = ud.string(forKey: Key.llmModel.rawValue) ?? Self.defaultLLMModelID
         microphoneID = ud.string(forKey: Key.microphoneID.rawValue)
+        remoteMicEnabled = ud.bool(forKey: Key.remoteMicEnabled.rawValue)
+        let savedGain = ud.double(forKey: Key.remoteMicGainDB.rawValue)
+        remoteMicGainDB = savedGain == 0 ? RemoteMicProtocol.defaultGainDB : min(24, max(0, savedGain))
         audioGateSensitivity = AudioSensitivity(
             rawValue: ud.string(forKey: Key.audioGateSensitivity.rawValue) ?? ""
         ) ?? .standard
@@ -217,6 +222,8 @@ final class AppSettings: ObservableObject {
         $whisperModel.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.whisperModel.rawValue) }.store(in: &cancellables)
         $llmModel.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.llmModel.rawValue) }.store(in: &cancellables)
         $microphoneID.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.microphoneID.rawValue) }.store(in: &cancellables)
+        $remoteMicEnabled.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.remoteMicEnabled.rawValue) }.store(in: &cancellables)
+        $remoteMicGainDB.dropFirst().sink { [defaults] in defaults.set($0, forKey: Key.remoteMicGainDB.rawValue) }.store(in: &cancellables)
         $audioGateSensitivity.dropFirst().sink {
             [defaults] in defaults.set($0.rawValue, forKey: Key.audioGateSensitivity.rawValue)
         }.store(in: &cancellables)

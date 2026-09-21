@@ -56,6 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         observeSystemAppearanceForIcon()
         observeUILanguageForSettingsWindow()
         observeIntegrationSettings()
+        observeRemoteMicSetting()
         configureIntegrationHTTPServer()
         configureIntegrationXPCServer()
 
@@ -67,6 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func applicationWillTerminate(_ notification: Notification) {
         stopIntegrationHTTPServer(resetService: true)
+        RemoteMicCaptureManager.shared.deactivate()
     }
 
     private func setupMenuBar() {

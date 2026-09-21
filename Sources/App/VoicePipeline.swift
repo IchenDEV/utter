@@ -5,7 +5,11 @@ import AppKit
 final class VoicePipeline {
     let appState: AppState
     let soundPlayer = SoundPlayer()
-    let audioCapture = AudioCaptureManager()
+    let audioCapture: AudioCaptureManager = {
+        let capture = AudioCaptureManager()
+        capture.remoteMicSource = .shared
+        return capture
+    }()
     let textInserter = TextInserter()
     let correctionCapture = CorrectionCaptureService()
     let textProcessor: TextProcessor
