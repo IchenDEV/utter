@@ -1,5 +1,6 @@
 import Foundation
 import Hub
+import HuggingFace
 
 /// All dependency writes for one download generation live below this root.
 /// The root is deliberately separate from the published model directory so a

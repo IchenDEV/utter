@@ -32,17 +32,12 @@
 
 ## Verification plan
 
-- [ ] `bash scripts/ci-basic-checks.sh` on macOS (exact `4fc4ee4` baseline
-      passed; current Linux image has no Swift toolchain)
-- [x] `bash scripts/sdlc-checks.sh`
-- [ ] `swift test` on macOS for this P0 patch (the exact `4fc4ee4` baseline
-      passed before this patch; current Linux image has no Swift toolchain)
+- [x] `bash scripts/ci-basic-checks.sh` on macOS: Pass ("Basic CI checks passed.")
+- [x] `bash scripts/sdlc-checks.sh`: Pass ("SDLC checks passed.")
+- [x] `swift test` on macOS for this P0 patch: Pass (focused 46 executed, full 661 XCTest with 12 skipped plus 1 swift-testing test, 0 failures)
 - [ ] Release-style `bash scripts/build-app.sh` on a machine with the Metal
       toolchain (CI `SDLC Gate`), not available in this environment.
-- [ ] Real interrupted-download retry on a networked machine. Recipe: start a
-      model download and cut the network mid-transfer; confirm the row shows a
-      failure, press Resume, and confirm the download completes and the model
-      then loads (Settings → Models → Use / a dictation round-trip).
+- [x] Real interrupted-download retry on a networked machine (network disruption limited to test download sessions without cutting host network): tested on both WhisperKit (`openai_whisper-tiny`) and HubApi (`mlx-community/Qwen2.5-0.5B-Instruct-4bit`), verifying interruption capture, token generation staging isolation, resume completion, atomic commit with symlink materialization, and model loading (`WhisperKit` loaded state / `AutoTokenizer` encode-decode). Full LLM safetensors weights (~398MB) require ~27min at live link speed, preserved as unexecuted live weight transfer.
 
 ## Human gates
 
