@@ -110,11 +110,25 @@ Each piece of evidence maps to its originating commit:
   fails after file operations begin, `publishPreparedGeneration` cleans up the
   corrupted candidate and restores the previous live model from backup. Verified
   by `testFailedCommitKeepsThePreviouslyPublishedModel`.
-- Restart cleanup — **pass on macOS**: `ModelCatalog.init` removes orphaned
-  generation roots left by abnormal process termination before starting fresh
-  downloads. Verified by `testStartupCleanupRemovesOnlyOrphanedGenerationRoots`.
-- `swift test` execution — **pass on macOS**: 48 focused tests pass (48 passed, 0 skipped, 0 failures);
-  full suite passes with 666 total: 652 passed, 14 skipped, 0 failures (651 XCTest passed, 14 skipped; 1 swift-testing passed).
+- Restart cleanup — **pass on macOS**: `ModelCatalog.init` reclaims every
+  managed artifact left by abnormal process termination — generation roots,
+  `.utter-promotion-*` candidates, `.utter-backup-*` rollback copies, and
+  `.utter-cleanup/*` retired roots — before starting fresh downloads. Verified by
+  `testStartupCleanupRemovesAllOrphanedGenerationArtifacts` (asserts all five
+  directories are removed) and confirmed by mutation: disabling the
+  promotion/backup scan makes it fail (3 vs 5 removed, leftovers remain).
+- Runtime cleanup responsiveness — **pass on macOS**: retiring a staged or
+  superseded tree moves it into the managed cleanup root in O(1) on the
+  MainActor and deletes it in a detached task, so a model-sized copy never
+  blocks Cancel/Delete arbitration. Verified by
+  `testGenerationCleanupKeepsMainActorResponsive`.
+- Application-layer Resume before the old writer returns — **pass on macOS**:
+  `testApplicationCancelAllowsResumeBeforeOldWriterReturns` drives the real
+  `ModelCatalog.downloadTasks` facade, cancels while the old writer is suspended,
+  and asserts the replacement starts before the old writer is released.
+- `swift test` execution — **pass on macOS** at `3442f836`: the focused
+  `ModelDownloadTasksTests|UtilityTests` run is 34 executed, 0 failures; the full
+  suite is 667 executed, 14 skipped, 0 failures.
 - Real network interrupted download → Resume → model load & inference — **pass on macOS**:
   WhisperKit end-to-end download, resume, model load, and real audio transcription pass 100% (`en-sample.m4a` in 0.14s).
   HubApi full weights download (278 MB safetensors), symlink materialization, staging purge, tokenizer encode/decode, MLX ModelContainer loading (0.78s), and real text generation (1.62s) pass 100% in test host with `default.metallib`.

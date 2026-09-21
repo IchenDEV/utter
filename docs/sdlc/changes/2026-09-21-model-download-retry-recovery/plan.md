@@ -35,6 +35,13 @@
       the previous model from backup when replacement fails.
 - [x] Add startup cleanup (`cleanupOrphanedGenerationStaging`) in `ModelCatalog`
       reclaiming orphaned generation roots from previous abnormal process exits.
+- [x] Extend reclaim to every managed temporary artifact: `.utter-generations/*`,
+      `.utter-promotion-*` candidates, `.utter-backup-*` copies, and
+      `.utter-cleanup/*` retired roots.
+- [x] Retire runtime cleanup in O(1) on the MainActor and delete detached, so a
+      model-sized tree cannot block Cancel/Delete arbitration.
+- [x] Re-check the generation token while cleanup is pending, so a Cancel/Delete
+      during cleanup cannot let the old writer publish state.
 - [x] Add regression tests for candidate preparation responsiveness, restart cleanup,
       and replacement failure rollback in `UtilityTests`.
 
@@ -43,7 +50,8 @@
 - [x] `bash scripts/ci-basic-checks.sh` on macOS: Pass ("Basic CI checks passed.")
 - [x] `bash scripts/sdlc-checks.sh`: Pass ("SDLC checks passed.")
 - [x] `swift test` on macOS for focused tests: Pass (48 executed, 0 failures across `ModelDownload|DownloadStallWatchdog|Utility`)
-- [x] `swift test` on macOS for full suite: Pass (666 total: 652 passed, 14 skipped [all 4 live integration tests], 0 failures; 651 XCTest passed + 1 swift-testing passed)
+- [x] `swift test` on macOS for full suite at `3442f836`: Pass (667 executed, 14 skipped, 0 failures)
+- [x] Focused counterexamples at `3442f836`: Pass (34 executed, 0 failures across `ModelDownloadTasksTests|UtilityTests`)
 - [x] Release-style `bash scripts/build-app.sh --app-only` on macOS with Xcode Metal toolchain: Pass (assembled `dist/Utter.app`, compiled `default.metallib` [3.7 MB], ad-hoc signed with hardened runtime, release artifact verification passed).
 - [x] Real interrupted-download retry on a networked machine (network disruption limited to test download sessions without cutting host network): tested on both WhisperKit (`openai_whisper-tiny`) and HubApi (`mlx-community/Qwen2.5-0.5B-Instruct-4bit`):
       - WhisperKit: voluntary cancellation (`Task.cancel`) caught cleanly (`downloadError("已取消")`), Generation 2 resumed to 100%, atomic commit via prepared candidate publisher succeeded, model initialized, and real audio transcription verified on sample audio (`docs/assets/demos/en-sample.m4a` transcribed in 0.14s: `"Hey so I wanted to, I wanted to follow up on the design doc we talked about"`).
