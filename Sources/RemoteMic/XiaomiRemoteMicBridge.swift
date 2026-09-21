@@ -561,6 +561,8 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
             managerIdentity: transport.identity,
             peripheralIdentity: peripheralIdentity,
             peripheral: nil,
+            advertisementData: [:],
+            rssi: 0,
             sourceAttempt: transport.delegateProxy.attempt
         )
         return activeConnectionAttempt

@@ -220,7 +220,7 @@ final class RemoteMicCallbackRoutingTests: XCTestCase {
             guard let bridge else {
                 preconditionFailure("central gate fixture outlived its bridge")
             }
-            RemoteMicCentralTransportFake(
+            return RemoteMicCentralTransportFake(
                 bridge: bridge,
                 stats: stats
             )
