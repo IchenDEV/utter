@@ -1,17 +1,9 @@
 name: Manual App Artifact
 
-# Acceptance artifact only: no pull_request, schedule, tag, or release.
+# Acceptance artifact only: no push, pull_request, schedule, tag, or release.
 # The fixed source SHA was explicitly approved for this handoff. Hardware,
 # licensing, merge, and release decisions remain separate human gates.
 on:
-  # One-time bootstrap for the approved build. The job additionally requires
-  # the exact pre-merge main SHA below; a later workflow-only cleanup removes
-  # this trigger after the artifact is uploaded.
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/manual-app-artifact.yml
   workflow_dispatch:
     inputs:
       retention_days:
@@ -42,7 +34,6 @@ jobs:
     timeout-minutes: 75
     env:
       APPROVED_COMMIT_SHA: 31b3c7f614656c59855b7fd556734a11543fa9eb
-      RETENTION_DAYS: ${{ github.event_name == 'push' && '14' || inputs.retention_days }}
     steps:
       - name: Check out the approved commit
         uses: actions/checkout@v4
@@ -53,23 +44,12 @@ jobs:
 
       - name: Prove the checked-out commit and authorization
         env:
+          RETENTION_DAYS: ${{ inputs.retention_days }}
           APPROVAL_ACK: ${{ inputs.approval_ack }}
-          TRIGGER_EVENT: ${{ github.event_name }}
-          TRIGGER_BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          if [ "$TRIGGER_EVENT" = "push" ]; then
-            if [ "$TRIGGER_BEFORE" != "12a45b20d0e169a41533426d881190b659ef3fcc" ]; then
-              echo "one-time bootstrap rejected unexpected prior main SHA: $TRIGGER_BEFORE" >&2
-              exit 1
-            fi
-          elif [ "$TRIGGER_EVENT" = "workflow_dispatch" ]; then
-            if [ "$APPROVAL_ACK" != "APPROVED" ]; then
-              echo "artifact build/upload is held until its explicit approval is recorded" >&2
-              exit 1
-            fi
-          else
-            echo "unsupported trigger event: $TRIGGER_EVENT" >&2
+          if [ "$APPROVAL_ACK" != "APPROVED" ]; then
+            echo "artifact build/upload is held until its explicit approval is recorded" >&2
             exit 1
           fi
           if [[ ! "$RETENTION_DAYS" =~ ^[0-9]+$ ]] ||
@@ -180,7 +160,7 @@ jobs:
           name: ${{ steps.package.outputs.artifact_name }}
           path: ${{ runner.temp }}/utter-app-artifact
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_DAYS }}
+          retention-days: ${{ inputs.retention_days }}
           compression-level: 0
 
       - name: Record the artifact delivery location
