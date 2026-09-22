@@ -11,6 +11,7 @@ final class ModelCatalog: ObservableObject {
 
     let settings = AppSettings.shared
     let downloadTasks = ModelDownloadTasks()
+    private let startupCleanupTask: Task<Int, Never>
 
     /// LLM model family categories
     enum ModelFamily: String, CaseIterable {
@@ -86,7 +87,21 @@ final class ModelCatalog: ObservableObject {
         "large-v3-turbo", "large-v3", "large-v2", "medium", "small", "base", "tiny",
     ]
 
-    private init() {
+    /// Internal construction seam used to exercise the real startup wiring
+    /// against a path-scoped cleanup task. Production callers use the
+    /// detached ModelStorage default below.
+    typealias StartupCleanupFactory = (URL) -> Task<Int, Never>
+
+    init(
+        startupStorageRoot: URL = ModelStorage.huggingFaceBase,
+        startupCleanup: StartupCleanupFactory = { storageRoot in
+            ModelStorage.cleanupOrphanedGenerationStagingInBackground(storageRoot: storageRoot)
+        }
+    ) {
+        // A previous process may have exited before a cancelled writer could
+        // run its cleanup. Reclaim those roots away from the MainActor and
+        // gate fresh download entry points on this task below.
+        startupCleanupTask = startupCleanup(startupStorageRoot)
         let rec = WhisperKit.recommendedModels()
         let defaultID = rec.default
         let supported = Set(rec.supported)
@@ -133,6 +148,13 @@ final class ModelCatalog: ObservableObject {
             settings.qwenASRModel = QwenASRModel.defaultID
         }
         refreshStatus()
+    }
+
+    /// Startup cleanup may remove model-sized trees. Download entry points
+    /// await its detached task before admitting a new writer, while the
+    /// MainActor remains available for UI and Cancel/Delete arbitration.
+    func awaitStartupCleanup() async {
+        _ = await startupCleanupTask.value
     }
 
     static var defaultLLMModels: [(String, String, String, ModelFamily?, ModelTier)] {

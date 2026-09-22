@@ -232,7 +232,7 @@ extension ModelManagementView {
         }
     }
 
-    func delete(_ model: ModelCatalog.ModelEntry, isActive: Bool, type: ModelType) {
+    func delete(_ model: ModelCatalog.ModelEntry, isActive: Bool, type: ModelType) async {
         if isActive {
             switch type {
             case .whisper:
@@ -246,11 +246,11 @@ extension ModelManagementView {
 
         switch type {
         case .whisper:
-            catalog.deleteWhisper(model.id)
+            await catalog.deleteWhisper(model.id)
         case .llm:
-            catalog.deleteLLM(model.id)
+            await catalog.deleteLLM(model.id)
         case .asr:
-            catalog.deleteASR(model.id)
+            await catalog.deleteASR(model.id)
         }
     }
 

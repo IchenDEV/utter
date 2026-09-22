@@ -270,6 +270,7 @@
 "model.download_required" = "The model files have not been downloaded. Open Settings → Models and confirm the data usage first.";
 "model.download_stalled_help" = "No progress for a while? Cancel and resume; files already downloaded will be preserved.";
 "model.download_failed_timeout" = "The download connection timed out. Existing files are preserved; check your network and select Resume.";
+"model.download_failed_stalled" = "The download stopped making progress and was paused. Select Resume to clear the partial file and start again.";
 "model.download_failed_network" = "The network connection was interrupted and the download paused. Restore the connection and select Resume.";
 "model.download_failed_disk_space" = "The model storage disk is out of space. Free space or change the storage location, then resume.";
 "model.download_failed_permission" = "Utter cannot write to the model folder. Check its permissions or choose another storage location.";

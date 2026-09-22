@@ -108,3 +108,6 @@ playground.xcworkspace
 *.log
 *.tmp
 .claude/
+.build-test/
+.build-p2/
+.build-p34/

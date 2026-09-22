@@ -4,15 +4,24 @@ import MLXLMCommon
 import Tokenizers
 
 enum MLXModelLoading {
-    static let downloader: any MLXLMCommon.Downloader = HubDownloader()
+    static let downloader: any MLXLMCommon.Downloader = HubDownloader(
+        hubApi: HubApi(downloadBase: ModelStorage.huggingFaceBase)
+    )
     static let tokenizerLoader: any MLXLMCommon.TokenizerLoader = TransformersTokenizerLoader()
 
-    fileprivate static var hubApi: HubApi {
-        HubApi(downloadBase: ModelStorage.huggingFaceBase)
+    static func downloader(for staging: ModelDownloadStaging) -> any MLXLMCommon.Downloader {
+        HubDownloader(
+            hubApi: HubApi(
+                downloadBase: staging.downloadBase,
+                cache: staging.hubCache
+            )
+        )
     }
 }
 
 private struct HubDownloader: MLXLMCommon.Downloader {
+    let hubApi: HubApi
+
     func download(
         id: String,
         revision: String?,
@@ -20,7 +29,7 @@ private struct HubDownloader: MLXLMCommon.Downloader {
         useLatest: Bool,
         progressHandler: @Sendable @escaping (Progress) -> Void
     ) async throws -> URL {
-        try await MLXModelLoading.hubApi.snapshot(
+        try await hubApi.snapshot(
             from: id,
             revision: revision ?? "main",
             matching: patterns
