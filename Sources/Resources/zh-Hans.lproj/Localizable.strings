@@ -165,7 +165,7 @@
 "settings.microphone" = "麦克风";
 "settings.system_default" = "系统默认";
 "settings.remote_mic" = "小米遥控器无线麦";
-"settings.remote_mic_help" = "连接小米蓝牙遥控器 2 Pro，按住语音键即可使用它的麦克风，无需再安装其他应用。";
+"settings.remote_mic_help" = "按住小米蓝牙遥控器 2 Pro 的语音键时使用遥控器麦克风；键盘快捷键仍使用上方选择的 Mac 麦克风。";
 "settings.remote_mic_status" = "连接状态";
 "settings.remote_mic_gain" = "音量增益";
 "remote_mic.state.idle" = "未连接";

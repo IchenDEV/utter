@@ -46,11 +46,11 @@ the speech engines.
 ## Acceptance criteria
 
 - With the setting off, recording is byte-for-byte the existing path.
-- With the setting on and a remote connected, recording uses the decoded 16 kHz
-  mono stream; the WAV, activity gate, level meter, and streaming buffers behave
-  like the built-in path.
-- With the setting on and no remote connected, recording still succeeds with the
-  system input.
+- With the setting on and a remote connected, holding its voice key starts a
+  recording from the decoded 16 kHz mono stream; the WAV, activity gate, level
+  meter, and streaming buffers behave like the built-in path.
+- Keyboard-shortcut and developer-API sessions keep using the selected system
+  input; enabling the remote does not disable that picker.
 - The ATVV capability parsing, framing, ADPCM decode, and PCM post-processing are
   covered by deterministic unit tests.
 - Localizations stay in parity and the two check scripts pass.

@@ -50,18 +50,17 @@ size. Audio notifications are IMA/DVI ADPCM nibbles that decode to 16 kHz mono
   callback, streamed `AVAudioPCMBuffer`s.
 
 `AudioCaptureManager` gains an optional `remoteMicSource` and a
-`usesRemoteMic` flag. `start` tries the remote first when
-`AppSettings.remoteMicEnabled` is on and the bridge is ready; otherwise it takes
-the existing AVAudioEngine path. `lastRecordingURL` / `lastActivity` /
-`cleanupLastRecording` / `stop` dispatch to whichever source is active, so the
-pipeline and integration coordinator need no changes. `VoicePipeline` and
-`InputSessionCoordinator` inject `RemoteMicCaptureManager.shared`.
+`usesRemoteMic` flag. A session latched by the remote's voice key uses the
+remote source; ordinary keyboard-shortcut and developer-API sessions keep the
+existing AVAudioEngine path. `lastRecordingURL` / `lastActivity` /
+`cleanupLastRecording` / `stop` dispatch to whichever source is active, and
+`VoicePipeline` injects `RemoteMicCaptureManager.shared`.
 
 `AppSettings` adds `remoteMicEnabled` (default false) and `remoteMicGainDB`
 (default 12, 0–24). `AppDelegate` observes the setting and activates/deactivates
 the bridge; `applicationWillTerminate` deactivates it. The General tab adds the
-toggle, a live connection state, and the gain slider, and disables the system
-device picker while the remote is enabled.
+toggle, a live connection state, and the gain slider. The system device picker
+remains available because keyboard-shortcut and API sessions still use it.
 
 The remote's voice key arrives on the ATVV control channel. Per the AOSP ATVV
 reference firmware, a PTT press sends `AUDIO_START` (0x04) directly and the host
@@ -71,8 +70,11 @@ request. `AppDelegate` maps the latch onto the same `startRecording` /
 `stopRecording` path the configured hotkey uses, but with an explicit latch:
 
 - the bridge latches the session synchronously and hands over a token;
-- audio that arrives before the pipeline commits is held in a bounded pre-roll
-  and drained on commit, so the opening word is not clipped;
+- audio that arrives before the pipeline commits is held in a bounded 30-second
+  pre-roll and drained on commit, so a normal cold model load does not clip the
+  opening words;
+- the ATVV v1.0 stream id from `AUDIO_START` is retained and echoed in
+  `MIC_CLOSE`, including non-zero PTT/HTT stream ids;
 - a release, disconnect, or feature shutdown that arrives before the commit
   cancels the pending start, so a short press cannot begin a recording; and
 - `endCapture` closes the microphone exactly once, in every phase.

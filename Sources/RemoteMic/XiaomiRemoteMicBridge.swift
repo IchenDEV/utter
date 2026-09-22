@@ -394,6 +394,9 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
 
     private var capabilities = RemoteMicCapabilities.default
     private var microphoneOpened = false
+    /// ATVV v1.0 requires `MIC_CLOSE` to identify the stream announced by
+    /// `AUDIO_START`; physical PTT/HTT sessions commonly use a non-zero id.
+    private var streamID: UInt8 = 0
     /// Latches the voice-key session synchronously, so a release or disconnect
     /// that arrives while the pipeline is still starting cancels the pending
     /// start instead of being ignored.
@@ -678,9 +681,10 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         guard microphoneOpened else { return }
         _ = write(RemoteMicProtocol.microphoneClose(
             version: capabilities.version,
-            sessionID: 0
+            sessionID: streamID
         ))
         microphoneOpened = false
+        streamID = 0
     }
 
     private func write(_ data: Data) -> Bool {
@@ -836,6 +840,7 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         transmitCharacteristic = nil
         audioCharacteristic = nil
         controlCharacteristic = nil
+        streamID = 0
     }
 
     /// Starts a new peripheral lifecycle and installs the source-bound route.
@@ -954,11 +959,10 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
             openMicrophoneIfNeeded()
         case .streamStart:
             guard handshake.isReady, isActive else { return }
-            if bytes.count >= 3 {
-                let codec = bytes[2]
-                capabilities.selectedCodec = codec
-                capabilities.sampleRate = codec == 0x02 ? 16_000 : 8_000
-            }
+            guard let start = RemoteMicStreamStart.parse(data) else { return }
+            capabilities.selectedCodec = start.codec
+            capabilities.sampleRate = start.codec == 0x02 ? 16_000 : 8_000
+            streamID = start.streamID
             guard RemoteMicProtocol.supportsAudio(sampleRate: capabilities.sampleRate) else {
                 failAttempt(reason: L("remote_mic.error.unsupported_codec"))
                 return

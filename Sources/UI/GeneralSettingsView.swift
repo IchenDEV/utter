@@ -201,7 +201,6 @@ struct GeneralSettingsView: View {
                 Text(microphone.name).tag(microphone.id as String?)
             }
         }
-        .disabled(settings.remoteMicEnabled)
     }
 
     @ViewBuilder

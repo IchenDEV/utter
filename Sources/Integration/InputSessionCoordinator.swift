@@ -35,7 +35,6 @@ final class InputSessionCoordinator {
         isUserWorkflowBusy: @escaping @MainActor () -> Bool = { false }
     ) {
         self.service = service
-        audioCapture.remoteMicSource = .shared
         self.audioCapture = audioCapture
         self.engineProvider = engineProvider ?? SpeechEngineProvider()
         self.textProcessor = textProcessor

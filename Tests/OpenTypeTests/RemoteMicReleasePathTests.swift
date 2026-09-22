@@ -95,7 +95,7 @@ final class RemoteMicAudioRoutingTests: XCTestCase {
 
     func testIdleToPressToReleaseKeepsOnlyTheStartingChunk() {
         var session = RemoteMicSession()
-        var preRoll = RemoteMicPreRoll(capacity: 4)
+        var preRoll = RemoteMicPreRoll(frameCapacity: 4)
         var forwarded = 0
 
         func deliver() {

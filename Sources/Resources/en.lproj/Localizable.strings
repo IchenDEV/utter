@@ -165,7 +165,7 @@
 "settings.microphone" = "Microphone";
 "settings.system_default" = "System Default";
 "settings.remote_mic" = "Xiaomi remote wireless mic";
-"settings.remote_mic_help" = "Connect a Xiaomi Bluetooth Remote 2 Pro and hold its voice key to use its microphone — no extra app required.";
+"settings.remote_mic_help" = "Hold the Xiaomi Bluetooth Remote 2 Pro voice key to record from it. Keyboard shortcuts keep using the Mac microphone selected above.";
 "settings.remote_mic_status" = "Connection";
 "settings.remote_mic_gain" = "Gain";
 "remote_mic.state.idle" = "Not connected";

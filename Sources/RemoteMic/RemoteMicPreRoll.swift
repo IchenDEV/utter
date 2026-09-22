@@ -8,24 +8,32 @@ import Foundation
 /// and drops the oldest data once the bound is hit so a session that never
 /// starts cannot grow without limit.
 struct RemoteMicPreRoll {
-    private let capacity: Int
-    private var chunks: [[Int16]] = []
-    private var chunkCount = 0
+    /// Thirty seconds of 16 kHz mono audio is under 1 MB as `Int16` samples and
+    /// covers a normal cold model load without clipping the beginning.
+    static let defaultFrameCapacity = 16_000 * 30
 
-    init(capacity: Int = 4) {
-        self.capacity = max(1, capacity)
+    private let frameCapacity: Int
+    private var chunks: [[Int16]] = []
+    private var frameCount = 0
+
+    init(frameCapacity: Int = Self.defaultFrameCapacity) {
+        self.frameCapacity = max(1, frameCapacity)
     }
 
     var isEmpty: Bool { chunks.isEmpty }
     var retainedChunks: Int { chunks.count }
-    var retainedFrames: Int { chunkCount }
+    var retainedFrames: Int { frameCount }
 
     mutating func append(_ samples: [Int16]) {
         guard !samples.isEmpty else { return }
         chunks.append(samples)
-        chunkCount += samples.count
-        while chunks.count > capacity {
-            chunkCount -= chunks.removeFirst().count
+        frameCount += samples.count
+        while frameCount > frameCapacity, chunks.count > 1 {
+            frameCount -= chunks.removeFirst().count
+        }
+        if frameCount > frameCapacity, let last = chunks.last {
+            chunks = [Array(last.suffix(frameCapacity))]
+            frameCount = chunks[0].count
         }
     }
 
@@ -33,13 +41,13 @@ struct RemoteMicPreRoll {
     mutating func drain() -> [[Int16]] {
         let drained = chunks
         chunks.removeAll(keepingCapacity: false)
-        chunkCount = 0
+        frameCount = 0
         return drained
     }
 
     mutating func reset() {
         chunks.removeAll(keepingCapacity: false)
-        chunkCount = 0
+        frameCount = 0
     }
 }
 

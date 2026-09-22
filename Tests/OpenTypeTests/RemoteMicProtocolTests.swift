@@ -33,6 +33,37 @@ final class RemoteMicProtocolTests: XCTestCase {
         XCTAssertEqual(RemoteMicProtocol.microphoneClose(version: 0x0010, sessionID: 7), Data([0x0D]))
     }
 
+    func testStreamStartParsesTheSessionIDUsedForClose() throws {
+        let start = try XCTUnwrap(RemoteMicStreamStart.parse(Data([0x04, 0x03, 0x02, 0x47])))
+        XCTAssertEqual(start.reason, 0x03)
+        XCTAssertEqual(start.codec, 0x02)
+        XCTAssertEqual(start.streamID, 0x47)
+        XCTAssertEqual(
+            RemoteMicProtocol.microphoneClose(version: 0x0100, sessionID: start.streamID),
+            Data([0x0D, 0x47])
+        )
+    }
+
+    func testRemoteMicGainAllowsPersistedZeroDB() {
+        let suite = "RemoteMicProtocolTests.\(#function).\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        defaults.set(0.0, forKey: "remoteMicGainDB")
+        XCTAssertEqual(AppSettings(defaults: defaults).remoteMicGainDB, 0)
+    }
+
+    func testRemoteMicGainDefaultsOnlyWhenTheKeyIsAbsent() {
+        let suite = "RemoteMicProtocolTests.\(#function).\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        XCTAssertEqual(
+            AppSettings(defaults: defaults).remoteMicGainDB,
+            RemoteMicProtocol.defaultGainDB
+        )
+    }
+
     func testADPCMDecodesHighNibbleFirst() {
         let decoder = RemoteMicADPCMDecoder()
         XCTAssertEqual(decoder.decode(Data([0x70])), [11, 13])
