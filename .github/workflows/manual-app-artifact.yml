@@ -59,7 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$TRIGGER_EVENT" = "push" ]; then
-            if [ "$TRIGGER_BEFORE" != "b2fe12acbfa7d62fd807d15fbeb90374f719e93d" ]; then
+            if [ "$TRIGGER_BEFORE" != "12a45b20d0e169a41533426d881190b659ef3fcc" ]; then
               echo "one-time bootstrap rejected unexpected prior main SHA: $TRIGGER_BEFORE" >&2
               exit 1
             fi
@@ -102,7 +102,7 @@ jobs:
           set -euo pipefail
           ./scripts/build-app.sh --app-only --sign=-
           app="${GITHUB_WORKSPACE}/dist/Utter.app"
-          version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app")"
+          version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")"
           ./scripts/verify-release-artifact.sh \
             --app "$app" \
             --version "$version"
