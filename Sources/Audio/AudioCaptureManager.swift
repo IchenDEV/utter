@@ -44,20 +44,38 @@ struct AudioCaptureActivity: Equatable {
 final class AudioCaptureManager {
     private let engine = AVAudioEngine()
     private var audioFile: AVAudioFile?
-    private(set) var lastRecordingURL: URL?
-    private(set) var lastActivity = AudioCaptureActivity()
+    private var localLastRecordingURL: URL?
+    private var localLastActivity = AudioCaptureActivity()
     /// Thresholds used for the next recording. Set from user sensitivity
     /// presets before `start(...)`; defaults preserve prior behavior.
     var thresholds = AudioActivityThresholds.default
+    /// When set and enabled in settings, the connected wireless remote supplies
+    /// the audio instead of a CoreAudio input device.
+    var remoteMicSource: RemoteMicCaptureManager?
+    private var usesRemoteMic = false
     private var levelCallback: ((Float) -> Void)?
     private var bufferCallback: ((AVAudioPCMBuffer) -> Void)?
 
     private var isRunning = false
 
+    var lastRecordingURL: URL? {
+        usesRemoteMic ? remoteMicSource?.lastRecordingURL : localLastRecordingURL
+    }
+
+    var lastActivity: AudioCaptureActivity {
+        usesRemoteMic
+            ? (remoteMicSource?.lastActivity ?? AudioCaptureActivity(thresholds: thresholds))
+            : localLastActivity
+    }
+
     func cleanupLastRecording() {
-        guard let url = lastRecordingURL else { return }
+        if usesRemoteMic {
+            remoteMicSource?.cleanupLastRecording()
+            return
+        }
+        guard let url = localLastRecordingURL else { return }
         try? FileManager.default.removeItem(at: url)
-        lastRecordingURL = nil
+        localLastRecordingURL = nil
     }
 
     @discardableResult
@@ -68,9 +86,22 @@ final class AudioCaptureManager {
     ) -> Bool {
         if isRunning { stop() }
         cleanupLastRecording()
-        lastActivity = AudioCaptureActivity(thresholds: thresholds)
+        usesRemoteMic = false
+        localLastActivity = AudioCaptureActivity(thresholds: thresholds)
         levelCallback = levelUpdate
         bufferCallback = bufferUpdate
+
+        if AppSettings.shared.remoteMicEnabled,
+           let remoteMicSource,
+           let token = remoteMicSource.currentSessionToken {
+            remoteMicSource.thresholds = thresholds
+            if remoteMicSource.start(token: token, levelUpdate: levelUpdate, bufferUpdate: bufferUpdate) {
+                usesRemoteMic = true
+                isRunning = true
+                return true
+            }
+            Log.info("[AudioCapture] wireless remote unavailable; using the system input")
+        }
 
         let authStatus = AVCaptureDevice.authorizationStatus(for: .audio)
         guard authStatus == .authorized else {
@@ -91,7 +122,7 @@ final class AudioCaptureManager {
 
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("opentype_recording_\(UUID().uuidString).wav")
-        lastRecordingURL = url
+        localLastRecordingURL = url
 
         do {
             audioFile = try AVAudioFile(
@@ -110,7 +141,7 @@ final class AudioCaptureManager {
             try? self.audioFile?.write(from: buffer)
 
             let rms = Self.calculateRMS(buffer: buffer)
-            self.lastActivity.record(rms: rms, frameCount: Int(buffer.frameLength))
+            self.localLastActivity.record(rms: rms, frameCount: Int(buffer.frameLength))
 
             let level = Self.visualLevel(fromRMS: rms)
             self.levelCallback?(level)
@@ -139,6 +170,13 @@ final class AudioCaptureManager {
 
     func stop() {
         guard isRunning else { return }
+        if usesRemoteMic {
+            remoteMicSource?.stop()
+            levelCallback = nil
+            bufferCallback = nil
+            isRunning = false
+            return
+        }
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
         audioFile = nil

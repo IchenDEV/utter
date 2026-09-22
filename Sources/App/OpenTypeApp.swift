@@ -35,6 +35,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var integrationXPCServer: IntegrationXPCServer?
     var integrationHTTPPort: Int?
     var integrationHTTPToken: String?
+    /// Latched voice-key session whose asynchronous start is in flight.
+    var remoteMicPendingToken: UInt64?
+    var remoteMicStartTask: Task<Void, Never>?
 
     override init() {
         let registry = IntegrationClientRegistry()
@@ -56,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         observeSystemAppearanceForIcon()
         observeUILanguageForSettingsWindow()
         observeIntegrationSettings()
+        observeRemoteMicSetting()
         configureIntegrationHTTPServer()
         configureIntegrationXPCServer()
 
@@ -67,6 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func applicationWillTerminate(_ notification: Notification) {
         stopIntegrationHTTPServer(resetService: true)
+        RemoteMicCaptureManager.shared.deactivate()
     }
 
     private func setupMenuBar() {
@@ -137,20 +142,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
     }
 
-    private func startRecording(action: HotkeyAction) {
+    /// Starts a recording and returns the task that owns the whole pipeline
+    /// start, so a caller that may need to cancel a slow start (the remote voice
+    /// key) can actually cancel it instead of only the layer above.
+    @discardableResult
+    func startRecording(
+        action: HotkeyAction,
+        remoteSessionToken: UInt64? = nil
+    ) -> Task<Void, Never>? {
         if integrationSessionCoordinator.isBusy {
             pipeline?.showBusyHint()
-            return
+            return nil
         }
         savePreviousApp()
         if popover.isShown { closePopover() }
         let mode: VoiceInputMode = action == .translation
             ? .translation(AppSettings.shared.translationTargetLanguage)
             : .dictation
-        Task { await pipeline?.start(mode: mode, targetApp: previousApp) }
+        return Task {
+            await pipeline?.start(
+                mode: mode,
+                targetApp: previousApp,
+                remoteSessionToken: remoteSessionToken
+            )
+        }
     }
 
-    private func stopRecording() {
+    func stopRecording() {
         Task { await pipeline?.stop(targetApp: previousApp) }
     }
 
