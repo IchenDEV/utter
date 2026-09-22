@@ -150,9 +150,9 @@ struct OnboardingView: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) { refreshPermissions() }
                 }
             }
-            .background(Color(nsColor: .controlBackgroundColor))
+            .background(SettingsSurface.card)
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(nsColor: .separatorColor), lineWidth: 0.5))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(SettingsSurface.cardStroke, lineWidth: 0.5))
 
             HStack {
                 Spacer()

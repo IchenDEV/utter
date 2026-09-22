@@ -214,10 +214,10 @@ struct HistoryInsightsOverview: View {
 
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Color(nsColor: .controlBackgroundColor))
+            .fill(SettingsSurface.card)
             .overlay {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color(nsColor: .separatorColor).opacity(0.7), lineWidth: 0.5)
+                    .stroke(SettingsSurface.cardStroke.opacity(0.7), lineWidth: 0.5)
             }
     }
 
