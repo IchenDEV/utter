@@ -17,8 +17,8 @@
       reconnect, observable state.
 - [x] `RemoteMicCaptureManager`: WAV/activity/level/buffer capture surface.
 - [x] `AudioCaptureManager` source selection with system-input fallback.
-- [x] Inject the shared remote source in `VoicePipeline` and
-      `InputSessionCoordinator`.
+- [x] Inject the shared remote source in `VoicePipeline`; keep developer-API
+      sessions on their selected system input.
 - [x] `AppSettings.remoteMicEnabled` / `remoteMicGainDB` with persistence.
 - [x] Settings toggle, live state, gain; `AppDelegate` activate/deactivate.
 - [x] `NSBluetoothAlwaysUsageDescription` and the Bluetooth entitlement.
@@ -39,6 +39,8 @@
 - [x] Bind an attempt identity to the handshake and every control/audio
       callback, so a stale callback on a reused peripheral is rejected even
       after the new attempt has requested capabilities.
+- [x] Preserve keyboard/API system-input behavior, retain 30 seconds of cold-
+      start pre-roll, echo the ATVV stream id on close, and persist a 0 dB gain.
 
 ## Verification plan
 

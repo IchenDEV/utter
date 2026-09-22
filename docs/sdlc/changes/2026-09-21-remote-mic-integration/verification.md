@@ -13,11 +13,11 @@
 | Host and toolchain | Pass | Mac mini `Mac16,10` / Apple M4 / macOS 27.2; Xcode 27.0 (`27A266a`), Swift 6.4 from `/Applications/Xcode.app/Contents/Developer`. |
 | `bash scripts/ci-basic-checks.sh` | Pass | Exit 0 with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` and `SDKROOT=.../MacOSX27.0.sdk`; all static, localization, vocabulary, resource, and secret checks passed. |
 | `bash scripts/sdlc-checks.sh` | Pass | Exit 0: "SDLC checks passed." |
-| `swift test --filter RemoteMic` | Pass | Exit 0; 68 tests, 0 failures. |
+| `swift test --filter RemoteMic` | Pass | Exit 0; 72 tests, 0 failures, including persisted 0 dB gain, 30-second pre-roll capacity, and ATVV v1.0 stream-id parsing/close encoding. |
 | `swift test --filter RemoteMicCallbackRoutingTests` | Pass | Exit 0; 7 tests, 0 failures. |
 | `review-evidence/vec4-central-gate-mutations.sh` | Pass | Exit 0; baseline 7 tests passed; manager, peripheral, and attempt mutations each exited 1 with the target assertion classified; every restore returned exact head/tree and clean status. |
-| `swift test` (full suite) | Pass | Exit 0; 701 tests executed, 10 environment/model-gated tests skipped, 0 failures. |
-| `bash scripts/build-app.sh --app-only` | Pass | Exit 0; Release arm64 app and CLI helper built, ad-hoc hardened-runtime signed, `verify-release-artifact.sh` reported valid on disk and designated requirement satisfied; app binary SHA-256 `a0965499a77c35f2dfddb1ad1935b566cecae428cc3513cfc0ffad87d86611ad`. |
+| `swift test` (full suite) | Pass | Exit 0; 705 tests executed, 10 environment/model-gated tests skipped, 0 failures. |
+| `bash scripts/build-app.sh --app-only` | Pass | Exit 0; Release arm64 app and CLI helper built, ad-hoc hardened-runtime signed, `verify-release-artifact.sh` reported valid on disk and designated requirement satisfied; app binary SHA-256 `68eb91f0ff30ccfada4c2854208aaf56e9c472effb30945888e6c56141a351ca`. |
 | Real Xiaomi remote end-to-end | Not run | No hardware in this environment |
 
 Environment note: the current evidence was collected on the online Mac mini
@@ -28,6 +28,13 @@ explicit `SDKROOT` rerun passed and is the recorded result. The earlier Linux
 bundle verification remains historical evidence only.
 
 ### 2026-09-22 Mac mini rerun details
+
+The PR review fixes were rerun locally on the exact PR head plus this working
+tree. They preserve system-input selection for keyboard/API sessions, retain up
+to 30 seconds of decoded pre-roll, echo the ATVV v1.0 stream id in `MIC_CLOSE`,
+and distinguish a persisted 0 dB gain from an absent preference. Both check
+scripts, the 72-test RemoteMic slice, the 705-test full suite, and the
+release-style app build passed. Hardware and licensing gates remain open.
 
 The bundle's checked-in mutation script initially had three trailing shell
 continuations that swallowed the following `run_mutation` calls. The minimal
@@ -108,16 +115,15 @@ licensing question is a human/CTO item and is untouched here.
 - Setting off keeps the existing path — pass by construction
   (`AudioCaptureManager.start` only consults the remote when
   `remoteMicEnabled`); covered by the full Mac mini suite.
-- Setting on with a connected remote uses the decoded stream — implemented, but
-  **not verified**: requires the physical remote.
-- Setting on with no remote falls back to the system input — pass by
-  construction (`RemoteMicCaptureManager.start` returns false unless the bridge
-  is `.ready`), and the failure path now provably leaves no residue.
+- A remote voice-key session uses the decoded stream — implemented, but **not
+  verified**: requires the physical remote.
+- Keyboard-shortcut and developer-API sessions continue using the selected
+  system input, including while the remote feature is enabled.
 - Voice key starts and stops recording — implemented through the control-channel
   adoption path; **not verified on hardware**.
 - Handshake ordering, attempt isolation, and timeouts are covered by
   deterministic tests (`RemoteMicHandshakeTests`,
-  `RemoteMicAttemptIsolationTests`); the RemoteMic Mac mini run passed all 68
+  `RemoteMicAttemptIsolationTests`); the RemoteMic Mac mini run passed all 72
   tests.
 - Source-bound same-peripheral late-event regression — specified in
   `swift test --filter RemoteMicCallbackRoutingTests`; the test uses the

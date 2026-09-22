@@ -133,8 +133,9 @@ final class AppSettings: ObservableObject {
         llmModel = ud.string(forKey: Key.llmModel.rawValue) ?? Self.defaultLLMModelID
         microphoneID = ud.string(forKey: Key.microphoneID.rawValue)
         remoteMicEnabled = ud.bool(forKey: Key.remoteMicEnabled.rawValue)
-        let savedGain = ud.double(forKey: Key.remoteMicGainDB.rawValue)
-        remoteMicGainDB = savedGain == 0 ? RemoteMicProtocol.defaultGainDB : min(24, max(0, savedGain))
+        remoteMicGainDB = ud.object(forKey: Key.remoteMicGainDB.rawValue) == nil
+            ? RemoteMicProtocol.defaultGainDB
+            : min(24, max(0, ud.double(forKey: Key.remoteMicGainDB.rawValue)))
         audioGateSensitivity = AudioSensitivity(
             rawValue: ud.string(forKey: Key.audioGateSensitivity.rawValue) ?? ""
         ) ?? .standard

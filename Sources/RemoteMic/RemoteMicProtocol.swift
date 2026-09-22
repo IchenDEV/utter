@@ -102,6 +102,23 @@ enum RemoteMicControlOpcode: UInt8 {
     case sync = 0x0A
 }
 
+/// Fields carried by an ATVV v1.0 `AUDIO_START` notification.
+struct RemoteMicStreamStart: Equatable {
+    let reason: UInt8
+    let codec: UInt8
+    let streamID: UInt8
+
+    static func parse(_ data: Data) -> RemoteMicStreamStart? {
+        let bytes = Array(data)
+        guard bytes.first == RemoteMicControlOpcode.streamStart.rawValue else { return nil }
+        return RemoteMicStreamStart(
+            reason: bytes.count >= 2 ? bytes[1] : 0,
+            codec: bytes.count >= 3 ? bytes[2] : RemoteMicCapabilities.default.selectedCodec,
+            streamID: bytes.count >= 4 ? bytes[3] : 0
+        )
+    }
+}
+
 /// Stateful IMA/DVI ADPCM decoder. The remote encodes four-bit nibbles per
 /// sample; the sequence's predictor and step index persist across frames and can
 /// be reset by a sync packet.

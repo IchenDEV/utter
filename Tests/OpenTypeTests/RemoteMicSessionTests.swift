@@ -98,7 +98,7 @@ final class RemoteMicSessionTests: XCTestCase {
 /// The pre-roll must retain the opening audio without growing without bound.
 final class RemoteMicPreRollTests: XCTestCase {
     func testDrainReturnsChunksInOrder() {
-        var preRoll = RemoteMicPreRoll(capacity: 4)
+        var preRoll = RemoteMicPreRoll(frameCapacity: 4)
         preRoll.append([1, 2])
         preRoll.append([3, 4])
 
@@ -109,13 +109,23 @@ final class RemoteMicPreRollTests: XCTestCase {
     }
 
     func testBoundedBufferDropsOldestChunks() {
-        var preRoll = RemoteMicPreRoll(capacity: 2)
+        var preRoll = RemoteMicPreRoll(frameCapacity: 2)
         preRoll.append([1])
         preRoll.append([2])
         preRoll.append([3])
 
         XCTAssertEqual(preRoll.retainedChunks, 2, "must not grow past capacity")
         XCTAssertEqual(preRoll.drain(), [[2], [3]], "oldest chunk dropped")
+    }
+
+    func testDefaultCapacityRetainsThirtySecondsAndDropsOlderFrames() {
+        var preRoll = RemoteMicPreRoll()
+        let frame = [Int16](repeating: 1, count: 240)
+        for _ in 0..<2_001 { preRoll.append(frame) }
+
+        XCTAssertEqual(RemoteMicPreRoll.defaultFrameCapacity, 480_000)
+        XCTAssertEqual(preRoll.retainedFrames, 480_000)
+        XCTAssertEqual(preRoll.retainedChunks, 2_000)
     }
 
     func testEmptySamplesAreIgnored() {
@@ -144,7 +154,7 @@ final class RemoteMicSessionOrderingTests: XCTestCase {
         XCTAssertTrue(session.isStarting)
 
         // AUDIO frames arrive while starting; they are pre-rolled, not dropped.
-        var preRoll = RemoteMicPreRoll(capacity: 4)
+        var preRoll = RemoteMicPreRoll(frameCapacity: 4)
         preRoll.append([1, 2])
         preRoll.append([3, 4])
         XCTAssertFalse(preRoll.isEmpty)

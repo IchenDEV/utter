@@ -49,8 +49,8 @@ final class AudioCaptureManager {
     /// Thresholds used for the next recording. Set from user sensitivity
     /// presets before `start(...)`; defaults preserve prior behavior.
     var thresholds = AudioActivityThresholds.default
-    /// When set and enabled in settings, the connected wireless remote supplies
-    /// the audio instead of a CoreAudio input device.
+    /// A voice-key session from the connected remote can supply audio instead of
+    /// the selected CoreAudio device. Keyboard/API sessions remain local.
     var remoteMicSource: RemoteMicCaptureManager?
     private var usesRemoteMic = false
     private var levelCallback: ((Float) -> Void)?
@@ -91,6 +91,7 @@ final class AudioCaptureManager {
         levelCallback = levelUpdate
         bufferCallback = bufferUpdate
 
+        // Only a session latched by the remote's voice key adopts its audio.
         if AppSettings.shared.remoteMicEnabled,
            let remoteMicSource,
            let token = remoteMicSource.currentSessionToken {
