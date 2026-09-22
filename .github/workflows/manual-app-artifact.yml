@@ -1,0 +1,187 @@
+name: Manual App Artifact
+
+# Acceptance artifact only: no push, pull_request, schedule, tag, or release.
+# The fixed source SHA was explicitly approved for this handoff. Hardware,
+# licensing, merge, and release decisions remain separate human gates.
+on:
+  workflow_dispatch:
+    inputs:
+      retention_days:
+        description: "Artifact retention in days (1-90)"
+        required: false
+        type: string
+        default: "14"
+      approval_ack:
+        description: "Select APPROVED only for the authorized fixed-SHA acceptance build/upload"
+        required: true
+        type: choice
+        options:
+          - HOLD
+          - APPROVED
+        default: HOLD
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manual-app-artifact-31b3c7f614656c59855b7fd556734a11543fa9eb
+  cancel-in-progress: false
+
+jobs:
+  build-and-package:
+    name: Build, Verify & Archive .app
+    runs-on: macos-26
+    timeout-minutes: 75
+    env:
+      APPROVED_COMMIT_SHA: 31b3c7f614656c59855b7fd556734a11543fa9eb
+    steps:
+      - name: Check out the approved commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: 31b3c7f614656c59855b7fd556734a11543fa9eb
+          persist-credentials: false
+
+      - name: Prove the checked-out commit and authorization
+        env:
+          RETENTION_DAYS: ${{ inputs.retention_days }}
+          APPROVAL_ACK: ${{ inputs.approval_ack }}
+        run: |
+          set -euo pipefail
+          if [ "$APPROVAL_ACK" != "APPROVED" ]; then
+            echo "artifact build/upload is held until its explicit approval is recorded" >&2
+            exit 1
+          fi
+          if [[ ! "$RETENTION_DAYS" =~ ^[0-9]+$ ]] ||
+             [ "$RETENTION_DAYS" -lt 1 ] || [ "$RETENTION_DAYS" -gt 90 ]; then
+            echo "retention_days must be an integer from 1 to 90" >&2
+            exit 1
+          fi
+          actual="$(git rev-parse HEAD)"
+          if [ "$actual" != "$APPROVED_COMMIT_SHA" ]; then
+            echo "checked out $actual, approved $APPROVED_COMMIT_SHA" >&2
+            exit 1
+          fi
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "the checkout is not clean" >&2
+            exit 1
+          fi
+          {
+            echo "COMMIT_SHA=$actual"
+            echo "RETENTION_DAYS=$RETENTION_DAYS"
+          } >> "$GITHUB_ENV"
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Ensure Metal toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
+
+      - name: Build and verify the app bundle
+        run: |
+          set -euo pipefail
+          ./scripts/build-app.sh --app-only --sign=-
+          app="${GITHUB_WORKSPACE}/dist/Utter.app"
+          version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app")"
+          ./scripts/verify-release-artifact.sh \
+            --app "$app" \
+            --version "$version"
+          signature="$(codesign -dvvv "$app" 2>&1)"
+          grep -Eq '^CodeDirectory .*flags=.*\(.*runtime.*\)' <<<"$signature"
+          {
+            echo "APP_VERSION=$version"
+            echo "APP_PATH=$app"
+          } >> "$GITHUB_ENV"
+
+      - name: Archive and re-verify the app bundle
+        id: package
+        env:
+          WORKFLOW_DEFINITION_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          artifact_dir="${RUNNER_TEMP}/utter-app-artifact"
+          verify_dir="${RUNNER_TEMP}/utter-app-verify"
+          rm -rf "$artifact_dir" "$verify_dir"
+          mkdir -p "$artifact_dir" "$verify_dir"
+
+          archive_name="Utter-${COMMIT_SHA}.app.zip"
+          archive_path="$artifact_dir/$archive_name"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$archive_path"
+
+          ditto -x -k "$archive_path" "$verify_dir"
+          extracted_app="$verify_dir/Utter.app"
+          [ -d "$extracted_app" ]
+          ./scripts/verify-release-artifact.sh \
+            --app "$extracted_app" \
+            --version "$APP_VERSION"
+
+          archive_sha256="$(shasum -a 256 "$archive_path" | awk '{print $1}')"
+          checksum_path="$artifact_dir/${archive_name}.sha256"
+          printf '%s  %s\n' "$archive_sha256" "$archive_name" > "$checksum_path"
+
+          binary_sha256="$(shasum -a 256 "$APP_PATH/Contents/MacOS/Utter" | awk '{print $1}')"
+          artifact_name="utter-app-${COMMIT_SHA}"
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          manifest_path="$artifact_dir/manifest.json"
+          cat > "$manifest_path" <<EOF
+          {
+            "repository": "${GITHUB_REPOSITORY}",
+            "commit_sha": "${COMMIT_SHA}",
+            "workflow_definition_sha": "${WORKFLOW_DEFINITION_SHA}",
+            "app_version": "${APP_VERSION}",
+            "archive": "${archive_name}",
+            "archive_sha256": "${archive_sha256}",
+            "app_main_binary_sha256": "${binary_sha256}",
+            "artifact_name": "${artifact_name}",
+            "workflow_run_url": "${run_url}",
+            "download_location": "${run_url} (artifact: ${artifact_name})"
+          }
+          EOF
+
+          {
+            echo "ARCHIVE_NAME=$archive_name"
+            echo "ARCHIVE_SHA256=$archive_sha256"
+            echo "BINARY_SHA256=$binary_sha256"
+            echo "ARTIFACT_NAME=$artifact_name"
+            echo "ARTIFACT_DIR=$artifact_dir"
+            echo "RUN_URL=$run_url"
+          } >> "$GITHUB_ENV"
+
+          {
+            echo "archive_name=$archive_name"
+            echo "archive_sha256=$archive_sha256"
+            echo "artifact_name=$artifact_name"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload the verified app archive
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.artifact_name }}
+          path: ${{ runner.temp }}/utter-app-artifact
+          if-no-files-found: error
+          retention-days: ${{ inputs.retention_days }}
+          compression-level: 0
+
+      - name: Record the artifact delivery location
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          [ -n "$ARTIFACT_URL" ]
+          {
+            echo "### Verified app artifact"
+            echo
+            printf '%s\n' "- Commit SHA: \`${COMMIT_SHA}\`"
+            printf '%s\n' "- App version: \`${APP_VERSION}\`"
+            printf '%s\n' "- Archive: \`${ARCHIVE_NAME}\`"
+            printf '%s\n' "- Archive SHA-256: \`${ARCHIVE_SHA256}\`"
+            printf '%s\n' "- App main binary SHA-256: \`${BINARY_SHA256}\`"
+            printf '%s\n' "- GitHub artifact name: \`${ARTIFACT_NAME}\`"
+            printf '%s\n' "- GitHub artifact id: \`${ARTIFACT_ID}\`"
+            printf '%s\n' "- GitHub artifact digest: \`${ARTIFACT_DIGEST}\`"
+            echo "- Download location: ${ARTIFACT_URL}"
+            echo "- Workflow run: ${RUN_URL}"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
