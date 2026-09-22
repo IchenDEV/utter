@@ -1,8 +1,9 @@
 name: Manual App Artifact
 
 # Acceptance artifact only: no push, pull_request, schedule, tag, or release.
-# The fixed source SHA was explicitly approved for this handoff. Hardware,
-# licensing, merge, and release decisions remain separate human gates.
+# The fixed source SHA is the combined main head (#102/#103/#104/#109) built
+# under the already-approved build/upload authorization. Hardware, licensing,
+# and release decisions remain separate human gates.
 on:
   workflow_dispatch:
     inputs:
@@ -24,7 +25,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: manual-app-artifact-31b3c7f614656c59855b7fd556734a11543fa9eb
+  group: manual-app-artifact-7d3bbf3d45744c760714f955cf6c04a0f190904d
   cancel-in-progress: false
 
 jobs:
@@ -33,13 +34,13 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 75
     env:
-      APPROVED_COMMIT_SHA: 31b3c7f614656c59855b7fd556734a11543fa9eb
+      APPROVED_COMMIT_SHA: 7d3bbf3d45744c760714f955cf6c04a0f190904d
     steps:
       - name: Check out the approved commit
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: 31b3c7f614656c59855b7fd556734a11543fa9eb
+          ref: 7d3bbf3d45744c760714f955cf6c04a0f190904d
           persist-credentials: false
 
       - name: Prove the checked-out commit and authorization
