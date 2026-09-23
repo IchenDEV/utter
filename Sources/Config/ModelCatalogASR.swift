@@ -12,6 +12,11 @@ extension ModelCatalog {
                 L("model.qwen3_asr_quality")
             ),
             (
+                QwenASRModel.confuciusR2T2ID,
+                "Confucius4-R2T2 8-bit",
+                L("model.confucius_r2t2")
+            ),
+            (
                 "mlx-community/FireRedASR2-AED-mlx",
                 "FireRedASR2-AED",
                 L("model.firered_asr")
@@ -33,7 +38,9 @@ extension ModelCatalog {
     func asrModels(for engine: SpeechEngineType) -> [ModelEntry] {
         switch engine {
         case .qwen3:
-            return asrModels.filter { $0.id == QwenASRModel.defaultID }
+            return asrModels.filter {
+                $0.id == QwenASRModel.defaultID || $0.id == QwenASRModel.confuciusR2T2ID
+            }
         case .firered:
             return asrModels.filter { $0.id == "mlx-community/FireRedASR2-AED-mlx" }
         case .megaASR:
@@ -260,44 +267,5 @@ extension ModelCatalog {
 
     private func asrRequiredRepoIDs(for id: String) -> [String] {
         [id]
-    }
-
-    static func asrRepoContainsRequiredFiles(_ id: String, at dir: URL?) -> Bool {
-        guard let dir else { return false }
-        return asrRequiredFiles(for: id).allSatisfy { relativePath in
-            let file = dir.appendingPathComponent(relativePath)
-            var isDirectory = ObjCBool(false)
-            guard FileManager.default.fileExists(atPath: file.path, isDirectory: &isDirectory),
-                  !isDirectory.boolValue else { return false }
-            let attributes = try? FileManager.default.attributesOfItem(atPath: file.path)
-            return (attributes?[.size] as? NSNumber)?.int64Value ?? 0 > 0
-        }
-    }
-
-    nonisolated static func asrRequiredFiles(for id: String) -> [String] {
-        switch id {
-        case QwenASRModel.defaultID:
-            return [
-                "config.json",
-                "model.safetensors",
-                "model.safetensors.index.json",
-                "preprocessor_config.json",
-                "tokenizer_config.json",
-                "vocab.json",
-                "merges.txt",
-            ]
-        case "mlx-community/FireRedASR2-AED-mlx":
-            return [
-                "config.json",
-                "tokenizer.json",
-            ]
-        case "mlx-community/Mega-ASR-6bit":
-            return [
-                "config.json",
-                "tokenizer_config.json",
-            ]
-        default:
-            return ["config.json"]
-        }
     }
 }

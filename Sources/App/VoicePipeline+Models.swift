@@ -161,7 +161,10 @@ extension VoicePipeline {
             }
             let modelPath = catalog.asrModelPath(for: settings.qwenASRModel)
             if qwenSpeechEngine?.usesModel(at: modelPath) == true { return }
-            let engine = QwenNativeASREngine(modelPath: modelPath)
+            let engine = QwenNativeASREngine(
+                modelPath: modelPath,
+                modelID: settings.qwenASRModel
+            )
             qwenSpeechEngine = engine
             Task { await engine.prepare() }
         case .firered, .megaASR:

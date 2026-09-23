@@ -516,8 +516,12 @@
 "volc.resource_id" = "Resource ID";
 
 /* ── Local ASR ── */
-"qwen_asr.config_hint" = "Qwen3-ASR runs locally with native Swift and MLX. Download the model once, then recognition works offline.";
+"qwen_asr.config_hint" = "Qwen-compatible speech models run locally with Swift and MLX. Download a model once for offline recognition.";
 "model.qwen3_asr_quality" = "Local ASR through MLX, ~4.1 GB";
+"model.confucius_r2t2" = "Local MLX speech recognition, ~2.5 GB";
+"model.confucius_license" = "Model license (Chinese)";
+"model.confucius_english_license" = "English translation";
+"model.confucius_notice" = "Conversion notice";
 "model.firered_asr" = "Robust Chinese ASR, ~4.6 GB";
 "model.mega_asr" = "Noise-robust ASR (Qwen3-ASR + LoRA), ~2.0 GB";
 "model.asr_incomplete" = "Only part of the model was downloaded. Select Resume to finish.";
