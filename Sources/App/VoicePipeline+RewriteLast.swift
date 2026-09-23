@@ -6,7 +6,7 @@ extension VoicePipeline {
     func rewriteLastInsertion(
         raw: String,
         intent: SelectionRewriteIntent,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async {
         cancelScreenContextCapture()
@@ -24,11 +24,12 @@ extension VoicePipeline {
             inputLanguage: settings.inputLanguage,
             source: .menuBar
         )
-        var options = TextProcessingOptions(settings: settings)
+        var options = settings.processing
         options.llmModel = settings.llmModel
         let memoryContext = VoicePipelinePolicy.memoryContext(
             for: .command,
-            settings: settings,
+            enableMemory: settings.enableMemory,
+            memoryWindowMinutes: settings.memoryWindowMinutes,
             currentContext: context
         )
 
@@ -56,6 +57,7 @@ extension VoicePipeline {
             previouslyInserted: appState.lastInsertedText,
             targetApp: targetApp
         )
+        guard !Task.isCancelled else { return }
         appState.phase = .done
         appState.statusMessage = L("status.done")
         hideOverlayAfterDelay()

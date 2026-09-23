@@ -14,11 +14,14 @@ final class VoicePipeline {
     let correctionCapture = CorrectionCaptureService()
     let textProcessor: TextProcessor
     let overlay = OverlayPanel()
-    var whisperEngine: WhisperEngine?
-    var appleSpeechEngine: AppleSpeechEngine?
-    var volcSpeechEngine: VolcSpeechEngine?
-    var qwenSpeechEngine: QwenNativeASREngine?
-    var mlxSTTEngine: MLXSTTEngine?
+    let ownership: InputSessionOwnership
+    let engineProvider: SpeechEngineProvider
+    var sessionLease: UUID?
+    var sessionEngine: (any SpeechEngine)?
+    var enginePreparationTask: Task<Void, Never>?
+    var sessionSettings: VoiceInputSettings?
+    var recordingLanguage: String?
+    var recordingStreaming = false
     var screenOCRTask: Task<ScreenContextSnapshot, Never>?
     var screenOCRStartedAt: CFAbsoluteTime?
     var processingTask: Task<Void, Never>?
@@ -41,20 +44,18 @@ final class VoicePipeline {
     /// Test-only observation point for whether the remote capture path is used.
     var remoteCaptureSpy: RemoteMicCaptureSpy?
 
-    var currentEngine: (any SpeechEngine)? {
-        if let engineOverride { return engineOverride }
-        switch appState.settings.speechEngine {
-        case .whisper: return whisperEngine
-        case .apple: return appleSpeechEngine
-        case .volc: return volcSpeechEngine
-        case .qwen3: return qwenSpeechEngine
-        case .firered, .megaASR: return mlxSTTEngine
-        }
-    }
+    var currentEngine: (any SpeechEngine)? { engineOverride ?? sessionEngine }
 
-    init(appState: AppState, textProcessor: TextProcessor = TextProcessor()) {
+    init(
+        appState: AppState,
+        textProcessor: TextProcessor = TextProcessor(),
+        ownership: InputSessionOwnership? = nil,
+        engineProvider: SpeechEngineProvider? = nil
+    ) {
         self.appState = appState
         self.textProcessor = textProcessor
+        self.ownership = ownership ?? InputSessionOwnership()
+        self.engineProvider = engineProvider ?? SpeechEngineProvider()
     }
 
     func warmUp() async {
@@ -80,8 +81,10 @@ final class VoicePipeline {
             modelDownloaded: formattingModelAvailable
         )
 
-        if shouldLoadSpeech {
+        if shouldLoadSpeech, let lease = try? ownership.acquire() {
             await ensureEngineLoaded(requestPermission: false)
+            sessionEngine = nil
+            ownership.release(lease)
         }
 
         if shouldLoadFormatting {
@@ -93,155 +96,12 @@ final class VoicePipeline {
             }
         }
 
-        markReadyIfPossible()
-    }
-
-    // MARK: - Recording
-
-    func start(
-        mode: VoiceInputMode = .dictation,
-        targetApp: NSRunningApplication? = nil,
-        remoteSessionToken: UInt64? = nil
-    ) async {
-        if appState.isBusy {
-            Log.info("[VoicePipeline] start: busy (\(appState.phase)), ignoring")
-            showBusyHint()
-            return
-        }
-
-        if appState.isDownloading { return }
-
-        correctionCapture.finishCurrentSession()
-
-        if let engineLoadBarrier {
-            await engineLoadBarrier()
-        }
-
-        if !(currentEngine?.isReady ?? false) {
-            await ensureEngineLoaded(requestPermission: true)
-        }
-
-        // Model loading above can take a while. A remote voice-key session may
-        // have been released meanwhile; never commit that start (and never fall
-        // back to the system microphone for a key the user already let go).
-        if let remoteSessionToken,
-           !RemoteMicStartGuard.shouldCommit(
-               remoteSessionToken: remoteSessionToken,
-               isCancelled: Task.isCancelled,
-               isSessionCurrent: XiaomiRemoteMicBridge.isSessionCurrent
-           ) {
-            Log.info("[VoicePipeline] start: remote session superseded before commit; aborting")
-            currentEngine?.cancelListening()
-            cancelScreenContextCapture()
-            return
-        }
-
-        guard currentEngine?.isReady ?? false else {
-            let message = appState.statusMessage == L("pipeline.speech_model_download_required")
-                ? appState.statusMessage
-                : L("pipeline.model_load_failed")
-            showErrorHint(message)
-            return
-        }
-
-        // Warm the engine while the user is still speaking (no-op if already warm).
-        if let engine = currentEngine {
-            Task { await engine.prepare() }
-        }
-
-        clearInFlightWork()
-
-        appState.reset()
-        appState.activeInputMode = mode
-        appState.phase = .recording
-        appState.statusMessage = mode.isTranslation
-            ? L("pipeline.recording_translation")
-            : L("pipeline.recording")
-        recordingTargetApp = targetApp
-
-        if mode.isTranslation {
-            cancelScreenContextCapture()
-        } else {
-            startScreenContextCaptureIfNeeded()
-        }
-
-        soundPlayer.playStart()
-        showOverlay()
-
-        let micID = appState.settings.microphoneID
-        let language = appState.settings.inputLanguage.whisperCode
-        let streamingEnabled = appState.settings.enableStreamingRecognitionBeta
-        let vocabularySnapshot = PersonalDictionary.shared.snapshot(
-            settings: appState.settings
-        )
-        currentEngine?.configureRecognition(
-            context: SpeechRecognitionContext(phrases: vocabularySnapshot.recognitionPhrases)
-        )
-        if streamingEnabled {
-            currentEngine?.startListening(language: language) { [weak self] partialText in
-                Task { @MainActor in
-                    guard let self, self.appState.isRecording else { return }
-                    self.appState.rawTranscription = TranscriptionSanitizer.previewText(
-                        partialText,
-                        inputLanguage: self.appState.settings.inputLanguage
-                    )
-                }
-            }
-        }
-
-        if let remoteCaptureSpy {
-            let token = remoteCaptureSpy.currentToken
-            let startedSpy = token.map { remoteCaptureSpy.start(token: $0) } ?? false
-            guard startedSpy else {
-                currentEngine?.cancelListening()
-                cancelScreenContextCapture()
-                recordingTargetApp = nil
-                appState.phase = .error(L("pipeline.mic_failed_permissions"))
-                appState.statusMessage = L("pipeline.mic_unavailable")
-                overlay.hide()
-                return
-            }
-            commitRecording(mode: mode, targetApp: targetApp)
-            return
-        }
-
-        activeCapture.thresholds = appState.settings.audioActivityThresholds
-
-        let micStarted = activeCapture.start(
-            deviceID: micID,
-            levelUpdate: { [weak self] level in
-                Task { @MainActor in
-                    self?.appState.audioLevel = level
-                }
-            },
-            bufferUpdate: { [weak self] buffer in
-                guard streamingEnabled else { return }
-                self?.currentEngine?.appendAudioBuffer(buffer)
-            }
-        )
-        guard micStarted else {
-            currentEngine?.cancelListening()
-            cancelScreenContextCapture()
-            recordingTargetApp = nil
-            appState.phase = .error(L("pipeline.mic_failed_permissions"))
-            appState.statusMessage = L("pipeline.mic_unavailable")
-            overlay.hide()
-            return
-        }
-    }
-
-    /// Marks the pipeline as committed and recording. Extracted so the
-    /// test-only capture seam and the real capture path share one commit point.
-    private func commitRecording(mode: VoiceInputMode, targetApp: NSRunningApplication?) {
-        appState.phase = .recording
-        appState.statusMessage = mode.isTranslation
-            ? L("pipeline.recording_translation")
-            : L("pipeline.recording")
-        recordingTargetApp = targetApp
+        if !ownership.isBusy { markReadyIfPossible() }
     }
 
     func stop(targetApp: NSRunningApplication? = nil) async {
         guard appState.isRecording else {
+            if sessionLease != nil, processingTask == nil { cancel() }
             Log.info("[VoicePipeline] stop: not recording (\(appState.phase)), ignoring")
             return
         }
@@ -254,14 +114,21 @@ final class VoicePipeline {
         appState.phase = .transcribing
         appState.statusMessage = L("pipeline.transcribing")
 
-        let language = appState.settings.inputLanguage.whisperCode
+        let language = recordingLanguage
         let audioURL = activeCapture.lastRecordingURL
         let audioActivity = activeCapture.lastActivity
-        let settings = appState.settings
+        guard let settings = sessionSettings else { return }
         let inputMode = appState.activeInputMode
 
+        guard let lease = sessionLease else { return }
         processingTask = Task { @MainActor [weak self] in
             guard let self else { return }
+            defer {
+                self.processingTask = nil
+                self.releaseSession(lease)
+            }
+            await self.enginePreparationTask?.value
+            guard !Task.isCancelled else { return }
             await TextProcessor.withEspressoOutcomeTracking {
                 await self.processRecording(
                     audioURL: audioURL,
@@ -276,23 +143,40 @@ final class VoicePipeline {
     }
 
     func cancel() {
-        guard appState.isRecording else {
-            Log.info("[VoicePipeline] cancel: not recording (\(appState.phase)), ignoring")
-            return
-        }
-
-        Log.info("[VoicePipeline] recording cancelled by user")
-        clearInFlightWork()
+        guard let lease = sessionLease else { return }
+        ownership.cancel(lease)
+        processingTask?.cancel()
+        enginePreparationTask?.cancel()
+        replacementTask?.cancel()
         currentEngine?.cancelListening()
-        audioCapture.stop()
-        audioCapture.cleanupLastRecording()
+        activeCapture.stop()
+        cancelScreenContextCapture()
         recordingTargetApp = nil
         soundPlayer.playStop()
+        let wasRecording = appState.isRecording
         appState.reset()
         overlay.hide()
+        // Preparation/processing releases only after its suspended work returns.
+        if wasRecording, processingTask == nil {
+            processingTask = Task { @MainActor in
+                await enginePreparationTask?.value
+                processingTask = nil
+                releaseSession(lease)
+            }
+        }
     }
 
-    private func clearInFlightWork() {
+    func releaseSession(_ lease: UUID) {
+        guard sessionLease == lease else { return }
+        activeCapture.cleanupLastRecording()
+        sessionEngine = nil
+        enginePreparationTask = nil
+        sessionSettings = nil
+        sessionLease = nil
+        ownership.release(lease)
+    }
+
+    func clearInFlightWork() {
         processingTask?.cancel()
         processingTask = nil
         replacementTask?.cancel()

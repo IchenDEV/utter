@@ -9,71 +9,41 @@ extension InputSessionCoordinator {
         cleanup: Bool
     ) async throws -> InputSessionResult {
         defer {
-            if cleanup {
-                try? FileManager.default.removeItem(at: audioURL)
-            }
+            if cleanup { try? FileManager.default.removeItem(at: audioURL) }
         }
-        guard activeSession == nil, !isUserWorkflowBusy() else {
-            throw IntegrationError.busy
-        }
-        guard let session = try service.session(sessionID, clientID: clientID) else {
-            throw IntegrationError.sessionNotFound
-        }
-        let effective = effectiveSettings(for: session.request)
-        guard let engine = await engineProvider.engine(settings: settings), engine.isReady else {
-            throw IntegrationError.modelNotReady
-        }
-        let vocabularySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
-        engine.configureRecognition(
-            context: SpeechRecognitionContext(phrases: vocabularySnapshot.recognitionPhrases)
-        )
-
-        do {
-            try service.emitAudioReceived(sessionID: sessionID, clientID: clientID)
-            try await service.beginProcessing(sessionID: sessionID, clientID: clientID)
-            let transcript = try await transcribeAudioURL(
-                audioURL,
-                engine: engine,
-                languageCode: effective.languageCode
-            )
-            try service.emitTranscriptFinal(sessionID: sessionID, clientID: clientID, text: transcript)
+        let session = try reserve(sessionID: sessionID, clientID: clientID)
+        return try await runOperation {
+            let effective = self.effectiveSettings(for: session.request)
+            guard let snapshot = self.requestSettings else { throw CancellationError() }
+            let vocabulary = snapshot.dictionary
+            let engine = try await self.loadSpeechEngine()
+            engine.configureRecognition(context: SpeechRecognitionContext(phrases: vocabulary.recognitionPhrases))
             let active = ActiveSession(
-                sessionID: sessionID,
-                clientID: clientID,
-                engine: engine,
-                languageCode: effective.languageCode,
-                mode: effective.mode,
-                inputLanguage: effective.inputLanguage,
-                useScreenContext: effective.useScreenContext,
+                sessionID: sessionID, clientID: clientID, engine: engine,
+                languageCode: effective.languageCode, mode: effective.mode,
+                inputLanguage: effective.inputLanguage, useScreenContext: effective.useScreenContext,
                 streamingEnabled: false,
-                screenContextTask: startScreenContextCaptureIfNeeded(
-                    mode: effective.mode,
-                    useScreenContext: effective.useScreenContext
+                screenContextTask: self.startScreenContextCaptureIfNeeded(
+                    mode: effective.mode, useScreenContext: effective.useScreenContext
                 ),
-                client: service.integrationClient(id: clientID)
+                client: self.service.integrationClient(id: clientID),
+                snapshot: snapshot
             )
-            let text = try await outputText(for: transcript, active: active)
-            try await service.completeSession(sessionID: sessionID, clientID: clientID, finalText: text)
-            guard let completed = try service.session(sessionID, clientID: clientID) else {
+            self.activeSession = active
+            try self.service.emitAudioReceived(sessionID: sessionID, clientID: clientID)
+            try await self.service.beginProcessing(sessionID: sessionID, clientID: clientID)
+            try self.checkCurrent()
+            let raw = try await engine.transcribe(audioURL: audioURL, language: effective.languageCode)
+            try self.checkCurrent()
+            let transcript = try self.prepareTranscript(raw, audioActivity: nil)
+            try self.service.emitTranscriptFinal(sessionID: sessionID, clientID: clientID, text: transcript)
+            let text = try await self.outputText(for: transcript, active: active)
+            try self.checkCurrent()
+            try self.commitOutput(text, sessionID: sessionID, clientID: clientID)
+            guard let completed = try self.service.session(sessionID, clientID: clientID) else {
                 throw IntegrationError.sessionNotFound
             }
             return InputSessionResult(session: completed, transcript: transcript, text: text)
-        } catch let error as IntegrationError {
-            try? await service.failSession(sessionID: sessionID, clientID: clientID, error: error)
-            throw error
-        } catch {
-            Log.error("[InputSessionCoordinator] audio file processing failed: \(error.localizedDescription)")
-            try? await service.failSession(sessionID: sessionID, clientID: clientID, error: .operationFailed)
-            throw IntegrationError.operationFailed
         }
-    }
-
-    private func transcribeAudioURL(
-        _ audioURL: URL,
-        engine: any SpeechEngine,
-        languageCode: String?
-    ) async throws -> String {
-        let raw = try await engine.transcribe(audioURL: audioURL, language: languageCode)
-        return try prepareTranscript(raw, audioActivity: nil)
     }
 }

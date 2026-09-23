@@ -12,6 +12,8 @@ extension VoicePipeline {
     }
 
     func applyPendingReplacement() async {
+        guard let lease = try? ownership.acquire() else { return }
+        defer { ownership.release(lease) }
         refreshPendingReplacement()
 
         guard var replacement = appState.pendingReplacement else { return }
@@ -35,11 +37,11 @@ extension VoicePipeline {
 
     func handleDeferredSmartFormat(
         raw: String,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async {
-        let processingOptions = TextProcessingOptions(settings: settings)
-        let dictionarySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
+        let processingOptions = settings.processing
+        let dictionarySnapshot = settings.dictionary
         let enableMemory = settings.enableMemory
         let memoryWindowMinutes = settings.memoryWindowMinutes
         let quickText = immediateInsertText(
@@ -75,6 +77,7 @@ extension VoicePipeline {
         Log.sensitive("[VoicePipeline] instant insert \(quickText.count) chars")
         let started = CFAbsoluteTimeGetCurrent()
         let result = await textInserter.insert(text: quickText, targetApp: targetApp)
+        guard !Task.isCancelled else { return }
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         Log.info("[VoicePipeline] instant insert stage finished in \(String(format: "%.2f", elapsed))s")
 
@@ -146,6 +149,7 @@ extension VoicePipeline {
             previouslyInserted: replacement.insertedText,
             targetApp: targetApp
         )
+        guard !Task.isCancelled else { return }
 
         if case .probablyFailed = result {
             TextInserter.copyToClipboard(formattedText)
@@ -232,7 +236,6 @@ extension VoicePipeline {
             inputContext: inputContext,
             formatKind: currentReplacement.formatKind,
             allowsPreparedFallback: false,
-            allowsGuardFallback: false,
             dictionarySnapshot: dictionarySnapshot
         )
         let elapsed = CFAbsoluteTimeGetCurrent() - started

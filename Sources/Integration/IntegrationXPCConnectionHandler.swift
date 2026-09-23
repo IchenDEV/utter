@@ -144,7 +144,7 @@ final class IntegrationXPCConnectionHandler: NSObject, OpenTypeXPCProtocol {
     }
 
     func invalidate() {
-        coordinator.releaseActiveSessionForShutdown()
+        coordinator.releaseActiveSessionForShutdown(clientID: clientID)
         for subscription in subscriptions.values {
             service.unsubscribeEvents(
                 sessionID: subscription.sessionID,

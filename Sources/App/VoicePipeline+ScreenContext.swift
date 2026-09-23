@@ -3,9 +3,10 @@ import Foundation
 @MainActor
 extension VoicePipeline {
     func startScreenContextCaptureIfNeeded() {
+        let snapshot = sessionSettings ?? VoiceInputSettings(settings: appState.settings)
         let needsScreenContext = VoicePipelinePolicy.shouldCaptureScreenContext(
-            outputMode: appState.settings.outputMode,
-            useScreenContext: appState.settings.useScreenContext
+            outputMode: snapshot.outputMode,
+            useScreenContext: snapshot.useScreenContext
         )
         guard needsScreenContext else {
             cancelScreenContextCapture()
@@ -14,10 +15,10 @@ extension VoicePipeline {
 
         screenOCRStartedAt = CFAbsoluteTimeGetCurrent()
         let mode = ScreenContextMode.effectiveCaptureMode(
-            preference: appState.settings.screenContextMode,
-            useRemoteLLM: appState.settings.useRemoteLLM
-                || appState.settings.localLLMBackend == .espresso,
-            modelID: appState.settings.llmModel
+            preference: snapshot.processing.screenContextMode,
+            useRemoteLLM: snapshot.processing.useRemoteLLM
+                || snapshot.processing.localLLMBackend == .espresso,
+            modelID: snapshot.llmModel
         )
         screenOCRTask = Task.detached(priority: .utility) {
             await ScreenOCR.capture(mode: mode)

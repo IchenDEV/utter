@@ -123,15 +123,27 @@ final class OverlayLayoutTests: XCTestCase {
         XCTAssertNil(index)
     }
 
-    func testCancellingRecordingResetsStateWithoutProcessing() {
+    func testCancellingRecordingResetsStateWithoutProcessing() async {
         let appState = AppState()
-        appState.phase = .recording
-        appState.rawTranscription = "Discard me"
         let pipeline = VoicePipeline(appState: appState)
+        let capture = CaptureSpySource()
+        capture.currentToken = 1
+        pipeline.remoteCaptureSpy = capture
+        pipeline.engineOverride = OverlaySpeechEngine()
+        await pipeline.start()
+        XCTAssertEqual(appState.phase, .recording)
+        appState.rawTranscription = "Discard me"
 
         pipeline.cancel()
+        await pipeline.processingTask?.value
 
         XCTAssertEqual(appState.phase, .idle)
         XCTAssertEqual(appState.rawTranscription, "")
+        XCTAssertFalse(pipeline.ownership.isBusy)
     }
+}
+
+private final class OverlaySpeechEngine: SpeechEngine {
+    var isReady: Bool { true }
+    func transcribe(audioURL: URL?, language: String?) async throws -> String { "" }
 }

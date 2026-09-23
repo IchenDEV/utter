@@ -6,7 +6,7 @@ extension VoicePipeline {
     func processTranslation(
         _ raw: String,
         targetLanguage: TranslationLanguage,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async -> VoicePipelineOutput {
         appState.phase = .processing
@@ -21,7 +21,7 @@ extension VoicePipeline {
             inputLanguage: settings.inputLanguage,
             source: .menuBar
         )
-        let options = TextProcessingOptions(settings: settings)
+        let options = settings.processing
         let text = await textProcessor.translate(
             text: raw,
             targetLanguage: targetLanguage,
