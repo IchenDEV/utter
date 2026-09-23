@@ -94,7 +94,8 @@ final class TextProcessor {
             memoryContext: memoryContext,
             inputContext: inputContext,
             formatKind: formatKind,
-            dictionarySnapshot: dictionarySnapshot
+            dictionarySnapshot: dictionarySnapshot,
+            transcript: cleanedText
         )
 
         let userPrompt = formattingUserPrompt(
@@ -126,7 +127,8 @@ final class TextProcessor {
                             memoryContext: memoryContext,
                             inputContext: inputContext,
                             formatKind: formatKind,
-                            dictionarySnapshot: dictionarySnapshot
+                            dictionarySnapshot: dictionarySnapshot,
+                            transcript: cleanedText
                         )
                         return try await generateText(
                             prompt: userPrompt,
@@ -210,7 +212,8 @@ final class TextProcessor {
             screenImageAvailable: useScreenImage,
             memoryContext: memoryContext,
             inputContext: inputContext,
-            dictionarySnapshot: dictionarySnapshot
+            dictionarySnapshot: dictionarySnapshot,
+            transcript: text
         )
         let userPrompt = PromptBuilder.buildCommandUserPrompt(
             text: text,
@@ -238,7 +241,8 @@ final class TextProcessor {
                             screenImageAvailable: false,
                             memoryContext: memoryContext,
                             inputContext: inputContext,
-                            dictionarySnapshot: dictionarySnapshot
+                            dictionarySnapshot: dictionarySnapshot,
+                            transcript: text
                         )
                         return try await generateText(
                             prompt: userPrompt,

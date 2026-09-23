@@ -48,6 +48,7 @@ let package = Package(
                 .copy("Resources/SettingsIntegrationsIllustration.png"),
                 .copy("Resources/SettingsAboutIllustration.png"),
                 .copy("Resources/IndustryLexicons.json"),
+                .copy("Resources/THUOCL-LICENSE.txt"),
                 .copy("Resources/Sounds"),
                 .copy("Resources/AppIcon.icns"),
                 .copy("Resources/AppIconLight.icns"),

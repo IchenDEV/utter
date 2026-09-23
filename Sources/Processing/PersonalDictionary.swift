@@ -69,10 +69,6 @@ struct PersonalDictionarySnapshot: Sendable {
             .joined(separator: "\n")
     }
 
-    var activeIndustryTermsDescription: String {
-        industryLexicon.promptDescription
-    }
-
     var recognitionPhrases: [String] {
         let personal = SpeechRecognitionContext(dictionaryEntries: entries).phrases
         return SpeechRecognitionContext(

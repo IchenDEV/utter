@@ -17,6 +17,69 @@ final class IndustryLexiconTests: XCTestCase {
         }
     }
 
+    func testImportedPacksHaveLicensedTermsWithoutAutomaticRewrites() throws {
+        let license = try XCTUnwrap(AppResources.bundle.url(forResource: "THUOCL-LICENSE", withExtension: "txt"))
+        XCTAssertTrue(try String(contentsOf: license).contains("Copyright (c) 2018 THUNLP"))
+        for pack in catalog.packs {
+            XCTAssertEqual(pack.terms.count, 2030)
+            let imported = pack.terms.filter { $0.category == "thuocl-common" }
+            XCTAssertEqual(imported.count, 2000)
+            XCTAssertTrue(imported.allSatisfy { $0.corrections.isEmpty && $0.aliases.isEmpty })
+            let source = try XCTUnwrap(catalog.sources.first { $0.id == "thuocl-" + pack.id.rawValue })
+            XCTAssertEqual(source.redistribution, "MIT")
+            XCTAssertTrue(source.url.contains("a30ce79d895d01ab5132a5c74c29703ff7efb4cc"))
+            let snapshot = IndustryLexiconSnapshot(pack: pack)
+            XCTAssertEqual(snapshot.protectedTerms.count, 30)
+            XCTAssertLessThanOrEqual(snapshot.recognitionPhrases.count, 100)
+        }
+    }
+
+    func testLongTailTermsReachBoundedPromptThroughActualPromptBuilder() throws {
+        for pack in catalog.packs {
+            let tail = try XCTUnwrap(pack.terms.last)
+            let snapshot = IndustryLexiconSnapshot(pack: pack)
+            let description = snapshot.promptDescription(matching: "请记录：" + tail.term)
+            XCTAssertTrue(description.components(separatedBy: "\n").contains(tail.term))
+            XCTAssertLessThanOrEqual(description.count, IndustryLexiconSnapshot.maximumPromptCharacters)
+            let prompt = TextProcessor().systemPromptWithPersonalContext(
+                "基础提示", inputLanguage: .chinese,
+                dictionarySnapshot: PersonalDictionarySnapshot(entries: [], editRules: [], industryLexicon: snapshot),
+                transcript: tail.term
+            )
+            XCTAssertTrue(prompt.contains(tail.term))
+            XCTAssertFalse(snapshot.protectedTerms.contains(tail.term))
+        }
+    }
+
+    func testLargeMatchingTranscriptCannotOverflowPromptBudget() {
+        for pack in catalog.packs {
+            let snapshot = IndustryLexiconSnapshot(pack: pack)
+            let text = pack.terms.map(\.term).joined(separator: "，")
+            let prompt = snapshot.promptDescription(matching: text)
+            let lines = prompt.components(separatedBy: "\n")
+            XCTAssertLessThanOrEqual(lines.count, IndustryLexiconSnapshot.maximumPromptTerms)
+            XCTAssertLessThanOrEqual(prompt.count, IndustryLexiconSnapshot.maximumPromptCharacters)
+            XCTAssertEqual(Set(lines).count, lines.count)
+        }
+    }
+
+    func testPromptCharacterBudgetNeverCutsAnEntry() throws {
+        let original = try XCTUnwrap(catalog.pack(for: .technology))
+        let pack = IndustryLexiconPack(
+            id: .technology, version: original.version, locale: original.locale,
+            reviewStatus: original.reviewStatus, sourceIDs: original.sourceIDs,
+            terms: (0..<100).map { index in
+                IndustryLexiconTerm(id: "test-\(index)", term: "term-\(index)",
+                    aliases: [String(repeating: "长术语", count: 30)], corrections: [], category: "test")
+            }
+        )
+        let prompt = IndustryLexiconSnapshot(pack: pack).promptDescription
+        XCTAssertFalse(prompt.isEmpty)
+        XCTAssertLessThanOrEqual(prompt.count, IndustryLexiconSnapshot.maximumPromptCharacters)
+        XCTAssertTrue(prompt.components(separatedBy: "\n").allSatisfy { $0.hasSuffix("）") })
+        XCTAssertLessThan(prompt.components(separatedBy: "\n").count, IndustryLexiconSnapshot.maximumPromptTerms)
+    }
+
     func testSelectedPackReachesRecognitionContextWithAliases() throws {
         let medical = try XCTUnwrap(catalog.pack(for: .medical))
         let snapshot = PersonalDictionarySnapshot(
