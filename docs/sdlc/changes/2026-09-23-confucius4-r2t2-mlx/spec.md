@@ -57,6 +57,23 @@ add migration and regression cost without a demonstrated need. A whole-app or
 whole-ASR rewrite would require substantially more validation and has no
 benefit for this model addition.
 
+### Download amendment, approved 2026-09-23
+
+The first live `ModelCatalog.downloadASR` test found that Hub snapshot progress
+counts completed files, so it remained unchanged while the 2.46 GB weight was
+transferring and the shared 120-second watchdog cancelled the transfer. The
+user approved an upstream Xet probe, but it stalled near the tail after 17
+minutes. The user then approved an application-side parallel HTTP fallback for
+this model. A later live test also found Hub could stall on a small file before
+reaching the weight. Download the model's files from one pinned revision in
+bounded HTTP ranges, with 16 independent URL sessions because one shared
+HTTP/2 connection was much slower in a local probe. Require HTTP 206 with the
+exact `Content-Range` and length and verify each file against its pinned
+SHA-256 before publishing. Report actual completed bytes to the existing
+progress tracker and stall watchdog. Retain generation staging, cancellation,
+deletion, and the commit path. Other models continue using the existing Hub
+download. A complete live catalog download is required before merge.
+
 ## Safety and failure modes
 
 - Audio remains local. Downloaded weights come from the named Hugging Face

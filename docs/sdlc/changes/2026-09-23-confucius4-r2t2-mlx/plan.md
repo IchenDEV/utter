@@ -24,9 +24,11 @@
 - [x] Run a mid-sentence stop sample. If final words are lost, add the
   smallest model-specific silence-padding change and a regression test that
   distinguishes recovered text from merely removing `|`.
-- [ ] Review the exact NetEase license and conversion notices for the in-app
+- [x] Review the exact NetEase license and conversion notices for the in-app
   download flow. Provide the required model-license link and retain notices;
   record the release owner's license decision before any distribution.
+- [x] Verify the parallel HTTP application catalog download publishes the full
+  Confucius repository, then deletes it through the same catalog path.
 - [x] Remove any temporary probe code and keep only a single active Qwen
   runtime path. Review the final diff for stale selection assumptions and
   changes outside this model's boundary.

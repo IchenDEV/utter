@@ -104,10 +104,6 @@ extension ModelCatalog {
 
         do {
             try ModelStorage.prepareGeneration(staging)
-            let api = HubApi(
-                downloadBase: staging.downloadBase,
-                cache: staging.hubCache
-            )
             let tracker = DownloadProgressTracker(
                 startDate: Date(),
                 initialBytes: asrRepoSize(id, downloadBase: staging.downloadBase)
@@ -115,31 +111,50 @@ extension ModelCatalog {
             let estimatedTotalBytes = estimatedASRDownloadBytes(id) ?? 0
             let repositories = asrRequiredRepoIDs(for: id)
             for (repositoryIndex, repositoryID) in repositories.enumerated() {
-                _ = try await api.snapshot(from: ModelStorage.hubModelRepo(repositoryID)) { [weak self] progress in
-                    Task { @MainActor in
-                        guard let self,
-                              self.downloadTasks.isCurrent(key, token: token),
-                              let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
-                        let repositoryFraction =
-                            (Double(repositoryIndex) + progress.fractionCompleted) / Double(repositories.count)
-                        let downloadedBytes = self.asrRepoSize(
-                            id,
-                            downloadBase: staging.downloadBase
-                        )
-                        let info = tracker.update(
-                            completedBytes: downloadedBytes,
-                            totalBytes: estimatedTotalBytes,
-                            fraction: repositoryFraction
-                        )
-                        if signal.advanced(
-                            completedBytes: max(downloadedBytes, progress.completedUnitCount),
-                            fraction: info.fraction
-                        ) {
-                            watchdog.noteProgress()
+                if repositoryID == QwenASRModel.confuciusR2T2ID {
+                    let directory = ModelStorage.asrRepoDir(repositoryID, downloadBase: staging.downloadBase)
+                    try await ConfuciusModelDownloader.downloadRepository(to: directory) { [weak self] bytes in
+                        Task { @MainActor in
+                            guard let self,
+                                  self.downloadTasks.isCurrent(key, token: token),
+                                  let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
+                            let info = tracker.update(
+                                completedBytes: bytes,
+                                totalBytes: estimatedTotalBytes
+                            )
+                            if signal.advanced(completedBytes: bytes, fraction: info.fraction) {
+                                watchdog.noteProgress()
+                            }
+                            self.asrModels[i].downloadProgress = info.fraction
+                            self.asrModels[i].downloadDetail = info.detailText
+                            onProgress?(info)
                         }
-                        self.asrModels[i].downloadProgress = info.fraction
-                        self.asrModels[i].downloadDetail = info.detailText
-                        onProgress?(info)
+                    }
+                } else {
+                    let api = HubApi(downloadBase: staging.downloadBase, cache: staging.hubCache)
+                    _ = try await api.snapshot(from: ModelStorage.hubModelRepo(repositoryID)) { [weak self] progress in
+                        Task { @MainActor in
+                            guard let self,
+                                  self.downloadTasks.isCurrent(key, token: token),
+                                  let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
+                            let repositoryFraction =
+                                (Double(repositoryIndex) + progress.fractionCompleted) / Double(repositories.count)
+                            let downloadedBytes = self.asrRepoSize(id, downloadBase: staging.downloadBase)
+                            let info = tracker.update(
+                                completedBytes: downloadedBytes,
+                                totalBytes: estimatedTotalBytes,
+                                fraction: repositoryFraction
+                            )
+                            if signal.advanced(
+                                completedBytes: max(downloadedBytes, progress.completedUnitCount),
+                                fraction: info.fraction
+                            ) {
+                                watchdog.noteProgress()
+                            }
+                            self.asrModels[i].downloadProgress = info.fraction
+                            self.asrModels[i].downloadDetail = info.detailText
+                            onProgress?(info)
+                        }
                     }
                 }
             }
@@ -246,26 +261,7 @@ extension ModelCatalog {
         }
     }
 
-    private func asrRepoSize(_ id: String, downloadBase: URL) -> Int64 {
-        asrRequiredRepoIDs(for: id).reduce(0) { total, repositoryID in
-            total + ModelStorage.directorySize(
-                at: ModelStorage.asrRepoDir(repositoryID, downloadBase: downloadBase)
-            )
-        }
-    }
-
-    private func asrMissingStatus(size: Int64) -> ModelStatus {
-        size > 0 ? .error(L("model.asr_incomplete")) : .notDownloaded
-    }
-
-    func asrRepoSize(_ id: String) -> Int64 {
-        asrRequiredRepoIDs(for: id).reduce(0) { total, repositoryID in
-            guard let directory = ModelStorage.asrRepoDir(repositoryID) else { return total }
-            return total + ModelStorage.directorySize(at: directory)
-        }
-    }
-
-    private func asrRequiredRepoIDs(for id: String) -> [String] {
+    func asrRequiredRepoIDs(for id: String) -> [String] {
         [id]
     }
 }

@@ -92,4 +92,45 @@ final class ConfuciusASRTests: XCTestCase {
         XCTAssertTrue(tail.localizedCaseInsensitiveContains("follow"), tail)
         XCTAssertFalse(tail.hasSuffix("|"), tail)
     }
+
+    func testApplicationCatalogDownloadsAndDeletesModel() async throws {
+        guard ProcessInfo.processInfo.environment["OPENTYPE_CONFUCIUS_LIVE_DOWNLOAD"] == "1" else {
+            throw XCTSkip("Set OPENTYPE_CONFUCIUS_LIVE_DOWNLOAD=1 for the live catalog download")
+        }
+
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("utter-confucius-catalog-\(UUID().uuidString)")
+        let settings = AppSettings.shared
+        let previousPath = settings.modelStoragePath
+        settings.modelStoragePath = root.path
+        defer {
+            settings.modelStoragePath = previousPath
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let catalog = ModelCatalog(startupStorageRoot: root)
+        let id = QwenASRModel.confuciusR2T2ID
+        guard let index = catalog.asrModels.firstIndex(where: { $0.id == id }) else {
+            return XCTFail("Confucius must appear in the application catalog")
+        }
+        XCTAssertEqual(catalog.asrModels[index].status, .notDownloaded)
+
+        var lastProgressLog = -10
+        await catalog.downloadASR(id) { info in
+            let elapsed = Int(info.elapsedSeconds)
+            guard elapsed >= lastProgressLog + 10 else { return }
+            lastProgressLog = elapsed
+            print("[CONFUCIUS-DOWNLOAD] seconds=\(elapsed) fraction=\(info.fraction) bytes=\(info.completedBytes)")
+            fflush(stdout)
+        }
+        XCTAssertEqual(catalog.asrModels[index].status, .downloaded)
+        let modelPath = catalog.asrModelPath(for: id)
+        XCTAssertFalse(modelPath.isEmpty)
+        XCTAssertTrue(ModelCatalog.asrRepoContainsRequiredFiles(id, at: URL(fileURLWithPath: modelPath)))
+        print("CONFUCIUS_CATALOG_DOWNLOAD_BYTES=\(catalog.asrRepoSize(id))")
+
+        await catalog.deleteASR(id)
+        XCTAssertEqual(catalog.asrModels[index].status, .notDownloaded)
+        XCTAssertTrue(catalog.asrModelPath(for: id).isEmpty)
+    }
 }
