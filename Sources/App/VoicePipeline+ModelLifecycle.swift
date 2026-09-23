@@ -5,7 +5,6 @@ extension VoicePipeline {
     func unloadLLM() {
         formattingPreloadGeneration += 1
         processingTask?.cancel()
-        processingTask = nil
         replacementTask?.cancel()
         replacementTask = nil
         appState.clearPendingReplacement()
@@ -37,7 +36,8 @@ extension VoicePipeline {
         let precedingTask = formattingModelLifecycleTask
         let task: Task<EspressoGenerationOutcome?, Never> = Task { @MainActor [weak self] in
             _ = await precedingTask?.value
-            guard let self else { return nil }
+            guard let self, let lease = try? self.ownership.acquire() else { return nil }
+            defer { self.ownership.release(lease) }
             return await self.preloadFormattingModelNow(
                 showFailureInStatus: showFailureInStatus
             )

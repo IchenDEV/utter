@@ -26,7 +26,8 @@ extension TextProcessor {
         memoryContext: String,
         inputContext: InputContext?,
         formatKind: TextFormatKind? = nil,
-        dictionarySnapshot: PersonalDictionarySnapshot? = nil
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil,
+        transcript: String = ""
     ) -> String {
         systemPromptWithPersonalContext(
             PromptBuilder.buildSystemPrompt(
@@ -42,7 +43,8 @@ extension TextProcessor {
                 customSystemPrompt: options.customSystemPrompt
             ),
             inputLanguage: options.inputLanguage,
-            dictionarySnapshot: dictionarySnapshot
+            dictionarySnapshot: dictionarySnapshot,
+            transcript: transcript
         )
     }
 
@@ -52,7 +54,8 @@ extension TextProcessor {
         screenImageAvailable: Bool,
         memoryContext: String,
         inputContext: InputContext?,
-        dictionarySnapshot: PersonalDictionarySnapshot? = nil
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil,
+        transcript: String = ""
     ) -> String {
         systemPromptWithPersonalContext(
             PromptBuilder.buildCommandSystemPrompt(
@@ -63,19 +66,21 @@ extension TextProcessor {
                 inputLanguage: options.inputLanguage
             ),
             inputLanguage: options.inputLanguage,
-            dictionarySnapshot: dictionarySnapshot
+            dictionarySnapshot: dictionarySnapshot,
+            transcript: transcript
         )
     }
 
     func systemPromptWithPersonalContext(
         _ systemPrompt: String,
         inputLanguage: InputLanguage,
-        dictionarySnapshot: PersonalDictionarySnapshot? = nil
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil,
+        transcript: String = ""
     ) -> String {
         let snapshot = dictionarySnapshot ?? PersonalDictionary.shared.snapshot(settings: .shared)
         let extraSections = [
             PromptCatalog.activeIndustryLexiconSection(
-                snapshot.activeIndustryTermsDescription,
+                snapshot.industryLexicon.promptDescription(matching: transcript),
                 industry: snapshot.industryLexicon.pack?.id,
                 inputLanguage: inputLanguage
             ),

@@ -107,6 +107,11 @@ final class OpenTypeService {
     }
 
     func completeSession(sessionID: UUID, clientID: String, finalText: String?) async throws {
+        try commitSession(sessionID: sessionID, clientID: clientID, finalText: finalText)
+    }
+
+    /// Result and history commit without an await between the terminal-state check and publication.
+    func commitSession(sessionID: UUID, clientID: String, finalText: String?, record: () -> Void = {}) throws {
         try requireAuthorized(clientID: clientID, capability: .record)
         guard var session = sessions[sessionID] else {
             throw IntegrationError.sessionNotFound
@@ -121,6 +126,7 @@ final class OpenTypeService {
         }
 
         let now = Date()
+        record()
         session.state = .completed
         session.updatedAt = now
         sessions[sessionID] = session

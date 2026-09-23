@@ -5,7 +5,7 @@ import Foundation
 extension VoicePipeline {
     func handleSpokenEditCommandIfNeeded(
         raw: String,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async -> Bool {
         let expectedEspressoModelPath = settings.espressoModelPath
@@ -17,6 +17,7 @@ extension VoicePipeline {
             return false
         }
 
+        guard !Task.isCancelled else { return true }
         switch command {
         case .replaceLast(let replacementRaw):
             await replaceLastInsertion(
@@ -54,7 +55,7 @@ extension VoicePipeline {
 
         guard !Task.isCancelled else { return true }
         if let espressoOutcome = await consumeEspressoOutcome(
-            settings: settings,
+            settings: appState.settings,
             expectedEspressoModelPath: expectedEspressoModelPath
         ) {
             if case .error = appState.phase, espressoOutcome == .fallback {
@@ -74,7 +75,7 @@ extension VoicePipeline {
     private func replaceLastInsertion(
         raw: String,
         replacementRaw: String,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async {
         cancelScreenContextCapture()
@@ -101,6 +102,7 @@ extension VoicePipeline {
             previouslyInserted: appState.lastInsertedText,
             targetApp: targetApp
         )
+        guard !Task.isCancelled else { return }
 
         appState.phase = .done
         appState.statusMessage = L("status.done")
@@ -130,7 +132,7 @@ extension VoicePipeline {
     private func replaceSelectedText(
         raw: String,
         replacementRaw: String,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async {
         cancelScreenContextCapture()
@@ -148,6 +150,7 @@ extension VoicePipeline {
 
         Log.sensitive("[VoicePipeline] voice edit replace selection \(replacementText.count) chars")
         let result = await textInserter.replaceSelectedText(text: replacementText, targetApp: targetApp)
+        guard !Task.isCancelled else { return }
 
         appState.phase = .done
         appState.statusMessage = L("status.done")
@@ -183,6 +186,7 @@ extension VoicePipeline {
 
         Log.info("[VoicePipeline] voice edit delete selection")
         let result = await textInserter.deleteSelectedText(targetApp: targetApp)
+        guard !Task.isCancelled else { return }
 
         if case .probablyFailed(let reason) = result {
             Log.info("[VoicePipeline] voice edit delete selection probably failed: \(reason)")
@@ -213,6 +217,7 @@ extension VoicePipeline {
             previouslyInserted: appState.lastInsertedText,
             targetApp: targetApp
         )
+        guard !Task.isCancelled else { return }
 
         if case .probablyFailed(let reason) = result {
             Log.info("[VoicePipeline] voice edit undo probably failed: \(reason)")

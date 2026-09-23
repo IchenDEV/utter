@@ -14,6 +14,7 @@ final class InputSessionCoordinator {
         let streamingEnabled: Bool
         let screenContextTask: Task<ScreenContextSnapshot, Never>?
         let client: IntegrationClient?
+        var snapshot: VoiceInputSettings? = nil
     }
 
     let service: OpenTypeService
@@ -21,10 +22,16 @@ final class InputSessionCoordinator {
     let engineProvider: SpeechEngineProvider
     let textProcessor: TextProcessor
     let settings: AppSettings
-    let isUserWorkflowBusy: @MainActor () -> Bool
+    let ownership: InputSessionOwnership
+    var lease: UUID?
+    var owner: (sessionID: UUID, clientID: String)?
+    var cancelOperation: (() -> Void)?
+    var engineLoader: ((AppSettings) async -> (any SpeechEngine)?)?
     var activeSession: ActiveSession?
+    var requestSettings: VoiceInputSettings?
+    var pendingHistory: (() -> Void)?
 
-    var isBusy: Bool { activeSession != nil }
+    var isBusy: Bool { lease != nil }
 
     init(
         service: OpenTypeService,
@@ -32,28 +39,32 @@ final class InputSessionCoordinator {
         engineProvider: SpeechEngineProvider? = nil,
         textProcessor: TextProcessor = TextProcessor(),
         settings: AppSettings = .shared,
-        isUserWorkflowBusy: @escaping @MainActor () -> Bool = { false }
+        ownership: InputSessionOwnership? = nil
     ) {
         self.service = service
         self.audioCapture = audioCapture
         self.engineProvider = engineProvider ?? SpeechEngineProvider()
         self.textProcessor = textProcessor
         self.settings = settings
-        self.isUserWorkflowBusy = isUserWorkflowBusy
+        self.ownership = ownership ?? InputSessionOwnership()
     }
 
     func startRecording(sessionID: UUID, clientID: String) async throws {
-        guard activeSession == nil, !isUserWorkflowBusy() else {
-            throw IntegrationError.busy
+        let session = try reserve(sessionID: sessionID, clientID: clientID)
+        try await runOperation(keepRecording: true) {
+            try await self.prepareRecording(session)
         }
-        guard let session = try service.session(sessionID, clientID: clientID) else {
-            throw IntegrationError.sessionNotFound
-        }
+    }
+
+    private func prepareRecording(_ session: InputSession) async throws {
+        guard let owner else { throw CancellationError() }
+        let (sessionID, clientID) = owner
         let effective = effectiveSettings(for: session.request)
-        guard let engine = await engineProvider.engine(settings: settings), engine.isReady else {
-            throw IntegrationError.modelNotReady
-        }
-        let vocabularySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
+        guard let snapshot = requestSettings else { throw CancellationError() }
+        let microphoneID = snapshot.microphoneID
+        let thresholds = snapshot.audioActivityThresholds
+        let engine = try await loadSpeechEngine()
+        let vocabularySnapshot = snapshot.dictionary
         engine.configureRecognition(
             context: SpeechRecognitionContext(phrases: vocabularySnapshot.recognitionPhrases)
         )
@@ -75,10 +86,10 @@ final class InputSessionCoordinator {
             }
         }
 
-        audioCapture.thresholds = settings.audioActivityThresholds
+        audioCapture.thresholds = thresholds
 
         let micStarted = audioCapture.start(
-            deviceID: settings.microphoneID,
+            deviceID: microphoneID,
             levelUpdate: { _ in },
             bufferUpdate: effective.streamingEnabled && engine.supportsStreaming ? { buffer in
                 engine.appendAudioBuffer(buffer)
@@ -93,6 +104,7 @@ final class InputSessionCoordinator {
 
         do {
             try await service.startRecording(sessionID: sessionID, clientID: clientID)
+            try checkCurrent()
             activeSession = ActiveSession(
                 sessionID: sessionID,
                 clientID: clientID,
@@ -106,7 +118,8 @@ final class InputSessionCoordinator {
                     mode: effective.mode,
                     useScreenContext: effective.useScreenContext
                 ),
-                client: service.integrationClient(id: clientID)
+                client: service.integrationClient(id: clientID),
+                snapshot: snapshot
             )
         } catch {
             audioCapture.stop()
@@ -123,37 +136,33 @@ final class InputSessionCoordinator {
             throw IntegrationError.invalidSessionState
         }
 
-        audioCapture.stop()
-        do {
-            try await service.beginProcessing(sessionID: sessionID, clientID: clientID)
-            let result = try await processRecording(active)
-            try await service.completeSession(sessionID: sessionID, clientID: clientID, finalText: result.text)
-            guard let completed = try service.session(sessionID, clientID: clientID) else {
+        guard cancelOperation == nil else { throw IntegrationError.invalidSessionState }
+        return try await runOperation {
+            self.audioCapture.stop()
+            try await self.service.beginProcessing(sessionID: sessionID, clientID: clientID)
+            try self.checkCurrent()
+            let result = try await self.processRecording(active)
+            try self.checkCurrent()
+            try self.commitOutput(result.text, sessionID: sessionID, clientID: clientID)
+            guard let completed = try self.service.session(sessionID, clientID: clientID) else {
                 throw IntegrationError.sessionNotFound
             }
-            activeSession = nil
-            audioCapture.cleanupLastRecording()
             return InputSessionResult(session: completed, transcript: result.transcript, text: result.text)
-        } catch let error as IntegrationError {
-            await failActiveSession(active, error: error)
-            throw error
-        } catch {
-            Log.error("[InputSessionCoordinator] stop failed: \(error.localizedDescription)")
-            await failActiveSession(active, error: .operationFailed)
-            throw IntegrationError.operationFailed
         }
     }
 
     func cancel(sessionID: UUID, clientID: String) async throws {
-        if let active = activeSession, active.sessionID == sessionID, active.clientID == clientID {
-            release(active)
-        }
+        // Authorize before touching shared capture or model resources.
         try await service.cancel(sessionID: sessionID, clientID: clientID)
+        guard try service.session(sessionID, clientID: clientID)?.state == .cancelled,
+              owner?.sessionID == sessionID, owner?.clientID == clientID else { return }
+        cancelOwnedWork()
     }
 
-    func releaseActiveSessionForShutdown() {
-        guard let active = activeSession else { return }
-        release(active)
+    func releaseActiveSessionForShutdown(clientID: String? = nil) {
+        guard let owner, clientID == nil || owner.clientID == clientID else { return }
+        cancelOwnedWork()
+        Task { try? await service.cancel(sessionID: owner.sessionID, clientID: owner.clientID) }
     }
 
     private func processRecording(_ active: ActiveSession) async throws -> (transcript: String, text: String) {
@@ -175,6 +184,7 @@ final class InputSessionCoordinator {
             )
         }
 
+        try checkCurrent()
         let transcript = try prepareTranscript(raw, audioActivity: audioCapture.lastActivity)
 
         try service.emitTranscriptFinal(
@@ -187,6 +197,11 @@ final class InputSessionCoordinator {
         return (transcript, text)
     }
 
+    func finishCapture() {
+        audioCapture.stop()
+        audioCapture.cleanupLastRecording()
+    }
+
     func prepareTranscript(_ raw: String, audioActivity: AudioCaptureActivity?) throws -> String {
         guard let transcript = TranscriptionSanitizer.prepare(raw, audioActivity: audioActivity) else {
             throw IntegrationError.noSpeechDetected
@@ -194,28 +209,16 @@ final class InputSessionCoordinator {
         return transcript
     }
 
-    private func failActiveSession(_ active: ActiveSession, error: IntegrationError) async {
-        release(active)
-        try? await service.failSession(sessionID: active.sessionID, clientID: active.clientID, error: error)
-    }
-
-    private func release(_ active: ActiveSession) {
-        active.engine.cancelListening()
-        active.screenContextTask?.cancel()
-        audioCapture.stop()
-        audioCapture.cleanupLastRecording()
-        activeSession = nil
-    }
-
     func effectiveSettings(
         for request: InputSessionRequest
     ) -> (mode: OutputMode, inputLanguage: InputLanguage, useScreenContext: Bool, streamingEnabled: Bool, languageCode: String?) {
-        let inputLanguage = request.language ?? settings.inputLanguage
+        let snapshot = requestSettings ?? VoiceInputSettings(settings: settings)
+        let inputLanguage = request.language ?? snapshot.inputLanguage
         return (
-            mode: request.mode ?? settings.outputMode,
+            mode: request.mode ?? snapshot.outputMode,
             inputLanguage: inputLanguage,
-            useScreenContext: request.useScreenContext ?? settings.useScreenContext,
-            streamingEnabled: true,
+            useScreenContext: request.useScreenContext ?? snapshot.useScreenContext,
+            streamingEnabled: snapshot.streamingEnabled,
             languageCode: inputLanguage.whisperCode
         )
     }
@@ -230,10 +233,11 @@ final class InputSessionCoordinator {
         ) else {
             return nil
         }
+        let options = requestSettings?.processing ?? TextProcessingOptions(settings: settings)
         let contextMode = ScreenContextMode.effectiveCaptureMode(
-            preference: settings.screenContextMode,
-            useRemoteLLM: settings.useRemoteLLM || settings.localLLMBackend == .espresso,
-            modelID: settings.llmModel
+            preference: options.screenContextMode,
+            useRemoteLLM: options.useRemoteLLM || options.localLLMBackend == .espresso,
+            modelID: options.llmModel
         )
         return Task.detached(priority: .utility) {
             await ScreenOCR.capture(mode: contextMode)

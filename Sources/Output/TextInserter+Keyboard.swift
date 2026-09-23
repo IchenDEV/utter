@@ -12,7 +12,7 @@ extension TextInserter {
 
     @discardableResult
     func simulateCommandShortcut(keyCode: CGKeyCode, scriptKey: String) async -> Bool {
-        guard AXIsProcessTrusted() else { return false }
+        guard !Task.isCancelled, AXIsProcessTrusted() else { return false }
 
         let source = CGEventSource(stateID: .combinedSessionState)
         guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true),
@@ -31,7 +31,7 @@ extension TextInserter {
 
     @discardableResult
     func simulateKeyPress(keyCode: CGKeyCode, scriptKeyCode: Int) async -> Bool {
-        guard AXIsProcessTrusted() else { return false }
+        guard !Task.isCancelled, AXIsProcessTrusted() else { return false }
 
         let source = CGEventSource(stateID: .combinedSessionState)
         guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true),

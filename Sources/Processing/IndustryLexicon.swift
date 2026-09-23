@@ -62,18 +62,24 @@ private struct IndustryLexiconDocument: Codable, Sendable {
 }
 
 struct IndustryLexiconSnapshot: Equatable, Sendable {
+    static let maximumRecognitionPhrases = 100
+    static let maximumPromptTerms = 80
+    static let maximumPromptCharacters = 2000
+
     static let empty = IndustryLexiconSnapshot(pack: nil)
 
     let pack: IndustryLexiconPack?
 
     var recognitionPhrases: [String] {
         guard let pack else { return [] }
-        return unique(pack.terms.flatMap { [$0.term] + $0.aliases })
+        return Array(unique(pack.terms.prefix(Self.maximumRecognitionPhrases).flatMap { [$0.term] + $0.aliases })
+            .prefix(Self.maximumRecognitionPhrases))
     }
 
     var protectedTerms: [String] {
         guard let pack else { return [] }
-        return unique(pack.terms.map(\.term))
+        // Imported common words are hints, not mandatory literal-output constraints.
+        return unique(pack.terms.filter { $0.category != "thuocl-common" }.map(\.term))
     }
 
     var corrections: [IndustryLexiconCorrection] {
@@ -85,12 +91,31 @@ struct IndustryLexiconSnapshot: Equatable, Sendable {
         }
     }
 
-    var promptDescription: String {
+    var promptDescription: String { promptDescription(matching: "") }
+
+    func promptDescription(matching transcript: String) -> String {
         guard let pack else { return "" }
-        return pack.terms.map { item in
-            guard !item.aliases.isEmpty else { return item.term }
-            return "\(item.term)（\(item.aliases.joined(separator: "、"))）"
-        }.joined(separator: "\n")
+        let text = transcript.lowercased()
+        let matching = text.isEmpty ? [] : pack.terms.filter { item in
+            ([item.term] + item.aliases + item.corrections).contains {
+                text.contains($0.lowercased())
+            }
+        }.sorted { $0.term.count > $1.term.count }
+        let candidates = matching + pack.terms.prefix(Self.maximumPromptTerms)
+        var seen = Set<String>()
+        var lines: [String] = []
+        var characters = 0
+        for item in candidates {
+            guard seen.insert(item.id).inserted else { continue }
+            let line = item.aliases.isEmpty ? item.term
+                : "\(item.term)（\(item.aliases.joined(separator: "、"))）"
+            let cost = line.count + (lines.isEmpty ? 0 : 1)
+            guard characters + cost <= Self.maximumPromptCharacters else { continue }
+            lines.append(line)
+            characters += cost
+            if lines.count == Self.maximumPromptTerms { break }
+        }
+        return lines.joined(separator: "\n")
     }
 
     private func unique(_ values: [String]) -> [String] {
@@ -135,8 +160,8 @@ struct IndustryLexiconCatalog: Sendable {
                   !source.id.isEmpty
                       && !source.title.isEmpty
                       && URL(string: source.url)?.scheme?.hasPrefix("http") == true
-                      && source.usage == "reference-only"
-                      && source.redistribution == "not-redistributed"
+                      && ((source.usage == "reference-only" && source.redistribution == "not-redistributed")
+                          || (source.usage == "redistributed-terms" && source.redistribution == "MIT"))
               }) else {
             throw IndustryLexiconError.invalidSource
         }
@@ -148,7 +173,8 @@ struct IndustryLexiconCatalog: Sendable {
         for pack in document.packs {
             guard !pack.version.isEmpty,
                   pack.locale == "zh-CN",
-                  pack.reviewStatus == "project-seed-needs-domain-review",
+                  ["project-seed-needs-domain-review", "curated-and-imported-needs-domain-review"]
+                    .contains(pack.reviewStatus),
                   !pack.terms.isEmpty,
                   Set(pack.terms.map(\.id)).count == pack.terms.count,
                   !pack.sourceIDs.isEmpty,

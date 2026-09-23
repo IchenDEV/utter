@@ -5,7 +5,7 @@ import Foundation
 extension VoicePipeline {
     func resolvedSpokenEditCommand(
         raw: String,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async -> SpokenEditCommand? {
         guard VoicePipelinePolicy.shouldResolveEditCommandWithLLMFirst(outputMode: settings.outputMode) else {
@@ -47,10 +47,10 @@ extension VoicePipeline {
 
     private func resolveSpokenEditCommandWithLLM(
         raw: String,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async -> SpokenEditCommandLLMResolution? {
-        var options = TextProcessingOptions(settings: settings)
+        var options = settings.processing
         options.llmModel = settings.llmModel
         return await textProcessor.resolveSpokenEditCommandResolution(
             text: raw,
