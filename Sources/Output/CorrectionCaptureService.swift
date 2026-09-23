@@ -54,8 +54,7 @@ final class CorrectionCaptureService {
                 inserted: session.seed.insertedText,
                 userFinal: session.latestFinalText,
                 sourceRecordID: session.recordID,
-                languageCode: session.seed.context.inputLanguage.whisperCode
-                    ?? session.seed.context.inputLanguage.rawValue,
+                languageCode: session.seed.context.inputLanguage.whisperCode,
                 bundleIdentifier: session.seed.context.bundleIdentifier
            ) {
             PersonalDictionary.shared.recordLearnedCandidate(candidate)

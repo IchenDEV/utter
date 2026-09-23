@@ -2,6 +2,16 @@ import XCTest
 @testable import OpenType
 
 final class CorrectionCandidateClassifierTests: XCTestCase {
+    func testDoesNotLearnStandaloneFillerAsReusableCorrection() {
+        XCTAssertNil(CorrectionCandidateClassifier.candidate(
+            inserted: "嗯。",
+            userFinal: "Do anything",
+            sourceRecordID: UUID(),
+            languageCode: "zh",
+            bundleIdentifier: "com.apple.Notes"
+        ))
+    }
+
     func testLearnsCaseAndSpacingCorrectionAsHighConfidenceTerm() throws {
         let candidate = try XCTUnwrap(CorrectionCandidateClassifier.candidate(
             inserted: "Please use open type today.",

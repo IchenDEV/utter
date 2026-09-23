@@ -14,9 +14,13 @@ struct PersonalDictionarySnapshot: Sendable {
     init(
         entries: [DictionaryEntry],
         editRules: [EditRule],
-        industryLexicon: IndustryLexiconSnapshot = .empty
+        industryLexicon: IndustryLexiconSnapshot = .empty,
+        bundleIdentifier: String? = nil,
+        languageCode: String? = nil
     ) {
-        self.entries = entries
+        self.entries = entries.filter {
+            $0.applies(bundleIdentifier: bundleIdentifier, languageCode: languageCode)
+        }
         self.editRules = editRules
         self.industryLexicon = industryLexicon
     }
@@ -73,10 +77,13 @@ struct PersonalDictionarySnapshot: Sendable {
         industryLexicon.promptDescription
     }
 
+    var personalRecognitionPhrases: [String] {
+        SpeechRecognitionContext(dictionaryEntries: entries).phrases
+    }
+
     var recognitionPhrases: [String] {
-        let personal = SpeechRecognitionContext(dictionaryEntries: entries).phrases
         return SpeechRecognitionContext(
-            phrases: personal + industryLexicon.recognitionPhrases
+            phrases: personalRecognitionPhrases + industryLexicon.recognitionPhrases
         ).phrases
     }
 
@@ -133,19 +140,31 @@ final class PersonalDictionary: ObservableObject {
         snapshot().activeRulesDescription
     }
 
-    func snapshot(industryLexicon: IndustryLexiconSnapshot = .empty) -> PersonalDictionarySnapshot {
+    func snapshot(
+        industryLexicon: IndustryLexiconSnapshot = .empty,
+        bundleIdentifier: String? = nil,
+        languageCode: String? = nil
+    ) -> PersonalDictionarySnapshot {
         PersonalDictionarySnapshot(
             entries: entries,
             editRules: editRules,
-            industryLexicon: industryLexicon
+            industryLexicon: industryLexicon,
+            bundleIdentifier: bundleIdentifier,
+            languageCode: languageCode
         )
     }
 
-    func snapshot(settings: AppSettings) -> PersonalDictionarySnapshot {
+    func snapshot(
+        settings: AppSettings,
+        bundleIdentifier: String? = nil,
+        languageCode: String? = nil
+    ) -> PersonalDictionarySnapshot {
         snapshot(
             industryLexicon: IndustryLexiconCatalog.shared.snapshot(
                 for: settings.industryLexicon
-            )
+            ),
+            bundleIdentifier: bundleIdentifier,
+            languageCode: languageCode
         )
     }
 
@@ -165,6 +184,8 @@ final class PersonalDictionary: ObservableObject {
             entries[index].status = .active
             entries[index].confidence = 1
             entries[index].evidenceCount = max(1, entries[index].evidenceCount)
+            entries[index].languageCode = nil
+            entries[index].appScopes = []
             save()
             return entries[index].id
         }
@@ -206,7 +227,9 @@ final class PersonalDictionary: ObservableObject {
         let original = entries[index].original
         for otherIndex in entries.indices where otherIndex != index
             && entries[otherIndex].origin == .learned
-            && entries[otherIndex].original.caseInsensitiveCompare(original) == .orderedSame {
+            && entries[otherIndex].original.caseInsensitiveCompare(original) == .orderedSame
+            && entries[otherIndex].languageCode == entries[index].languageCode
+            && entries[otherIndex].appScopes == entries[index].appScopes {
             entries[otherIndex].status = .pending
         }
         entries[index].status = .active

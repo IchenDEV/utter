@@ -20,21 +20,24 @@ extension InputSessionCoordinator {
             throw IntegrationError.sessionNotFound
         }
         let effective = effectiveSettings(for: session.request)
-        guard let engine = await engineProvider.engine(settings: settings), engine.isReady else {
+        guard let engine = await selectedEngine(), engine.isReady else {
             throw IntegrationError.modelNotReady
         }
-        let vocabularySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
-        engine.configureRecognition(
-            context: SpeechRecognitionContext(phrases: vocabularySnapshot.recognitionPhrases)
-        )
+        let vocabularySnapshot = dictionarySnapshot(clientID: clientID, languageCode: effective.languageCode)
+        engine.configureRecognition(context: recognitionContext(engine: engine, snapshot: vocabularySnapshot))
 
         do {
             try service.emitAudioReceived(sessionID: sessionID, clientID: clientID)
             try await service.beginProcessing(sessionID: sessionID, clientID: clientID)
+            guard await recordingContainsSpeech(audioURL) else {
+                throw IntegrationError.noSpeechDetected
+            }
             let transcript = try await transcribeAudioURL(
                 audioURL,
                 engine: engine,
-                languageCode: effective.languageCode
+                languageCode: effective.languageCode,
+                clientID: clientID,
+                dictionarySnapshot: vocabularySnapshot
             )
             try service.emitTranscriptFinal(sessionID: sessionID, clientID: clientID, text: transcript)
             let active = ActiveSession(
@@ -50,7 +53,8 @@ extension InputSessionCoordinator {
                     mode: effective.mode,
                     useScreenContext: effective.useScreenContext
                 ),
-                client: service.integrationClient(id: clientID)
+                client: service.integrationClient(id: clientID),
+                dictionarySnapshot: vocabularySnapshot
             )
             let text = try await outputText(for: transcript, active: active)
             try await service.completeSession(sessionID: sessionID, clientID: clientID, finalText: text)
@@ -71,9 +75,14 @@ extension InputSessionCoordinator {
     private func transcribeAudioURL(
         _ audioURL: URL,
         engine: any SpeechEngine,
-        languageCode: String?
+        languageCode: String?,
+        clientID: String,
+        dictionarySnapshot: PersonalDictionarySnapshot
     ) async throws -> String {
         let raw = try await engine.transcribe(audioURL: audioURL, language: languageCode)
-        return try prepareTranscript(raw, audioActivity: nil)
+        return try prepareTranscript(
+            raw, audioActivity: nil, clientID: clientID,
+            languageCode: languageCode, dictionarySnapshot: dictionarySnapshot
+        )
     }
 }

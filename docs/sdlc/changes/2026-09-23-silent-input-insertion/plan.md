@@ -1,8 +1,8 @@
 # Plan: Prevent unsolicited Qwen vocabulary insertion
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User (conversation; confirmed revised implementation plan)
+**Approved-date:** 2026-09-24
 **Upstream:** [spec.md](spec.md)
 
 This plan supersedes the 2026-09-23 plan. Existing code and tests remain in the draft PR; the items below describe only the redesigned work.
@@ -26,4 +26,4 @@ This plan supersedes the 2026-09-23 plan. Existing code and tests remain in the 
 
 ## Human gate
 
-`docs/sdlc/README.md` requires explicit approval of this revised plan before implementation resumes. Earlier approval of the old plan does not approve this one.
+The user approved this revised plan on 2026-09-24. Verification, independent review, and release retain their separate gates.

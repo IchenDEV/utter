@@ -76,6 +76,32 @@ final class QwenNativeASREngineTests: XCTestCase {
         XCTAssertEqual(weightAfter.contentModificationDate, weightBefore.contentModificationDate)
     }
 
+    func testExistingModelUsesBoundedRareTermHint() async throws {
+        guard ProcessInfo.processInfo.environment["OPENTYPE_QWEN_NATIVE_INTEGRATION"] == "1" else {
+            throw XCTSkip("Set OPENTYPE_QWEN_NATIVE_INTEGRATION=1 to run native Qwen integration tests")
+        }
+        let modelPath = try XCTUnwrap(ProcessInfo.processInfo.environment["OPENTYPE_QWEN_MODEL_PATH"])
+        let audioURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("utter-rare-term-\(UUID().uuidString).aiff")
+        defer { try? FileManager.default.removeItem(at: audioURL) }
+        let speech = Process()
+        speech.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+        speech.arguments = ["-v", "Samantha", "-o", audioURL.path,
+                            "We shipped Zyralith to production today."]
+        try speech.run()
+        speech.waitUntilExit()
+        XCTAssertEqual(speech.terminationStatus, 0)
+
+        let engine = QwenNativeASREngine(modelPath: modelPath)
+        engine.configureRecognition(context: .empty)
+        let withoutContext = try await engine.transcribe(audioURL: audioURL, language: "en")
+        engine.configureRecognition(context: SpeechRecognitionContext(phrases: ["Zyralith"]))
+        let withContext = try await engine.transcribe(audioURL: audioURL, language: "en")
+        print("QWEN_RARE_TERM_WITHOUT_CONTEXT=\(withoutContext)")
+        print("QWEN_RARE_TERM_WITH_CONTEXT=\(withContext)")
+        XCTAssertTrue(withContext.contains("Zyralith"), withContext)
+    }
+
     func testExistingModelRejectsSyntheticNonSpeechNoise() async throws {
         guard ProcessInfo.processInfo.environment["OPENTYPE_QWEN_NATIVE_INTEGRATION"] == "1" else {
             throw XCTSkip("Set OPENTYPE_QWEN_NATIVE_INTEGRATION=1 to run the native Qwen integration test")

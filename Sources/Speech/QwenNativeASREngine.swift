@@ -7,6 +7,8 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
     private let modelDirectory: URL
     private let tailPaddingFrames: AVAudioFrameCount
     private let runtime = QwenNativeASRRuntime()
+    private let contextLock = NSLock()
+    private var recognitionContext = SpeechRecognitionContext.empty
 
     init(modelPath: String, modelID: String = QwenASRModel.defaultID) {
         modelDirectory = URL(fileURLWithPath: modelPath).standardizedFileURL
@@ -19,6 +21,12 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
 
     func usesModel(at modelPath: String) -> Bool {
         modelDirectory == URL(fileURLWithPath: modelPath).standardizedFileURL
+    }
+
+    func configureRecognition(context: SpeechRecognitionContext) {
+        contextLock.lock()
+        recognitionContext = context
+        contextLock.unlock()
     }
 
     func prepare() async {
@@ -34,18 +42,25 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
         guard isReady else { throw QwenNativeASRError.notConfigured }
         guard let audioURL else { throw QwenNativeASRError.noAudioFile }
 
+        contextLock.lock()
+        let prompt = QwenRecognitionPrompt(phrases: recognitionContext.phrases)
+        contextLock.unlock()
+
         let started = CFAbsoluteTimeGetCurrent()
         let result = try await QwenAudioPreprocessor.withPreparedAudio(
             from: audioURL,
             tailPaddingFrames: tailPaddingFrames
         ) { preparedURL in
-            try await runtime.transcribe(
-                audioURL: preparedURL,
-                modelDirectory: modelDirectory,
-                language: language,
-                context: ""
-            )
+            try await QwenContextRecovery.run(prompt: prompt) { context in
+                try await runtime.transcribe(
+                    audioURL: preparedURL,
+                    modelDirectory: modelDirectory,
+                    language: language,
+                    context: context
+                )
+            } text: { $0.text }
         }
+        guard let result else { return "" }
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         Log.info(
             "[Qwen3ASRNative] transcribed \(result.text.count) chars in "

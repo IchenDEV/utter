@@ -5,6 +5,27 @@ import XCTest
 
 @MainActor
 final class IntegrationOutputTests: XCTestCase {
+    func testImportedAudioRejectsNoSpeechBeforeTranscriptionOrFinalEvent() async throws {
+        let store = registry()
+        defer { store.cleanup() }
+        store.registry.approve(IntegrationClient.localHTTP(tokenID: "token"))
+        let service = makeService(registry: store.registry)
+        let session = try await service.createSession(request(mode: .direct), clientID: clientID)
+        let coordinator = InputSessionCoordinator(service: service)
+        let engine = TestSpeechEngine(transcript: "Vocabulary: Alpha, Beta, Gamma, Delta")
+        coordinator.engineOverrideForTesting = engine
+        coordinator.speechActivityOverrideForTesting = { _ in false }
+
+        await assertThrowsIntegrationError(.noSpeechDetected) {
+            _ = try await coordinator.processAudioFile(
+                sessionID: session.id, clientID: clientID,
+                audioURL: URL(fileURLWithPath: "/tmp/utter-missing-audio.wav"), cleanup: false
+            )
+        }
+        XCTAssertEqual(engine.transcribeCount, 0)
+        XCTAssertEqual(try service.session(session.id, clientID: clientID)?.state, .failed)
+    }
+
     func testCoordinatorRejectsWeakAudioVocabularyEcho() {
         let store = registry()
         defer { store.cleanup() }
@@ -149,6 +170,7 @@ private extension IntegrationOutputTests {
 
 private final class TestSpeechEngine: SpeechEngine, @unchecked Sendable {
     let transcript: String
+    private(set) var transcribeCount = 0
     var isReady: Bool { true }
 
     init(transcript: String) {
@@ -156,7 +178,8 @@ private final class TestSpeechEngine: SpeechEngine, @unchecked Sendable {
     }
 
     func transcribe(audioURL: URL?, language: String?) async throws -> String {
-        transcript
+        transcribeCount += 1
+        return transcript
     }
 }
 

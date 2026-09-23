@@ -14,6 +14,7 @@ final class InputSessionCoordinator {
         let streamingEnabled: Bool
         let screenContextTask: Task<ScreenContextSnapshot, Never>?
         let client: IntegrationClient?
+        var dictionarySnapshot: PersonalDictionarySnapshot? = nil
     }
 
     let service: OpenTypeService
@@ -23,6 +24,10 @@ final class InputSessionCoordinator {
     let settings: AppSettings
     let isUserWorkflowBusy: @MainActor () -> Bool
     var activeSession: ActiveSession?
+    #if DEBUG
+    var speechActivityOverrideForTesting: ((URL?) async -> Bool)?
+    var engineOverrideForTesting: (any SpeechEngine)?
+    #endif
 
     var isBusy: Bool { activeSession != nil }
 
@@ -50,13 +55,11 @@ final class InputSessionCoordinator {
             throw IntegrationError.sessionNotFound
         }
         let effective = effectiveSettings(for: session.request)
-        guard let engine = await engineProvider.engine(settings: settings), engine.isReady else {
+        guard let engine = await selectedEngine(), engine.isReady else {
             throw IntegrationError.modelNotReady
         }
-        let vocabularySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
-        engine.configureRecognition(
-            context: SpeechRecognitionContext(phrases: vocabularySnapshot.recognitionPhrases)
-        )
+        let vocabularySnapshot = dictionarySnapshot(clientID: clientID, languageCode: effective.languageCode)
+        engine.configureRecognition(context: recognitionContext(engine: engine, snapshot: vocabularySnapshot))
 
         if effective.streamingEnabled, engine.supportsStreaming {
             engine.startListening(language: effective.languageCode) { [weak service] partialText in
@@ -106,7 +109,8 @@ final class InputSessionCoordinator {
                     mode: effective.mode,
                     useScreenContext: effective.useScreenContext
                 ),
-                client: service.integrationClient(id: clientID)
+                client: service.integrationClient(id: clientID),
+                dictionarySnapshot: vocabularySnapshot
             )
         } catch {
             audioCapture.stop()
@@ -161,7 +165,7 @@ final class InputSessionCoordinator {
         guard audioCapture.lastActivity.hasMeaningfulAudio else {
             throw IntegrationError.noSpeechDetected
         }
-        guard await SpeechActivityClassifier.containsSpeech(at: audioCapture.lastRecordingURL) else {
+        guard await recordingContainsSpeech(audioCapture.lastRecordingURL) else {
             throw IntegrationError.noSpeechDetected
         }
 
@@ -178,7 +182,11 @@ final class InputSessionCoordinator {
             )
         }
 
-        let transcript = try prepareTranscript(raw, audioActivity: audioCapture.lastActivity)
+        let transcript = try prepareTranscript(
+            raw, audioActivity: audioCapture.lastActivity,
+            clientID: active.clientID, languageCode: active.languageCode,
+            dictionarySnapshot: active.dictionarySnapshot
+        )
 
         try service.emitTranscriptFinal(
             sessionID: active.sessionID,
@@ -190,8 +198,16 @@ final class InputSessionCoordinator {
         return (transcript, text)
     }
 
-    func prepareTranscript(_ raw: String, audioActivity: AudioCaptureActivity?) throws -> String {
-        let recognitionPhrases = PersonalDictionary.shared.snapshot(settings: settings).recognitionPhrases
+    func prepareTranscript(
+        _ raw: String,
+        audioActivity: AudioCaptureActivity?,
+        clientID: String? = nil,
+        languageCode: String? = nil,
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil
+    ) throws -> String {
+        let recognitionPhrases = (dictionarySnapshot ?? self.dictionarySnapshot(
+            clientID: clientID ?? "", languageCode: languageCode
+        )).recognitionPhrases
         guard let transcript = TranscriptionSanitizer.prepare(
             raw,
             audioActivity: audioActivity,
@@ -205,6 +221,13 @@ final class InputSessionCoordinator {
     private func failActiveSession(_ active: ActiveSession, error: IntegrationError) async {
         release(active)
         try? await service.failSession(sessionID: active.sessionID, clientID: active.clientID, error: error)
+    }
+
+    func selectedEngine() async -> (any SpeechEngine)? {
+        #if DEBUG
+        if let engineOverrideForTesting { return engineOverrideForTesting }
+        #endif
+        return await engineProvider.engine(settings: settings)
     }
 
     private func release(_ active: ActiveSession) {

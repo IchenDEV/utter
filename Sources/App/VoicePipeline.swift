@@ -26,6 +26,7 @@ final class VoicePipeline {
     var hideOverlayTask: Task<Void, Never>?
     var formattingModelLifecycleTask: Task<EspressoGenerationOutcome?, Never>?
     var recordingTargetApp: NSRunningApplication?
+    var sessionDictionarySnapshot: PersonalDictionarySnapshot?
     var formattingPreloadGeneration = 0
     /// Injectable engine used by tests to drive the real `start` await through a
     /// controlled model-load barrier. `nil` in production.
@@ -135,11 +136,12 @@ final class VoicePipeline {
         let micID = appState.settings.microphoneID
         let language = appState.settings.inputLanguage.whisperCode
         let streamingEnabled = appState.settings.enableStreamingRecognitionBeta
-        let vocabularySnapshot = PersonalDictionary.shared.snapshot(
-            settings: appState.settings
-        )
+        let vocabularySnapshot = dictionarySnapshot(settings: appState.settings, targetApp: targetApp)
+        sessionDictionarySnapshot = vocabularySnapshot
         currentEngine?.configureRecognition(
-            context: SpeechRecognitionContext(phrases: vocabularySnapshot.recognitionPhrases)
+            context: SpeechRecognitionContext(phrases: currentEngine is QwenNativeASREngine
+                ? vocabularySnapshot.personalRecognitionPhrases
+                : vocabularySnapshot.recognitionPhrases)
         )
         if streamingEnabled {
             currentEngine?.startListening(language: language) { [weak self] partialText in
@@ -160,6 +162,7 @@ final class VoicePipeline {
                 currentEngine?.cancelListening()
                 cancelScreenContextCapture()
                 recordingTargetApp = nil
+                sessionDictionarySnapshot = nil
                 appState.phase = .error(L("pipeline.mic_failed_permissions"))
                 appState.statusMessage = L("pipeline.mic_unavailable")
                 overlay.hide()
@@ -187,6 +190,7 @@ final class VoicePipeline {
             currentEngine?.cancelListening()
             cancelScreenContextCapture()
             recordingTargetApp = nil
+            sessionDictionarySnapshot = nil
             appState.phase = .error(L("pipeline.mic_failed_permissions"))
             appState.statusMessage = L("pipeline.mic_unavailable")
             overlay.hide()
@@ -251,6 +255,7 @@ final class VoicePipeline {
         audioCapture.stop()
         audioCapture.cleanupLastRecording()
         recordingTargetApp = nil
+        sessionDictionarySnapshot = nil
         soundPlayer.playStop()
         appState.reset()
         overlay.hide()

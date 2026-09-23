@@ -11,7 +11,10 @@ extension VoicePipeline {
         inputMode: VoiceInputMode,
         targetApp: NSRunningApplication?
     ) async {
-        defer { audioCapture.cleanupLastRecording() }
+        defer {
+            audioCapture.cleanupLastRecording()
+            sessionDictionarySnapshot = nil
+        }
         AudioCaptureDiagnostics.log(audioActivity)
 
         do {
@@ -28,7 +31,8 @@ extension VoicePipeline {
                 audioURL: audioURL,
                 audioActivity: audioActivity,
                 language: language,
-                settings: settings
+                settings: settings,
+                targetApp: targetApp
             )
 
             guard !Task.isCancelled else {
@@ -103,7 +107,8 @@ extension VoicePipeline {
         audioURL: URL?,
         audioActivity: AudioCaptureActivity,
         language: String?,
-        settings: AppSettings
+        settings: AppSettings,
+        targetApp: NSRunningApplication?
     ) async throws -> String {
         let started = CFAbsoluteTimeGetCurrent()
         let raw: String
@@ -115,7 +120,7 @@ extension VoicePipeline {
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         Log.info("[VoicePipeline] ASR stage finished in \(String(format: "%.2f", elapsed))s")
 
-        let recognitionPhrases = PersonalDictionary.shared.snapshot(settings: settings).recognitionPhrases
+        let recognitionPhrases = dictionarySnapshot(settings: settings, targetApp: targetApp).recognitionPhrases
         guard let prepared = TranscriptionSanitizer.prepare(
             raw,
             audioActivity: audioActivity,
@@ -151,7 +156,7 @@ extension VoicePipeline {
             return await processCommand(raw, settings: settings, targetApp: targetApp)
         case .direct:
             cancelScreenContextCapture()
-            let dictionarySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
+            let dictionarySnapshot = dictionarySnapshot(settings: settings, targetApp: targetApp)
             let context = InputContext.capture(
                 targetApp: targetApp,
                 screenContext: "",
@@ -180,7 +185,7 @@ extension VoicePipeline {
 
         let started = CFAbsoluteTimeGetCurrent()
         let processingOptions = TextProcessingOptions(settings: settings)
-        let dictionarySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
+        let dictionarySnapshot = dictionarySnapshot(settings: settings, targetApp: targetApp)
         let enableMemory = settings.enableMemory
         let memoryWindowMinutes = settings.memoryWindowMinutes
         let screenContext = await finishScreenContextCapture()
@@ -225,7 +230,7 @@ extension VoicePipeline {
 
         let started = CFAbsoluteTimeGetCurrent()
         let processingOptions = TextProcessingOptions(settings: settings)
-        let dictionarySnapshot = PersonalDictionary.shared.snapshot(settings: settings)
+        let dictionarySnapshot = dictionarySnapshot(settings: settings, targetApp: targetApp)
         let enableMemory = settings.enableMemory
         let memoryWindowMinutes = settings.memoryWindowMinutes
         let screenContext = await finishScreenContextCapture()
