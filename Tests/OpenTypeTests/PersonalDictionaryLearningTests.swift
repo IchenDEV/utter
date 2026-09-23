@@ -74,6 +74,20 @@ final class PersonalDictionaryLearningTests: XCTestCase {
             .applyReplacements(to: "open tape"), "open tape")
     }
 
+    func testGlobalManualEntrySuspendsConflictingScopedLearnedRules() {
+        let store = makeStore()
+        store.entries = [
+            DictionaryEntry(original: "open type", replacement: "Wrong A", origin: .learned,
+                            languageCode: "en", appScopes: ["com.apple.Notes"]),
+            DictionaryEntry(original: "open type", replacement: "Wrong B", origin: .learned,
+                            languageCode: "en", appScopes: ["com.apple.TextEdit"]),
+        ]
+        store.addEntry(original: "open type", replacement: "OpenType")
+        XCTAssertEqual(store.entries.filter { $0.origin == .learned }.map(\.status), [.pending])
+        XCTAssertEqual(store.snapshot(bundleIdentifier: "com.apple.TextEdit", languageCode: "en")
+            .applyReplacements(to: "open type"), "OpenType")
+    }
+
     func testLegacyEntryDecodesAsActiveManualTerm() throws {
         let data = Data(#"{"original":"open type","replacement":"OpenType","enabled":true}"#.utf8)
         let entry = try JSONDecoder().decode(DictionaryEntry.self, from: data)

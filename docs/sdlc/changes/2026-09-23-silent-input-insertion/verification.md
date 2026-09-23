@@ -17,10 +17,11 @@ The prior verification was approved for the superseded design. Results below des
 | Qwen echo recovery | Pass locally | A prompt-prefix or ordered-term echo triggers one empty-context retry. A repeated echo produces no transcript; a retry error cannot return the first echo. Short spoken terms remain eligible. |
 | All recorded-audio entry paths | Pass locally | Menu-bar, live integration, and imported audio call the same Sound Analysis classifier before final transcript and output. Imported-audio regression asserts no ASR call or final session when the classifier rejects. |
 | Existing session lifecycle | Pass locally | Integrated current `main` ownership/cancellation changes without removing their transaction guard. Ten ownership tests and the mode-specific insertion tests pass. |
-| Full `swift test --scratch-path /tmp/utter-silent-insertion-build` | Pass locally | 791 XCTest cases, 18 skipped, zero failures; one Swift Testing case passed. Ran after integration with current `main`. |
+| Full `swift test --scratch-path /tmp/utter-silent-insertion-build` | Pass locally | 793 XCTest cases, 18 skipped, zero failures; one Swift Testing case passed. Ran after integration with current `main`. |
 | `bash scripts/sdlc-checks.sh` and `bash scripts/ci-basic-checks.sh` | Pass locally | Both completed after the merge resolution. |
 | Installed local Qwen replay | Pass locally | Generated noise was rejected; repository-owned English and Chinese speech samples were transcribed. The synthetic rare name was rendered as “Zerolith” without a hint and “Zyralith” with one or three bounded hints. This is one generated voice sample, not a general accuracy estimate. |
 | Release-style app build | Pass locally | `bash scripts/build-app.sh --app-only --sign=-` built the app and CLI helper, bundled Metal resources, and passed artifact verification. Ad-hoc signing is for local checking only. |
+| PR mergeability | Pass at observed head | Merged `origin/main` at `7139f54`; GitHub reported PR #112 `MERGEABLE` at head `c82e77f`. Final branch updates require another mergeability check. Remote CI was still in progress. |
 | Real computer-microphone/window QA | Pending | Two other Utter instances are active. Launching this build concurrently would not give trustworthy hotkey/permission evidence. |
 | Independent verification, signed release, production observation | Pending | The author cannot satisfy the independent high-risk review or protected production gate. |
 

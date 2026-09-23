@@ -100,7 +100,6 @@ struct PersonalDictionarySnapshot: Sendable {
         }
         return industryTerms + personalTerms
     }
-
 }
 
 final class PersonalDictionary: ObservableObject {
@@ -170,9 +169,10 @@ final class PersonalDictionary: ObservableObject {
         let replacement = normalized(replacement)
         guard !original.isEmpty, !replacement.isEmpty, original != replacement else { return nil }
 
-        if let index = entries.firstIndex(where: {
-            $0.original.caseInsensitiveCompare(original) == .orderedSame
-        }) {
+        let matches = entries.indices.filter {
+            entries[$0].original.caseInsensitiveCompare(original) == .orderedSame
+        }
+        if let index = matches.first(where: { entries[$0].origin == .manual }) ?? matches.first {
             entries[index].original = original
             entries[index].replacement = replacement
             entries[index].enabled = true
@@ -182,12 +182,14 @@ final class PersonalDictionary: ObservableObject {
             entries[index].evidenceCount = max(1, entries[index].evidenceCount)
             entries[index].languageCode = nil
             entries[index].appScopes = []
+            suspendLearnedMappings(for: original, excluding: entries[index].id)
             save()
             return entries[index].id
         }
 
         let entry = DictionaryEntry(original: original, replacement: replacement)
         entries.append(entry)
+        suspendLearnedMappings(for: original, excluding: entry.id)
         save()
         return entry.id
     }
@@ -213,6 +215,7 @@ final class PersonalDictionary: ObservableObject {
         entries[index].status = .active
         entries[index].languageCode = nil
         entries[index].appScopes = []
+        suspendLearnedMappings(for: original, excluding: entries[index].id)
         save()
     }
 
@@ -231,12 +234,16 @@ final class PersonalDictionary: ObservableObject {
             entries[index].appScopes = []
         }
         let original = entries[index].original
-        for otherIndex in entries.indices where otherIndex != index
-            && entries[otherIndex].origin == .learned
-            && entries[otherIndex].original.caseInsensitiveCompare(original) == .orderedSame
-            && entries[otherIndex].languageCode == entries[index].languageCode
-            && entries[otherIndex].appScopes == entries[index].appScopes {
-            entries[otherIndex].status = .pending
+        if entries[index].origin == .manual {
+            suspendLearnedMappings(for: original, excluding: entries[index].id)
+        } else {
+            for otherIndex in entries.indices where otherIndex != index
+                && entries[otherIndex].origin == .learned
+                && entries[otherIndex].original.caseInsensitiveCompare(original) == .orderedSame
+                && entries[otherIndex].languageCode == entries[index].languageCode
+                && entries[otherIndex].appScopes == entries[index].appScopes {
+                entries[otherIndex].status = .pending
+            }
         }
         entries[index].status = .active
         entries[index].enabled = true
@@ -286,8 +293,7 @@ final class PersonalDictionary: ObservableObject {
     }
 
     private func normalized(_ text: String) -> String {
-        text.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        text.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
 }

@@ -1,6 +1,14 @@
 import Foundation
 
 extension PersonalDictionary {
+    func suspendLearnedMappings(for original: String, excluding id: UUID) {
+        for index in entries.indices where entries[index].id != id
+            && entries[index].origin == .learned
+            && entries[index].original.caseInsensitiveCompare(original) == .orderedSame {
+            entries[index].status = .pending
+        }
+    }
+
     func clearLearnedEntries() {
         entries.removeAll { $0.origin == .learned }
         save()
