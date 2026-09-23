@@ -12,7 +12,7 @@
 | Original sanitizer counterexample | Red before change | Weak-audio rehearsal passed the user-reported 351-character vocabulary list unchanged. |
 | Qwen synthetic-noise counterexample | Red before speech gate | Installed Qwen model returned an insertable “嗯。” from generated non-speech noise. |
 | Incident-stage provenance | Read-only local history | Four processed menu-bar records on 2026-09-21/23 UTC had 357-character `rawText` beginning `Terms: ` and 351-character `processedText` without that prefix. The literal prefix and ordered vocabulary match the legacy Qwen context construction. No private dictionary contents or audio were copied into the repository. |
-| Separate formatting prompt leak | Read-only local history | Three older records had two-character ASR output expanded to “Do anything” by formatting; this is distinct from the long-list incident. |
+| Separate learned-dictionary substitution | Read-only local history and dictionary | Three older records had “嗯。” as ASR text and “Do anything” as processed text. An active learned `嗯。 -> Do anything` rule deterministically explains the change; it became active after two correction observations. The original edit records have been pruned, so user intent cannot be inferred. |
 | `TranscriptionSanitizerTests` | Pass | Ordered vocabulary echo rejected; short terms and strong deliberate dictation retained. |
 | `VoicePipelineSilentInsertionTests` | Pass | Direct, processed, instant insert, command, and translation paths made zero insertion calls for rejected audio. |
 | `IntegrationOutputTests/testCoordinatorRejectsWeakAudioVocabularyEcho` | Pass | Live integration's shared transcript preparation rejected the list. |
@@ -20,7 +20,7 @@
 | Local Qwen noise replay | Pass | `OPENTYPE_QWEN_NATIVE_INTEGRATION=1` test with installed model rejected generated non-speech noise after independent speech classification. |
 | Qwen prompt-echo regression | Pass | The same installed-model noise replay now asserts that ASR output does not begin with `Terms: ` even when a technology recognition context was configured on the engine. |
 | Local Qwen repository speech samples | Pass | Installed model transcribed English and Chinese repository samples without downloading weights. |
-| Later formatting-AI vocabulary echo | Pass | `TranscriptFidelityGuardTests` rejects a list copied from formatting prompt terms and the short-ASR “Do anything” expansion, under both faithful-correction and bounded-custom-transformation policies. These are deterministic guard tests, not model replays. |
+| Formatting-output guard | Pass | `TranscriptFidelityGuardTests` rejects a list copied from formatting prompt terms and an unsupported short-ASR expansion under both fidelity policies. The short historical output came from a learned replacement before formatting, so this guard test does not reproduce that incident. |
 | `swift test --scratch-path /tmp/utter-silent-insertion-build` | Pass | 754 XCTest cases, 15 skipped, no failures; one Swift Testing case passed before the later formatting-AI regression test was added. That focused new test passed separately. Scratch path used because a fresh MLX submodule checkout stalled. |
 | `bash scripts/sdlc-checks.sh` | Pass | Stage artifacts valid after the user confirmed updated verification. |
 | `bash scripts/ci-basic-checks.sh` | Pass | SDLC, localization, resources, lexicon evaluation, and repository checks passed. |
@@ -39,7 +39,7 @@
 ## Residual risk
 
 - The built-in classifier cannot identify who spoke. Nearby human speech may still be transcribed; this is outside the no-speech and non-speech-noise acceptance criterion.
-- The long-list generating stage is strongly identified as Qwen ASR context echo by the saved `rawText` and legacy `Terms: ` construction. The exact incident audio and runtime prompt snapshot were not retained, so the sound that crossed the original RMS gate is unknown. Separate historical records show formatting AI expansion of a short ASR result. Command mode has a different output contract; the new audio gate remains the primary protection for no-speech recordings.
+- The long-list generating stage is strongly identified as Qwen ASR context echo by the saved `rawText` and legacy `Terms: ` construction. The exact incident audio and runtime prompt snapshot were not retained, so the sound that crossed the original RMS gate is unknown. Separate historical records show an active learned rule replacing a short filler utterance. The current branch does not yet prevent that rule from applying to genuine speech. Command mode has a different output contract; the new audio gate remains the primary protection for no-speech recordings.
 - The 0.6 speech-confidence threshold is calibrated against the listed fixtures, not a diverse microphone corpus. Real microphone validation and independent review remain required.
 - Two other Utter instances prevent a trustworthy real-window test of this local build without interrupting the user's running apps.
 - The branch includes `origin/main` at `60e7ed4`; compare against the live PR base again before review or merge, since main can advance.
