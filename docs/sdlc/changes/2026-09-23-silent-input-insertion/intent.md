@@ -7,7 +7,7 @@
 
 ## Problem
 
-The user observed Utter inserting a long list of unrelated technical terms into the focused input field while the user was not speaking. The list included “Do anything” and terms that resemble the technology industry lexicon. This is an unsolicited output and can expose text to whichever application has focus. The specific microphone, recognition engine, and recording mode involved have not yet been identified.
+The user observed Utter inserting a long list of unrelated technical terms into the focused input field while the user was not speaking. The list included “Do anything” and terms that resemble the technology industry lexicon. This is an unsolicited output and can expose text to whichever application has focus. The user identified the local Qwen recognition model and computer microphone; recording mode remains uncertain.
 
 ## Outcome
 
@@ -36,5 +36,5 @@ An input session without user speech ends with no text insertion, clipboard writ
 
 ## Open questions
 
-- Which microphone source, recognition engine, output mode, and trigger produced the observed list? Diagnosis can begin without these details, but they are needed to match the user's exact runtime path.
+- Which output mode and trigger produced the observed list? The user identified the computer microphone and local Qwen model; real-time recognition remains unconfirmed.
 - Did the list appear in the Utter overlay before insertion, or only in the target application?

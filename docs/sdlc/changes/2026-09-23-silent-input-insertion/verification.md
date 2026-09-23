@@ -1,9 +1,11 @@
 # Verification: Prevent unsolicited Qwen vocabulary insertion
 
-**Status:** approved
-**Approved-by:** User (conversation; confirmation of updated verification)
-**Approved-date:** 2026-09-24
+**Status:** draft
+**Approved-by:** —
+**Approved-date:** —
 **Upstream:** [plan.md](plan.md)
+
+The prior verification was approved for the superseded design. Results below describe the existing draft PR and do not establish acceptance of the revised design approved on 2026-09-24. Fresh verification is required after implementation.
 
 ## Evidence
 
@@ -47,4 +49,4 @@
 
 ## Decision
 
-The user confirmed the updated verification on 2026-09-24 with the listed evidence gaps visible. Independent high-risk review remains pending. Do not release until a conflict-free PR, signed build, and protected production approval are complete.
+The user confirmed this historical verification on 2026-09-24, then rejected the design because Qwen vocabulary help was lost and the unsafe learned rule remained active. It no longer approves the change. Independent high-risk review and fresh verification remain pending. Do not release until a conflict-free PR, signed build, and protected production approval are complete.
