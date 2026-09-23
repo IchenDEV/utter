@@ -22,6 +22,8 @@
 | `bash scripts/sdlc-checks.sh` | Pass | Stage artifacts valid after the user confirmed updated verification. |
 | `bash scripts/ci-basic-checks.sh` | Pass | SDLC, localization, resources, lexicon evaluation, and repository checks passed. |
 | `bash scripts/build-app.sh --app-only --sign=-` | Pass | Xcode Release build, Metal shader bundle, CLI helper, bundle assembly, ad-hoc codesign, and artifact verification passed. No usable Utter signing identity was installed; this is a local build, not a trusted release. |
+| Rebase onto `origin/main` | Pass | Commit `686becb` is based on `60e7ed4` (Confucius4-R2T2 support). Qwen's new `modelID` and tail-padding path remain intact; vocabulary context injection remains removed. |
+| Post-rebase checks | Pass | `bash scripts/ci-basic-checks.sh`; `swift test --scratch-path /tmp/utter-silent-insertion-build` (763 XCTest cases, 17 skipped, no failures; one Swift Testing case passed); release-style ad-hoc app build and artifact verification. |
 | Real microphone/window check | Not run | Two other Utter instances are active on this Mac. Launching a third copy would conflict with hotkeys and would not provide reliable input-path evidence. |
 | Independent verification | Pending | — |
 
@@ -37,7 +39,7 @@
 - The incident's generating stage is unknown. Both Qwen ASR and the later formatting AI previously received the vocabulary list, and no per-stage transcript/output was retained for this incident. The formatting-output guard is exercised by a focused test, but command mode has a different output contract; the new audio gate remains the primary protection for no-speech recordings.
 - The 0.6 speech-confidence threshold is calibrated against the listed fixtures, not a diverse microphone corpus. Real microphone validation and independent review remain required.
 - Two other Utter instances prevent a trustworthy real-window test of this local build without interrupting the user's running apps.
-- `origin/main` advanced after this worktree branched and changed Qwen files. Resolve those overlapping changes and confirm the future PR is conflict-free before opening it.
+- The branch includes `origin/main` at `60e7ed4`; compare against the live PR base again before review or merge, since main can advance.
 - Full release signing, GitHub CI, and production behavior have not been verified.
 
 ## Decision
