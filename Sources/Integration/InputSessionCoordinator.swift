@@ -161,6 +161,9 @@ final class InputSessionCoordinator {
         guard audioCapture.lastActivity.hasMeaningfulAudio else {
             throw IntegrationError.noSpeechDetected
         }
+        guard await SpeechActivityClassifier.containsSpeech(at: audioCapture.lastRecordingURL) else {
+            throw IntegrationError.noSpeechDetected
+        }
 
         let raw: String
         if active.streamingEnabled {
@@ -188,7 +191,12 @@ final class InputSessionCoordinator {
     }
 
     func prepareTranscript(_ raw: String, audioActivity: AudioCaptureActivity?) throws -> String {
-        guard let transcript = TranscriptionSanitizer.prepare(raw, audioActivity: audioActivity) else {
+        let recognitionPhrases = PersonalDictionary.shared.snapshot(settings: settings).recognitionPhrases
+        guard let transcript = TranscriptionSanitizer.prepare(
+            raw,
+            audioActivity: audioActivity,
+            recognitionPhrases: recognitionPhrases
+        ) else {
             throw IntegrationError.noSpeechDetected
         }
         return transcript

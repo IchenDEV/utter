@@ -11,9 +11,16 @@ enum TranscriptionSanitizer {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    static func prepare(_ text: String, audioActivity: AudioCaptureActivity? = nil) -> String? {
+    static func prepare(
+        _ text: String,
+        audioActivity: AudioCaptureActivity? = nil,
+        recognitionPhrases: [String] = []
+    ) -> String? {
         let normalized = normalizeTranscript(text)
         guard !isNonSpeechArtifact(normalized) else { return nil }
+        guard !isVocabularyEcho(normalized, audioActivity: audioActivity, phrases: recognitionPhrases) else {
+            return nil
+        }
 
         // Whole-transcript repetition is a hallucination pattern that shows up
         // when the model has little real speech to work with. Deliberate spoken
@@ -122,6 +129,41 @@ enum TranscriptionSanitizer {
             }
         }
         return isNonSpeechArtifact(cleaned) ? nil : cleaned
+    }
+
+    private static func isVocabularyEcho(
+        _ text: String,
+        audioActivity: AudioCaptureActivity?,
+        phrases: [String]
+    ) -> Bool {
+        guard audioActivity?.hasWeakSpeechEvidence == true, phrases.count >= 8 else { return false }
+        let trimSet = CharacterSet.whitespacesAndNewlines.union(.punctuationCharacters)
+        let expected = phrases.map { $0.trimmingCharacters(in: trimSet).lowercased() }
+        var indices: [String: Int] = [:]
+        for (index, phrase) in expected.enumerated() where !phrase.isEmpty {
+            if indices[phrase] == nil { indices[phrase] = index }
+        }
+        let segments = text.components(separatedBy: CharacterSet(charactersIn: ",，、;；\n"))
+            .map { $0.trimmingCharacters(in: trimSet).lowercased() }
+            .filter { !$0.isEmpty }
+        guard segments.count >= 8 else { return false }
+
+        var matching = 0
+        var run = 0
+        var longestRun = 0
+        var previousIndex: Int?
+        for segment in segments {
+            guard let index = indices[segment] else {
+                run = 0
+                previousIndex = nil
+                continue
+            }
+            matching += 1
+            run = previousIndex.map { $0 + 1 == index } == true ? run + 1 : 1
+            longestRun = max(longestRun, run)
+            previousIndex = index
+        }
+        return longestRun >= 8 && matching * 2 >= segments.count
     }
 
     private static func normalizedPhrase(_ text: String) -> String {

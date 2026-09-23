@@ -5,6 +5,28 @@ import XCTest
 
 @MainActor
 final class IntegrationOutputTests: XCTestCase {
+    func testCoordinatorRejectsWeakAudioVocabularyEcho() {
+        let store = registry()
+        defer { store.cleanup() }
+        let suite = "IntegrationVocabularyEcho-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let settings = AppSettings(defaults: defaults)
+        settings.industryLexicon = .technology
+        let coordinator = InputSessionCoordinator(
+            service: makeService(registry: store.registry),
+            settings: settings
+        )
+        var activity = AudioCaptureActivity()
+        activity.record(rms: 0.002, frameCount: 16_000)
+        let echo = ["云原生", "容器编排", "微服务", "服务网格", "持续集成", "CI", "持续交付", "CD"]
+            .joined(separator: ", ")
+
+        XCTAssertThrowsError(try coordinator.prepareTranscript(echo, audioActivity: activity)) { error in
+            XCTAssertEqual(error as? IntegrationError, .noSpeechDetected)
+        }
+    }
+
     func testAppDelegateSharesTextProcessorWithIntegrationCoordinator() {
         let delegate = AppDelegate()
 

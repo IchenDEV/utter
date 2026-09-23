@@ -7,8 +7,6 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
     private let modelDirectory: URL
     private let tailPaddingFrames: AVAudioFrameCount
     private let runtime = QwenNativeASRRuntime()
-    private let recognitionContextLock = NSLock()
-    private var recognitionContext = SpeechRecognitionContext.empty
 
     init(modelPath: String, modelID: String = QwenASRModel.defaultID) {
         modelDirectory = URL(fileURLWithPath: modelPath).standardizedFileURL
@@ -21,20 +19,6 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
 
     func usesModel(at modelPath: String) -> Bool {
         modelDirectory == URL(fileURLWithPath: modelPath).standardizedFileURL
-    }
-
-    func configureRecognition(context: SpeechRecognitionContext) {
-        recognitionContextLock.lock()
-        recognitionContext = context
-        recognitionContextLock.unlock()
-    }
-
-    /// The exact context string handed to `Qwen3ASRModel.generate(context:)`.
-    /// Exposed for tests so vocabulary injection can be asserted without a model.
-    func currentContextPrompt() -> String? {
-        recognitionContextLock.lock()
-        defer { recognitionContextLock.unlock() }
-        return recognitionContext.contextualPrompt()
     }
 
     func prepare() async {
@@ -50,7 +34,6 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
         guard isReady else { throw QwenNativeASRError.notConfigured }
         guard let audioURL else { throw QwenNativeASRError.noAudioFile }
 
-        let contextPrompt = currentContextPrompt()
         let started = CFAbsoluteTimeGetCurrent()
         let result = try await QwenAudioPreprocessor.withPreparedAudio(
             from: audioURL,
@@ -60,7 +43,7 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
                 audioURL: preparedURL,
                 modelDirectory: modelDirectory,
                 language: language,
-                context: contextPrompt
+                context: ""
             )
         }
         let elapsed = CFAbsoluteTimeGetCurrent() - started

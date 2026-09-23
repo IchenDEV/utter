@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import XCTest
 @testable import OpenType
@@ -75,6 +76,56 @@ final class QwenNativeASREngineTests: XCTestCase {
         XCTAssertEqual(weightAfter.contentModificationDate, weightBefore.contentModificationDate)
     }
 
+    func testExistingModelRejectsSyntheticNonSpeechNoise() async throws {
+        guard ProcessInfo.processInfo.environment["OPENTYPE_QWEN_NATIVE_INTEGRATION"] == "1" else {
+            throw XCTSkip("Set OPENTYPE_QWEN_NATIVE_INTEGRATION=1 to run the native Qwen integration test")
+        }
+        let modelPath = try XCTUnwrap(ProcessInfo.processInfo.environment["OPENTYPE_QWEN_MODEL_PATH"])
+        let engine = QwenNativeASREngine(modelPath: modelPath)
+        XCTAssertTrue(engine.isReady)
+        let phrases = IndustryLexiconCatalog.shared.snapshot(for: .technology).recognitionPhrases
+        engine.configureRecognition(context: SpeechRecognitionContext(phrases: phrases))
+
+        let audioURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("utter-noise-\(UUID().uuidString).wav")
+        defer { try? FileManager.default.removeItem(at: audioURL) }
+        let format = try XCTUnwrap(AVAudioFormat(
+            commonFormat: .pcmFormatFloat32,
+            sampleRate: 16_000,
+            channels: 1,
+            interleaved: false
+        ))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 32_000))
+        buffer.frameLength = 32_000
+        var seed: UInt32 = 1
+        for index in 0..<Int(buffer.frameLength) {
+            seed = 1_664_525 &* seed &+ 1_013_904_223
+            buffer.floatChannelData![0][index] = (Float(seed) / Float(UInt32.max) - 0.5) * 0.007
+        }
+        do {
+            let file = try AVAudioFile(
+                forWriting: audioURL,
+                settings: format.settings,
+                commonFormat: .pcmFormatFloat32,
+                interleaved: false
+            )
+            try file.write(from: buffer)
+        }
+
+        var activity = AudioCaptureActivity()
+        activity.record(rms: 0.002, frameCount: Int(buffer.frameLength))
+        XCTAssertTrue(activity.hasMeaningfulAudio)
+        let raw = try await engine.transcribe(audioURL: audioURL, language: "zh")
+        let hasSpeech = await SpeechActivityClassifier.containsSpeech(at: audioURL)
+        XCTAssertFalse(hasSpeech)
+        let prepared = hasSpeech ? TranscriptionSanitizer.prepare(
+            raw,
+            audioActivity: activity,
+            recognitionPhrases: phrases
+        ) : nil
+        XCTAssertNil(prepared)
+    }
+
     func testExistingModelNativeBenchmark() async throws {
         let environment = ProcessInfo.processInfo.environment
         guard environment["OPENTYPE_QWEN_NATIVE_BENCHMARK"] == "1" else {
@@ -111,19 +162,6 @@ final class QwenNativeASREngineTests: XCTestCase {
                 XCTAssertFalse(text.isEmpty)
             }
         }
-    }
-
-    func testRecognitionContextPromptReachesTheModelCall() {
-        let engine = QwenNativeASREngine(modelPath: "/nonexistent-qwen-model")
-        XCTAssertNil(engine.currentContextPrompt())
-
-        engine.configureRecognition(
-            context: SpeechRecognitionContext(phrases: ["OpenType", "菜单栏"])
-        )
-        XCTAssertEqual(engine.currentContextPrompt(), "Terms: OpenType, 菜单栏")
-
-        engine.configureRecognition(context: .empty)
-        XCTAssertNil(engine.currentContextPrompt())
     }
 
     private func safetensorsFiles(in directory: URL) throws -> Set<String> {
