@@ -116,6 +116,7 @@ final class QwenNativeASREngineTests: XCTestCase {
         activity.record(rms: 0.002, frameCount: Int(buffer.frameLength))
         XCTAssertTrue(activity.hasMeaningfulAudio)
         let raw = try await engine.transcribe(audioURL: audioURL, language: "zh")
+        XCTAssertFalse(raw.hasPrefix("Terms: "), "Qwen must not echo a vocabulary prompt")
         let hasSpeech = await SpeechActivityClassifier.containsSpeech(at: audioURL)
         XCTAssertFalse(hasSpeech)
         let prepared = hasSpeech ? TranscriptionSanitizer.prepare(
