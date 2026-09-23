@@ -13,7 +13,7 @@ final class IntegrationOutputTests: XCTestCase {
         let session = try await service.createSession(request(mode: .direct), clientID: clientID)
         let coordinator = InputSessionCoordinator(service: service)
         let engine = TestSpeechEngine(transcript: "Vocabulary: Alpha, Beta, Gamma, Delta")
-        coordinator.engineOverrideForTesting = engine
+        coordinator.engineLoader = { _ in engine }
         coordinator.speechActivityOverrideForTesting = { _ in false }
 
         await assertThrowsIntegrationError(.noSpeechDetected) {
@@ -38,6 +38,7 @@ final class IntegrationOutputTests: XCTestCase {
             service: makeService(registry: store.registry),
             settings: settings
         )
+        coordinator.requestSettings = VoiceInputSettings(settings: settings)
         var activity = AudioCaptureActivity()
         activity.record(rms: 0.002, frameCount: 16_000)
         let echo = ["云原生", "容器编排", "微服务", "服务网格", "持续集成", "CI", "持续交付", "CD"]

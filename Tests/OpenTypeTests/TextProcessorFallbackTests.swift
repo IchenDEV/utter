@@ -23,29 +23,10 @@ final class TextProcessorFallbackTests: XCTestCase {
         )
     }
 
-    func testRejectedOutputFallbackAlwaysKeepsSourceTranscript() {
+    func testValidatedOutputAcceptsFaithfulCandidateAndRejectsEmptyOutput() {
         let processor = TextProcessor()
-
-        XCTAssertEqual(
-            processor.rejectedOutputFallback(
-                "raw transcript",
-                allowsGuardFallback: true
-            ),
-            "raw transcript"
-        )
-        XCTAssertEqual(
-            processor.rejectedOutputFallback(
-                "raw transcript",
-                allowsGuardFallback: false
-            ),
-            "raw transcript"
-        )
-        XCTAssertFalse(
-            processor.rejectedOutputFallback(
-                "raw transcript",
-                allowsGuardFallback: false
-            ).isEmpty
-        )
+        XCTAssertEqual(processor.validatedOutput("Ship today.", source: "Ship today", inputLanguage: .english), "Ship today.")
+        XCTAssertEqual(processor.validatedOutput("", source: "Ship today", inputLanguage: .english), "Ship today")
     }
 
     func testGuardRejectsExcessiveDeletionAndKeepsSourceTranscript() {
@@ -63,9 +44,8 @@ final class TextProcessorFallbackTests: XCTestCase {
             "excessive_deletion"
         )
 
-        let fallback = TextProcessor().rejectedOutputFallback(
-            source,
-            allowsGuardFallback: false
+        let fallback = TextProcessor().validatedOutput(
+            candidate, source: source, inputLanguage: .chinese
         )
         XCTAssertEqual(fallback, source)
         XCTAssertTrue(fallback.contains("讨论发布方案"))
@@ -87,9 +67,8 @@ final class TextProcessorFallbackTests: XCTestCase {
             "protected_token_change"
         )
 
-        let fallback = TextProcessor().rejectedOutputFallback(
-            source,
-            allowsGuardFallback: false
+        let fallback = TextProcessor().validatedOutput(
+            candidate, source: source, inputLanguage: .chinese
         )
         XCTAssertEqual(fallback, source)
         XCTAssertTrue(fallback.contains("第3章"))
@@ -111,9 +90,8 @@ final class TextProcessorFallbackTests: XCTestCase {
             "excessive_expansion"
         )
 
-        let fallback = TextProcessor().rejectedOutputFallback(
-            source,
-            allowsGuardFallback: false
+        let fallback = TextProcessor().validatedOutput(
+            candidate, source: source, inputLanguage: .chinese
         )
         XCTAssertEqual(fallback, source)
         XCTAssertFalse(fallback.contains("项目目标"))

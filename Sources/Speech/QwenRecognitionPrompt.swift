@@ -38,9 +38,12 @@ enum QwenPromptEcho {
         guard segments.count >= 4 else { return false }
         let expected = prompt.phrases.map { $0.trimmingCharacters(in: trim).lowercased() }
         guard expected.count >= 4 else { return false }
-        for start in 0...(expected.count - 4) {
-            if Array(segments.prefix(4)) == Array(expected[start..<(start + 4)]) {
-                return true
+        for expectedStart in 0...(expected.count - 4) {
+            for transcriptStart in 0...(segments.count - 4) {
+                if Array(segments[transcriptStart..<(transcriptStart + 4)])
+                    == Array(expected[expectedStart..<(expectedStart + 4)]) {
+                    return true
+                }
             }
         }
         return false

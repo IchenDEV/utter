@@ -7,14 +7,11 @@ extension VoicePipeline {
         audioURL: URL?,
         audioActivity: AudioCaptureActivity,
         language: String?,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         inputMode: VoiceInputMode,
         targetApp: NSRunningApplication?
     ) async {
-        defer {
-            audioCapture.cleanupLastRecording()
-            sessionDictionarySnapshot = nil
-        }
+        defer { audioCapture.cleanupLastRecording() }
         AudioCaptureDiagnostics.log(audioActivity)
 
         do {
@@ -31,8 +28,7 @@ extension VoicePipeline {
                 audioURL: audioURL,
                 audioActivity: audioActivity,
                 language: language,
-                settings: settings,
-                targetApp: targetApp
+                settings: settings
             )
 
             guard !Task.isCancelled else {
@@ -107,12 +103,11 @@ extension VoicePipeline {
         audioURL: URL?,
         audioActivity: AudioCaptureActivity,
         language: String?,
-        settings: AppSettings,
-        targetApp: NSRunningApplication?
+        settings: VoiceInputSettings
     ) async throws -> String {
         let started = CFAbsoluteTimeGetCurrent()
         let raw: String
-        if settings.enableStreamingRecognitionBeta {
+        if recordingStreaming {
             raw = try await currentEngine?.finishListening(audioURL: audioURL, language: language) ?? ""
         } else {
             raw = try await currentEngine?.transcribe(audioURL: audioURL, language: language) ?? ""
@@ -120,11 +115,10 @@ extension VoicePipeline {
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         Log.info("[VoicePipeline] ASR stage finished in \(String(format: "%.2f", elapsed))s")
 
-        let recognitionPhrases = dictionarySnapshot(settings: settings, targetApp: targetApp).recognitionPhrases
+        try Task.checkCancellation()
         guard let prepared = TranscriptionSanitizer.prepare(
-            raw,
-            audioActivity: audioActivity,
-            recognitionPhrases: recognitionPhrases
+            raw, audioActivity: audioActivity,
+            recognitionPhrases: settings.dictionary.recognitionPhrases
         ) else {
             showNoSpeechDetected(reason: "transcription has no meaningful content")
             throw VoicePipelineStop.noSpeech
@@ -136,7 +130,7 @@ extension VoicePipeline {
 
     private func outputText(
         for raw: String,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         inputMode: VoiceInputMode,
         targetApp: NSRunningApplication?
     ) async -> VoicePipelineOutput {
@@ -156,7 +150,7 @@ extension VoicePipeline {
             return await processCommand(raw, settings: settings, targetApp: targetApp)
         case .direct:
             cancelScreenContextCapture()
-            let dictionarySnapshot = dictionarySnapshot(settings: settings, targetApp: targetApp)
+            let dictionarySnapshot = settings.dictionary
             let context = InputContext.capture(
                 targetApp: targetApp,
                 screenContext: "",
@@ -177,15 +171,15 @@ extension VoicePipeline {
 
     private func processSmartFormat(
         _ raw: String,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async -> VoicePipelineOutput {
         appState.phase = .processing
         appState.statusMessage = L("pipeline.formatting")
 
         let started = CFAbsoluteTimeGetCurrent()
-        let processingOptions = TextProcessingOptions(settings: settings)
-        let dictionarySnapshot = dictionarySnapshot(settings: settings, targetApp: targetApp)
+        let processingOptions = settings.processing
+        let dictionarySnapshot = settings.dictionary
         let enableMemory = settings.enableMemory
         let memoryWindowMinutes = settings.memoryWindowMinutes
         let screenContext = await finishScreenContextCapture()
@@ -222,15 +216,15 @@ extension VoicePipeline {
 
     private func processCommand(
         _ raw: String,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async -> VoicePipelineOutput {
         appState.phase = .processing
         appState.statusMessage = L("pipeline.formatting")
 
         let started = CFAbsoluteTimeGetCurrent()
-        let processingOptions = TextProcessingOptions(settings: settings)
-        let dictionarySnapshot = dictionarySnapshot(settings: settings, targetApp: targetApp)
+        let processingOptions = settings.processing
+        let dictionarySnapshot = settings.dictionary
         let enableMemory = settings.enableMemory
         let memoryWindowMinutes = settings.memoryWindowMinutes
         let screenContext = await finishScreenContextCapture()

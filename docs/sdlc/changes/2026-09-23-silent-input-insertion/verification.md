@@ -7,6 +7,25 @@
 
 The prior verification was approved for the superseded design. Results below describe the existing draft PR and do not establish acceptance of the revised design approved on 2026-09-24. Fresh verification is required after implementation.
 
+## Revised-design evidence (2026-09-24, pending independent review)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Session dictionary scope | Pass locally | Snapshots filter learned entries by app and language; menu-bar and integration admission capture one effective snapshot. Global manual entries remain available. Tests cover unknown context, cross-app evidence, and valid scoped replacements. |
+| Unsafe existing learned rule | Pass locally | The saved-type `嗯。 -> Do anything` rule is inert on use and shown as pending when loaded, without rewriting the dictionary file. A user approval or edit explicitly converts it to a manual rule. New correction capture rejects the filler source. |
+| Qwen context | Pass locally | Qwen receives at most eight effective personal replacement terms within a 160-character terms budget; the expanded industry lexicon remains available for post-ASR correction without being sent whole to Qwen. Tests cover budget and deduplication. |
+| Qwen echo recovery | Pass locally | A prompt-prefix or ordered-term echo triggers one empty-context retry. A repeated echo produces no transcript; a retry error cannot return the first echo. Short spoken terms remain eligible. |
+| All recorded-audio entry paths | Pass locally | Menu-bar, live integration, and imported audio call the same Sound Analysis classifier before final transcript and output. Imported-audio regression asserts no ASR call or final session when the classifier rejects. |
+| Existing session lifecycle | Pass locally | Integrated current `main` ownership/cancellation changes without removing their transaction guard. Ten ownership tests and the mode-specific insertion tests pass. |
+| Full `swift test --scratch-path /tmp/utter-silent-insertion-build` | Pass locally | 791 XCTest cases, 18 skipped, zero failures; one Swift Testing case passed. Ran after integration with current `main`. |
+| `bash scripts/sdlc-checks.sh` and `bash scripts/ci-basic-checks.sh` | Pass locally | Both completed after the merge resolution. |
+| Installed local Qwen replay | Pass locally | Generated noise was rejected; repository-owned English and Chinese speech samples were transcribed. The synthetic rare name was rendered as “Zerolith” without a hint and “Zyralith” with one or three bounded hints. This is one generated voice sample, not a general accuracy estimate. |
+| Release-style app build | Pass locally | `bash scripts/build-app.sh --app-only --sign=-` built the app and CLI helper, bundled Metal resources, and passed artifact verification. Ad-hoc signing is for local checking only. |
+| Real computer-microphone/window QA | Pending | Two other Utter instances are active. Launching this build concurrently would not give trustworthy hotkey/permission evidence. |
+| Independent verification, signed release, production observation | Pending | The author cannot satisfy the independent high-risk review or protected production gate. |
+
+These results verify the revised local implementation only. The exact incident audio was not retained, and Sound Analysis cannot determine who spoke. The draft PR stays unreleased until the remaining gates are met.
+
 ## Evidence
 
 | Check | Result | Evidence |

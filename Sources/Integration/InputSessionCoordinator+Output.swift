@@ -9,12 +9,11 @@ extension InputSessionCoordinator {
     }
 
     private func trackedOutputText(for raw: String, active: ActiveSession) async throws -> String {
-        let options = TextProcessingOptions(settings: settings, inputLanguage: active.inputLanguage)
-        let dictionarySnapshot = active.dictionarySnapshot ?? dictionarySnapshot(
-            clientID: active.clientID, languageCode: active.languageCode
-        )
-        let enableMemory = settings.enableMemory
-        let memoryWindowMinutes = settings.memoryWindowMinutes
+        let snapshot = active.snapshot ?? VoiceInputSettings(settings: settings, inputLanguage: active.inputLanguage)
+        let options = snapshot.processing
+        let dictionarySnapshot = snapshot.dictionary
+        let enableMemory = snapshot.enableMemory
+        let memoryWindowMinutes = snapshot.memoryWindowMinutes
         let text: String
         let context: InputContext
         let formatKind: TextFormatKind?
@@ -88,14 +87,28 @@ extension InputSessionCoordinator {
             throw IntegrationError.operationFailed
         }
 
-        InputHistory.shared.addRecord(
-            rawText: raw,
-            processedText: text,
-            wasProcessed: active.mode != .direct,
-            context: context,
-            formatKind: formatKind
-        )
+        try checkCurrent()
+        guard let session = try service.session(active.sessionID, clientID: active.clientID),
+              !session.state.isTerminal else { throw CancellationError() }
+        pendingHistory = {
+            InputHistory.shared.addRecord(
+                rawText: raw,
+                processedText: text,
+                wasProcessed: active.mode != .direct,
+                context: context,
+                formatKind: formatKind
+            )
+        }
         return text
+    }
+
+    func commitOutput(_ text: String, sessionID: UUID, clientID: String) throws {
+        try checkCurrent()
+        try service.commitSession(
+            sessionID: sessionID, clientID: clientID, finalText: text,
+            record: pendingHistory ?? {}
+        )
+        pendingHistory = nil
     }
 
     private func inputContext(

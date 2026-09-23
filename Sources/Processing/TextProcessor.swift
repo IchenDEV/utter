@@ -46,8 +46,7 @@ final class TextProcessor {
         memoryContext: String = "",
         inputContext: InputContext? = nil,
         formatKind: TextFormatKind? = nil,
-        allowsPreparedFallback: Bool = TextProcessor.defaultAllowsPreparedFallback,
-        allowsGuardFallback: Bool = true
+        allowsPreparedFallback: Bool = TextProcessor.defaultAllowsPreparedFallback
     ) async -> String {
         let settings = AppSettings.shared
         var options = TextProcessingOptions(settings: settings)
@@ -61,8 +60,7 @@ final class TextProcessor {
             memoryContext: memoryContext,
             inputContext: inputContext,
             formatKind: formatKind,
-            allowsPreparedFallback: allowsPreparedFallback,
-            allowsGuardFallback: allowsGuardFallback
+            allowsPreparedFallback: allowsPreparedFallback
         )
     }
 
@@ -75,7 +73,6 @@ final class TextProcessor {
         inputContext: InputContext? = nil,
         formatKind: TextFormatKind? = nil,
         allowsPreparedFallback: Bool = TextProcessor.defaultAllowsPreparedFallback,
-        allowsGuardFallback: Bool = true,
         dictionarySnapshot requestedDictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
         let prepareStarted = CFAbsoluteTimeGetCurrent()
@@ -97,7 +94,8 @@ final class TextProcessor {
             memoryContext: memoryContext,
             inputContext: inputContext,
             formatKind: formatKind,
-            dictionarySnapshot: dictionarySnapshot
+            dictionarySnapshot: dictionarySnapshot,
+            transcript: cleanedText
         )
 
         let userPrompt = formattingUserPrompt(
@@ -129,7 +127,8 @@ final class TextProcessor {
                             memoryContext: memoryContext,
                             inputContext: inputContext,
                             formatKind: formatKind,
-                            dictionarySnapshot: dictionarySnapshot
+                            dictionarySnapshot: dictionarySnapshot,
+                            transcript: cleanedText
                         )
                         return try await generateText(
                             prompt: userPrompt,
@@ -158,24 +157,12 @@ final class TextProcessor {
                 inputLanguage: options.inputLanguage,
                 fallback: fallback
             )
-            if let violation = TranscriptFidelityGuard.violation(
-                source: cleanedText,
-                candidate: output,
+            return validatedOutput(
+                output, source: cleanedText,
                 protectedTerms: dictionarySnapshot.protectedTerms,
                 inputLanguage: options.inputLanguage,
                 enforceSemanticFidelity: options.fidelityPolicy == .faithfulCorrection
-            ) {
-                Log.error(
-                    "[TextProcessor] rejected unsafe formatting output: \(violation) "
-                        + "(source \(cleanedText.count) chars, candidate \(output.count) chars); "
-                        + "keeping source transcript"
-                )
-                return rejectedOutputFallback(
-                    cleanedText,
-                    allowsGuardFallback: allowsGuardFallback
-                )
-            }
-            return output
+            )
         } catch {
             if allowsPreparedFallback {
                 Log.error("[TextProcessor] LLM failed, falling back to prepared raw text: \(error.localizedDescription)")
@@ -225,7 +212,8 @@ final class TextProcessor {
             screenImageAvailable: useScreenImage,
             memoryContext: memoryContext,
             inputContext: inputContext,
-            dictionarySnapshot: dictionarySnapshot
+            dictionarySnapshot: dictionarySnapshot,
+            transcript: text
         )
         let userPrompt = PromptBuilder.buildCommandUserPrompt(
             text: text,
@@ -253,7 +241,8 @@ final class TextProcessor {
                             screenImageAvailable: false,
                             memoryContext: memoryContext,
                             inputContext: inputContext,
-                            dictionarySnapshot: dictionarySnapshot
+                            dictionarySnapshot: dictionarySnapshot,
+                            transcript: text
                         )
                         return try await generateText(
                             prompt: userPrompt,

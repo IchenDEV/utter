@@ -73,10 +73,6 @@ struct PersonalDictionarySnapshot: Sendable {
             .joined(separator: "\n")
     }
 
-    var activeIndustryTermsDescription: String {
-        industryLexicon.promptDescription
-    }
-
     var personalRecognitionPhrases: [String] {
         SpeechRecognitionContext(dictionaryEntries: entries).phrases
     }
@@ -213,6 +209,10 @@ final class PersonalDictionary: ObservableObject {
         guard !original.isEmpty, !replacement.isEmpty, original != replacement else { return }
         entries[index].original = original
         entries[index].replacement = replacement
+        entries[index].origin = .manual
+        entries[index].status = .active
+        entries[index].languageCode = nil
+        entries[index].appScopes = []
         save()
     }
 
@@ -224,6 +224,12 @@ final class PersonalDictionary: ObservableObject {
 
     func approveEntry(id: UUID) {
         guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        if entries[index].origin == .learned,
+           LearnedCorrectionPolicy.isUnsafeSource(entries[index].original) {
+            entries[index].origin = .manual
+            entries[index].languageCode = nil
+            entries[index].appScopes = []
+        }
         let original = entries[index].original
         for otherIndex in entries.indices where otherIndex != index
             && entries[otherIndex].origin == .learned
@@ -264,7 +270,14 @@ final class PersonalDictionary: ObservableObject {
         decoder.dateDecodingStrategy = .iso8601
         if let data = try? Data(contentsOf: entriesURL),
            let decoded = try? decoder.decode([DictionaryEntry].self, from: data) {
-            entries = decoded
+            entries = decoded.map { entry in
+                var entry = entry
+                if entry.origin == .learned,
+                   LearnedCorrectionPolicy.isUnsafeSource(entry.original) {
+                    entry.status = .pending
+                }
+                return entry
+            }
         }
         if let data = try? Data(contentsOf: rulesURL),
            let decoded = try? decoder.decode([EditRule].self, from: data) {

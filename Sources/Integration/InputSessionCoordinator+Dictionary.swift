@@ -2,14 +2,6 @@ import Foundation
 
 @MainActor
 extension InputSessionCoordinator {
-    func dictionarySnapshot(clientID: String, languageCode: String?) -> PersonalDictionarySnapshot {
-        PersonalDictionary.shared.snapshot(
-            settings: settings,
-            bundleIdentifier: service.integrationClient(id: clientID)?.bundleIdentifier,
-            languageCode: languageCode
-        )
-    }
-
     func recognitionContext(
         engine: any SpeechEngine,
         snapshot: PersonalDictionarySnapshot

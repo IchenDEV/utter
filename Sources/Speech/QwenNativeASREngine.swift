@@ -24,9 +24,7 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
     }
 
     func configureRecognition(context: SpeechRecognitionContext) {
-        contextLock.lock()
-        recognitionContext = context
-        contextLock.unlock()
+        contextLock.withLock { recognitionContext = context }
     }
 
     func prepare() async {
@@ -42,9 +40,9 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
         guard isReady else { throw QwenNativeASRError.notConfigured }
         guard let audioURL else { throw QwenNativeASRError.noAudioFile }
 
-        contextLock.lock()
-        let prompt = QwenRecognitionPrompt(phrases: recognitionContext.phrases)
-        contextLock.unlock()
+        let prompt = contextLock.withLock {
+            QwenRecognitionPrompt(phrases: recognitionContext.phrases)
+        }
 
         let started = CFAbsoluteTimeGetCurrent()
         let result = try await QwenAudioPreprocessor.withPreparedAudio(

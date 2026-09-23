@@ -16,6 +16,7 @@ final class TextInserter {
     #endif
 
     func insert(text: String, targetApp: NSRunningApplication? = nil) async -> InsertResult {
+        guard !Task.isCancelled else { return .probablyFailed(reason: L("error.operation_failed")) }
         #if DEBUG
         if let insertOverrideForTesting { return insertOverrideForTesting(text) }
         #endif
@@ -25,6 +26,7 @@ final class TextInserter {
         }
 
         await activateTarget(targetApp)
+        guard !Task.isCancelled else { return .probablyFailed(reason: L("error.operation_failed")) }
 
         let front = NSWorkspace.shared.frontmostApplication
         let targetPID = targetApp?.processIdentifier
@@ -95,12 +97,14 @@ final class TextInserter {
     // MARK: - Activate target
 
     private func activateTarget(_ app: NSRunningApplication?) async {
+        guard !Task.isCancelled else { return }
         guard let app, !app.isTerminated else { return }
 
         NSApp.yieldActivation(to: app)
         app.activate()
 
         for _ in 0..<30 {
+            guard !Task.isCancelled else { return }
             try? await Task.sleep(nanoseconds: 50_000_000)
             if NSWorkspace.shared.frontmostApplication?.processIdentifier == app.processIdentifier {
                 break
@@ -165,6 +169,7 @@ final class TextInserter {
         }
 
         await activateTarget(targetApp)
+        guard !Task.isCancelled else { return .probablyFailed(reason: L("error.operation_failed")) }
 
         let front = NSWorkspace.shared.frontmostApplication
         let targetPID = targetApp?.processIdentifier
@@ -181,34 +186,52 @@ final class TextInserter {
     // MARK: - Clipboard + Cmd+V
 
     /// Returns true if at least one paste method was executed without errors.
-    func insertViaClipboard(text: String) async -> Bool {
-        let pasteboard = NSPasteboard.general
-        let prevChange = pasteboard.changeCount
-        let previousContents = pasteboard.string(forType: .string)
+    func insertViaClipboard(
+        text: String,
+        pasteboard: NSPasteboard = .general,
+        paste: (() async -> Bool)? = nil
+    ) async -> Bool {
+        guard !Task.isCancelled else { return false }
+        let previousItems = (pasteboard.pasteboardItems ?? []).map { item in
+            let copy = NSPasteboardItem()
+            for type in item.types {
+                if let data = item.data(forType: type) { copy.setData(data, forType: type) }
+            }
+            return copy
+        }
 
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
-
-        try? await Task.sleep(nanoseconds: 50_000_000)
-
-        let pasteOK: Bool
-        if await simulatePaste() {
-            pasteOK = true
-        } else {
-            Log.info("[TextInserter] CGEvent failed, trying AppleScript")
-            pasteOK = pasteViaAppleScript()
-        }
-
-        try? await Task.sleep(nanoseconds: 300_000_000)
-
-        if pasteboard.changeCount == prevChange + 1 {
-            pasteboard.clearContents()
-            if let prev = previousContents {
-                pasteboard.setString(prev, forType: .string)
+        let insertedChange = pasteboard.changeCount
+        defer {
+            if pasteboard.changeCount == insertedChange {
+                pasteboard.clearContents()
+                pasteboard.writeObjects(previousItems)
             }
         }
 
+        try? await Task.sleep(nanoseconds: 50_000_000)
+
+        guard !Task.isCancelled else { return false }
+        let pasteOK: Bool
+        if let paste {
+            pasteOK = await paste()
+        } else {
+            pasteOK = await performPaste()
+        }
+        if pasteOK {
+            // A posted key cannot be recalled. Let the target read the clipboard
+            // before restoring it, even when the caller cancels after posting.
+            await Task.detached { try? await Task.sleep(nanoseconds: 300_000_000) }.value
+        }
         return pasteOK
+    }
+
+    private func performPaste() async -> Bool {
+        if await simulatePaste() { return true }
+        guard !Task.isCancelled else { return false }
+        Log.info("[TextInserter] CGEvent failed, trying AppleScript")
+        return pasteViaAppleScript()
     }
 
     /// Place text on the clipboard so the user can manually Cmd+V.

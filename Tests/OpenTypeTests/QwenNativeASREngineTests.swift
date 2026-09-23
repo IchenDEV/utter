@@ -97,9 +97,15 @@ final class QwenNativeASREngineTests: XCTestCase {
         let withoutContext = try await engine.transcribe(audioURL: audioURL, language: "en")
         engine.configureRecognition(context: SpeechRecognitionContext(phrases: ["Zyralith"]))
         let withContext = try await engine.transcribe(audioURL: audioURL, language: "en")
+        engine.configureRecognition(context: SpeechRecognitionContext(
+            phrases: ["Zyralith", "Roleva", "Utter"]
+        ))
+        let withBoundedContext = try await engine.transcribe(audioURL: audioURL, language: "en")
         print("QWEN_RARE_TERM_WITHOUT_CONTEXT=\(withoutContext)")
         print("QWEN_RARE_TERM_WITH_CONTEXT=\(withContext)")
+        print("QWEN_RARE_TERM_WITH_BOUNDED_CONTEXT=\(withBoundedContext)")
         XCTAssertTrue(withContext.contains("Zyralith"), withContext)
+        XCTAssertTrue(withBoundedContext.contains("Zyralith"), withBoundedContext)
     }
 
     func testExistingModelRejectsSyntheticNonSpeechNoise() async throws {

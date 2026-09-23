@@ -22,16 +22,17 @@ extension VoicePipeline {
     func insertFinalText(
         _ output: VoicePipelineOutput,
         raw: String,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         expectedEspressoModelPath: String,
         inputMode: VoiceInputMode,
         targetApp: NSRunningApplication?
     ) async {
         let finalText = output.text
         let espressoOutcome = await consumeEspressoOutcome(
-            settings: settings,
+            settings: appState.settings,
             expectedEspressoModelPath: expectedEspressoModelPath
         )
+        guard !Task.isCancelled else { return }
         guard !finalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             Log.info("[VoicePipeline] skipping empty final text")
             showErrorHint(espressoOutcome?.message ?? L("error.operation_failed"))
@@ -45,6 +46,7 @@ extension VoicePipeline {
         Log.sensitive("[VoicePipeline] inserting \(finalText.count) chars")
         let started = CFAbsoluteTimeGetCurrent()
         let result = await textInserter.insert(text: finalText, targetApp: targetApp)
+        guard !Task.isCancelled else { return }
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         Log.info("[VoicePipeline] insert stage finished in \(String(format: "%.2f", elapsed))s")
 

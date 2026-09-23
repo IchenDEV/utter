@@ -118,7 +118,7 @@ final class VoicePipelinePolicyTests: XCTestCase {
         settings.outputMode = .direct
         let directCommand = await pipeline.resolvedSpokenEditCommand(
             raw: "delete selection",
-            settings: settings,
+            settings: VoiceInputSettings(settings: settings),
             targetApp: nil
         )
         XCTAssertNil(directCommand)
@@ -126,7 +126,7 @@ final class VoicePipelinePolicyTests: XCTestCase {
         settings.outputMode = .processed
         let processedCommand = await pipeline.resolvedSpokenEditCommand(
             raw: "delete selection",
-            settings: settings,
+            settings: VoiceInputSettings(settings: settings),
             targetApp: nil
         )
         XCTAssertNil(processedCommand)

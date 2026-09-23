@@ -18,6 +18,28 @@ final class PersonalDictionaryLearningTests: XCTestCase {
         XCTAssertEqual(manual.applyReplacements(to: "嗯。"), "Do anything")
     }
 
+    func testUnsafePersistedRuleAppearsPendingWithoutRewritingFile() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeDictionaryReload-\(UUID().uuidString)", isDirectory: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
+        let store = PersonalDictionary(directoryURL: directory)
+        let entry = DictionaryEntry(
+            original: "嗯。", replacement: "Do anything", origin: .learned,
+            languageCode: "zh", appScopes: ["com.apple.Notes"]
+        )
+        store.entries = [entry]
+        store.save()
+        let file = directory.appendingPathComponent("dictionary.json")
+        let originalData = try Data(contentsOf: file)
+
+        let reloaded = PersonalDictionary(directoryURL: directory)
+        XCTAssertEqual(reloaded.entries.first?.status, .pending)
+        XCTAssertEqual(try Data(contentsOf: file), originalData)
+        reloaded.approveEntry(id: entry.id)
+        XCTAssertEqual(reloaded.entries.first?.origin, .manual)
+        XCTAssertEqual(reloaded.applyReplacements(to: "嗯。"), "Do anything")
+    }
+
     func testLearnedScopeDoesNotLeakAcrossAppsOrLanguages() {
         let entry = DictionaryEntry(
             original: "open type", replacement: "OpenType", origin: .learned,

@@ -92,20 +92,19 @@ extension TextProcessor {
         return cleanGeneratedOutput(text, inputLanguage: inputLanguage)
     }
 
-    /// Guard rejections must never drop the user's dictation. The safe,
-    /// content-preserving result is always the prepared source transcript: the
-    /// rejected candidate is discarded, so no hallucinated content can enter,
-    /// while the dictation survives.
-    ///
-    /// `allowsGuardFallback` is kept so call sites can document intent; it no
-    /// longer suppresses the fallback, since suppressing it produced empty
-    /// output on a guard rejection.
-    func rejectedOutputFallback(
-        _ cleanedText: String,
-        allowsGuardFallback: Bool
+    func validatedOutput(
+        _ candidate: String,
+        source: String,
+        protectedTerms: [String] = [],
+        inputLanguage: InputLanguage,
+        enforceSemanticFidelity: Bool = true
     ) -> String {
-        _ = allowsGuardFallback
-        return cleanedText
+        guard let violation = TranscriptFidelityGuard.violation(
+            source: source, candidate: candidate, protectedTerms: protectedTerms,
+            inputLanguage: inputLanguage, enforceSemanticFidelity: enforceSemanticFidelity
+        ) else { return candidate }
+        Log.error("[TextProcessor] rejected formatting output: \(violation); keeping source transcript")
+        return source
     }
 
     /// Keeps line breaks while collapsing surrounding whitespace.

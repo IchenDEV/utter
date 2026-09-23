@@ -24,6 +24,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var settingsWindowDelegate: SettingsWindowDelegate?
     private var onboardingWindow: NSWindow?
     private let popoverOutsideClickMonitor = PopoverOutsideClickMonitor()
+    let inputOwnership = InputSessionOwnership()
+    let speechEngineProvider = SpeechEngineProvider()
     let textProcessor: TextProcessor
     var cancellables = Set<AnyCancellable>()
     var iconTimer: Timer?
@@ -102,7 +104,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     private func setupPipeline() {
-        pipeline = VoicePipeline(appState: appState, textProcessor: textProcessor)
+        pipeline = VoicePipeline(appState: appState, textProcessor: textProcessor, ownership: inputOwnership, engineProvider: speechEngineProvider)
         Task { await pipeline?.warmUp() }
     }
 
@@ -150,26 +152,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         action: HotkeyAction,
         remoteSessionToken: UInt64? = nil
     ) -> Task<Void, Never>? {
-        if integrationSessionCoordinator.isBusy {
-            pipeline?.showBusyHint()
-            return nil
-        }
         savePreviousApp()
         if popover.isShown { closePopover() }
         let mode: VoiceInputMode = action == .translation
             ? .translation(AppSettings.shared.translationTargetLanguage)
             : .dictation
+        let targetApp = previousApp
         return Task {
             await pipeline?.start(
                 mode: mode,
-                targetApp: previousApp,
+                targetApp: targetApp,
                 remoteSessionToken: remoteSessionToken
             )
         }
     }
 
     func stopRecording() {
-        Task { await pipeline?.stop(targetApp: previousApp) }
+        Task { await pipeline?.stop() }
     }
 
     private func applyPendingReplacement() async {

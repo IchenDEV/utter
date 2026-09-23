@@ -35,7 +35,7 @@ final class VoicePipelineSilentInsertionTests: XCTestCase {
             audioURL: nil,
             audioActivity: activity,
             language: nil,
-            settings: settings,
+            settings: VoiceInputSettings(settings: settings),
             inputMode: .dictation,
             targetApp: nil
         )
@@ -81,7 +81,7 @@ final class VoicePipelineSilentInsertionTests: XCTestCase {
                 audioURL: nil,
                 audioActivity: activity,
                 language: nil,
-                settings: settings,
+                settings: VoiceInputSettings(settings: settings),
                 inputMode: inputMode,
                 targetApp: nil
             )

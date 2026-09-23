@@ -4,7 +4,7 @@ import Foundation
 @MainActor
 extension VoicePipeline {
     func replacementInputContext(
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) -> InputContext {
         InputContext.capture(
@@ -18,7 +18,7 @@ extension VoicePipeline {
 
     func finalizedReplacementText(
         _ text: String,
-        settings: AppSettings
+        settings: VoiceInputSettings
     ) -> String {
         textProcessor.cleanCommandGeneratedOutput(
             text,
@@ -29,7 +29,7 @@ extension VoicePipeline {
     func rewriteSelectedText(
         raw: String,
         intent: SelectionRewriteIntent,
-        settings: AppSettings,
+        settings: VoiceInputSettings,
         targetApp: NSRunningApplication?
     ) async {
         cancelScreenContextCapture()
@@ -48,11 +48,12 @@ extension VoicePipeline {
             inputLanguage: settings.inputLanguage,
             source: .menuBar
         )
-        var options = TextProcessingOptions(settings: settings)
+        var options = settings.processing
         options.llmModel = settings.llmModel
         let memoryContext = VoicePipelinePolicy.memoryContext(
             for: .command,
-            settings: settings,
+            enableMemory: settings.enableMemory,
+            memoryWindowMinutes: settings.memoryWindowMinutes,
             currentContext: context
         )
 
@@ -76,6 +77,7 @@ extension VoicePipeline {
         appState.statusMessage = L("pipeline.replacing")
 
         let result = await textInserter.replaceSelectedText(text: rewrittenText, targetApp: targetApp)
+        guard !Task.isCancelled else { return }
         appState.phase = .done
         appState.statusMessage = L("status.done")
         hideOverlayAfterDelay()
