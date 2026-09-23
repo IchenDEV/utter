@@ -222,6 +222,7 @@ final class ConfigurationTests: XCTestCase {
         let models = ModelCatalog.defaultASRModels
         XCTAssertEqual(models.map(\.id), [
             QwenASRModel.defaultID,
+            QwenASRModel.confuciusR2T2ID,
             "mlx-community/FireRedASR2-AED-mlx",
             "mlx-community/Mega-ASR-6bit",
         ])

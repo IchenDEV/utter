@@ -516,8 +516,12 @@
 "volc.resource_id" = "Resource ID（资源 ID）";
 
 /* ── 本地语音识别 ── */
-"qwen_asr.config_hint" = "Qwen3-ASR 使用原生 Swift 和 MLX 在本机运行。模型下载一次后即可离线识别。";
+"qwen_asr.config_hint" = "兼容 Qwen 的语音模型使用 Swift 和 MLX 在本机运行。模型下载一次后即可离线识别。";
 "model.qwen3_asr_quality" = "本地 MLX 语音识别，约 4.1 GB";
+"model.confucius_r2t2" = "本地 MLX 语音识别，约 2.5 GB";
+"model.confucius_license" = "模型许可协议（中文）";
+"model.confucius_english_license" = "英文译本";
+"model.confucius_notice" = "转换声明";
 "model.firered_asr" = "强鲁棒中文 ASR，约 4.6 GB";
 "model.mega_asr" = "抗噪 ASR（Qwen3-ASR + LoRA），约 2.0 GB";
 "model.asr_incomplete" = "模型只下载了一部分。点击“继续下载”即可接着完成";

@@ -1,15 +1,18 @@
+import AVFoundation
 import Foundation
 import MLXAudioCore
 import MLXAudioSTT
 
 final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
     private let modelDirectory: URL
+    private let tailPaddingFrames: AVAudioFrameCount
     private let runtime = QwenNativeASRRuntime()
     private let recognitionContextLock = NSLock()
     private var recognitionContext = SpeechRecognitionContext.empty
 
-    init(modelPath: String) {
+    init(modelPath: String, modelID: String = QwenASRModel.defaultID) {
         modelDirectory = URL(fileURLWithPath: modelPath).standardizedFileURL
+        tailPaddingFrames = modelID == QwenASRModel.confuciusR2T2ID ? 8_000 : 0
     }
 
     var isReady: Bool {
@@ -49,7 +52,10 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
 
         let contextPrompt = currentContextPrompt()
         let started = CFAbsoluteTimeGetCurrent()
-        let result = try await QwenAudioPreprocessor.withPreparedAudio(from: audioURL) { preparedURL in
+        let result = try await QwenAudioPreprocessor.withPreparedAudio(
+            from: audioURL,
+            tailPaddingFrames: tailPaddingFrames
+        ) { preparedURL in
             try await runtime.transcribe(
                 audioURL: preparedURL,
                 modelDirectory: modelDirectory,

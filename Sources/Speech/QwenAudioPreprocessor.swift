@@ -6,6 +6,7 @@ enum QwenAudioPreprocessor {
 
     static func withPreparedAudio<T>(
         from sourceURL: URL,
+        tailPaddingFrames: AVAudioFrameCount = 0,
         operation: (URL) async throws -> T
     ) async throws -> T {
         let preparedURL = FileManager.default.temporaryDirectory
@@ -14,7 +15,11 @@ enum QwenAudioPreprocessor {
         defer { try? FileManager.default.removeItem(at: preparedURL) }
 
         do {
-            try convertToPCM16kMono(from: sourceURL, to: preparedURL)
+            try convertToPCM16kMono(
+                from: sourceURL,
+                to: preparedURL,
+                tailPaddingFrames: tailPaddingFrames
+            )
         } catch {
             Log.error("[Qwen3ASR] audio preprocessing failed: \(error.localizedDescription)")
             throw QwenAudioPreprocessorError.conversionFailed
@@ -23,7 +28,11 @@ enum QwenAudioPreprocessor {
         return try await operation(preparedURL)
     }
 
-    private static func convertToPCM16kMono(from sourceURL: URL, to outputURL: URL) throws {
+    private static func convertToPCM16kMono(
+        from sourceURL: URL,
+        to outputURL: URL,
+        tailPaddingFrames: AVAudioFrameCount
+    ) throws {
         let sourceFile = try AVAudioFile(forReading: sourceURL)
         let sourceFormat = sourceFile.processingFormat
         guard sourceFormat.sampleRate > 0, sourceFormat.channelCount > 0 else {
@@ -55,6 +64,17 @@ enum QwenAudioPreprocessor {
             outputFormat: outputFormat,
             converter: converter
         )
+        if tailPaddingFrames > 0 {
+            guard let silence = AVAudioPCMBuffer(
+                pcmFormat: outputFormat,
+                frameCapacity: tailPaddingFrames
+            ), let samples = silence.int16ChannelData else {
+                throw AudioConversionError.outputBufferCreationFailed
+            }
+            samples[0].update(repeating: 0, count: Int(tailPaddingFrames))
+            silence.frameLength = tailPaddingFrames
+            try outputFile.write(from: silence)
+        }
     }
 
     private static func convert(

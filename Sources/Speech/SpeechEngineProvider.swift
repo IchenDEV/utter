@@ -50,7 +50,10 @@ final class SpeechEngineProvider {
             }
             let modelPath = ModelCatalog.shared.asrModelPath(for: settings.qwenASRModel)
             if qwenSpeechEngine?.usesModel(at: modelPath) == true { return }
-            qwenSpeechEngine = QwenNativeASREngine(modelPath: modelPath)
+            qwenSpeechEngine = QwenNativeASREngine(
+                modelPath: modelPath,
+                modelID: settings.qwenASRModel
+            )
         case .firered, .megaASR:
             guard let modelID = settings.speechEngine.asrModelID else { return }
             guard localASRIsAvailable(modelID) else {
