@@ -43,6 +43,8 @@ jobs:
   release:
     name: Sign, Verify & Publish
     needs: [validate]
+    permissions:
+      contents: write
     uses: ./.github/workflows/release-artifact.yml
     with:
       # `v0.0.46` -> `0.0.46`; the same script the reusable workflow enforces.

@@ -109,6 +109,14 @@ grep -Fq './scripts/nightly-release-plan.sh . origin/main' "$WORKFLOW" \
 for workflow in "$RELEASE_WORKFLOW" "$WORKFLOW"; do
     grep -Fq 'uses: ./.github/workflows/release-artifact.yml' "$workflow" \
         || fail "$workflow must call the reusable artifact workflow"
+    awk '
+        /^permissions:$/ { getline; if ($0 == "  contents: read") read_default = 1 }
+        /^  release:$/ { in_release = 1; next }
+        in_release && /^  [a-z_-]+:$/ { exit }
+        in_release && /^    permissions:$/ { in_permissions = 1; next }
+        in_permissions && /^      contents: write$/ { release_write = 1 }
+        END { exit !(read_default && release_write) }
+    ' "$workflow" || fail "$workflow must keep read-only defaults and grant contents: write to its release call"
 done
 
 # Guardrails copied from the tag workflow must survive in the shared pipeline.
