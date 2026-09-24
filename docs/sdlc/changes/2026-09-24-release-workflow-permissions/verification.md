@@ -13,7 +13,7 @@
 | `bash scripts/sdlc-checks.sh` | Pass locally | Stage order and approval fields passed. |
 | `bash scripts/ci-basic-checks.sh` | Pass locally | Basic CI checks passed, including the workflow wiring test. |
 | `swift test --scratch-path /tmp/utter-silent-insertion-build` | Pass locally | 793 XCTest cases, 18 skipped, zero failures; one Swift Testing case passed. |
-| GitHub PR checks and mergeability | Pending | — |
+| GitHub PR checks and mergeability | In progress | [Draft PR #114](https://github.com/IchenDEV/utter/pull/114) was reported `MERGEABLE` at `a090dd7`; remote checks were still running. |
 | Real Nightly startup | Pending | Requires merge to `main` and an authorized run. |
 
 ## Acceptance criteria

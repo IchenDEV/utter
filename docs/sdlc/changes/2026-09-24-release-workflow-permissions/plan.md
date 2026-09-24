@@ -11,7 +11,7 @@
   observe it fail on the current callers.
 - [x] Grant `contents: write` on the `release` calling job in both entry-point
   workflows, leaving top-level permissions read-only.
-- [ ] Run local checks, review the exact diff, and create a conflict-free PR.
+- [x] Run local checks, review the exact diff, and create a conflict-free PR.
 
 ## Verification plan
 
