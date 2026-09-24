@@ -21,8 +21,10 @@ The prior verification was approved for the superseded design. Results below des
 | `bash scripts/sdlc-checks.sh` and `bash scripts/ci-basic-checks.sh` | Pass locally | Both completed after the merge resolution. |
 | Installed local Qwen replay | Pass locally | Generated noise was rejected; repository-owned English and Chinese speech samples were transcribed. The synthetic rare name was rendered as “Zerolith” without a hint and “Zyralith” with one or three bounded hints. This is one generated voice sample, not a general accuracy estimate. |
 | Release-style app build | Pass locally | `bash scripts/build-app.sh --app-only --sign=-` built the app and CLI helper, bundled Metal resources, and passed artifact verification. Ad-hoc signing is for local checking only. |
-| PR mergeability | Pass at observed head | Merged `origin/main` at `7139f54`; GitHub reported PR #112 `MERGEABLE` at head `c82e77f`. Final branch updates require another mergeability check. Remote CI was still in progress. |
-| Real computer-microphone/window QA | Pending | Two other Utter instances are active. Launching this build concurrently would not give trustworthy hotkey/permission evidence. |
+| PR mergeability and remote CI | Pass at observed head | GitHub reported draft PR #112 `MERGEABLE` at `9f9ccc8`; Contract & Tests, Release-style App Build, and SDLC Gate all succeeded. |
+| Real computer-microphone silence QA | Pass for live integration route | Temporarily stopped both original instances, launched the ad-hoc local build, granted its microphone permission through the onboarding UI, and recorded three seconds from the default MacBook Pro Microphone. The live recording API returned `no_speech_detected` with no transcript or final text. |
+| Real computer-microphone speech QA | Inconclusive | Two attempts to play a Chinese technical sentence through the MacBook speakers into the microphone returned `no_speech_detected`; the system output was subsequently observed muted. No valid audible speech sample was confirmed at the microphone. The menu-bar hotkey path was not exercised because this ad-hoc build lacked Accessibility authorization. |
+| Original app restoration | Pass | Stopped the test build and restarted the two exact original bundles, one from `/Applications/Utter.app` and one from the prior worktree. Restored `hasCompletedOnboarding=true` and `activationMode=longPress`; both original processes were observed running. The speaker mute state was left as the user set it. |
 | Independent verification, signed release, production observation | Pending | The author cannot satisfy the independent high-risk review or protected production gate. |
 
 These results verify the revised local implementation only. The exact incident audio was not retained, and Sound Analysis cannot determine who spoke. The draft PR stays unreleased until the remaining gates are met.
@@ -49,23 +51,23 @@ These results verify the revised local implementation only. The exact incident a
 | `bash scripts/build-app.sh --app-only --sign=-` | Pass | Xcode Release build, Metal shader bundle, CLI helper, bundle assembly, ad-hoc codesign, and artifact verification passed. No usable Utter signing identity was installed; this is a local build, not a trusted release. |
 | Rebase onto `origin/main` | Pass | Commit `686becb` is based on `60e7ed4` (Confucius4-R2T2 support). Qwen's new `modelID` and tail-padding path remain intact; vocabulary context injection remains removed. |
 | Post-rebase checks | Pass | `bash scripts/ci-basic-checks.sh`; `swift test --scratch-path /tmp/utter-silent-insertion-build` (763 XCTest cases, 17 skipped, no failures; one Swift Testing case passed); release-style ad-hoc app build and artifact verification. |
-| Real microphone/window check | Not run | Two other Utter instances are active on this Mac. Launching a third copy would conflict with hotkeys and would not provide reliable input-path evidence. |
+| Real microphone/window check | Partial | The revised-design table above records the new three-second silence result, inconclusive speaker playback, and restoration of both original instances. This older evidence table describes the superseded design. |
 | Independent verification | Pending | — |
 
 ## Acceptance criteria
 
 - The reported vocabulary echo is rejected before insertion, clipboard, edit-command, and history paths — automated menu-bar and integration tests pass; independent review pending.
-- Generated non-speech audio is rejected by an independent classifier even when Qwen emits text — local model replay passes; real microphone check pending.
-- Clear English/Chinese speech and short clips remain accepted — automated file fixtures pass, including quieter short clips; real microphone check pending.
+- Generated non-speech audio is rejected by an independent classifier even when Qwen emits text — local model replay passes; a three-second real-microphone silence session was also rejected. This does not isolate which of the RMS gate and classifier rejected that session.
+- Clear English/Chinese speech and short clips remain accepted — automated file fixtures pass, including quieter short clips; real microphone speech acceptance remains pending.
 
 ## Residual risk
 
 - The built-in classifier cannot identify who spoke. Nearby human speech may still be transcribed; this is outside the no-speech and non-speech-noise acceptance criterion.
-- The long-list generating stage is strongly identified as Qwen ASR context echo by the saved `rawText` and legacy `Terms: ` construction. The exact incident audio and runtime prompt snapshot were not retained, so the sound that crossed the original RMS gate is unknown. Separate historical records show an active learned rule replacing a short filler utterance. The current branch does not yet prevent that rule from applying to genuine speech. Command mode has a different output contract; the new audio gate remains the primary protection for no-speech recordings.
-- The 0.6 speech-confidence threshold is calibrated against the listed fixtures, not a diverse microphone corpus. Real microphone validation and independent review remain required.
-- Two other Utter instances prevent a trustworthy real-window test of this local build without interrupting the user's running apps.
-- The branch includes `origin/main` at `60e7ed4`; compare against the live PR base again before review or merge, since main can advance.
-- Full release signing, GitHub CI, and production behavior have not been verified.
+- The long-list generating stage is strongly identified as Qwen ASR context echo by the saved `rawText` and legacy `Terms: ` construction. The exact incident audio and runtime prompt snapshot were not retained, so the sound that crossed the original RMS gate is unknown. The separately observed learned `嗯。 -> Do anything` rule is now inert unless manually approved or edited.
+- The 0.6 speech-confidence threshold is calibrated against fixtures, not a diverse microphone corpus. A real-microphone silence session passed, but an audible speech acceptance test and independent review remain required.
+- The two original Utter instances were restored after the test. The ad-hoc test build lacked Accessibility authorization, so menu-bar hotkey insertion was not verified with real audio.
+- The branch includes `origin/main` at `7139f54`; compare against the live PR base again before review or merge, since main can advance.
+- Remote PR CI passed at `9f9ccc8`; trusted release signing and production behavior have not been verified.
 
 ## Decision
 
