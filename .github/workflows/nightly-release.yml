@@ -108,6 +108,8 @@ jobs:
     name: Sign, Verify & Publish
     needs: [plan, validate]
     if: ${{ needs.plan.outputs.changed == 'true' }}
+    permissions:
+      contents: write
     uses: ./.github/workflows/release-artifact.yml
     with:
       version: ${{ needs.plan.outputs.version }}
