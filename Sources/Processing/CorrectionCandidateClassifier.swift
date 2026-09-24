@@ -69,6 +69,7 @@ enum CorrectionCandidateClassifier {
         languageCode: String?,
         bundleIdentifier: String?
     ) -> LearnedCorrectionCandidate? {
+        guard !LearnedCorrectionPolicy.isUnsafeSource(inserted) else { return nil }
         guard let diff = CorrectionEditDiff.between(inserted, userFinal) else { return nil }
         var original = diff.beforeSegment.trimmingCharacters(in: .whitespacesAndNewlines)
         var replacement = diff.afterSegment.trimmingCharacters(in: .whitespacesAndNewlines)

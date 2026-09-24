@@ -3,6 +3,91 @@ import XCTest
 @testable import OpenType
 
 final class PersonalDictionaryLearningTests: XCTestCase {
+    func testExistingLearnedFillerIsInertButManualRuleStillWorks() {
+        let bad = DictionaryEntry(
+            original: "嗯。", replacement: "Do anything", origin: .learned,
+            languageCode: "zh", appScopes: ["com.apple.Notes"]
+        )
+        let snapshot = PersonalDictionarySnapshot(entries: [bad], editRules: [])
+        XCTAssertEqual(snapshot.applyReplacements(to: "嗯。"), "嗯。")
+        XCTAssertFalse(snapshot.recognitionPhrases.contains("Do anything"))
+
+        let manual = PersonalDictionarySnapshot(entries: [
+            DictionaryEntry(original: "嗯。", replacement: "Do anything")
+        ], editRules: [])
+        XCTAssertEqual(manual.applyReplacements(to: "嗯。"), "Do anything")
+    }
+
+    func testUnsafePersistedRuleAppearsPendingWithoutRewritingFile() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OpenTypeDictionaryReload-\(UUID().uuidString)", isDirectory: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
+        let store = PersonalDictionary(directoryURL: directory)
+        let entry = DictionaryEntry(
+            original: "嗯。", replacement: "Do anything", origin: .learned,
+            languageCode: "zh", appScopes: ["com.apple.Notes"]
+        )
+        store.entries = [entry]
+        store.save()
+        let file = directory.appendingPathComponent("dictionary.json")
+        let originalData = try Data(contentsOf: file)
+
+        let reloaded = PersonalDictionary(directoryURL: directory)
+        XCTAssertEqual(reloaded.entries.first?.status, .pending)
+        XCTAssertEqual(try Data(contentsOf: file), originalData)
+        reloaded.approveEntry(id: entry.id)
+        XCTAssertEqual(reloaded.entries.first?.origin, .manual)
+        XCTAssertEqual(reloaded.applyReplacements(to: "嗯。"), "Do anything")
+    }
+
+    func testLearnedScopeDoesNotLeakAcrossAppsOrLanguages() {
+        let entry = DictionaryEntry(
+            original: "open type", replacement: "OpenType", origin: .learned,
+            languageCode: "en", appScopes: ["com.apple.Notes"]
+        )
+        let store = makeStore()
+        store.entries = [entry]
+        XCTAssertEqual(store.snapshot(bundleIdentifier: "com.apple.Notes", languageCode: "en")
+            .applyReplacements(to: "open type"), "OpenType")
+        XCTAssertEqual(store.snapshot(bundleIdentifier: "com.apple.TextEdit", languageCode: "en")
+            .applyReplacements(to: "open type"), "open type")
+        XCTAssertEqual(store.snapshot(bundleIdentifier: "com.apple.Notes", languageCode: "zh")
+            .applyReplacements(to: "open type"), "open type")
+        XCTAssertEqual(store.snapshot().applyReplacements(to: "open type"), "open type")
+    }
+
+    func testIndependentAppsDoNotMergeLearnedEvidence() throws {
+        let store = makeStore()
+        let first = LearnedCorrectionCandidate(
+            original: "open tape", replacement: "OpenType", confidence: 0.82,
+            sourceRecordID: UUID(), languageCode: "en", bundleIdentifier: "com.apple.Notes"
+        )
+        let second = LearnedCorrectionCandidate(
+            original: "open tape", replacement: "OpenType", confidence: 0.82,
+            sourceRecordID: UUID(), languageCode: "en", bundleIdentifier: "com.apple.TextEdit"
+        )
+        store.recordLearnedCandidate(first)
+        store.recordLearnedCandidate(second)
+        XCTAssertEqual(store.entries.count, 2)
+        XCTAssertEqual(store.entries.map(\.status), [.pending, .pending])
+        XCTAssertEqual(store.snapshot(bundleIdentifier: "com.apple.Notes", languageCode: "en")
+            .applyReplacements(to: "open tape"), "open tape")
+    }
+
+    func testGlobalManualEntrySuspendsConflictingScopedLearnedRules() {
+        let store = makeStore()
+        store.entries = [
+            DictionaryEntry(original: "open type", replacement: "Wrong A", origin: .learned,
+                            languageCode: "en", appScopes: ["com.apple.Notes"]),
+            DictionaryEntry(original: "open type", replacement: "Wrong B", origin: .learned,
+                            languageCode: "en", appScopes: ["com.apple.TextEdit"]),
+        ]
+        store.addEntry(original: "open type", replacement: "OpenType")
+        XCTAssertEqual(store.entries.filter { $0.origin == .learned }.map(\.status), [.pending])
+        XCTAssertEqual(store.snapshot(bundleIdentifier: "com.apple.TextEdit", languageCode: "en")
+            .applyReplacements(to: "open type"), "OpenType")
+    }
+
     func testLegacyEntryDecodesAsActiveManualTerm() throws {
         let data = Data(#"{"original":"open type","replacement":"OpenType","enabled":true}"#.utf8)
         let entry = try JSONDecoder().decode(DictionaryEntry.self, from: data)
@@ -27,12 +112,14 @@ final class PersonalDictionaryLearningTests: XCTestCase {
 
         let entryID = try XCTUnwrap(store.recordLearnedCandidate(first))
         XCTAssertEqual(store.entries.first(where: { $0.id == entryID })?.status, .pending)
-        XCTAssertEqual(store.applyReplacements(to: "菜单蓝"), "菜单蓝")
+        XCTAssertEqual(store.snapshot(bundleIdentifier: "com.apple.Notes", languageCode: "zh")
+            .applyReplacements(to: "菜单蓝"), "菜单蓝")
         XCTAssertTrue(SpeechRecognitionContext(dictionaryEntries: store.entries).phrases.isEmpty)
 
         store.recordLearnedCandidate(second)
         XCTAssertEqual(store.entries.first(where: { $0.id == entryID })?.status, .active)
-        XCTAssertEqual(store.applyReplacements(to: "菜单蓝"), "菜单栏")
+        XCTAssertEqual(store.snapshot(bundleIdentifier: "com.apple.Notes", languageCode: "zh")
+            .applyReplacements(to: "菜单蓝"), "菜单栏")
     }
 
     func testHighConfidenceLearnedTermActivatesOnceAndManualEntryWins() throws {
@@ -76,7 +163,7 @@ final class PersonalDictionaryLearningTests: XCTestCase {
         XCTAssertEqual(store.applyReplacements(to: "open tape"), "open tape")
 
         store.approveEntry(id: competingID)
-        XCTAssertEqual(store.applyReplacements(to: "open tape"), "Open Tape")
+        XCTAssertEqual(store.snapshot(languageCode: "en").applyReplacements(to: "open tape"), "Open Tape")
         XCTAssertEqual(store.entries.filter(\.isEffective).count, 1)
     }
 

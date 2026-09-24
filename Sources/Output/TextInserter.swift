@@ -11,9 +11,15 @@ enum InsertResult {
 @MainActor
 final class TextInserter {
     var recentInsertionAnchor: RecentInsertionAnchor?
+    #if DEBUG
+    var insertOverrideForTesting: ((String) -> InsertResult)?
+    #endif
 
     func insert(text: String, targetApp: NSRunningApplication? = nil) async -> InsertResult {
         guard !Task.isCancelled else { return .probablyFailed(reason: L("error.operation_failed")) }
+        #if DEBUG
+        if let insertOverrideForTesting { return insertOverrideForTesting(text) }
+        #endif
         guard AXIsProcessTrusted() else {
             Log.error("[TextInserter] no AX trust")
             return .probablyFailed(reason: "Accessibility permission not granted")

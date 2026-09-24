@@ -43,6 +43,9 @@ final class VoicePipeline {
     var engineLoadBarrier: (() async -> Void)?
     /// Test-only observation point for whether the remote capture path is used.
     var remoteCaptureSpy: RemoteMicCaptureSpy?
+    #if DEBUG
+    var speechActivityOverrideForTesting: ((URL?) async -> Bool)?
+    #endif
 
     var currentEngine: (any SpeechEngine)? { engineOverride ?? sessionEngine }
 

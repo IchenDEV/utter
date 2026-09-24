@@ -30,6 +30,9 @@ final class InputSessionCoordinator {
     var activeSession: ActiveSession?
     var requestSettings: VoiceInputSettings?
     var pendingHistory: (() -> Void)?
+    #if DEBUG
+    var speechActivityOverrideForTesting: ((URL?) async -> Bool)?
+    #endif
 
     var isBusy: Bool { lease != nil }
 
@@ -66,7 +69,7 @@ final class InputSessionCoordinator {
         let engine = try await loadSpeechEngine()
         let vocabularySnapshot = snapshot.dictionary
         engine.configureRecognition(
-            context: SpeechRecognitionContext(phrases: vocabularySnapshot.recognitionPhrases)
+            context: recognitionContext(engine: engine, snapshot: vocabularySnapshot)
         )
 
         if effective.streamingEnabled, engine.supportsStreaming {
@@ -170,6 +173,10 @@ final class InputSessionCoordinator {
         guard audioCapture.lastActivity.hasMeaningfulAudio else {
             throw IntegrationError.noSpeechDetected
         }
+        guard await recordingContainsSpeech(audioCapture.lastRecordingURL) else {
+            throw IntegrationError.noSpeechDetected
+        }
+        try checkCurrent()
 
         let raw: String
         if active.streamingEnabled {
@@ -185,7 +192,10 @@ final class InputSessionCoordinator {
         }
 
         try checkCurrent()
-        let transcript = try prepareTranscript(raw, audioActivity: audioCapture.lastActivity)
+        let transcript = try prepareTranscript(
+            raw, audioActivity: audioCapture.lastActivity,
+            dictionarySnapshot: active.snapshot?.dictionary
+        )
 
         try service.emitTranscriptFinal(
             sessionID: active.sessionID,
@@ -202,8 +212,16 @@ final class InputSessionCoordinator {
         audioCapture.cleanupLastRecording()
     }
 
-    func prepareTranscript(_ raw: String, audioActivity: AudioCaptureActivity?) throws -> String {
-        guard let transcript = TranscriptionSanitizer.prepare(raw, audioActivity: audioActivity) else {
+    func prepareTranscript(
+        _ raw: String,
+        audioActivity: AudioCaptureActivity?,
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil
+    ) throws -> String {
+        let vocabulary = dictionarySnapshot ?? requestSettings?.dictionary
+        guard let transcript = TranscriptionSanitizer.prepare(
+            raw, audioActivity: audioActivity,
+            recognitionPhrases: vocabulary?.recognitionPhrases ?? []
+        ) else {
             throw IntegrationError.noSpeechDetected
         }
         return transcript

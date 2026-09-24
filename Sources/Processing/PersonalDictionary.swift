@@ -14,9 +14,13 @@ struct PersonalDictionarySnapshot: Sendable {
     init(
         entries: [DictionaryEntry],
         editRules: [EditRule],
-        industryLexicon: IndustryLexiconSnapshot = .empty
+        industryLexicon: IndustryLexiconSnapshot = .empty,
+        bundleIdentifier: String? = nil,
+        languageCode: String? = nil
     ) {
-        self.entries = entries
+        self.entries = entries.filter {
+            $0.applies(bundleIdentifier: bundleIdentifier, languageCode: languageCode)
+        }
         self.editRules = editRules
         self.industryLexicon = industryLexicon
     }
@@ -69,10 +73,13 @@ struct PersonalDictionarySnapshot: Sendable {
             .joined(separator: "\n")
     }
 
+    var personalRecognitionPhrases: [String] {
+        SpeechRecognitionContext(dictionaryEntries: entries).phrases
+    }
+
     var recognitionPhrases: [String] {
-        let personal = SpeechRecognitionContext(dictionaryEntries: entries).phrases
         return SpeechRecognitionContext(
-            phrases: personal + industryLexicon.recognitionPhrases
+            phrases: personalRecognitionPhrases + industryLexicon.recognitionPhrases
         ).phrases
     }
 
@@ -93,7 +100,6 @@ struct PersonalDictionarySnapshot: Sendable {
         }
         return industryTerms + personalTerms
     }
-
 }
 
 final class PersonalDictionary: ObservableObject {
@@ -129,19 +135,31 @@ final class PersonalDictionary: ObservableObject {
         snapshot().activeRulesDescription
     }
 
-    func snapshot(industryLexicon: IndustryLexiconSnapshot = .empty) -> PersonalDictionarySnapshot {
+    func snapshot(
+        industryLexicon: IndustryLexiconSnapshot = .empty,
+        bundleIdentifier: String? = nil,
+        languageCode: String? = nil
+    ) -> PersonalDictionarySnapshot {
         PersonalDictionarySnapshot(
             entries: entries,
             editRules: editRules,
-            industryLexicon: industryLexicon
+            industryLexicon: industryLexicon,
+            bundleIdentifier: bundleIdentifier,
+            languageCode: languageCode
         )
     }
 
-    func snapshot(settings: AppSettings) -> PersonalDictionarySnapshot {
+    func snapshot(
+        settings: AppSettings,
+        bundleIdentifier: String? = nil,
+        languageCode: String? = nil
+    ) -> PersonalDictionarySnapshot {
         snapshot(
             industryLexicon: IndustryLexiconCatalog.shared.snapshot(
                 for: settings.industryLexicon
-            )
+            ),
+            bundleIdentifier: bundleIdentifier,
+            languageCode: languageCode
         )
     }
 
@@ -151,9 +169,10 @@ final class PersonalDictionary: ObservableObject {
         let replacement = normalized(replacement)
         guard !original.isEmpty, !replacement.isEmpty, original != replacement else { return nil }
 
-        if let index = entries.firstIndex(where: {
-            $0.original.caseInsensitiveCompare(original) == .orderedSame
-        }) {
+        let matches = entries.indices.filter {
+            entries[$0].original.caseInsensitiveCompare(original) == .orderedSame
+        }
+        if let index = matches.first(where: { entries[$0].origin == .manual }) ?? matches.first {
             entries[index].original = original
             entries[index].replacement = replacement
             entries[index].enabled = true
@@ -161,12 +180,16 @@ final class PersonalDictionary: ObservableObject {
             entries[index].status = .active
             entries[index].confidence = 1
             entries[index].evidenceCount = max(1, entries[index].evidenceCount)
+            entries[index].languageCode = nil
+            entries[index].appScopes = []
+            suspendLearnedMappings(for: original, excluding: entries[index].id)
             save()
             return entries[index].id
         }
 
         let entry = DictionaryEntry(original: original, replacement: replacement)
         entries.append(entry)
+        suspendLearnedMappings(for: original, excluding: entry.id)
         save()
         return entry.id
     }
@@ -188,6 +211,11 @@ final class PersonalDictionary: ObservableObject {
         guard !original.isEmpty, !replacement.isEmpty, original != replacement else { return }
         entries[index].original = original
         entries[index].replacement = replacement
+        entries[index].origin = .manual
+        entries[index].status = .active
+        entries[index].languageCode = nil
+        entries[index].appScopes = []
+        suspendLearnedMappings(for: original, excluding: entries[index].id)
         save()
     }
 
@@ -199,11 +227,23 @@ final class PersonalDictionary: ObservableObject {
 
     func approveEntry(id: UUID) {
         guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        if entries[index].origin == .learned,
+           LearnedCorrectionPolicy.isUnsafeSource(entries[index].original) {
+            entries[index].origin = .manual
+            entries[index].languageCode = nil
+            entries[index].appScopes = []
+        }
         let original = entries[index].original
-        for otherIndex in entries.indices where otherIndex != index
-            && entries[otherIndex].origin == .learned
-            && entries[otherIndex].original.caseInsensitiveCompare(original) == .orderedSame {
-            entries[otherIndex].status = .pending
+        if entries[index].origin == .manual {
+            suspendLearnedMappings(for: original, excluding: entries[index].id)
+        } else {
+            for otherIndex in entries.indices where otherIndex != index
+                && entries[otherIndex].origin == .learned
+                && entries[otherIndex].original.caseInsensitiveCompare(original) == .orderedSame
+                && entries[otherIndex].languageCode == entries[index].languageCode
+                && entries[otherIndex].appScopes == entries[index].appScopes {
+                entries[otherIndex].status = .pending
+            }
         }
         entries[index].status = .active
         entries[index].enabled = true
@@ -237,7 +277,14 @@ final class PersonalDictionary: ObservableObject {
         decoder.dateDecodingStrategy = .iso8601
         if let data = try? Data(contentsOf: entriesURL),
            let decoded = try? decoder.decode([DictionaryEntry].self, from: data) {
-            entries = decoded
+            entries = decoded.map { entry in
+                var entry = entry
+                if entry.origin == .learned,
+                   LearnedCorrectionPolicy.isUnsafeSource(entry.original) {
+                    entry.status = .pending
+                }
+                return entry
+            }
         }
         if let data = try? Data(contentsOf: rulesURL),
            let decoded = try? decoder.decode([EditRule].self, from: data) {
@@ -246,8 +293,7 @@ final class PersonalDictionary: ObservableObject {
     }
 
     private func normalized(_ text: String) -> String {
-        text.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        text.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
 }

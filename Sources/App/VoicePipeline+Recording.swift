@@ -24,7 +24,9 @@ extension VoicePipeline {
         sessionLease = lease
         var started = false
         defer { if !started { releaseSession(lease) } }
-        let snapshot = VoiceInputSettings(settings: appState.settings)
+        let snapshot = VoiceInputSettings(
+            settings: appState.settings, bundleIdentifier: targetApp?.bundleIdentifier
+        )
         sessionSettings = snapshot
         recordingLanguage = snapshot.inputLanguage.whisperCode
         recordingStreaming = snapshot.streamingEnabled
@@ -89,7 +91,9 @@ extension VoicePipeline {
         let streamingEnabled = recordingStreaming && (currentEngine?.supportsStreaming ?? false)
         recordingStreaming = streamingEnabled
         currentEngine?.configureRecognition(
-            context: SpeechRecognitionContext(phrases: vocabularySnapshot.recognitionPhrases)
+            context: SpeechRecognitionContext(phrases: currentEngine is QwenNativeASREngine
+                ? vocabularySnapshot.personalRecognitionPhrases
+                : vocabularySnapshot.recognitionPhrases)
         )
         if streamingEnabled {
             currentEngine?.startListening(language: language) { [weak self] partialText in

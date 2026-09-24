@@ -120,4 +120,45 @@ final class TranscriptionSanitizerTests: XCTestCase {
             "Do anything."
         )
     }
+
+    func testRejectsOrderedVocabularyEchoOnWeakAudio() {
+        var weakAudio = AudioCaptureActivity()
+        weakAudio.record(rms: 0.002, frameCount: 16_000)
+        let terms = ["云原生", "容器编排", "微服务", "服务网格", "持续集成", "CI", "持续交付", "CD"]
+        let echoed = terms.joined(separator: ", ")
+
+        XCTAssertNil(
+            TranscriptionSanitizer.prepare(
+                echoed,
+                audioActivity: weakAudio,
+                recognitionPhrases: terms
+            )
+        )
+        XCTAssertNil(
+            TranscriptionSanitizer.prepare(
+                "Do anything, GW, Fallow, 17e, " + echoed,
+                audioActivity: weakAudio,
+                recognitionPhrases: terms
+            )
+        )
+        XCTAssertEqual(
+            TranscriptionSanitizer.prepare(
+                "请解释云原生和容器编排",
+                audioActivity: weakAudio,
+                recognitionPhrases: terms
+            ),
+            "请解释云原生和容器编排"
+        )
+
+        var strongAudio = AudioCaptureActivity()
+        strongAudio.record(rms: 0.02, frameCount: 16_000)
+        XCTAssertEqual(
+            TranscriptionSanitizer.prepare(
+                echoed,
+                audioActivity: strongAudio,
+                recognitionPhrases: terms
+            ),
+            echoed
+        )
+    }
 }

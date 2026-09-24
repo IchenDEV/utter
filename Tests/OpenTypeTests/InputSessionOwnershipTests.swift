@@ -220,6 +220,7 @@ private final class SessionFixture {
             settings: .init(developerInterfaceEnabled: true, httpToken: "token"), registry: registry
         )
         coordinator = InputSessionCoordinator(service: service, settings: settings, ownership: ownership)
+        coordinator.speechActivityOverrideForTesting = { _ in true }
     }
 
     func create() async throws -> InputSession {

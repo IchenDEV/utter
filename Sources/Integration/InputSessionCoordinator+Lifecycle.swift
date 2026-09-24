@@ -10,7 +10,11 @@ extension InputSessionCoordinator {
         let reservation = try ownership.acquire()
         lease = reservation
         owner = (sessionID, clientID)
-        requestSettings = VoiceInputSettings(settings: settings, inputLanguage: session.request.language)
+        requestSettings = VoiceInputSettings(
+            settings: settings,
+            inputLanguage: session.request.language,
+            bundleIdentifier: service.integrationClient(id: clientID)?.bundleIdentifier
+        )
         return session
     }
 

@@ -19,6 +19,10 @@ extension VoicePipeline {
                 showNoSpeechDetected(reason: "recorded audio energy below threshold")
                 return
             }
+            guard await recordingContainsSpeech(audioURL) else {
+                showNoSpeechDetected(reason: "recorded audio has no speech evidence")
+                return
+            }
 
             let preparedRaw = try await transcribePreparedText(
                 audioURL: audioURL,
@@ -86,6 +90,15 @@ extension VoicePipeline {
         }
     }
 
+    private func recordingContainsSpeech(_ audioURL: URL?) async -> Bool {
+        #if DEBUG
+        if let speechActivityOverrideForTesting {
+            return await speechActivityOverrideForTesting(audioURL)
+        }
+        #endif
+        return await SpeechActivityClassifier.containsSpeech(at: audioURL)
+    }
+
     private func transcribePreparedText(
         audioURL: URL?,
         audioActivity: AudioCaptureActivity,
@@ -103,8 +116,11 @@ extension VoicePipeline {
         Log.info("[VoicePipeline] ASR stage finished in \(String(format: "%.2f", elapsed))s")
 
         try Task.checkCancellation()
-        guard let prepared = TranscriptionSanitizer.prepare(raw, audioActivity: audioActivity) else {
-            showNoSpeechDetected(reason: "transcription has no meaningful content: \(raw)")
+        guard let prepared = TranscriptionSanitizer.prepare(
+            raw, audioActivity: audioActivity,
+            recognitionPhrases: settings.dictionary.recognitionPhrases
+        ) else {
+            showNoSpeechDetected(reason: "transcription has no meaningful content")
             throw VoicePipelineStop.noSpeech
         }
 

@@ -93,6 +93,40 @@ final class TranscriptFidelityGuardTests: XCTestCase {
         )
     }
 
+    func testRejectsVocabularyCopiedFromFormattingPromptWhenASRDidNotSayIt() {
+        let source = "嗯。"
+        let candidate = "GW, Fallow, 云原生, 容器编排, 微服务, 服务网格"
+        let terms = ["GW", "Fallow", "云原生", "容器编排", "微服务", "服务网格"]
+
+        for enforceSemanticFidelity in [true, false] {
+            XCTAssertEqual(
+                TranscriptFidelityGuard.violation(
+                    source: source,
+                    candidate: candidate,
+                    protectedTerms: terms,
+                    inputLanguage: .auto,
+                    enforceSemanticFidelity: enforceSemanticFidelity
+                ),
+                "dictionary_term_change"
+            )
+        }
+    }
+
+    func testRejectsDoAnythingExpandedFromShortASROutput() {
+        for enforceSemanticFidelity in [true, false] {
+            XCTAssertEqual(
+                TranscriptFidelityGuard.violation(
+                    source: "嗯。",
+                    candidate: "Do anything。",
+                    protectedTerms: ["Do anything"],
+                    inputLanguage: .auto,
+                    enforceSemanticFidelity: enforceSemanticFidelity
+                ),
+                "dictionary_term_change"
+            )
+        }
+    }
+
     func testRejectsTokenReorderingAndNegationScopeMovement() {
         XCTAssertEqual(
             violation("Alice 2, Bob 3", "Alice 3, Bob 2", language: .english),

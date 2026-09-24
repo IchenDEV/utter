@@ -19,10 +19,18 @@ struct VoiceInputSettings {
     var espressoModelPath: String { processing.espressoModelPath }
 
     @MainActor
-    init(settings: AppSettings, inputLanguage: InputLanguage? = nil) {
+    init(
+        settings: AppSettings,
+        inputLanguage: InputLanguage? = nil,
+        bundleIdentifier: String? = nil
+    ) {
         processing = TextProcessingOptions(settings: settings, inputLanguage: inputLanguage)
         speech = SpeechEngineProvider.Selection(settings: settings, inputLanguage: inputLanguage)
-        dictionary = PersonalDictionary.shared.snapshot(settings: settings)
+        dictionary = PersonalDictionary.shared.snapshot(
+            settings: settings,
+            bundleIdentifier: bundleIdentifier,
+            languageCode: (inputLanguage ?? settings.inputLanguage).whisperCode
+        )
         outputMode = settings.outputMode
         enableInstantInsert = settings.enableInstantInsert
         enableMemory = settings.enableMemory
