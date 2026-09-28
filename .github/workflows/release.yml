@@ -13,6 +13,8 @@ jobs:
     name: Release Candidate Tests
     runs-on: macos-26
     timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.value }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,6 +50,6 @@ jobs:
     uses: ./.github/workflows/release-artifact.yml
     with:
       # `v0.0.46` -> `0.0.46`; the same script the reusable workflow enforces.
-      version: ${{ github.ref_name }}
+      version: ${{ needs.validate.outputs.version }}
       tag: ${{ github.ref_name }}
     secrets: inherit

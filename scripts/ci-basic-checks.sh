@@ -25,6 +25,7 @@ bash scripts/sdlc-checks.sh
 bash scripts/tests/test_build_version.sh
 bash scripts/tests/test_release_version.sh
 bash scripts/tests/test_nightly_release_plan.sh
+bash scripts/tests/test_release_workflow_contract.sh
 
 step "Linting property lists and localized strings"
 plutil -lint Resources/Info.plist
