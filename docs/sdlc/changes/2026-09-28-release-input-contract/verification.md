@@ -1,8 +1,8 @@
 # Verification: Restore the release workflow input contract
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** chenli (explicit approval in this chat)
+**Approved-date:** 2026-09-28
 **Upstream:** docs/sdlc/changes/2026-09-28-release-input-contract/plan.md
 
 ## Change and acceptance evidence
@@ -63,8 +63,7 @@ evaluation or protected-environment execution. The completed ad-hoc app build
 is the PR-style packaging check, not release-signing or notarization evidence.
 The 18 skipped XCTest cases require opt-in integration settings or local
 models; they are not reported as executed. No application/UI behavior
-changed, so microphone and real-window QA do not
-apply to this repair.
+changed, so microphone and real-window QA do not apply to this repair.
 
 Rollback remains a scoped workflow/test revert. Already pushed release tags
 and published assets must not be moved or replaced.
