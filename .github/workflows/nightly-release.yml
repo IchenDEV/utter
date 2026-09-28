@@ -48,7 +48,7 @@ jobs:
             case "$key" in
             changed | version | reason | commit_count | commit_summary | head_sha | latest_tag)
               if [ "$key" = "version" ] && [ -n "$value" ]; then
-                value="v$value"
+                echo "tag=v$value" >> "$GITHUB_OUTPUT"
               fi
               echo "$key=$value" >> "$GITHUB_OUTPUT"
               ;;

@@ -2,9 +2,8 @@
 # release workflow and the nightly release workflow. Keeping the steps here
 # prevents the two entry points from drifting.
 #
-# The caller must provide the version and tag because a reusable workflow cannot
-# create the tag it is releasing; see .github/workflows/release.yml and
-# .github/workflows/nightly-release.yml.
+# Callers provide a numeric bundle version and its corresponding release tag.
+# The nightly entry point requests tag creation after validating the main tip.
 name: Release Artifact
 
 on:
@@ -58,7 +57,7 @@ jobs:
           fi
 
       - name: Require a SemVer tag on main
-        if: ${{ inputs.require_ancestor }}
+        if: ${{ inputs.require_ancestor && !inputs.create_tag }}
         env:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
