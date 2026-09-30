@@ -126,8 +126,23 @@ extension VoicePipeline {
         }
 
         activeCapture.thresholds = snapshot.audioActivityThresholds
+        activeCapture.onAutoSwitch = { [weak self] in
+            Task { @MainActor in
+                guard let self, self.sessionLease == lease, self.appState.isRecording else { return }
+                self.appState.statusMessage = L("pipeline.mic_switched")
+            }
+        }
+        activeCapture.onInputUnavailable = { [weak self] in
+            Task { @MainActor in
+                guard let self, self.sessionLease == lease, self.appState.isRecording else { return }
+                self.appState.phase = .error(L("pipeline.mic_clamshell_no_input"))
+                self.appState.statusMessage = L("pipeline.mic_clamshell_no_input")
+                self.overlay.hide()
+                self.cancel()
+            }
+        }
 
-        let micStarted = activeCapture.start(
+        let micFailure = activeCapture.start(
             deviceID: microphoneID,
             levelUpdate: { [weak self] level in
                 Task { @MainActor in
@@ -140,12 +155,18 @@ extension VoicePipeline {
                 self?.currentEngine?.appendAudioBuffer(buffer)
             }
         )
-        guard micStarted else {
+        if let micFailure {
             currentEngine?.cancelListening()
             cancelScreenContextCapture()
             recordingTargetApp = nil
-            appState.phase = .error(L("pipeline.mic_failed_permissions"))
-            appState.statusMessage = L("pipeline.mic_unavailable")
+            switch micFailure {
+            case .noUsableInput:
+                appState.phase = .error(L("pipeline.mic_clamshell_no_input"))
+                appState.statusMessage = L("pipeline.mic_clamshell_no_input")
+            case .permissionDenied, .engineFailed:
+                appState.phase = .error(L("pipeline.mic_failed_permissions"))
+                appState.statusMessage = L("pipeline.mic_unavailable")
+            }
             overlay.hide()
             return
         }

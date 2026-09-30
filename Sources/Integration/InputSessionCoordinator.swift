@@ -91,14 +91,14 @@ final class InputSessionCoordinator {
 
         audioCapture.thresholds = thresholds
 
-        let micStarted = audioCapture.start(
+        let micFailure = audioCapture.start(
             deviceID: microphoneID,
             levelUpdate: { _ in },
             bufferUpdate: effective.streamingEnabled && engine.supportsStreaming ? { buffer in
                 engine.appendAudioBuffer(buffer)
             } : nil
         )
-        guard micStarted else {
+        guard micFailure == nil else {
             engine.cancelListening()
             audioCapture.stop()
             audioCapture.cleanupLastRecording()
