@@ -85,6 +85,8 @@
 "pipeline.insert_failed_body" = "文本已复制到剪贴板，请按 ⌘V 手动粘贴。\n\n原因：";
 "pipeline.mic_failed_permissions" = "麦克风启动失败，请检查权限";
 "pipeline.mic_unavailable" = "麦克风不可用";
+"pipeline.mic_clamshell_no_input" = "笔记本已合盖，内置麦克风被禁用。请连接外接麦克风（显示器、USB、蓝牙或 iPhone）。";
+"pipeline.mic_switched" = "已切换到外接麦克风";
 "pipeline.download_failed" = "模型下载未完成。已下载内容会保留，请检查网络后继续下载";
 "pipeline.compile_failed" = "模型文件已下载，但编译失败。请重试；若仍失败，请重新下载或切换模型";
 "pipeline.load_failed" = "模型文件已下载，但加载失败。请重试；若仍失败，请重新下载或切换模型";

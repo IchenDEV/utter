@@ -41,6 +41,14 @@ struct AudioCaptureActivity: Equatable {
     }
 }
 
+/// Why a local capture could not start. Remote wiring maps these to localized
+/// messages; the pipeline distinguishes "no usable input" from permission loss.
+enum AudioCaptureStartFailure: Error, Equatable {
+    case permissionDenied
+    case noUsableInput
+    case engineFailed
+}
+
 final class AudioCaptureManager {
     private let engine = AVAudioEngine()
     private var audioFile: AVAudioFile?
@@ -52,11 +60,23 @@ final class AudioCaptureManager {
     /// A voice-key session from the connected remote can supply audio instead of
     /// the selected CoreAudio device. Keyboard/API sessions remain local.
     var remoteMicSource: RemoteMicCaptureManager?
+    /// Called on the main run loop after capture switches to a fallback input
+    /// because the active device became unusable (for example, the lid closed).
+    var onAutoSwitch: (() -> Void)?
+    /// Called on the main run loop when the active input was lost and no other
+    /// usable input exists.
+    var onInputUnavailable: (() -> Void)?
     private var usesRemoteMic = false
     private var levelCallback: ((Float) -> Void)?
     private var bufferCallback: ((AVAudioPCMBuffer) -> Void)?
 
     private var isRunning = false
+    private var preferredInputUID: String?
+    private var activeInputUID: String?
+    private var failoverTimer: Timer?
+    private var recordingFormat: AVAudioFormat?
+    private var converter: AVAudioConverter?
+    private var converterSourceFormat: AVAudioFormat?
 
     var lastRecordingURL: URL? {
         usesRemoteMic ? remoteMicSource?.lastRecordingURL : localLastRecordingURL
@@ -83,7 +103,7 @@ final class AudioCaptureManager {
         deviceID: String?,
         levelUpdate: @escaping (Float) -> Void,
         bufferUpdate: ((AVAudioPCMBuffer) -> Void)? = nil
-    ) -> Bool {
+    ) -> AudioCaptureStartFailure? {
         if isRunning { stop() }
         cleanupLastRecording()
         usesRemoteMic = false
@@ -99,7 +119,7 @@ final class AudioCaptureManager {
             if remoteMicSource.start(token: token, levelUpdate: levelUpdate, bufferUpdate: bufferUpdate) {
                 usesRemoteMic = true
                 isRunning = true
-                return true
+                return nil
             }
             Log.info("[AudioCapture] wireless remote unavailable; using the system input")
         }
@@ -107,10 +127,23 @@ final class AudioCaptureManager {
         let authStatus = AVCaptureDevice.authorizationStatus(for: .audio)
         guard authStatus == .authorized else {
             Log.error("[AudioCapture] microphone not authorized (status: \(authStatus.rawValue))")
-            return false
+            return .permissionDenied
         }
 
-        if let deviceID, let uid = findDevice(id: deviceID) {
+        let devices = AudioInputDevices.available()
+        let lidClosed = ClamshellState.isClosed
+        switch AudioInputResolver.resolve(
+            devices: devices,
+            preferredUID: deviceID,
+            systemDefaultUID: AudioInputDevices.systemDefaultUID(),
+            lidClosed: lidClosed
+        ) {
+        case .unavailable:
+            Log.error("[AudioCapture] no usable input (lid closed: \(lidClosed))")
+            return .noUsableInput
+        case .use(let uid):
+            preferredInputUID = deviceID
+            activeInputUID = uid
             setInputDevice(uid: uid)
         }
 
@@ -118,7 +151,7 @@ final class AudioCaptureManager {
         let format = inputNode.outputFormat(forBus: 0)
         guard format.sampleRate > 0, format.channelCount > 0 else {
             Log.error("[AudioCapture] invalid input format: \(format)")
-            return false
+            return .engineFailed
         }
 
         let url = FileManager.default.temporaryDirectory
@@ -126,51 +159,42 @@ final class AudioCaptureManager {
         localLastRecordingURL = url
 
         do {
-            audioFile = try AVAudioFile(
+            let file = try AVAudioFile(
                 forWriting: url,
                 settings: format.settings,
                 commonFormat: format.commonFormat,
                 interleaved: format.isInterleaved
             )
+            audioFile = file
+            recordingFormat = file.processingFormat
         } catch {
             Log.error("[AudioCapture] cannot create audio file: \(error.localizedDescription)")
-            return false
+            return .engineFailed
         }
 
-        inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
-            guard let self else { return }
-            try? self.audioFile?.write(from: buffer)
-
-            let rms = Self.calculateRMS(buffer: buffer)
-            self.localLastActivity.record(rms: rms, frameCount: Int(buffer.frameLength))
-
-            let level = Self.visualLevel(fromRMS: rms)
-            self.levelCallback?(level)
-
-            if let bufferCallback = self.bufferCallback {
-                if let copiedBuffer = buffer.copied() {
-                    bufferCallback(copiedBuffer)
-                } else {
-                    Log.error("[AudioCapture] unsupported format \(buffer.format.commonFormat.rawValue); dropping streaming buffer")
-                }
-            }
+        guard installCaptureTap() else {
+            audioFile = nil
+            return .engineFailed
         }
 
         engine.prepare()
         do {
             try engine.start()
-            isRunning = true
-            return true
         } catch {
             engine.inputNode.removeTap(onBus: 0)
             audioFile = nil
             Log.error("[AudioCapture] engine start failed: \(error.localizedDescription)")
-            return false
+            return .engineFailed
         }
+
+        isRunning = true
+        startFailoverMonitor()
+        return nil
     }
 
     func stop() {
         guard isRunning else { return }
+        stopFailoverMonitor()
         if usesRemoteMic {
             remoteMicSource?.stop()
             levelCallback = nil
@@ -181,9 +205,150 @@ final class AudioCaptureManager {
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
         audioFile = nil
+        recordingFormat = nil
+        converter = nil
+        converterSourceFormat = nil
+        preferredInputUID = nil
+        activeInputUID = nil
         levelCallback = nil
         bufferCallback = nil
         isRunning = false
+    }
+
+    // MARK: - Capture tap and file writing
+
+    private func installCaptureTap() -> Bool {
+        let inputNode = engine.inputNode
+        let format = inputNode.outputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0 else {
+            Log.error("[AudioCapture] invalid input format: \(format)")
+            return false
+        }
+
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
+            guard let self else { return }
+            self.write(buffer)
+
+            let rms = Self.calculateRMS(buffer: buffer)
+            self.localLastActivity.record(rms: rms, frameCount: Int(buffer.frameLength))
+            self.levelCallback?(Self.visualLevel(fromRMS: rms))
+
+            if let bufferCallback = self.bufferCallback {
+                if let copiedBuffer = buffer.copied() {
+                    bufferCallback(copiedBuffer)
+                } else {
+                    Log.error("[AudioCapture] unsupported format \(buffer.format.commonFormat.rawValue); dropping streaming buffer")
+                }
+            }
+        }
+        return true
+    }
+
+    /// Writes a buffer to the recording file, converting when a fallback device
+    /// produced a different sample rate or channel layout.
+    private func write(_ buffer: AVAudioPCMBuffer) {
+        guard let audioFile, let target = recordingFormat else { return }
+        if buffer.format == target {
+            try? audioFile.write(from: buffer)
+            return
+        }
+        guard let converted = convert(buffer, to: target) else { return }
+        try? audioFile.write(from: converted)
+    }
+
+    private func convert(_ buffer: AVAudioPCMBuffer, to target: AVAudioFormat) -> AVAudioPCMBuffer? {
+        if converterSourceFormat != buffer.format {
+            converter = AVAudioConverter(from: buffer.format, to: target)
+            converterSourceFormat = buffer.format
+        }
+        guard let converter else { return nil }
+
+        let ratio = target.sampleRate / buffer.format.sampleRate
+        let capacity = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 1024
+        guard let output = AVAudioPCMBuffer(pcmFormat: target, frameCapacity: capacity) else {
+            return nil
+        }
+
+        var supplied = false
+        var error: NSError?
+        converter.convert(to: output, error: &error) { _, status in
+            if supplied {
+                status.pointee = .noDataNow
+                return nil
+            }
+            supplied = true
+            status.pointee = .haveData
+            return buffer
+        }
+        if let error {
+            Log.error("[AudioCapture] format conversion failed: \(error.localizedDescription)")
+            return nil
+        }
+        return output
+    }
+
+    // MARK: - Mid-session failover
+
+    private func startFailoverMonitor() {
+        stopFailoverMonitor()
+        let timer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.evaluateInputHealth()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        failoverTimer = timer
+    }
+
+    private func stopFailoverMonitor() {
+        failoverTimer?.invalidate()
+        failoverTimer = nil
+    }
+
+    private func evaluateInputHealth() {
+        guard isRunning, !usesRemoteMic else { return }
+        let action = MicFailoverDecision.decide(
+            activeUID: activeInputUID,
+            devices: AudioInputDevices.available(),
+            preferredUID: preferredInputUID,
+            systemDefaultUID: AudioInputDevices.systemDefaultUID(),
+            lidClosed: ClamshellState.isClosed
+        )
+        switch action {
+        case .keep:
+            break
+        case .switchTo(let uid):
+            switchInput(to: uid)
+        case .fail:
+            handleInputUnavailable()
+        }
+    }
+
+    private func switchInput(to uid: String) {
+        let name = AudioInputDevices.available().first(where: { $0.uid == uid })?.name ?? uid
+        Log.info("[AudioCapture] switching to fallback input")
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
+        setInputDevice(uid: uid)
+        guard installCaptureTap() else {
+            handleInputUnavailable()
+            return
+        }
+        engine.prepare()
+        do {
+            try engine.start()
+        } catch {
+            Log.error("[AudioCapture] fallback engine start failed: \(error.localizedDescription)")
+            handleInputUnavailable()
+            return
+        }
+        activeInputUID = uid
+        Log.info("[AudioCapture] fallback input active: \(name)")
+        onAutoSwitch?()
+    }
+
+    private func handleInputUnavailable() {
+        Log.error("[AudioCapture] active input lost with no fallback")
+        stop()
+        onInputUnavailable?()
     }
 
     private static func calculateRMS(buffer: AVAudioPCMBuffer) -> Float {
@@ -225,32 +390,11 @@ final class AudioCaptureManager {
     // MARK: - Device Management
 
     static func availableMicrophones() -> [(id: String, name: String)] {
-        var propertyAddress = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDevices,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var dataSize: UInt32 = 0
-        AudioObjectGetPropertyDataSize(AudioObjectID(kAudioObjectSystemObject), &propertyAddress, 0, nil, &dataSize)
-
-        let count = Int(dataSize) / MemoryLayout<AudioDeviceID>.size
-        var deviceIDs = [AudioDeviceID](repeating: 0, count: count)
-        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &propertyAddress, 0, nil, &dataSize, &deviceIDs)
-
-        return deviceIDs.compactMap { deviceID -> (id: String, name: String)? in
-            guard hasInputChannels(deviceID: deviceID) else { return nil }
-            let name = deviceName(deviceID: deviceID) ?? "Unknown"
-            let uid = deviceUID(deviceID: deviceID) ?? "\(deviceID)"
-            return (id: uid, name: name)
-        }
-    }
-
-    private func findDevice(id: String) -> String? {
-        AudioCaptureManager.availableMicrophones().first { $0.id == id }?.id
+        AudioInputDevices.available().map { (id: $0.uid, name: $0.name) }
     }
 
     private func setInputDevice(uid: String) {
-        guard let deviceID = Self.audioDeviceID(forUID: uid) else { return }
+        guard let deviceID = AudioInputDevices.deviceID(forUID: uid) else { return }
         guard let audioUnit = engine.inputNode.audioUnit else { return }
         var id = deviceID
         AudioUnitSetProperty(
@@ -261,55 +405,5 @@ final class AudioCaptureManager {
             &id,
             UInt32(MemoryLayout<AudioDeviceID>.size)
         )
-    }
-
-    private static func audioDeviceID(forUID uid: String) -> AudioDeviceID? {
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDevices,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var dataSize: UInt32 = 0
-        AudioObjectGetPropertyDataSize(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &dataSize)
-        let count = Int(dataSize) / MemoryLayout<AudioDeviceID>.size
-        var deviceIDs = [AudioDeviceID](repeating: 0, count: count)
-        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &dataSize, &deviceIDs)
-        return deviceIDs.first { deviceUID(deviceID: $0) == uid }
-    }
-
-    private static func hasInputChannels(deviceID: AudioDeviceID) -> Bool {
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioDevicePropertyStreamConfiguration,
-            mScope: kAudioDevicePropertyScopeInput,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var size: UInt32 = 0
-        AudioObjectGetPropertyDataSize(deviceID, &address, 0, nil, &size)
-        let bufferListPointer = UnsafeMutablePointer<AudioBufferList>.allocate(capacity: Int(size))
-        defer { bufferListPointer.deallocate() }
-        AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, bufferListPointer)
-        let bufferList = UnsafeMutableAudioBufferListPointer(bufferListPointer)
-        return bufferList.reduce(0) { $0 + Int($1.mNumberChannels) } > 0
-    }
-
-    private static func deviceName(deviceID: AudioDeviceID) -> String? {
-        getStringProperty(deviceID: deviceID, selector: kAudioDevicePropertyDeviceNameCFString)
-    }
-
-    private static func deviceUID(deviceID: AudioDeviceID) -> String? {
-        getStringProperty(deviceID: deviceID, selector: kAudioDevicePropertyDeviceUID)
-    }
-
-    private static func getStringProperty(deviceID: AudioDeviceID, selector: AudioObjectPropertySelector) -> String? {
-        var address = AudioObjectPropertyAddress(
-            mSelector: selector,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var value: Unmanaged<CFString>?
-        var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
-        let status = AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, &value)
-        guard status == noErr, let cf = value?.takeUnretainedValue() else { return nil }
-        return cf as String
     }
 }

@@ -85,6 +85,8 @@
 "pipeline.insert_failed_body" = "The text has been copied to your clipboard. Press ⌘V to paste it manually.\n\nReason: ";
 "pipeline.mic_failed_permissions" = "Microphone failed — check permissions";
 "pipeline.mic_unavailable" = "Microphone unavailable";
+"pipeline.mic_clamshell_no_input" = "The MacBook lid is closed, so the built-in microphone is disabled. Connect an external microphone (display, USB, Bluetooth, or iPhone).";
+"pipeline.mic_switched" = "Switched to an external microphone";
 "pipeline.download_failed" = "The model download did not finish. Existing files are preserved; check your network and resume.";
 "pipeline.compile_failed" = "The model was downloaded but could not be compiled. Retry, then redownload or switch models if it continues.";
 "pipeline.load_failed" = "The model was downloaded but could not be loaded. Retry, then redownload or switch models if it continues.";
