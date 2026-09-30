@@ -30,7 +30,7 @@ extension ModelCatalog {
             }
             return required
         case "mlx-community/FireRedASR2-AED-mlx":
-            return ["config.json", "tokenizer.json"]
+            return ["config.json", "cmvn.json", "dict.txt", "model.safetensors"]
         case "mlx-community/Mega-ASR-6bit":
             return ["config.json", "tokenizer_config.json"]
         default:

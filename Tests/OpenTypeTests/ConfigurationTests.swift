@@ -148,6 +148,24 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertTrue(ModelCatalog.asrRepoContainsRequiredFiles(QwenASRModel.defaultID, at: dir))
     }
 
+    @MainActor
+    func testFireRedASRCompletenessMatchesUpstreamManifest() throws {
+        let id = "mlx-community/FireRedASR2-AED-mlx"
+        let required = ModelCatalog.asrRequiredFiles(for: id)
+        XCTAssertEqual(required, ["config.json", "cmvn.json", "dict.txt", "model.safetensors"])
+        XCTAssertFalse(required.contains("tokenizer.json"))
+
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        try writeTestFiles(["config.json", "cmvn.json", "dict.txt"], under: dir)
+        XCTAssertFalse(ModelCatalog.asrRepoContainsRequiredFiles(id, at: dir))
+
+        try writeTestFiles(["model.safetensors"], under: dir)
+        XCTAssertTrue(ModelCatalog.asrRepoContainsRequiredFiles(id, at: dir))
+    }
+
     func testAudioCaptureActivityDetectsSilence() {
         var activity = AudioCaptureActivity()
         activity.record(rms: 0, frameCount: 16_000)
