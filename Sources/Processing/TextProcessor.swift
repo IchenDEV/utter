@@ -87,7 +87,11 @@ final class TextProcessor {
         guard !cleanedText.isEmpty else { return "" }
 
         let useScreenImage = shouldUseScreenImage(options: options, image: screenImage)
-        let systemPrompt = formattingSystemPrompt(
+        let baseUserPrompt = formattingUserPrompt(
+            text: cleanedText,
+            options: options
+        )
+        let assembly = formattingAssembly(
             options: options,
             screenContext: screenContext,
             screenImageAvailable: useScreenImage,
@@ -97,11 +101,8 @@ final class TextProcessor {
             dictionarySnapshot: dictionarySnapshot,
             transcript: cleanedText
         )
+        let userPrompt = assembly.userPrompt(containing: baseUserPrompt)
 
-        let userPrompt = formattingUserPrompt(
-            text: cleanedText,
-            options: options
-        )
         let generationOptions = formattingOptions(for: cleanedText, style: options.languageStyle)
 
         do {
@@ -112,7 +113,7 @@ final class TextProcessor {
                     do {
                         return try await generateWithScreenImage(
                             prompt: userPrompt,
-                            systemPrompt: systemPrompt,
+                            systemPrompt: assembly.stablePrefix,
                             model: options.llmModel,
                             image: screenImage,
                             maxTokens: generationOptions.maxTokens,
@@ -120,7 +121,7 @@ final class TextProcessor {
                         )
                     } catch {
                         Log.error("[TextProcessor] VLM failed, falling back to text LLM: \(error.localizedDescription)")
-                        let textFallbackSystemPrompt = formattingSystemPrompt(
+                        let textFallback = formattingAssembly(
                             options: options,
                             screenContext: screenContext,
                             screenImageAvailable: false,
@@ -131,8 +132,8 @@ final class TextProcessor {
                             transcript: cleanedText
                         )
                         return try await generateText(
-                            prompt: userPrompt,
-                            systemPrompt: textFallbackSystemPrompt,
+                            prompt: textFallback.userPrompt(containing: baseUserPrompt),
+                            systemPrompt: textFallback.stablePrefix,
                             options: options,
                             maxTokens: generationOptions.maxTokens,
                             temperature: generationOptions.temperature
@@ -142,7 +143,7 @@ final class TextProcessor {
             } else {
                 result = try await generateText(
                     prompt: userPrompt,
-                    systemPrompt: systemPrompt,
+                    systemPrompt: assembly.stablePrefix,
                     options: options,
                     maxTokens: generationOptions.maxTokens,
                     temperature: generationOptions.temperature
@@ -206,7 +207,11 @@ final class TextProcessor {
     ) async -> String {
         let dictionarySnapshot = requestedDictionarySnapshot ?? dictionary.snapshot(settings: .shared)
         let useScreenImage = shouldUseScreenImage(options: options, image: screenImage)
-        let systemPrompt = commandSystemPrompt(
+        let baseUserPrompt = PromptBuilder.buildCommandUserPrompt(
+            text: text,
+            inputLanguage: options.inputLanguage
+        )
+        let assembly = commandAssembly(
             options: options,
             screenContext: screenContext,
             screenImageAvailable: useScreenImage,
@@ -215,10 +220,7 @@ final class TextProcessor {
             dictionarySnapshot: dictionarySnapshot,
             transcript: text
         )
-        let userPrompt = PromptBuilder.buildCommandUserPrompt(
-            text: text,
-            inputLanguage: options.inputLanguage
-        )
+        let userPrompt = assembly.userPrompt(containing: baseUserPrompt)
 
         do {
             var result: String
@@ -227,7 +229,7 @@ final class TextProcessor {
                     do {
                         return try await generateWithScreenImage(
                             prompt: userPrompt,
-                            systemPrompt: systemPrompt,
+                            systemPrompt: assembly.stablePrefix,
                             model: options.llmModel,
                             image: screenImage,
                             maxTokens: 4096,
@@ -235,7 +237,7 @@ final class TextProcessor {
                         )
                     } catch {
                         Log.error("[TextProcessor] Command VLM failed, falling back to text LLM: \(error.localizedDescription)")
-                        let textFallbackSystemPrompt = commandSystemPrompt(
+                        let textFallback = commandAssembly(
                             options: options,
                             screenContext: screenContext,
                             screenImageAvailable: false,
@@ -245,8 +247,8 @@ final class TextProcessor {
                             transcript: text
                         )
                         return try await generateText(
-                            prompt: userPrompt,
-                            systemPrompt: textFallbackSystemPrompt,
+                            prompt: textFallback.userPrompt(containing: baseUserPrompt),
+                            systemPrompt: textFallback.stablePrefix,
                             options: options,
                             maxTokens: 4096,
                             temperature: 0.3
@@ -256,7 +258,7 @@ final class TextProcessor {
             } else {
                 result = try await generateText(
                     prompt: userPrompt,
-                    systemPrompt: systemPrompt,
+                    systemPrompt: assembly.stablePrefix,
                     options: options,
                     maxTokens: 4096,
                     temperature: 0.3

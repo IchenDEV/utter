@@ -26,16 +26,21 @@ extension TextProcessor {
 
         do {
             let generationOptions = editCommandResolutionOptions(for: transcript)
+            let baseUserPrompt = PromptBuilder.buildEditCommandResolverUserPrompt(
+                text: transcript,
+                inputLanguage: options.inputLanguage,
+                context: context
+            )
+            let personal = personalContextSections(
+                inputLanguage: options.inputLanguage,
+                transcript: transcript
+            )
+            let userPrompt = personal.isEmpty
+                ? baseUserPrompt
+                : personal.joined(separator: "\n\n") + "\n\n" + baseUserPrompt
             let result = try await generateText(
-                prompt: PromptBuilder.buildEditCommandResolverUserPrompt(
-                    text: transcript,
-                    inputLanguage: options.inputLanguage,
-                    context: context
-                ),
-                systemPrompt: systemPromptWithPersonalContext(
-                    PromptBuilder.buildEditCommandResolverSystemPrompt(
-                        inputLanguage: options.inputLanguage
-                    ),
+                prompt: userPrompt,
+                systemPrompt: PromptBuilder.buildEditCommandResolverSystemPrompt(
                     inputLanguage: options.inputLanguage
                 ),
                 options: options,
