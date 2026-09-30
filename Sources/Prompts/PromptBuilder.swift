@@ -13,7 +13,33 @@ enum PromptBuilder {
         useCustomSystemPrompt: Bool? = nil,
         customSystemPrompt: String? = nil
     ) -> String {
-        var parts = promptParts(
+        buildFormattingAssembly(
+            style: style,
+            stylePrompt: stylePrompt,
+            screenContext: screenContext,
+            screenImageAvailable: screenImageAvailable,
+            memoryContext: memoryContext,
+            inputContext: inputContext,
+            formatKind: formatKind,
+            inputLanguage: inputLanguage,
+            useCustomSystemPrompt: useCustomSystemPrompt,
+            customSystemPrompt: customSystemPrompt
+        ).systemPrompt
+    }
+
+    static func buildFormattingAssembly(
+        style: LanguageStyle,
+        stylePrompt: String,
+        screenContext: String = "",
+        screenImageAvailable: Bool = false,
+        memoryContext: String = "",
+        inputContext: InputContext? = nil,
+        formatKind: TextFormatKind? = nil,
+        inputLanguage: InputLanguage = .chinese,
+        useCustomSystemPrompt: Bool? = nil,
+        customSystemPrompt: String? = nil
+    ) -> PromptAssembly {
+        var stableParts = promptParts(
             useCustomSystemPrompt: useCustomSystemPrompt
                 ?? AppSettings.shared.useCustomSystemPrompt,
             customSystemPrompt: customSystemPrompt
@@ -23,20 +49,23 @@ enum PromptBuilder {
             inputLanguage: inputLanguage
         )
         if let formatKind {
-            parts.append(PromptCatalog.formatContractSection(
+            stableParts.append(PromptCatalog.formatContractSection(
                 kind: formatKind,
                 inputLanguage: inputLanguage
             ))
         }
-        parts.append(contentsOf: PromptCatalog.processingContextSections(
+        let volatileParts = PromptCatalog.processingContextSections(
             screenContext: screenContext,
             screenImageAvailable: screenImageAvailable,
             memoryContext: memoryContext,
             inputContext: inputContext,
             inputLanguage: inputLanguage
-        ))
+        )
 
-        return parts.joined(separator: "\n\n")
+        return PromptAssembly(
+            stablePrefix: stableParts.joined(separator: "\n\n"),
+            volatileContext: volatileParts.joined(separator: "\n\n")
+        )
     }
 
     static func buildUserPrompt(text: String, inputLanguage: InputLanguage = .chinese) -> String {
@@ -73,15 +102,34 @@ enum PromptBuilder {
         inputContext: InputContext? = nil,
         inputLanguage: InputLanguage = .chinese
     ) -> String {
-        var parts = [PromptCatalog.commandSystemPrompt(inputLanguage: inputLanguage)]
-        parts.append(contentsOf: PromptCatalog.commandContextSections(
+        buildCommandAssembly(
             screenContext: screenContext,
             screenImageAvailable: screenImageAvailable,
             memoryContext: memoryContext,
             inputContext: inputContext,
             inputLanguage: inputLanguage
-        ))
-        return parts.joined(separator: "\n\n")
+        ).systemPrompt
+    }
+
+    static func buildCommandAssembly(
+        screenContext: String,
+        screenImageAvailable: Bool = false,
+        memoryContext: String = "",
+        inputContext: InputContext? = nil,
+        inputLanguage: InputLanguage = .chinese
+    ) -> PromptAssembly {
+        let stablePrefix = PromptCatalog.commandSystemPrompt(inputLanguage: inputLanguage)
+        let volatileParts = PromptCatalog.commandContextSections(
+            screenContext: screenContext,
+            screenImageAvailable: screenImageAvailable,
+            memoryContext: memoryContext,
+            inputContext: inputContext,
+            inputLanguage: inputLanguage
+        )
+        return PromptAssembly(
+            stablePrefix: stablePrefix,
+            volatileContext: volatileParts.joined(separator: "\n\n")
+        )
     }
 }
 

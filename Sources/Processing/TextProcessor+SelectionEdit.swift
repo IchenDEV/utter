@@ -14,16 +14,24 @@ extension TextProcessor {
         let generationOptions = selectionEditOptions(for: trimmedSelection, intent: intent)
 
         do {
+            let baseUserPrompt = selectionEditPrompt(
+                selectedText: trimmedSelection,
+                intent: intent,
+                inputLanguage: options.inputLanguage,
+                spokenCommand: spokenCommand,
+                memoryContext: memoryContext,
+                inputContext: inputContext
+            )
+            let personal = personalContextSections(
+                inputLanguage: options.inputLanguage,
+                transcript: trimmedSelection
+            )
+            let userPrompt = personal.isEmpty
+                ? baseUserPrompt
+                : personal.joined(separator: "\n\n") + "\n\n" + baseUserPrompt
             let result = try await generateText(
-                prompt: selectionEditPrompt(
-                    selectedText: trimmedSelection,
-                    intent: intent,
-                    inputLanguage: options.inputLanguage,
-                    spokenCommand: spokenCommand,
-                    memoryContext: memoryContext,
-                    inputContext: inputContext
-                ),
-                systemPrompt: selectionEditSystemPromptWithPersonalContext(inputLanguage: options.inputLanguage),
+                prompt: userPrompt,
+                systemPrompt: selectionEditSystemPrompt(inputLanguage: options.inputLanguage),
                 options: options,
                 maxTokens: generationOptions.maxTokens,
                 temperature: generationOptions.temperature
