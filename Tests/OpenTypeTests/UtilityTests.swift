@@ -50,41 +50,7 @@ final class UtilityTests: XCTestCase {
         case replacement
     }
 
-    func testModelStorageMakesStableLocalIDs() {
-        XCTAssertEqual(ModelStorage.makeLocalID(
-            prefix: "llm",
-            folderName: "Qwen",
-            existing: []
-        ), "local/llm-Qwen")
-        XCTAssertEqual(ModelStorage.makeLocalID(
-            prefix: "whisper",
-            folderName: "",
-            existing: []
-        ), "local/whisper-model")
-        XCTAssertEqual(ModelStorage.makeLocalID(
-            prefix: "llm",
-            folderName: "Qwen",
-            existing: ["local/llm-Qwen"]
-        ), "local/llm-Qwen-2")
-        XCTAssertEqual(ModelStorage.makeLocalID(
-            prefix: "llm",
-            folderName: "Qwen",
-            existing: ["local/llm-Qwen", "local/llm-Qwen-2"]
-        ), "local/llm-Qwen-3")
-    }
 
-    func testModelStorageDirectorySize() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("OpenTypeTests-\(UUID().uuidString)", isDirectory: true)
-        let nested = root.appendingPathComponent("nested", isDirectory: true)
-        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
-        try Data(repeating: 1, count: 12).write(to: root.appendingPathComponent("a.bin"))
-        try Data(repeating: 2, count: 8).write(to: nested.appendingPathComponent("b.bin"))
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        XCTAssertEqual(ModelStorage.directorySize(at: root), 20)
-        XCTAssertEqual(ModelStorage.directorySize(at: root.appendingPathComponent("missing")), 0)
-    }
 
     func testModelStorageUsesHubRepoPathForASR() {
         let suffix = ModelStorage.hubModelRepoDir(QwenASRModel.defaultID).path
@@ -512,62 +478,8 @@ final class UtilityTests: XCTestCase {
         )
     }
 
-    func testModelStorageRequiresWeightsBeforeLLMIsComplete() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("OpenTypeTests-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: root) }
 
-        try Data("{}".utf8).write(to: root.appendingPathComponent("config.json"))
-        XCTAssertFalse(ModelStorage.llmRepoIsComplete(at: root))
 
-        try Data("weights".utf8).write(to: root.appendingPathComponent("model.safetensors"))
-        XCTAssertTrue(ModelStorage.llmRepoIsComplete(at: root))
-    }
-
-    func testModelStorageRequiresEveryIndexedLLMShard() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("OpenTypeTests-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        try Data("{}".utf8).write(to: root.appendingPathComponent("config.json"))
-        let index = """
-        {"weight_map":{"first":"model-00001-of-00002.safetensors","second":"model-00002-of-00002.safetensors"}}
-        """
-        try Data(index.utf8).write(to: root.appendingPathComponent("model.safetensors.index.json"))
-        try Data("one".utf8).write(to: root.appendingPathComponent("model-00001-of-00002.safetensors"))
-        XCTAssertFalse(ModelStorage.llmRepoIsComplete(at: root))
-
-        try Data("two".utf8).write(to: root.appendingPathComponent("model-00002-of-00002.safetensors"))
-        XCTAssertTrue(ModelStorage.llmRepoIsComplete(at: root))
-    }
-
-    func testModelStorageRequiresAllWhisperComponents() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("OpenTypeTests-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        try FileManager.default.createDirectory(
-            at: root.appendingPathComponent("MelSpectrogram.mlmodelc"),
-            withIntermediateDirectories: true
-        )
-        try Data("model".utf8).write(
-            to: root.appendingPathComponent("MelSpectrogram.mlmodelc/model.bin")
-        )
-        XCTAssertFalse(ModelStorage.whisperModelIsComplete(at: root))
-
-        for name in ["AudioEncoder", "TextDecoder"] {
-            let component = root.appendingPathComponent("\(name).mlmodelc")
-            try FileManager.default.createDirectory(
-                at: component,
-                withIntermediateDirectories: true
-            )
-            try Data("model".utf8).write(to: component.appendingPathComponent("model.bin"))
-        }
-        XCTAssertTrue(ModelStorage.whisperModelIsComplete(at: root))
-    }
 
     @MainActor
     func testDownloadEstimateParsesModelHints() {

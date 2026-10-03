@@ -1,11 +1,10 @@
-import UtterProcessing
 import CoreGraphics
 import Foundation
 import UtterContracts
 import UtterMediaContracts
 
 extension TextProcessor {
-    func generationRequest(
+    package func generationRequest(
         prompt: String, systemPrompt: String?, options: TextProcessingOptions,
         maxTokens: Int, temperature: Double, usesANE: Bool = false
     ) -> TextGenerationRequest {
@@ -22,7 +21,7 @@ extension TextProcessor {
         )
     }
 
-    func generateText(
+    package func generateText(
         prompt: String, systemPrompt: String, options: TextProcessingOptions, maxTokens: Int, temperature: Double
     ) async throws -> String {
         let providerID = options.textProviderID ?? (options.useRemoteLLM ? "remote" : options.localLLMBackend.rawValue)
@@ -45,7 +44,7 @@ extension TextProcessor {
         }
         return try await withLocalModelAccess {
             do {
-                let result = try await Self.runEspressoWithMLXFallback(
+                let result = try await GenerationFallback.run(
                     fallbackEnabled: options.fallbackToMLXOnEspressoFailure,
                     espresso: { try await primary.generate(request) },
                     prepareForMLXFallback: { await primary.unload() },
@@ -57,7 +56,7 @@ extension TextProcessor {
                 )
                 if result.usedMLX {
                     await Self.recordEspressoOutcome(.fallback)
-                    Log.info("[TextProcessor] ANE-LM failed; unloaded it and used the selected MLX model")
+                    log.info("[TextProcessor] ANE-LM failed; unloaded it and used the selected MLX model")
                 } else {
                     await Self.clearEspressoOutcome()
                 }
@@ -66,7 +65,7 @@ extension TextProcessor {
                 throw CancellationError()
             } catch let error as EspressoMLXFallbackError {
                 await Self.recordEspressoOutcome(.unavailable)
-                Log.sensitive("[TextProcessor] ANE-LM and MLX fallback failed: \(error.details)")
+                log.sensitive("[TextProcessor] ANE-LM and MLX fallback failed: \(error.details)")
                 throw error
             } catch {
                 if !options.fallbackToMLXOnEspressoFailure { await Self.recordEspressoOutcome(.failed) }
@@ -75,21 +74,7 @@ extension TextProcessor {
         }
     }
 
-    typealias EspressoMLXFallbackError = UtterContracts.EspressoMLXFallbackError
-
-    static func runEspressoWithMLXFallback<Value>(
-        fallbackEnabled: Bool = true,
-        espresso: () async throws -> Value,
-        prepareForMLXFallback: () async -> Void = {},
-        mlx: () async throws -> Value
-    ) async throws -> (value: Value, usedMLX: Bool) {
-        try await GenerationFallback.run(
-            fallbackEnabled: fallbackEnabled, espresso: espresso,
-            prepareForMLXFallback: prepareForMLXFallback, mlx: mlx
-        )
-    }
-
-    func generateWithScreenImage(
+    package func generateWithScreenImage(
         prompt: String, systemPrompt: String, model: String, image: CGImage,
         maxTokens: Int, temperature: Double, providerID: String = "generation.mlx-image"
     ) async throws -> String {
@@ -97,6 +82,7 @@ extension TextProcessor {
             prompt: prompt, systemPrompt: systemPrompt, modelID: model, modelURL: modelFiles.installedTextModelURL(model),
             maxTokens: maxTokens, temperature: temperature
         )
+        guard let imageProviders else { throw GenerationServiceError.unsupportedOperation }
         let provider = try await imageProviders.create(id: providerID, request: .inference)
         try Task.checkCancellation()
         let result = try await provider.generate(ImageGenerationRequest(text: request, image: image))
@@ -104,8 +90,8 @@ extension TextProcessor {
         return result
     }
 
-    func shouldUseScreenImage(options: TextProcessingOptions, image: CGImage?) -> Bool {
-        guard image != nil, options.screenContextMode == .multimodal,
+    package func shouldUseScreenImage(options: TextProcessingOptions, image: CGImage?) -> Bool {
+        guard imageProviders != nil, image != nil, options.screenContextMode == .multimodal,
               !options.useRemoteLLM, options.localLLMBackend == .mlx else { return false }
         return ScreenContextMode.supportsScreenImageContext(modelID: options.llmModel)
     }

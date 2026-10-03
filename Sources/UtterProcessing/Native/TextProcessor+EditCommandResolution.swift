@@ -1,27 +1,29 @@
-import UtterProcessing
 import UtterContracts
 import Foundation
 
 extension TextProcessor {
-    func resolveSpokenEditCommand(
+    package func resolveSpokenEditCommand(
         text: String,
         options: TextProcessingOptions,
-        context: SpokenEditCommandResolutionContext = .unknown
+        context: SpokenEditCommandResolutionContext = .unknown,
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> SpokenEditCommand? {
         guard case .command(let command) = await resolveSpokenEditCommandResolution(
             text: text,
             options: options,
-            context: context
+            context: context,
+            dictionarySnapshot: dictionarySnapshot
         ) else {
             return nil
         }
         return command
     }
 
-    func resolveSpokenEditCommandResolution(
+    package func resolveSpokenEditCommandResolution(
         text: String,
         options: TextProcessingOptions,
-        context: SpokenEditCommandResolutionContext = .unknown
+        context: SpokenEditCommandResolutionContext = .unknown,
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> SpokenEditCommandLLMResolution? {
         let transcript = TranscriptionSanitizer.normalizeInput(text)
         guard !transcript.isEmpty else { return nil }
@@ -35,6 +37,7 @@ extension TextProcessor {
             )
             let personal = personalContextSections(
                 inputLanguage: options.inputLanguage,
+                dictionarySnapshot: dictionarySnapshot,
                 transcript: transcript
             )
             let userPrompt = personal.isEmpty
@@ -51,16 +54,16 @@ extension TextProcessor {
             )
             let resolution = SpokenEditCommandLLMResolver.resolution(from: result)
             if case .command = resolution {
-                Log.info("[TextProcessor] LLM resolved a spoken edit command")
+                log.info("[TextProcessor] LLM resolved a spoken edit command")
             }
             return resolution
         } catch {
-            Log.error("[TextProcessor] LLM edit command resolution failed: \(error.localizedDescription)")
+            log.error("[TextProcessor] LLM edit command resolution failed: \(error.localizedDescription)")
             return nil
         }
     }
 
-    func editCommandResolutionOptions(for text: String) -> GenerationOptions {
+    package func editCommandResolutionOptions(for text: String) -> GenerationOptions {
         let characterCount = text.trimmingCharacters(in: .whitespacesAndNewlines).count
         let maxTokens = characterCount > 160 ? 384 : 256
         return GenerationOptions(maxTokens: maxTokens, temperature: 0)

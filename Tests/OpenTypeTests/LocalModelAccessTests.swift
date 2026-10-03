@@ -1,3 +1,4 @@
+import UtterProcessing
 @testable import UtterModels
 import XCTest
 @testable import OpenType

@@ -1,9 +1,8 @@
-import UtterProcessing
 import UtterContracts
 import Foundation
 
 extension TextProcessor {
-    func selectionEditPrompt(
+    package func selectionEditPrompt(
         selectedText: String,
         intent: SelectionRewriteIntent,
         inputLanguage: InputLanguage,
@@ -32,7 +31,7 @@ extension TextProcessor {
         """
     }
 
-    func selectionEditSpokenCommandSection(_ spokenCommand: String, inputLanguage: InputLanguage) -> String {
+    package func selectionEditSpokenCommandSection(_ spokenCommand: String, inputLanguage: InputLanguage) -> String {
         guard let preview = SpokenEditCommandResolutionContext.preview(spokenCommand, limit: 600) else { return "" }
         switch inputLanguage {
         case .auto, .chinese, .cantonese:
@@ -58,14 +57,14 @@ extension TextProcessor {
         }
     }
 
-    func selectionEditSystemPromptWithPersonalContext(inputLanguage: InputLanguage) -> String {
+    package func selectionEditSystemPromptWithPersonalContext(inputLanguage: InputLanguage) -> String {
         systemPromptWithPersonalContext(
             selectionEditSystemPrompt(inputLanguage: inputLanguage),
             inputLanguage: inputLanguage
         )
     }
 
-    func selectionEditSystemPrompt(inputLanguage: InputLanguage) -> String {
+    package func selectionEditSystemPrompt(inputLanguage: InputLanguage) -> String {
         switch inputLanguage {
         case .auto:
             return """
@@ -120,7 +119,7 @@ extension TextProcessor {
         }
     }
 
-    func selectionEditMemorySection(_ memoryContext: String, inputLanguage: InputLanguage) -> String {
+    package func selectionEditMemorySection(_ memoryContext: String, inputLanguage: InputLanguage) -> String {
         guard !memoryContext.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return "" }
         let label: String
         switch inputLanguage {

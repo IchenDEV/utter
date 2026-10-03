@@ -1,4 +1,3 @@
-import UtterProcessing
 import UtterContracts
 import Foundation
 
@@ -16,7 +15,7 @@ extension TextProcessor {
         return "<(?:\(names))(?:\\s+[^>]*)?>"
     }()
 
-    func stripThinkingTags(_ text: String) -> String {
+    package func stripThinkingTags(_ text: String) -> String {
         if let finalText = LLMScaffoldedOutput.finalText(from: text) {
             return finalText
         }
@@ -37,7 +36,7 @@ extension TextProcessor {
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    func formattingOptions(for text: String, style: LanguageStyle) -> GenerationOptions {
+    package func formattingOptions(for text: String, style: LanguageStyle) -> GenerationOptions {
         let characterCount = text.trimmingCharacters(in: .whitespacesAndNewlines).count
 
         let minimumTokens: Int
@@ -70,7 +69,7 @@ extension TextProcessor {
 
     /// Dictionary replacements are applied once on the input side. Applying
     /// them again could double-expand replacements that contain the original.
-    func cleanGeneratedOutput(
+    package func cleanGeneratedOutput(
         _ text: String,
         inputLanguage: InputLanguage,
         fallback: String = ""
@@ -83,7 +82,7 @@ extension TextProcessor {
 
     /// Command output is entirely model-generated, so parsing its advertised
     /// final_text envelope cannot swallow dictated content.
-    func cleanCommandGeneratedOutput(
+    package func cleanCommandGeneratedOutput(
         _ text: String,
         inputLanguage: InputLanguage
     ) -> String {
@@ -94,7 +93,7 @@ extension TextProcessor {
         return cleanGeneratedOutput(text, inputLanguage: inputLanguage)
     }
 
-    func validatedOutput(
+    package func validatedOutput(
         _ candidate: String,
         source: String,
         protectedTerms: [String] = [],
@@ -105,12 +104,12 @@ extension TextProcessor {
             source: source, candidate: candidate, protectedTerms: protectedTerms,
             inputLanguage: inputLanguage, enforceSemanticFidelity: enforceSemanticFidelity
         ) else { return candidate }
-        Log.error("[TextProcessor] rejected formatting output: \(violation); keeping source transcript")
+        log.error("[TextProcessor] rejected formatting output: \(violation); keeping source transcript")
         return source
     }
 
     /// Keeps line breaks while collapsing surrounding whitespace.
-    func normalizeWhitespace(_ text: String) -> String {
+    package func normalizeWhitespace(_ text: String) -> String {
         TranscriptionSanitizer.normalizeInput(text)
             .replacingOccurrences(
                 of: "[^\\S\\n]*\\n[^\\S\\n]*",

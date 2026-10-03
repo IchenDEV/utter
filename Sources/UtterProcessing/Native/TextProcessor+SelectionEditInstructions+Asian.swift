@@ -2,7 +2,7 @@ import UtterContracts
 import Foundation
 
 extension TextProcessor {
-    func selectionEditJapaneseInstruction(_ intent: SelectionRewriteIntent) -> String {
+    package func selectionEditJapaneseInstruction(_ intent: SelectionRewriteIntent) -> String {
         switch intent {
         case .formal:
             return "選択テキストをより正式で明確な文体に書き換え、意味は保ってください。"
@@ -69,7 +69,7 @@ extension TextProcessor {
         }
     }
 
-    func selectionEditKoreanInstruction(_ intent: SelectionRewriteIntent) -> String {
+    package func selectionEditKoreanInstruction(_ intent: SelectionRewriteIntent) -> String {
         switch intent {
         case .formal:
             return "선택 텍스트를 더 공식적이고 명확하게 다시 쓰되 의미를 유지하세요."

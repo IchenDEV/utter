@@ -1,10 +1,8 @@
-import UtterProcessing
-import UtterPresentationContracts
 import UtterContracts
 import Foundation
 
 extension TextProcessor {
-    func formattingUserPrompt(
+    package func formattingUserPrompt(
         text: String,
         options: TextProcessingOptions
     ) -> String {
@@ -22,7 +20,7 @@ extension TextProcessor {
         }
     }
 
-    func formattingSystemPrompt(
+    package func formattingSystemPrompt(
         options: TextProcessingOptions,
         screenContext: String,
         screenImageAvailable: Bool,
@@ -51,7 +49,7 @@ extension TextProcessor {
         )
     }
 
-    func commandSystemPrompt(
+    package func commandSystemPrompt(
         options: TextProcessingOptions,
         screenContext: String,
         screenImageAvailable: Bool,
@@ -74,7 +72,7 @@ extension TextProcessor {
         )
     }
 
-    func systemPromptWithPersonalContext(
+    package func systemPromptWithPersonalContext(
         _ systemPrompt: String,
         inputLanguage: InputLanguage,
         dictionarySnapshot: PersonalDictionarySnapshot? = nil,
@@ -89,12 +87,12 @@ extension TextProcessor {
         return ([systemPrompt] + extraSections).joined(separator: "\n\n")
     }
 
-    func personalContextSections(
+    package func personalContextSections(
         inputLanguage: InputLanguage,
         dictionarySnapshot: PersonalDictionarySnapshot? = nil,
         transcript: String = ""
     ) -> [String] {
-        let snapshot = dictionarySnapshot ?? PersonalDictionary.shared.snapshot(settings: .shared)
+        let snapshot = dictionarySnapshot ?? snapshotDictionary()
         return [
             PromptCatalog.activeIndustryLexiconSection(
                 snapshot.industryLexicon.promptDescription(matching: transcript),
@@ -115,7 +113,7 @@ extension TextProcessor {
     /// Cacheable formatting assembly: only settings-derived instructions stay in
     /// `stablePrefix`; processing context and personal context become the
     /// volatile tail that travels in the user turn.
-    func formattingAssembly(
+    package func formattingAssembly(
         options: TextProcessingOptions,
         screenContext: String,
         screenImageAvailable: Bool,
@@ -145,7 +143,7 @@ extension TextProcessor {
         )
     }
 
-    func commandAssembly(
+    package func commandAssembly(
         options: TextProcessingOptions,
         screenContext: String,
         screenImageAvailable: Bool,

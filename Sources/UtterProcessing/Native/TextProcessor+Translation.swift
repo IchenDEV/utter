@@ -1,14 +1,14 @@
-import UtterProcessing
 import UtterContracts
 import Foundation
 
 extension TextProcessor {
-    func translate(
+    package func translate(
         text: String,
         targetLanguage: TranslationLanguage,
-        options: TextProcessingOptions
+        options: TextProcessingOptions,
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
-        let prepared = prepareForFormatting(text: text, inputLanguage: options.inputLanguage)
+        let prepared = prepareForFormatting(text: text, inputLanguage: options.inputLanguage, dictionarySnapshot: dictionarySnapshot)
         guard !prepared.isEmpty else { return "" }
 
         let systemPrompt = PromptCatalog.translationSystemPrompt(
@@ -31,7 +31,7 @@ extension TextProcessor {
             )
             return cleanCommandGeneratedOutput(result, inputLanguage: options.inputLanguage)
         } catch {
-            Log.error("[TextProcessor] translation failed: \(error.localizedDescription)")
+            log.error("[TextProcessor] translation failed: \(error.localizedDescription)")
             return ""
         }
     }

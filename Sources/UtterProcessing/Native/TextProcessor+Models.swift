@@ -1,16 +1,14 @@
-import UtterProcessing
-import UtterModels
 import UtterContracts
 import Foundation
 
 extension TextProcessor {
-    func withLocalModelAccess<Value>(
+    package func withLocalModelAccess<Value>(
         _ operation: () async throws -> Value
     ) async throws -> Value {
         try await localModelAccessGate.withAccess(operation)
     }
 
-    static func withEspressoOutcomeTracking<Value>(
+    package static func withEspressoOutcomeTracking<Value>(
         _ operation: () async throws -> Value
     ) async rethrows -> Value {
         if espressoGenerationTracker != nil {
@@ -21,19 +19,19 @@ extension TextProcessor {
         }
     }
 
-    static func recordEspressoOutcome(_ outcome: EspressoGenerationOutcome) async {
+    package static func recordEspressoOutcome(_ outcome: EspressoGenerationOutcome) async {
         await espressoGenerationTracker?.record(outcome)
     }
 
-    static func clearEspressoOutcome() async {
+    package static func clearEspressoOutcome() async {
         await espressoGenerationTracker?.clear()
     }
 
-    func consumeEspressoOutcome() async -> EspressoGenerationOutcome? {
+    package func consumeEspressoOutcome() async -> EspressoGenerationOutcome? {
         await Self.espressoGenerationTracker?.consume()
     }
 
-    func isLLMReady(for backend: LocalLLMBackend) async -> Bool {
+    package func isLLMReady(for backend: LocalLLMBackend) async -> Bool {
         do {
             let primary = try await providers.create(id: backend.rawValue, request: .inference)
             if await primary.isLoaded { return true }
@@ -43,20 +41,21 @@ extension TextProcessor {
         } catch { return false }
     }
 
-    func unloadLLM() async {
+    package func unloadLLM() async {
         let descriptors = await providers.descriptors
         for descriptor in descriptors where descriptor.id.hasPrefix("generation.") {
             for purpose in [GenerationPurpose.inference, .benchmark] {
                 if let provider = try? await providers.create(id: descriptor.id, request: purpose) { await provider.unload() }
             }
         }
+        guard let imageProviders else { return }
         let imageDescriptors = await imageProviders.descriptors
         for descriptor in imageDescriptors {
             if let provider = try? await imageProviders.create(id: descriptor.id, request: .inference) { await provider.unload() }
         }
     }
 
-    func benchmarkLLM(modelID: String) async throws -> ModelBenchmarkResult {
+    package func benchmarkLLM(modelID: String) async throws -> ModelBenchmarkResult {
         let request = TextGenerationRequest(prompt: "", modelID: modelID, modelURL: modelFiles.installedTextModelURL(modelID))
         let provider = try await providers.create(id: "generation.mlx", request: .benchmark)
         try Task.checkCancellation()
@@ -64,7 +63,7 @@ extension TextProcessor {
     }
 
     @discardableResult
-    func warmUpLLM(
+    package func warmUpLLM(
         model: String, backend: LocalLLMBackend, espressoModelPath: String,
         fallbackToMLXOnEspressoFailure: Bool
     ) async -> (loaded: Bool, errorMessage: String?, espressoOutcome: EspressoGenerationOutcome?) {
@@ -81,7 +80,7 @@ extension TextProcessor {
                 try Task.checkCancellation()
                 do {
                     if backend == .espresso {
-                        let result = try await Self.runEspressoWithMLXFallback(
+                        let result = try await GenerationFallback.run(
                             fallbackEnabled: fallbackToMLXOnEspressoFailure,
                             espresso: { try await primary.prepare(primaryRequest) },
                             prepareForMLXFallback: { await primary.unload() },
@@ -99,7 +98,7 @@ extension TextProcessor {
                 } catch is CancellationError {
                     throw CancellationError()
                 } catch let error as EspressoMLXFallbackError {
-                    Log.sensitive("[TextProcessor] ANE-LM and MLX warmup failed: \(error.details)")
+                    log.sensitive("[TextProcessor] ANE-LM and MLX warmup failed: \(error.details)")
                     return (false, EspressoGenerationOutcome.unavailable.message, .unavailable)
                 } catch {
                     if backend == .espresso && !fallbackToMLXOnEspressoFailure {

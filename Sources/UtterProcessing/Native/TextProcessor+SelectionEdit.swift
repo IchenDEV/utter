@@ -2,13 +2,14 @@ import UtterContracts
 import Foundation
 
 extension TextProcessor {
-    func processSelectionEdit(
+    package func processSelectionEdit(
         selectedText: String,
         intent: SelectionRewriteIntent,
         options: TextProcessingOptions,
         spokenCommand: String = "",
         memoryContext: String = "",
-        inputContext: InputContext? = nil
+        inputContext: InputContext? = nil,
+        dictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
         let trimmedSelection = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedSelection.isEmpty else { return "" }
@@ -25,6 +26,7 @@ extension TextProcessor {
             )
             let personal = personalContextSections(
                 inputLanguage: options.inputLanguage,
+                dictionarySnapshot: dictionarySnapshot,
                 transcript: trimmedSelection
             )
             let userPrompt = personal.isEmpty
@@ -39,20 +41,20 @@ extension TextProcessor {
             )
             return cleanSelectionEditOutput(result, inputLanguage: options.inputLanguage)
         } catch {
-            Log.error("[TextProcessor] Selection edit failed: \(error.localizedDescription)")
+            log.error("[TextProcessor] Selection edit failed: \(error.localizedDescription)")
             return ""
         }
     }
 
     /// Selection-edit prompts advertise the same final_text JSON contract as
     /// command prompts, so the envelope is honored here too.
-    func cleanSelectionEditOutput(_ text: String, inputLanguage: InputLanguage) -> String {
+    package func cleanSelectionEditOutput(_ text: String, inputLanguage: InputLanguage) -> String {
         cleanCommandGeneratedOutput(text, inputLanguage: inputLanguage)
     }
 }
 
 extension TextProcessor {
-    func selectionEditOptions(for text: String, intent: SelectionRewriteIntent) -> GenerationOptions {
+    package func selectionEditOptions(for text: String, intent: SelectionRewriteIntent) -> GenerationOptions {
         let characterCount = text.trimmingCharacters(in: .whitespacesAndNewlines).count
         let size = selectionEditSize(for: characterCount)
 
@@ -92,7 +94,7 @@ extension TextProcessor {
         return GenerationOptions(maxTokens: maxTokens, temperature: temperature)
     }
 
-    func selectionEditSize(for characterCount: Int) -> Int {
+    package func selectionEditSize(for characterCount: Int) -> Int {
         switch characterCount {
         case 0...120:
             return 0

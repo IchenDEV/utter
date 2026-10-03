@@ -1,7 +1,5 @@
-import UtterProcessing
-import UtterPresentationContracts
 import XCTest
-@testable import OpenType
+@testable import UtterProcessing
 
 final class MemoryContextFactBoundaryTests: XCTestCase {
     func testSmartFormatMemoryContextDoesNotBecomeFactSource() {
@@ -60,24 +58,14 @@ final class MemoryContextFactBoundaryTests: XCTestCase {
         XCTAssertTrue(english.contains("use it as a source of facts only when the command asks"))
     }
 
-    @MainActor
     func testCustomSystemPromptDoesNotPromoteContextToFactSource() {
-        let savedUseCustomSystemPrompt = AppSettings.shared.useCustomSystemPrompt
-        let savedCustomSystemPrompt = AppSettings.shared.customSystemPrompt
-        defer {
-            AppSettings.shared.useCustomSystemPrompt = savedUseCustomSystemPrompt
-            AppSettings.shared.customSystemPrompt = savedCustomSystemPrompt
-        }
-
-        AppSettings.shared.useCustomSystemPrompt = true
-        AppSettings.shared.customSystemPrompt = "Make this concise."
-
         let prompt = PromptBuilder.buildSystemPrompt(
             style: .professional,
             stylePrompt: "",
             screenContext: "screen-only launch date",
             memoryContext: "memory-only launch date",
-            inputLanguage: .english
+            inputLanguage: .english,
+            useCustomSystemPrompt: true, customSystemPrompt: "Make this concise."
         )
 
         XCTAssertTrue(prompt.contains("Do not add facts that are not present in the raw transcript"))

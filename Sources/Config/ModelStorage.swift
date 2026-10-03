@@ -1,3 +1,4 @@
+import UtterModels
 import UtterPresentationContracts
 import UtterContracts
 import Foundation
@@ -576,83 +577,10 @@ enum ModelStorage {
         return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath)
     }
 
-    static func whisperModelIsComplete(at dir: URL) -> Bool {
-        ["MelSpectrogram", "AudioEncoder", "TextDecoder"].allSatisfy { name in
-            resourceHasContent(dir.appendingPathComponent("\(name).mlmodelc")) ||
-                resourceHasContent(dir.appendingPathComponent("\(name).mlpackage"))
-        }
-    }
-
-    static func llmRepoIsComplete(at dir: URL) -> Bool {
-        guard fileExists(dir.appendingPathComponent("config.json")) else { return false }
-        let indexURL = dir.appendingPathComponent("model.safetensors.index.json")
-        if fileExists(indexURL),
-           let data = try? Data(contentsOf: indexURL),
-           let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let weightMap = object["weight_map"] as? [String: String] {
-            let shards = Set(weightMap.values)
-            return !shards.isEmpty && shards.allSatisfy {
-                fileExists(dir.appendingPathComponent($0))
-            }
-        }
-
-        if fileExists(dir.appendingPathComponent("model.safetensors")) ||
-            fileExists(dir.appendingPathComponent("weights.safetensors")) {
-            return true
-        }
-
-        guard let enumerator = FileManager.default.enumerator(
-            at: dir,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else { return false }
-
-        for case let fileURL as URL in enumerator {
-            if fileURL.pathExtension.lowercased() == "npz",
-               fileExists(fileURL) {
-                return true
-            }
-        }
-        return false
-    }
-
-    static func directorySize(at url: URL) -> Int64 {
-        guard let enumerator = FileManager.default.enumerator(
-            at: url, includingPropertiesForKeys: [.fileSizeKey]
-        ) else { return 0 }
-        var total: Int64 = 0
-        for case let fileURL as URL in enumerator {
-            if let sz = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
-                total += Int64(sz)
-            }
-        }
-        return total
-    }
-
-    private static func fileExists(_ url: URL) -> Bool {
-        var isDirectory = ObjCBool(false)
-        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
-              !isDirectory.boolValue else { return false }
-        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
-        return (attributes?[.size] as? NSNumber)?.int64Value ?? 0 > 0
-    }
-
-    private static func resourceHasContent(_ url: URL) -> Bool {
-        var isDirectory = ObjCBool(false)
-        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
-            return false
-        }
-        return isDirectory.boolValue ? directorySize(at: url) > 0 : fileExists(url)
-    }
-
+    static func whisperModelIsComplete(at directory: URL) -> Bool { ModelAssets.whisperModelIsComplete(at: directory) }
+    static func llmRepoIsComplete(at directory: URL) -> Bool { ModelAssets.llmRepoIsComplete(at: directory) }
+    static func directorySize(at directory: URL) -> Int64 { ModelAssets.directorySize(at: directory) }
     static func makeLocalID(prefix: String, folderName: String, existing: Set<String>) -> String {
-        let cleanName = folderName.isEmpty ? "model" : folderName
-        let base = "local/\(prefix)-\(cleanName)"
-        guard existing.contains(base) else { return base }
-        for n in 2...999 {
-            let candidate = "\(base)-\(n)"
-            if !existing.contains(candidate) { return candidate }
-        }
-        return "\(base)-\(UUID().uuidString.prefix(8))"
+        ModelAssets.makeLocalID(prefix: prefix, folderName: folderName, existing: existing)
     }
 }

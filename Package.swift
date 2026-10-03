@@ -18,10 +18,14 @@ let modelDependencies: [Target.Dependency] = ["UtterMediaContracts"]
 let modelExclusions: [String] = []
 let remoteDependencies: [Target.Dependency] = ["UtterMediaContracts"]
 let remoteExclusions: [String] = []
+let processingDependencies: [Target.Dependency] = ["UtterMediaContracts"]
+let processingExclusions: [String] = []
 #else
 let dataExclusions = ["SystemDiagnostics.swift"]
 let modelDependencies: [Target.Dependency] = []
 let modelExclusions = ["SpeechRegistry.swift", "ImageRegistry.swift"]
+let processingDependencies: [Target.Dependency] = []
+let processingExclusions = ["Native"]
 let remoteDependencies: [Target.Dependency] = []
 let remoteExclusions = ["GzipCompression.swift", "VolcSpeechEngine+Audio.swift", "VolcSpeechEngine+Codec.swift", "VolcSpeechEngine+Requests.swift", "VolcSpeechEngine+Transport.swift", "VolcSpeechEngine.swift", "VolcSpeechPlugins.swift", "VolcStreamingSession.swift"]
 #endif
@@ -43,7 +47,8 @@ let portableTargets: [Target] = [
     ),
     .target(
         name: "UtterProcessing",
-        dependencies: ["UtterRuntime", "UtterContracts"],
+        dependencies: ["UtterRuntime", "UtterContracts"] + processingDependencies,
+        exclude: processingExclusions,
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .testTarget(

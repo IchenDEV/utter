@@ -2,7 +2,7 @@ import UtterContracts
 import Foundation
 
 extension TextProcessor {
-    func selectionEditInstruction(_ intent: SelectionRewriteIntent, inputLanguage: InputLanguage) -> String {
+    package func selectionEditInstruction(_ intent: SelectionRewriteIntent, inputLanguage: InputLanguage) -> String {
         switch inputLanguage {
         case .auto:
             return selectionEditAutoInstruction(intent)
@@ -19,21 +19,21 @@ extension TextProcessor {
         }
     }
 
-    func selectionEditAutoInstruction(_ intent: SelectionRewriteIntent) -> String {
+    package func selectionEditAutoInstruction(_ intent: SelectionRewriteIntent) -> String {
         """
         先判断选中文本主要语言。除非本指令要求翻译或指定回复语言，否则保持选中文本原语言或自然混排，不要无故翻译。
         \(selectionEditChineseInstruction(intent))
         """
     }
 
-    func selectionEditCantoneseInstruction(_ intent: SelectionRewriteIntent) -> String {
+    package func selectionEditCantoneseInstruction(_ intent: SelectionRewriteIntent) -> String {
         """
         除非本指令要求翻译或指定回复语言，否则用自然粤语书面表达和必要中英混排输出，不要默认改成普通话书面中文。
         \(selectionEditChineseInstruction(intent))
         """
     }
 
-    func selectionEditChineseInstruction(_ intent: SelectionRewriteIntent) -> String {
+    package func selectionEditChineseInstruction(_ intent: SelectionRewriteIntent) -> String {
         switch intent {
         case .formal:
             return "把选中文本改写得更正式、清晰，保留原意。"
@@ -100,7 +100,7 @@ extension TextProcessor {
         }
     }
 
-    func selectionEditEnglishInstruction(_ intent: SelectionRewriteIntent) -> String {
+    package func selectionEditEnglishInstruction(_ intent: SelectionRewriteIntent) -> String {
         switch intent {
         case .formal:
             return "Rewrite the selected text in a more formal and clear style while preserving meaning."
