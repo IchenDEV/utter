@@ -1,6 +1,6 @@
-# Utter 本地语音输入 · 29 秒宣传片（配音版）
+# Utter 本地语音输入 · 28 秒宣传片（配音版）
 
-16:9 · 1920×1080 · 30 fps · 简体中文 · 成片 `dist/utter-offline-29s-zh-vo.mp4`
+16:9 · 1920×1080 · 30 fps · 简体中文 · 成片 `dist/utter-offline-28s-zh-vo.mp4`
 
 ## 创意
 
@@ -16,10 +16,10 @@
 | 0:02.5–0:03.6 | 聊天窗口浮入，镜头推向输入框 | — |
 | 0:03.6–0:11.9 | 按住 fn，录音胶囊出现，口述逐词显示，与配音同步 | 按住 **fn**，自然地说 |
 | 0:11.9–0:14.3 | 识别中 → 整理中（划掉口头禅和自我纠正，补标点）→ 输入中（飞入输入框）→ 完成 | 松开，**在本机**识别并整理 → 整理好的文字，**直接写进当前应用** |
-| 0:16.5–0:24.5 | 桌面收成“这台 Mac”。四个节点：你的声音 → 本地语音识别（Qwen3-ASR · Whisper · FireRed · Apple 设备端）→ 本地文字整理（Qwen3.5 · Gemma 4 · Llama 4，MLX）→ 写入当前应用；下方是 Utter 设置页真实截图（识别引擎页签、整理模型页签）；小标签“装好模型后，断网也能用” | 选你喜欢的**本地模型**，全程在这台 Mac 上 |
+| 0:16.5–0:24.5 | 桌面收成“这台 Mac”。四个节点：你的声音 → 本地语音识别（Qwen3-ASR · Whisper · FireRed · Apple 设备端）→ 本地文字整理（Qwen3.5 · Qwen3 · Gemma 4 · Gemma 3，MLX）→ 写入当前应用；下方是 Utter 设置页真实截图（识别引擎页签、“Qwen3.5 2B 当前”模型行）；小标签“装好模型后，断网也能用” | 选你喜欢的**本地模型**，全程在这台 Mac 上 |
 | 0:24.5–0:28.9 | 片尾 | 离线语音输入 / 你的声音，留在你的 Mac / utter.idevlab.dev（片尾标语不加句号） |
 
-页脚：演示段为“界面为动画重建，非实时录屏 · 实际速度取决于设备与模型 · 示例文本”；模型段为“截图来自 Utter 设置界面（‘豆包’‘远程’为联网选项）· 本地模式需预先下载模型”。
+页脚：演示段为“界面为动画重建，非实时录屏 · 实际速度取决于设备与模型 · 示例文本”；模型段为“截图来自 Utter 设置界面（‘豆包’为联网选项）· 本地模式需预先下载模型”。
 
 ## 口述与整理结果（示例文本）
 
@@ -33,7 +33,7 @@
 | 按住 fn 录音，松开输入 | 默认 `hotkeyType = .fn`、`activationMode = .longPress` |
 | HUD 外形与状态 | `OverlayLayout`；`pipeline.*` / `status.done` 文案 |
 | 本地识别模型 | `ModelCatalogASR.defaultASRModels`（Qwen3-ASR、Confucius4-R2T2、FireRedASR2、Mega-ASR）、WhisperKit、Apple Speech（`requiresOnDeviceRecognition = true`） |
-| 本地整理模型 | `ModelCatalog.defaultLLMModels`：Qwen3.5 / Qwen3 / Qwen2.5、Gemma 4 / Gemma 3、Llama 4（MLX） |
+| 本地整理模型 | `ModelCatalog.defaultLLMModels`：Qwen3.5 / Qwen3 / Qwen2.5、Gemma 4 / Gemma 3（MLX）；Llama 4 体积过大，不在片中展示 |
 | 断网可用 | 本地引擎只从本地目录加载模型；设置页文案“模型下载一次后即可离线识别” |
 
 ## 配音稿
@@ -45,5 +45,5 @@
 | 0:00.2–0:03.3 | 旁白（Evan Zhao） | Utter，在 Mac 上本地运行的语音输入。 |
 | 0:04.0–0:11.6 | 口述（ShanShan） | 嗯，那个，评审会改到周四，不对，周五下午三点。接口文档我今晚发群里，大家提前看一下。 |
 | 0:12.3–0:16.2 | 旁白（Evan Zhao） | 识别和整理都在本机完成，直接写进当前应用。 |
-| 0:17.2–0:24.3 | 旁白（Evan Zhao） | 识别用 Qwen3-ASR 或 Whisper，整理用 Qwen、Gemma 或 Llama，全部在本地运行。 |
-| 0:25.1–0:28.1 | 旁白（Evan Zhao） | Utter。你的声音，留在你的 Mac。 |
+| 0:17.2–0:23.5 | 旁白（Evan Zhao） | 识别用 Qwen3-ASR 或 Whisper，整理用 Qwen 或 Gemma，全部在本地运行。 |
+| 0:24.3–0:27.3 | 旁白（Evan Zhao） | Utter。你的声音，留在你的 Mac。 |

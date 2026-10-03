@@ -20,11 +20,11 @@ function buildScene(cues) {
       <div class="pv-label" id="pvMac">这台 Mac</div>
       <div class="pv-node" id="pvN0"><div class="ic">${ICON.mic}</div><div class="t">你的声音</div><div class="d">麦克风输入</div></div>
       <div class="pv-node wide" id="pvN1"><div class="ic">${ICON.transcribing}</div><div class="t">本地语音识别</div><div class="d">Qwen3-ASR · Whisper<br>FireRed · Apple 设备端</div></div>
-      <div class="pv-node wide" id="pvN2"><div class="ic">${ICON.chip}</div><div class="t">本地文字整理</div><div class="d">Qwen3.5 · Gemma 4<br>Llama 4（MLX）</div></div>
+      <div class="pv-node wide" id="pvN2"><div class="ic">${ICON.chip}</div><div class="t">本地文字整理</div><div class="d">Qwen3.5 · Qwen3<br>Gemma 4 · Gemma 3（MLX）</div></div>
       <div class="pv-node" id="pvN3"><div class="ic">${ICON.cursor}</div><div class="t">写入当前应用</div><div class="d">出现在光标处</div></div>
       <div class="pv-link" id="pvL0"></div><div class="pv-link" id="pvL1"></div><div class="pv-link" id="pvL2"></div>
       <div class="pv-shot" id="pvShotA"><img src="../../promo-kit/assets/ui-asr-engines.png" width="920" height="112"></div>
-      <div class="pv-shot" id="pvShotB"><img src="../../promo-kit/assets/ui-llm-types.png" width="920" height="143"></div>
+      <div class="pv-shot" id="pvShotB"><img src="../../promo-kit/assets/ui-llm-current-row.png" width="920" height="62"></div>
     </div>`);
   buildOverlay(stage, { l1: "离线语音输入", l2: "你的声音，留在你的 Mac" });
 }
@@ -94,6 +94,6 @@ window.renderAt = function renderAt(t) {
   renderKeys(t, [[E.keyDown, E.keyUp, ["fn"]]]);
   renderChip(t, E.privacy + 1.7, E.endCard - 0.3, "装好模型后，断网也能用");
   renderFoot(t, [[E.windowIn + 0.3, E.zoomOut + 0.3, "界面为动画重建，非实时录屏 · 实际速度取决于设备与模型 · 示例文本"],
-    [E.zoomOut + 0.5, E.endCard - 0.3, "截图来自 Utter 设置界面（“豆包”“远程”为联网选项）· 本地模式需预先下载模型"]]);
+    [E.zoomOut + 0.5, E.endCard - 0.3, "截图来自 Utter 设置界面（“豆包”为联网选项）· 本地模式需预先下载模型"]]);
   renderEnd(t, E.endCard + 0.25);
 };

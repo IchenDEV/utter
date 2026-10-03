@@ -1,9 +1,9 @@
 {
  "fps": 30,
- "duration": 51.812,
+ "duration": 50.939,
  "width": 1920,
  "height": 1080,
- "output": "utter-features-52s-zh-vo.mp4",
+ "output": "utter-features-51s-zh-vo.mp4",
  "beats": {
   "list": {
    "winIn": 2.5,
@@ -211,7 +211,7 @@
  },
  "models": {
   "start": 39.78,
-  "end": 46.412
+  "end": 45.539
  },
- "endCard": 46.412
+ "endCard": 45.539
 }

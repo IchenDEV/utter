@@ -46,7 +46,7 @@ function buildScene(cues) {
   }
   buildHud(desk, "hud");
   el("div", "", "", stage).id = "dip";
-  buildOverlay(stage, { l1: "说出来", l2: "就写好了", feat: "本地模型：Qwen · Gemma · Llama · Whisper" });
+  buildOverlay(stage, { l1: "说出来", l2: "就写好了", feat: "本地模型：Qwen · Gemma · Whisper" });
 }
 
 function setupScene(cues) {

@@ -120,7 +120,7 @@
    "id": "n6_models",
    "role": "narration",
    "voice": "narrator",
-   "text": "Qwen、Whisper、Gemma、Llama，本地模型随你选，也能接入自己的 API。",
+   "text": "Qwen、Whisper、Gemma，本地模型随你选，也能接入自己的 API。",
    "at": "models.start+0.3",
    "gain": 1.0,
    "until": "models.end-0.1",

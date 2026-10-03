@@ -1,6 +1,6 @@
 {
  "fps": 30,
- "duration": 28.893,
+ "duration": 28.093,
  "width": 1920,
  "height": 1080,
  "events": {
@@ -15,7 +15,7 @@
   "hudOut": 14.916,
   "zoomOut": 16.516,
   "privacy": 17.116,
-  "endCard": 24.493
+  "endCard": 23.693
  },
  "speech": [
   {
@@ -92,5 +92,5 @@
   }
  ],
  "result": "评审会改到周五下午 3 点。接口文档我今晚发群里，大家提前看一下。",
- "output": "utter-offline-29s-zh-vo.mp4"
+ "output": "utter-offline-28s-zh-vo.mp4"
 }

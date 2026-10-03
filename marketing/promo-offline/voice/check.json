@@ -2,25 +2,25 @@
  {
   "id": "n1_intro",
   "script": "Utter，在 Mac 上本地运行的语音输入。",
-  "heard": "Utter，在Mac上本地运行的语音输入。",
+  "heard": "Utter，在 Mac 上本地运行的语音输入",
   "cer": 0.0
  },
  {
   "id": "d1_dictation",
   "script": "嗯，那个，评审会改到周四，不对，周五下午三点。接口文档我今晚发群里，大家提前看一下。",
-  "heard": "嗯 那个评审会改到周四 不对 周五下午三点。接口文档我今晚发群里，大家提前看一下。",
+  "heard": "嗯 那个评审会改到周四 不对 周五下午3点 接口文档我今晚发群里 大家提前看一下。",
   "cer": 0.0
  },
  {
   "id": "n3_local",
   "script": "识别和整理都在本机完成，直接写进当前应用。",
-  "heard": "识别和整理都在本机完成，直接写进当前应用",
+  "heard": "识别和整理都在本机完成，直接写进当前应用。",
   "cer": 0.0
  },
  {
   "id": "n4_models",
-  "script": "识别用 Qwen3-ASR 或 Whisper，整理用 Qwen、Gemma 或 Llama，全部在本地运行。",
-  "heard": "识别用 Qwen 3 ASR 或 Whisper，整理用 Qwen、Gemma 或 Llama，全部在本地运行。",
+  "script": "识别用 Qwen3-ASR 或 Whisper，整理用 Qwen 或 Gemma，全部在本地运行。",
+  "heard": "识别用 Qwen 3 ASR 或 Whisper，整理用 Qwen 或 Gemma，全部在本地运行。",
   "cer": 0.0
  },
  {

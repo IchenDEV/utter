@@ -1,6 +1,6 @@
-# Utter 功能一览 · 52 秒宣传片（配音版）
+# Utter 功能一览 · 51 秒宣传片（配音版）
 
-16:9 · 1920×1080 · 30 fps · 简体中文 · 成片 `dist/utter-features-50s-zh-vo.mp4`
+16:9 · 1920×1080 · 30 fps · 简体中文 · 成片 `dist/utter-features-51s-zh-vo.mp4`
 
 ## 创意
 
@@ -16,7 +16,7 @@
 | 0:16.6–0:22.1 | 03 翻译听写 | Alex 用英文提问；按住 fn + shift，说“没问题 我今晚发给你”，HUD 显示“翻译中…”，英文写入。设置卡片：翻译目标语言＝英语 | 按住 fn + shift：**说中文，写英文** |
 | 0:22.1–0:30.45 | 04 行业词库 | 部署文档；设置卡片从“通用”切到“软件技术”；识别原文“库伯内提斯…三…瑞迪斯”整理为“Kubernetes … 3 … Redis” | 行业词库：**专业术语，一次写对** |
 | 0:30.2–0:35 | 05 表达风格 | 左卡“你说的”，右卡在“口语 / 专业”之间切换，显示两种结果 | 同一句话，**口语或专业**随你切换 |
-| 06 段 | 06 模型随你选 | 三张卡片逐一列出可选模型：语音识别（本地）Qwen3-ASR · Confucius4-R2T2 · FireRedASR2 · Mega-ASR · WhisperKit · Apple 设备端识别；文字整理（本地 MLX）Qwen3.5 · Qwen3 · Gemma 4 · Gemma 3 · Llama 4；可选远程 API OpenAI · Claude · Gemini · OpenRouter · 硅基流动 · 豆包 · 百炼 · MiniMax | 本地模型随你选，**也能接入自己的 API** |
+| 06 段 | 06 模型随你选 | 三张卡片逐一列出可选模型：语音识别（本地）Qwen3-ASR · Confucius4-R2T2 · FireRedASR2 · Mega-ASR · WhisperKit · Apple 设备端识别；文字整理（本地 MLX）Qwen3.5 · Qwen3 · Gemma 4 · Gemma 3；可选远程 API OpenAI · Claude · Gemini · OpenRouter · 硅基流动 · 豆包 · 百炼 · MiniMax | 本地模型随你选，**也能接入自己的 API** |
 | 0:39.6–0:45 | 片尾 | 图标、品牌名、标语、功能列表、网址 | 说出来 / 就写好了（两行，句末不加标点）/ 智能整理 · 语音指令 · 翻译听写 · 行业词库 · 本地模型 |
 
 ## 示例文本
@@ -61,5 +61,5 @@
 | 0:27.8–0:32.0 | 口述（ShanShan） | 把 Kubernetes 的副本数调到三，再检查一下 Redis 缓存。 |
 | 0:32.6–0:35.5 | 旁白（Evan Zhao） | 行业词库，让专业术语一次写对。 |
 | 0:35.6–0:38.9 | 旁白（Evan Zhao） | 同一句话，口语还是专业，随你切换。 |
-| 0:40.1–0:46.3 | 旁白（Evan Zhao） | Qwen、Whisper、Gemma、Llama，本地模型随你选，也能接入自己的 API。 |
-| 0:47.0–0:49.3 | 旁白（Evan Zhao） | Utter。说出来，就写好了。 |
+| 0:40.1–0:45.4 | 旁白（Evan Zhao） | Qwen、Whisper、Gemma，本地模型随你选，也能接入自己的 API。 |
+| 0:46.1–0:48.5 | 旁白（Evan Zhao） | Utter。说出来，就写好了。 |

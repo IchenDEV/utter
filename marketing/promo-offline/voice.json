@@ -60,7 +60,7 @@
    "id": "n4_models",
    "role": "narration",
    "voice": "narrator",
-   "text": "识别用 Qwen3-ASR 或 Whisper，整理用 Qwen、Gemma 或 Llama，全部在本地运行。",
+   "text": "识别用 Qwen3-ASR 或 Whisper，整理用 Qwen 或 Gemma，全部在本地运行。",
    "at": "events.privacy+0.1",
    "gain": 1.0,
    "until": "events.endCard-0.1",

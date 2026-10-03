@@ -50,7 +50,7 @@ function buildScene(cues) {
     <div class="mcard" id="mAsr" style="top:190px"><div class="mh">${ICON.transcribing}语音识别<span>本地运行</span></div>
       <div class="row"><span class="pill local">Qwen3-ASR</span><span class="pill local">Confucius4-R2T2</span><span class="pill local">FireRedASR2</span><span class="pill local">Mega-ASR</span><span class="pill local">WhisperKit</span><span class="pill local">Apple 设备端识别</span></div></div>
     <div class="mcard" id="mLlm" style="top:440px"><div class="mh">${ICON.chip}文字整理<span>本地运行 · MLX</span></div>
-      <div class="row"><span class="pill local">Qwen3.5</span><span class="pill local">Qwen3</span><span class="pill local">Gemma 4</span><span class="pill local">Gemma 3</span><span class="pill local">Llama 4</span></div></div>
+      <div class="row"><span class="pill local">Qwen3.5</span><span class="pill local">Qwen3</span><span class="pill local">Gemma 4</span><span class="pill local">Gemma 3</span></div></div>
     <div class="mcard" id="mRemote" style="top:690px"><div class="mh">${ICON.cloud}可选远程 API<span>联网，按需开启</span></div>
       <div class="row"><span class="pill ">OpenAI</span><span class="pill ">Claude</span><span class="pill ">Gemini</span><span class="pill ">OpenRouter</span><span class="pill ">硅基流动</span><span class="pill ">豆包</span><span class="pill ">百炼</span><span class="pill ">MiniMax</span></div></div>`);
   buildOverlay(stage, { l1: "说出来", l2: "就写好了", feat: "智能整理 · 语音指令 · 翻译听写 · 行业词库 · 本地模型" });

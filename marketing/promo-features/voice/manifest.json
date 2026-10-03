@@ -126,19 +126,19 @@
   "start": 40.08,
   "speech": [
    40.08,
-   46.262
+   45.389
   ],
-  "text": "Qwen、Whisper、Gemma、Llama，本地模型随你选，也能接入自己的 API。",
+  "text": "Qwen、Whisper、Gemma，本地模型随你选，也能接入自己的 API。",
   "gain": 1.0
  },
  {
   "id": "n7_end",
   "role": "narration",
   "file": "n7_end.mp3",
-  "start": 47.012,
+  "start": 46.139,
   "speech": [
-   47.012,
-   49.339
+   46.139,
+   48.466
   ],
   "text": "Utter。说出来，就写好了。",
   "gain": 1.0

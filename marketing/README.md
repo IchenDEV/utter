@@ -4,13 +4,13 @@
 
 | 目录 | 时长 | 主题 | 分镜与文案 |
 |---|---|---|---|
-| `promo-offline/` | 29s | 本地语音输入：说出来就是文字，模型都在本机 | [storyboard](promo-offline/storyboard.md) |
-| `promo-features/` | 52s | 功能一览：整理、指令、翻译、词库、风格、可选模型 | [storyboard](promo-features/storyboard.md) |
+| `promo-offline/` | 28s | 本地语音输入：说出来就是文字，模型都在本机 | [storyboard](promo-offline/storyboard.md) |
+| `promo-features/` | 51s | 功能一览：整理、指令、翻译、词库、风格、可选模型 | [storyboard](promo-features/storyboard.md) |
 | `promo-day/` | 58s | 场景故事：产品经理的一天（有人物的插画） | [storyboard](promo-day/storyboard.md) |
 
 ## 成片
 
-最终成片和封面放在 `videos/`（随仓库提交）：`utter-offline-29s-zh-vo.mp4`、`utter-features-52s-zh-vo.mp4`、`utter-day-58s-zh-vo.mp4`。重新渲染后，需要把 `promo-*/dist/` 里的新成片复制到这里，再提交。
+最终成片和封面放在 `videos/`（随仓库提交）：`utter-offline-28s-zh-vo.mp4`、`utter-features-51s-zh-vo.mp4`、`utter-day-58s-zh-vo.mp4`。重新渲染后，需要把 `promo-*/dist/` 里的新成片复制到这里，再提交。
 
 ## 渲染
 

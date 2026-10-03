@@ -2,7 +2,7 @@
  {
   "id": "n0_intro",
   "script": "Utter，不只是语音输入。",
-  "heard": "Utter 不只是语音输入",
+  "heard": "Utter 不只是语音输入。",
   "cer": 0.0
  },
  {
@@ -61,14 +61,14 @@
  },
  {
   "id": "n6_models",
-  "script": "Qwen、Whisper、Gemma、Llama，本地模型随你选，也能接入自己的 API。",
-  "heard": "Qwen、Whisper、Gemma、Llama，本地模型随你选，也能接入自己的API。",
+  "script": "Qwen、Whisper、Gemma，本地模型随你选，也能接入自己的 API。",
+  "heard": "Qwen、Whisper、Gemma，本地模型随你选，也能接入自己的API。",
   "cer": 0.0
  },
  {
   "id": "n7_end",
   "script": "Utter。说出来，就写好了。",
-  "heard": "Utter。说出来就写好了。",
-  "cer": 0.0
+  "heard": "Otter。说出来就写好了。",
+  "cer": 0.083
  }
 ]

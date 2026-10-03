@@ -42,19 +42,19 @@
   "start": 17.216,
   "speech": [
    17.216,
-   24.343
+   23.543
   ],
-  "text": "识别用 Qwen3-ASR 或 Whisper，整理用 Qwen、Gemma 或 Llama，全部在本地运行。",
+  "text": "识别用 Qwen3-ASR 或 Whisper，整理用 Qwen 或 Gemma，全部在本地运行。",
   "gain": 1.0
  },
  {
   "id": "n5_end",
   "role": "narration",
   "file": "n5_end.mp3",
-  "start": 25.093,
+  "start": 24.293,
   "speech": [
-   25.093,
-   28.075
+   24.293,
+   27.275
   ],
   "text": "Utter。你的声音，留在你的 Mac。",
   "gain": 1.0
