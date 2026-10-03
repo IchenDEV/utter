@@ -1,11 +1,12 @@
 import UtterContracts
 import UtterRemoteMic
+import UtterPresentationContracts
 
 extension XiaomiRemoteMicBridge {
     static let shared = XiaomiRemoteMicBridge()
 
-    convenience init() {
-        self.init(gainDB: { AppSettings.shared.remoteMicGainDB })
+    convenience init(legacySettings: AppSettings = .shared) {
+        self.init(gainDB: { legacySettings.remoteMicGainDB })
     }
 
     static func isSessionCurrent(_ token: UInt64) -> Bool {
