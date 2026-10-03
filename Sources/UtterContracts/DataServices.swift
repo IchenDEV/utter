@@ -21,6 +21,9 @@ package protocol ConfigurationService: AnyObject {
 
 package enum DataServices {
     package static let settings = ServiceKey<any SettingsService>("data.settings")
+    package static let history = ServiceKey<any HistoryService>("data.history")
+    package static let memory = ServiceKey<any MemoryService>("data.memory")
+    package static let dictionary = ServiceKey<any DictionaryService>("data.dictionary")
     package static let lexicons = ServiceKey<any LexiconService>("data.lexicons")
     package static let configuration = ServiceKey<any ConfigurationService>("data.configuration")
 }

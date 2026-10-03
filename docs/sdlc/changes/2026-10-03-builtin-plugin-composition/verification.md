@@ -26,13 +26,14 @@ the existing project's CI; native behavior evidence is still required.
 
 | Check | Result | Scope |
 | --- | --- | --- |
-| Swift 6.2 portable tests | Pass, 67 tests | Runtime graph/lifecycle faults, integration serialization/authentication, composition storage/recovery, lexicon replacement, session state/event contracts, and settings persistence/snapshot/notification contracts. |
+| Swift 6.2 portable tests | Pass, 90 tests | Runtime graph/lifecycle faults, integration/authentication, composition storage/recovery, session contracts, settings snapshots, targeted history replacement, shared history/memory authority, and unchanged dictionary learning/classification tests. |
 | Module boundary fixtures | Pass, 5 tests | Forbidden feature imports and overlapping source ownership are rejected. |
 | Actual portable module boundary check | Pass | Runtime, contracts, and extracted lexicon/data sources. |
 | Industry vocabulary evaluation | Pass | Real modules: term recall 100%, non-target preservation 100%; unchanged fixture. |
 | First extracted macOS build | Pass | [CI run](https://github.com/IchenDEV/utter/actions/runs/37136510317), commit `3535889`: basic checks and assembled app verification passed, including localization bundles and Metal. CI uses an ad-hoc test signature. |
 | Extracted macOS tests | Fixture corrected; rerun required | The first run executed 829 tests and the [second run](https://github.com/IchenDEV/utter/actions/runs/37138280093) executed 840 tests, each with 18 skipped and two assertions failing only in the added XPC fixture. Both Objective-C and Foundation expose the original qualified protocol names (`OpenType.OpenTypeXPCProtocol`, `OpenType.OpenTypeXPCEventSink`); the fixture now asserts those observed names. |
 | Composition checkpoint macOS build | Pass | The second run assembled and verified the app at `cb9672f`, including localization bundles and Metal. |
+| Native settings/session checkpoint tests | Pass | [CI run](https://github.com/IchenDEV/utter/actions/runs/37140908559) at `7702436`: 852 tests, 18 opt-in tests skipped, zero failures. The observed XPC identities and native settings projection contracts passed. An explicit Combine import corrected the preceding checkpoint's compilation failure. |
 | Session commit fault injection | Regression demonstrated and corrected | Before notification settlement, the five added tests failed with ten assertions: callbacks could observe an incomplete terminal event pair or reenter history commit. The corrected session owner settles state/history/events before notification and checks stream authorization at delivery. |
 | Local basic checks | Native step unavailable | Portable module and script fixtures passed. The full script reaches the macOS `PlistBuddy` step, which is unavailable on Linux; the unmodified native checks run in macOS CI. |
 

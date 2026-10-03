@@ -1,5 +1,6 @@
+import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterData
 
 final class CorrectionCandidateClassifierTests: XCTestCase {
     func testDoesNotLearnStandaloneFillerAsReusableCorrection() {

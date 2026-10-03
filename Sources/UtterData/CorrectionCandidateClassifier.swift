@@ -1,13 +1,13 @@
 import UtterContracts
 import Foundation
 
-struct CorrectionEditDiff: Equatable, Sendable {
-    let beforeSegment: String
-    let afterSegment: String
-    let commonPrefixCount: Int
-    let commonSuffixCount: Int
+package struct CorrectionEditDiff: Equatable, Sendable {
+    package let beforeSegment: String
+    package let afterSegment: String
+    package let commonPrefixCount: Int
+    package let commonSuffixCount: Int
 
-    static func between(_ before: String, _ after: String) -> CorrectionEditDiff? {
+    package static func between(_ before: String, _ after: String) -> CorrectionEditDiff? {
         guard before != after else { return nil }
         let beforeCharacters = Array(before)
         let afterCharacters = Array(after)
@@ -34,8 +34,8 @@ struct CorrectionEditDiff: Equatable, Sendable {
     }
 }
 
-enum CorrectionObservationPolicy {
-    static func associatedFinalText(inserted: String, edited: String) -> String? {
+package enum CorrectionObservationPolicy {
+    package static func associatedFinalText(inserted: String, edited: String) -> String? {
         guard let diff = CorrectionEditDiff.between(inserted, edited) else { return nil }
         let insertedCount = inserted.count
         let editedCount = edited.count
@@ -62,8 +62,8 @@ enum CorrectionObservationPolicy {
     }
 }
 
-enum CorrectionCandidateClassifier {
-    static func candidate(
+package enum CorrectionCandidateClassifier {
+    package static func candidate(
         inserted: String,
         userFinal: String,
         sourceRecordID: UUID,

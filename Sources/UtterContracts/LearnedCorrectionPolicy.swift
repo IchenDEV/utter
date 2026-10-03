@@ -1,20 +1,19 @@
-import UtterContracts
 import Foundation
 
-enum LearnedCorrectionPolicy {
+package enum LearnedCorrectionPolicy {
     private static let isolatedFillers: Set<String> = [
         "嗯", "呃", "额", "唔", "啊", "哦", "um", "uh", "hmm", "hm"
     ]
 
-    static func isUnsafeSource(_ text: String) -> Bool {
+    package static func isUnsafeSource(_ text: String) -> Bool {
         let lexical = String(text.lowercased().filter { $0.isLetter || $0.isNumber })
         return isolatedFillers.contains(lexical)
-            || TranscriptionSanitizer.isNonSpeechArtifact(text)
+            || SpeechArtifactPolicy.isNonSpeechArtifact(text)
     }
 }
 
 extension DictionaryEntry {
-    func applies(bundleIdentifier: String?, languageCode: String?) -> Bool {
+    package func applies(bundleIdentifier: String?, languageCode: String?) -> Bool {
         guard isEffective else { return false }
         if origin == .learned {
             guard !LearnedCorrectionPolicy.isUnsafeSource(original),

@@ -12,6 +12,7 @@ enum DeferredReplacementState {
 
 struct DeferredReplacement {
     let id: UUID
+    let historyRecordID: UUID
     let rawText: String
     let insertedText: String
     let targetPID: pid_t?
@@ -26,6 +27,7 @@ struct DeferredReplacement {
     let formatKind: TextFormatKind
 
     init(
+        historyRecordID: UUID,
         rawText: String,
         insertedText: String,
         targetApp: NSRunningApplication?,
@@ -36,6 +38,7 @@ struct DeferredReplacement {
         expirationInterval: TimeInterval = DeferredReplacementPolicy.expirationInterval
     ) {
         self.id = UUID()
+        self.historyRecordID = historyRecordID
         self.rawText = rawText
         self.insertedText = insertedText
         self.targetPID = targetApp?.processIdentifier

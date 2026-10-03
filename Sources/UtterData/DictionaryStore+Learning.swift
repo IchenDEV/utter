@@ -1,7 +1,7 @@
 import UtterContracts
 import Foundation
 
-extension PersonalDictionary {
+extension DictionaryStore {
     func suspendLearnedMappings(for original: String, excluding id: UUID) {
         for index in entries.indices where entries[index].id != id
             && entries[index].origin == .learned
@@ -10,13 +10,13 @@ extension PersonalDictionary {
         }
     }
 
-    func clearLearnedEntries() {
+    package func clearLearnedEntries() {
         entries.removeAll { $0.origin == .learned }
         save()
     }
 
     @discardableResult
-    func recordLearnedCandidate(_ candidate: LearnedCorrectionCandidate) -> UUID? {
+    package func recordLearnedCandidate(_ candidate: LearnedCorrectionCandidate) -> UUID? {
         guard !LearnedCorrectionPolicy.isUnsafeSource(candidate.original),
               candidate.languageCode != nil || candidate.bundleIdentifier != nil else { return nil }
         removePreviousEvidence(for: candidate)
@@ -70,7 +70,7 @@ extension PersonalDictionary {
     }
 }
 
-private extension PersonalDictionary {
+private extension DictionaryStore {
     func merge(_ candidate: LearnedCorrectionCandidate, intoEntryAt index: Int, now: Date) {
         if !entries[index].evidenceRecordIDs.contains(candidate.sourceRecordID) {
             entries[index].evidenceRecordIDs.append(candidate.sourceRecordID)

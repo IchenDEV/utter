@@ -1,8 +1,8 @@
 import UtterContracts
 import Foundation
 
-extension PersonalDictionary {
-    func exportData() throws -> Data {
+extension DictionaryStore {
+    package func exportData() throws -> Data {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -10,7 +10,7 @@ extension PersonalDictionary {
     }
 
     @discardableResult
-    func importEntries(from data: Data) throws -> Int {
+    package func importEntries(from data: Data) throws -> Int {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let imported = try decoder.decode([DictionaryEntry].self, from: data)

@@ -1,7 +1,7 @@
 import UtterContracts
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterData
 
 final class PersonalDictionaryLearningTests: XCTestCase {
     func testExistingLearnedFillerIsInertButManualRuleStillWorks() {
@@ -23,7 +23,7 @@ final class PersonalDictionaryLearningTests: XCTestCase {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("OpenTypeDictionaryReload-\(UUID().uuidString)", isDirectory: true)
         addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
-        let store = PersonalDictionary(directoryURL: directory)
+        let store = DictionaryStore(directoryURL: directory)
         let entry = DictionaryEntry(
             original: "嗯。", replacement: "Do anything", origin: .learned,
             languageCode: "zh", appScopes: ["com.apple.Notes"]
@@ -33,7 +33,7 @@ final class PersonalDictionaryLearningTests: XCTestCase {
         let file = directory.appendingPathComponent("dictionary.json")
         let originalData = try Data(contentsOf: file)
 
-        let reloaded = PersonalDictionary(directoryURL: directory)
+        let reloaded = DictionaryStore(directoryURL: directory)
         XCTAssertEqual(reloaded.entries.first?.status, .pending)
         XCTAssertEqual(try Data(contentsOf: file), originalData)
         reloaded.approveEntry(id: entry.id)
@@ -179,10 +179,10 @@ final class PersonalDictionaryLearningTests: XCTestCase {
         )
     }
 
-    private func makeStore() -> PersonalDictionary {
+    private func makeStore() -> DictionaryStore {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("OpenTypeDictionaryTests-\(UUID().uuidString)", isDirectory: true)
         addTeardownBlock { try? FileManager.default.removeItem(at: url) }
-        return PersonalDictionary(directoryURL: url)
+        return DictionaryStore(directoryURL: url)
     }
 }

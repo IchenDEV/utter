@@ -1,3 +1,4 @@
+import UtterPresentationContracts
 import UtterContracts
 import AppKit
 import Foundation
@@ -108,6 +109,7 @@ extension VoicePipeline {
         )
 
         let replacement = DeferredReplacement(
+            historyRecordID: recordID,
             rawText: raw,
             insertedText: quickText,
             targetApp: targetApp,
@@ -165,13 +167,17 @@ extension VoicePipeline {
 
         appState.processedText = formattedText
         appState.lastInsertedText = formattedText
-        let recordID = InputHistory.shared.replaceLatestRecord(
-            rawText: replacement.rawText,
+        guard let recordID = InputHistory.shared.replaceRecord(
+            recordID: replacement.historyRecordID,
             processedText: formattedText,
-            wasProcessed: true,
             context: replacement.context,
             formatKind: replacement.formatKind
-        )
+        ) else {
+            appState.clearPendingReplacement()
+            appState.phase = .done
+            appState.statusMessage = L("status.done")
+            return
+        }
         beginCorrectionCapture(
             recordID: recordID,
             insertedText: formattedText,

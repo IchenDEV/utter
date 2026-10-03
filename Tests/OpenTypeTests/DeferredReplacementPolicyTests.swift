@@ -7,18 +7,22 @@ import XCTest
 final class DeferredReplacementPolicyTests: XCTestCase {
     func testOnlyAppliesToSmartFormat() {
         XCTAssertTrue(DeferredReplacementPolicy.shouldUseDeferredReplacement(
+            historyRecordID: UUID(),
             outputMode: .processed,
             enableInstantInsert: true
         ))
         XCTAssertFalse(DeferredReplacementPolicy.shouldUseDeferredReplacement(
+            historyRecordID: UUID(),
             outputMode: .processed,
             enableInstantInsert: false
         ))
         XCTAssertFalse(DeferredReplacementPolicy.shouldUseDeferredReplacement(
+            historyRecordID: UUID(),
             outputMode: .direct,
             enableInstantInsert: true
         ))
         XCTAssertFalse(DeferredReplacementPolicy.shouldUseDeferredReplacement(
+            historyRecordID: UUID(),
             outputMode: .command,
             enableInstantInsert: true
         ))
@@ -38,6 +42,7 @@ final class DeferredReplacementPolicyTests: XCTestCase {
             source: .menuBar
         )
         let replacement = DeferredReplacement(
+            historyRecordID: UUID(),
             rawText: "raw",
             insertedText: "quick",
             targetApp: nil,
@@ -60,6 +65,7 @@ final class DeferredReplacementPolicyTests: XCTestCase {
 
     func testFailedStateIsNotReplaceable() {
         var replacement = DeferredReplacement(
+            historyRecordID: UUID(),
             rawText: "raw",
             insertedText: "quick",
             targetApp: nil,
@@ -81,6 +87,7 @@ final class DeferredReplacementPolicyTests: XCTestCase {
 
     func testDecisionRequiresSameFrontmostApp() throws {
         var replacement = DeferredReplacement(
+            historyRecordID: UUID(),
             rawText: "raw",
             insertedText: "quick",
             targetApp: nil,
@@ -105,6 +112,7 @@ final class DeferredReplacementPolicyTests: XCTestCase {
         }
 
         replacement = DeferredReplacement(
+            historyRecordID: UUID(),
             rawText: "raw",
             insertedText: "quick",
             targetApp: NSRunningApplication.current,
