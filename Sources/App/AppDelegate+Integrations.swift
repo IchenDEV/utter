@@ -1,3 +1,4 @@
+import UtterPresentationContracts
 import UtterSession
 import Combine
 import Foundation
@@ -7,8 +8,8 @@ import Network
 extension AppDelegate {
     func observeIntegrationSettings() {
         let settings = AppSettings.shared
-        settings.$developerInterfaceEnabled
-            .combineLatest(settings.$developerHTTPPort, settings.$developerHTTPToken)
+        settings.publisher(for: \.developerInterfaceEnabled)
+            .combineLatest(settings.publisher(for: \.developerHTTPPort), settings.publisher(for: \.developerHTTPToken))
             .dropFirst()
             .receive(on: RunLoop.main)
             .sink { [weak self] _, _, _ in

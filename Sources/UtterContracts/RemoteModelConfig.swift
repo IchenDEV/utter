@@ -1,11 +1,11 @@
 import Foundation
 
-package enum ApiFormat: String, Codable {
+package enum ApiFormat: String, Codable, Sendable {
     case openai
     case anthropic
 }
 
-package enum RemoteProvider: String, Codable, Identifiable {
+package enum RemoteProvider: String, Codable, Identifiable, Sendable {
     case custom
     case openai
     case claude

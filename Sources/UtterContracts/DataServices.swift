@@ -20,6 +20,7 @@ package protocol ConfigurationService: AnyObject {
 }
 
 package enum DataServices {
+    package static let settings = ServiceKey<any SettingsService>("data.settings")
     package static let lexicons = ServiceKey<any LexiconService>("data.lexicons")
     package static let configuration = ServiceKey<any ConfigurationService>("data.configuration")
 }

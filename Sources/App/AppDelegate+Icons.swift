@@ -1,3 +1,4 @@
+import UtterPresentationContracts
 import UtterContracts
 import AppKit
 import Combine
@@ -46,7 +47,7 @@ extension AppDelegate {
     }
 
     func observeMenuBarIconSetting() {
-        AppSettings.shared.$menuBarIcon
+        AppSettings.shared.publisher(for: \.menuBarIcon)
             .dropFirst()
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
@@ -57,7 +58,7 @@ extension AppDelegate {
     }
 
     func observeAppIconSetting() {
-        AppSettings.shared.$appIconAppearance
+        AppSettings.shared.publisher(for: \.appIconAppearance)
             .dropFirst()
             .receive(on: RunLoop.main)
             .sink { _ in AppIcon.install() }

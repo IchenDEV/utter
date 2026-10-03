@@ -1,6 +1,6 @@
 import Foundation
 
-package enum UILanguage: String, Codable, CaseIterable {
+package enum UILanguage: String, Codable, CaseIterable, Sendable {
     case chinese = "zh"
     case english = "en"
 
@@ -12,7 +12,7 @@ package enum UILanguage: String, Codable, CaseIterable {
     }
 }
 
-package enum OutputMode: String, Codable, CaseIterable {
+package enum OutputMode: String, Codable, CaseIterable, Sendable {
     case direct = "direct"
     case processed = "processed"
     case command = "command"
@@ -26,7 +26,7 @@ package enum OutputMode: String, Codable, CaseIterable {
     }
 }
 
-package enum SpeechEngineType: String, Codable, CaseIterable {
+package enum SpeechEngineType: String, Codable, CaseIterable, Sendable {
     case whisper = "whisper"
     case apple = "apple"
     case volc = "volc"
@@ -60,12 +60,12 @@ package enum SpeechEngineType: String, Codable, CaseIterable {
     }
 }
 
-package enum LocalLLMBackend: String, Codable, CaseIterable {
+package enum LocalLLMBackend: String, Codable, CaseIterable, Sendable {
     case mlx
     case espresso
 }
 
-package enum LanguageStyle: String, Codable, CaseIterable {
+package enum LanguageStyle: String, Codable, CaseIterable, Sendable {
     case casual = "casual"
     case professional = "professional"
     case custom = "custom"
@@ -132,14 +132,14 @@ package enum LanguageStyle: String, Codable, CaseIterable {
     }
 }
 
-package enum HotkeyType: String, Codable, CaseIterable {
+package enum HotkeyType: String, Codable, CaseIterable, Sendable {
     case ctrl = "Ctrl"
     case shift = "Shift"
     case option = "Option"
     case fn = "Fn"
 }
 
-package enum ActivationMode: String, Codable, CaseIterable {
+package enum ActivationMode: String, Codable, CaseIterable, Sendable {
     case longPress = "longPress"
     case doubleTap = "doubleTap"
     case toggle = "toggle"
@@ -153,7 +153,7 @@ package enum ActivationMode: String, Codable, CaseIterable {
     }
 }
 
-package enum HistoryRetention: String, Codable, CaseIterable {
+package enum HistoryRetention: String, Codable, CaseIterable, Sendable {
     case forever = "forever"
     case threeDays = "threeDays"
     case sevenDays = "sevenDays"
@@ -178,7 +178,7 @@ package enum HistoryRetention: String, Codable, CaseIterable {
     }
 }
 
-package enum MenuBarIcon: String, Codable, CaseIterable {
+package enum MenuBarIcon: String, Codable, CaseIterable, Sendable {
     case mic = "mic"
     case waveform = "waveform"
     case bubble = "bubble"
@@ -200,7 +200,7 @@ package enum MenuBarIcon: String, Codable, CaseIterable {
     }
 }
 
-package enum AppIconAppearance: String, Codable, CaseIterable {
+package enum AppIconAppearance: String, Codable, CaseIterable, Sendable {
     case system = "system"
     case dark = "dark"
     case light = "light"
@@ -222,7 +222,7 @@ package enum AppIconAppearance: String, Codable, CaseIterable {
     }
 }
 
-package enum InputLanguage: String, Codable, CaseIterable {
+package enum InputLanguage: String, Codable, CaseIterable, Sendable {
     case auto = "Auto"
     case chinese = "中文"
     case english = "English"
@@ -256,7 +256,7 @@ package enum InputLanguage: String, Codable, CaseIterable {
 /// User-facing sensitivity presets for the two independent audio activity
 /// threshold groups. `standard` always resolves to the shipped defaults, so
 /// existing users keep their behavior until they change the setting.
-package enum AudioSensitivity: String, Codable, CaseIterable {
+package enum AudioSensitivity: String, Codable, CaseIterable, Sendable {
     case conservative
     case standard
     case sensitive

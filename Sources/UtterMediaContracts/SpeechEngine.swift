@@ -2,7 +2,7 @@ import UtterContracts
 import Foundation
 import AVFoundation
 
-protocol SpeechEngine: AnyObject {
+package protocol SpeechEngine: AnyObject {
     var isReady: Bool { get }
     var supportsStreaming: Bool { get }
     /// Optional warm-up: load models or start helper processes ahead of the
@@ -17,26 +17,26 @@ protocol SpeechEngine: AnyObject {
 }
 
 extension SpeechEngine {
-    var supportsStreaming: Bool { false }
+    package var supportsStreaming: Bool { false }
 
-    func prepare() async {}
+    package func prepare() async {}
 
-    func configureRecognition(context: SpeechRecognitionContext) {
+    package func configureRecognition(context: SpeechRecognitionContext) {
         let _ = context
     }
 
-    func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
+    package func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
         let _ = language
         let _ = onPartialResult
     }
 
-    func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+    package func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         let _ = buffer
     }
 
-    func finishListening(audioURL: URL?, language: String?) async throws -> String {
+    package func finishListening(audioURL: URL?, language: String?) async throws -> String {
         try await transcribe(audioURL: audioURL, language: language)
     }
 
-    func cancelListening() {}
+    package func cancelListening() {}
 }

@@ -1,3 +1,4 @@
+import UtterPresentationContracts
 import Foundation
 
 enum HotkeyAction: Equatable {

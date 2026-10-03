@@ -72,6 +72,16 @@ let package = Package(
     ],
     dependencies: dependencies,
     targets: [
+        .target(
+            name: "UtterMediaContracts",
+            dependencies: ["UtterRuntime", "UtterContracts"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .target(
+            name: "UtterPresentationContracts",
+            dependencies: ["UtterRuntime", "UtterContracts", "UtterMediaContracts"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
         .executableTarget(
             name: "OpenType",
             dependencies: [
@@ -79,6 +89,8 @@ let package = Package(
                 "UtterContracts",
                 "UtterData",
                 "UtterSession",
+                "UtterMediaContracts",
+                "UtterPresentationContracts",
                 .product(name: "WhisperKit", package: "argmax-oss-swift"),
                 .product(name: "ANELMRuntime", package: "ANE-LM"),
                 .product(name: "MLXAudioCore", package: "mlx-audio-swift"),
@@ -90,7 +102,7 @@ let package = Package(
                 .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
             ],
             path: "Sources",
-            exclude: ["UtterRuntime", "UtterContracts", "UtterData", "UtterSession"],
+            exclude: ["UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
             resources: [
                 .copy("Resources/AppIcon.png"),
                 .copy("Resources/AppIcon.icon"),
@@ -120,7 +132,7 @@ let package = Package(
         ),
         .testTarget(
             name: "OpenTypeTests",
-            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession"],
+            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
             path: "Tests/OpenTypeTests",
             swiftSettings: [
                 .swiftLanguageMode(.v5)

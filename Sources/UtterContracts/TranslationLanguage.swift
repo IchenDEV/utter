@@ -1,6 +1,6 @@
 import Foundation
 
-package enum TranslationLanguage: String, Codable, CaseIterable, Identifiable {
+package enum TranslationLanguage: String, Codable, CaseIterable, Identifiable, Sendable {
     case english = "en"
     case simplifiedChinese = "zh-Hans"
     case traditionalChinese = "zh-Hant"

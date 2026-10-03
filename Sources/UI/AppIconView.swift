@@ -1,3 +1,4 @@
+import UtterPresentationContracts
 import SwiftUI
 
 struct AppIconView: View {

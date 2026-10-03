@@ -1,3 +1,4 @@
+import UtterPresentationContracts
 import UtterData
 import UtterSession
 import UtterContracts
@@ -268,7 +269,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     private func observeUILanguageForSettingsWindow() {
-        AppSettings.shared.$uiLanguage
+        AppSettings.shared.publisher(for: \.uiLanguage)
             .sink { [weak self] language in
                 self?.settingsWindow?.title = SettingsWindowTitle.text(for: language)
             }

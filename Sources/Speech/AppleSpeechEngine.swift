@@ -1,3 +1,4 @@
+import UtterMediaContracts
 import UtterContracts
 import Foundation
 @preconcurrency import Speech

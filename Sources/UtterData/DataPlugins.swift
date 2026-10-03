@@ -4,6 +4,12 @@ import UtterRuntime
 
 @MainActor
 package enum DataPlugins {
+    package static func settings(defaults: UserDefaults) -> PluginRegistration {
+        PluginRegistration(descriptor: PluginDescriptor(id: "data.settings", provides: [DataServices.settings.reference])) { context, _ in
+            try context.provide(DataServices.settings, value: SettingsStore(defaults: defaults))
+        }
+    }
+
     package static func lexicons() -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(id: "data.lexicons", provides: [DataServices.lexicons.reference])) { context, _ in
             let url = DataResources.bundle.url(forResource: "IndustryLexicons", withExtension: "json")

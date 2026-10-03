@@ -1,6 +1,6 @@
 import Foundation
 
-package enum ScreenContextMode: String, Codable, CaseIterable {
+package enum ScreenContextMode: String, Codable, CaseIterable, Sendable {
     case ocr = "ocr"
     case multimodal = "multimodal"
 

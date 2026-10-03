@@ -1,3 +1,4 @@
+import UtterPresentationContracts
 import Combine
 import Foundation
 
@@ -8,7 +9,7 @@ extension AppDelegate {
     func observeRemoteMicSetting() {
         let settings = AppSettings.shared
         applyRemoteMicSetting(settings.remoteMicEnabled)
-        settings.$remoteMicEnabled
+        settings.publisher(for: \.remoteMicEnabled)
             .dropFirst()
             .receive(on: RunLoop.main)
             .sink { [weak self] enabled in

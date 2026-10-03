@@ -1,3 +1,4 @@
+import UtterPresentationContracts
 import UtterContracts
 import XCTest
 @testable import OpenType
