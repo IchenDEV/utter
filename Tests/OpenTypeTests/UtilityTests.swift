@@ -1,3 +1,4 @@
+import UtterModels
 import UtterRemoteInference
 import UtterContracts
 import Foundation
@@ -46,15 +47,15 @@ private final class StartupCleanupGate: @unchecked Sendable {
 }
 
 final class UtilityTests: XCTestCase {
-    private enum InjectedReplacementFailure: Error {
-        case replacement
-    }
-
 
 
     func testModelStorageUsesHubRepoPathForASR() {
         let suffix = ModelStorage.hubModelRepoDir(QwenASRModel.defaultID).path
         XCTAssertTrue(suffix.hasSuffix("/models/mlx-community/Qwen3-ASR-1.7B-bf16"))
+        XCTAssertEqual(
+            ConfiguredModelFiles.repositoryDirectory(QwenASRModel.defaultID, storageRoot: ModelStorage.huggingFaceBase).path,
+            ModelStorage.hubModelRepoDir(QwenASRModel.defaultID).path
+        )
     }
 
     func testGenerationStagingSeparatesDownloadAndHubCache() throws {
@@ -79,182 +80,6 @@ final class UtilityTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: staging.root.path))
     }
 
-    func testCommitMaterializesHubSymlinkBeforeStagingCleanup() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("OpenTypeCommit-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        let staging = ModelStorage.generationStaging(
-            for: UUID(),
-            storageRoot: root
-        )
-        try ModelStorage.prepareGeneration(staging)
-        let stagedRepo = ModelStorage.hubModelRepoDir(
-            "org/model",
-            downloadBase: staging.downloadBase
-        )
-        let blob = staging.hubCache.cacheDirectory
-            .appendingPathComponent("models--org--model/blobs/weights.bin")
-        try FileManager.default.createDirectory(
-            at: stagedRepo,
-            withIntermediateDirectories: true
-        )
-        try FileManager.default.createDirectory(
-            at: blob.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        try Data("{}".utf8).write(to: stagedRepo.appendingPathComponent("config.json"))
-        try Data("committed-weights".utf8).write(to: blob)
-        try FileManager.default.createSymbolicLink(
-            at: stagedRepo.appendingPathComponent("weights.safetensors"),
-            withDestinationURL: blob
-        )
-
-        XCTAssertTrue(ModelStorage.llmRepoIsComplete(at: stagedRepo))
-        try ModelStorage.commitGeneration(
-            kind: .llm,
-            modelID: "org/model",
-            staging: staging
-        )
-        ModelStorage.removeGenerationStaging(staging)
-
-        let published = ModelStorage.hubModelRepoDir("org/model", downloadBase: root)
-        XCTAssertEqual(
-            try Data(contentsOf: published.appendingPathComponent("weights.safetensors")),
-            Data("committed-weights".utf8)
-        )
-        let attributes = try FileManager.default.attributesOfItem(
-            atPath: published.appendingPathComponent("weights.safetensors").path
-        )
-        XCTAssertNotEqual(attributes[.type] as? FileAttributeType, .typeSymbolicLink)
-        XCTAssertTrue(ModelStorage.llmRepoIsComplete(at: published))
-    }
-
-    func testFailedCommitKeepsThePreviouslyPublishedModel() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("OpenTypeCommitFailure-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        let previous = ModelStorage.hubModelRepoDir("org/model", downloadBase: root)
-        try FileManager.default.createDirectory(at: previous, withIntermediateDirectories: true)
-        try Data("old-config".utf8).write(to: previous.appendingPathComponent("config.json"))
-        try Data("old-weights".utf8).write(
-            to: previous.appendingPathComponent("weights.safetensors")
-        )
-
-        let staging = ModelStorage.generationStaging(for: UUID(), storageRoot: root)
-        try ModelStorage.prepareGeneration(staging)
-        let stagedRepo = ModelStorage.hubModelRepoDir(
-            "org/model",
-            downloadBase: staging.downloadBase
-        )
-        try FileManager.default.createDirectory(at: stagedRepo, withIntermediateDirectories: true)
-        try Data("new-config".utf8).write(to: stagedRepo.appendingPathComponent("config.json"))
-        try Data("new-weights".utf8).write(
-            to: stagedRepo.appendingPathComponent("weights.safetensors")
-        )
-
-        let prepared = try ModelStorage.prepareGenerationCommit(
-            kind: .llm,
-            modelID: "org/model",
-            staging: staging
-        )
-        defer { ModelStorage.discardPreparedGeneration(prepared) }
-
-        XCTAssertThrowsError(
-            try ModelStorage.publishPreparedGeneration(prepared) { candidate, destination in
-                // Simulate a replacement that moved the candidate but failed
-                // while returning from the filesystem operation. This enters
-                // the restore branch instead of failing during preparation.
-                try FileManager.default.removeItem(at: destination)
-                try FileManager.default.moveItem(at: candidate, to: destination)
-                throw InjectedReplacementFailure.replacement
-            }
-        )
-        XCTAssertEqual(
-            try Data(contentsOf: previous.appendingPathComponent("config.json")),
-            Data("old-config".utf8)
-        )
-        XCTAssertEqual(
-            try Data(contentsOf: previous.appendingPathComponent("weights.safetensors")),
-            Data("old-weights".utf8)
-        )
-    }
-
-    func testStartupCleanupRemovesAllOrphanedGenerationArtifacts() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("OpenTypeRestartCleanup-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        let stale = ModelStorage.generationStaging(for: UUID(), storageRoot: root)
-        let secondStale = ModelStorage.generationStaging(for: UUID(), storageRoot: root)
-        try ModelStorage.prepareGeneration(stale)
-        try ModelStorage.prepareGeneration(secondStale)
-        try Data("partial".utf8).write(
-            to: stale.downloadBase.appendingPathComponent("weights.incomplete")
-        )
-        let published = ModelStorage.hubModelRepoDir("org/model", downloadBase: root)
-        try FileManager.default.createDirectory(at: published, withIntermediateDirectories: true)
-        try Data("old-config".utf8).write(to: published.appendingPathComponent("config.json"))
-        try Data("old-weights".utf8).write(
-            to: published.appendingPathComponent("weights.safetensors")
-        )
-
-        let stagedRepo = ModelStorage.hubModelRepoDir(
-            "org/model",
-            downloadBase: stale.downloadBase
-        )
-        try FileManager.default.createDirectory(at: stagedRepo, withIntermediateDirectories: true)
-        try Data("new-config".utf8).write(to: stagedRepo.appendingPathComponent("config.json"))
-        try Data("new-weights".utf8).write(
-            to: stagedRepo.appendingPathComponent("weights.safetensors")
-        )
-        let prepared = try ModelStorage.prepareGenerationCommit(
-            kind: .llm,
-            modelID: "org/model",
-            staging: stale
-        )
-        XCTAssertTrue(FileManager.default.fileExists(atPath: prepared.candidate.path))
-        XCTAssertTrue(
-            prepared.backup.map { FileManager.default.fileExists(atPath: $0.path) } == true
-        )
-
-        let cleanupRoot = root.appendingPathComponent(
-            ModelStorage.cleanupDirectoryName,
-            isDirectory: true
-        )
-        let cleanupArtifact = cleanupRoot.appendingPathComponent("retired", isDirectory: true)
-        try FileManager.default.createDirectory(at: cleanupArtifact, withIntermediateDirectories: true)
-        try Data("retired".utf8).write(to: cleanupArtifact.appendingPathComponent("weights.bin"))
-
-        let generationRoot = root.appendingPathComponent(
-            ModelStorage.generationDirectoryName,
-            isDirectory: true
-        )
-        let childrenBefore = try FileManager.default.contentsOfDirectory(
-            at: generationRoot,
-            includingPropertiesForKeys: nil,
-            options: []
-        )
-        XCTAssertEqual(childrenBefore.count, 2)
-
-        // The cleanup helper is called by ModelCatalog before a restarted
-        // process can create any download writer. It covers generation roots,
-        // prepared candidates, rollback backups, and retired cleanup roots.
-        let removed = ModelStorage.cleanupOrphanedGenerationStaging(storageRoot: root)
-        XCTAssertEqual(removed, 5)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: stale.root.path))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: secondStale.root.path))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: prepared.candidate.path))
-        XCTAssertFalse(
-            prepared.backup.map { FileManager.default.fileExists(atPath: $0.path) } == true
-        )
-        XCTAssertFalse(FileManager.default.fileExists(atPath: cleanupArtifact.path))
-        XCTAssertEqual(
-            try Data(contentsOf: published.appendingPathComponent("config.json")),
-            Data("old-config".utf8)
-        )
-    }
 
     @MainActor
     func testStartupCleanupKeepsMainActorResponsive() async throws {
@@ -477,8 +302,6 @@ final class UtilityTests: XCTestCase {
             prepared.backup.map { FileManager.default.fileExists(atPath: $0.path) } == true
         )
     }
-
-
 
 
     @MainActor

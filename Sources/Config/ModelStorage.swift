@@ -17,36 +17,9 @@ struct ModelDownloadStaging: Sendable {
     let hubCache: HubCache
 }
 
-/// A fully materialized candidate and a copy of the currently published
-/// model, if one existed. Preparation is deliberately separate from publish:
-/// copying model-sized trees may take seconds or minutes and must not occupy
-/// the MainActor arbitration point used by Cancel/Delete.
-struct PreparedModelGeneration: Sendable {
-    let storageRoot: URL
-    let candidate: URL
-    let destination: URL
-    let backup: URL?
-}
-
-enum ModelGenerationError: LocalizedError {
-    case missingSource(URL)
-    case symlinkCycle(URL)
-
-    var errorDescription: String? {
-        switch self {
-        case .missingSource(let url):
-            return "Staged model output is missing: \(url.path)"
-        case .symlinkCycle(let url):
-            return "Staged model contains a symbolic-link cycle: \(url.path)"
-        }
-    }
-}
-
 enum ModelStorage {
-    static let generationDirectoryName = ".utter-generations"
-    static let cleanupDirectoryName = ".utter-cleanup"
-    static let promotionDirectoryPrefix = ".utter-promotion-"
-    static let backupDirectoryPrefix = ".utter-backup-"
+    static let generationDirectoryName = ModelGenerations.generationDirectoryName
+    static let cleanupDirectoryName = ModelGenerations.cleanupDirectoryName
 
     static var defaultRoot: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -103,7 +76,7 @@ enum ModelStorage {
     }
 
     static func removeGenerationStaging(_ staging: ModelDownloadStaging) {
-        retireManagedDirectory(at: staging.root, storageRoot: staging.storageRoot)
+        ModelGenerations.retireManagedDirectory(at: staging.root, storageRoot: staging.storageRoot)
     }
 
     /// Removes all managed generation, promotion, backup, and cleanup roots
@@ -124,60 +97,14 @@ enum ModelStorage {
     }
 
     /// Path-scoped background seam used by the responsiveness regression test.
-    static func cleanupOrphanedGenerationStagingInBackground(
-        storageRoot: URL,
-        onEnter: (@Sendable () -> Void)? = nil,
-        onExit: (@Sendable () -> Void)? = nil
-    ) -> Task<Int, Never> {
-        Task.detached(priority: .utility) {
-            onEnter?()
-            defer { onExit?() }
-            return cleanupOrphanedGenerationStaging(storageRoot: storageRoot)
-        }
+    static func cleanupOrphanedGenerationStagingInBackground(storageRoot: URL, onEnter: (@Sendable () -> Void)? = nil, onExit: (@Sendable () -> Void)? = nil) -> Task<Int, Never> {
+        ModelGenerations.cleanupOrphanedGenerationStagingInBackground(storageRoot: storageRoot, onEnter: onEnter, onExit: onExit)
     }
 
     /// Testable path-scoped implementation used by the startup wrapper.
     @discardableResult
     static func cleanupOrphanedGenerationStaging(storageRoot: URL) -> Int {
-        let fileManager = FileManager.default
-        var managedDirectories: [URL] = []
-
-        if let enumerator = fileManager.enumerator(
-            at: storageRoot,
-            includingPropertiesForKeys: [.isDirectoryKey],
-            options: []
-        ) {
-            for case let url as URL in enumerator {
-                let name = url.lastPathComponent
-                if name == generationDirectoryName {
-                    managedDirectories.append(contentsOf: generationChildren(at: url))
-                    enumerator.skipDescendants()
-                    continue
-                }
-                if name == cleanupDirectoryName {
-                    managedDirectories.append(contentsOf: cleanupChildren(at: url))
-                    enumerator.skipDescendants()
-                    continue
-                }
-                if isManagedTemporaryDirectoryName(name), isDirectory(url) {
-                    managedDirectories.append(url)
-                    enumerator.skipDescendants()
-                }
-            }
-        }
-
-        var removed = 0
-        for directory in managedDirectories.sorted(by: { $0.path.count > $1.path.count }) {
-            guard (try? fileManager.removeItem(at: directory)) != nil else { continue }
-            removed += 1
-        }
-        removeEmptyManagedRoot(
-            storageRoot.appendingPathComponent(generationDirectoryName, isDirectory: true)
-        )
-        removeEmptyManagedRoot(
-            storageRoot.appendingPathComponent(cleanupDirectoryName, isDirectory: true)
-        )
-        return removed
+        ModelGenerations.cleanupOrphanedGenerationStaging(storageRoot: storageRoot)
     }
 
     static var hubModelsBase: URL {
@@ -263,84 +190,26 @@ enum ModelStorage {
     /// the currently published model into a rollback backup. The expensive
     /// work is safe to run away from the MainActor because neither the staged
     /// tree nor the published tree is modified during preparation.
-    static func prepareGenerationCommit(
-        kind: ModelDownloadKind,
-        modelID: String,
-        staging: ModelDownloadStaging
-    ) throws -> PreparedModelGeneration {
-        let source: URL
-        let destination: URL
-        switch kind {
-        case .whisper:
-            source = whisperVariantDir(modelID, downloadBase: staging.downloadBase)
-            destination = whisperVariantDir(modelID, downloadBase: staging.storageRoot)
-        case .llm, .asr:
-            source = hubModelRepoDir(modelID, downloadBase: staging.downloadBase)
-            destination = hubModelRepoDir(modelID, downloadBase: staging.storageRoot)
-        }
-
-        let fileManager = FileManager.default
-        guard fileManager.fileExists(atPath: source.path) else {
-            throw ModelGenerationError.missingSource(source)
-        }
-
-        let parent = destination.deletingLastPathComponent()
-        try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
-        let candidate = parent.appendingPathComponent(
-            "\(promotionDirectoryPrefix)\(UUID().uuidString)",
-            isDirectory: true
-        )
-        var backup: URL? = nil
-        do {
-            var activeSymlinks = Set<String>()
-            try materialize(
-                from: source,
-                to: candidate,
-                activeSymlinks: &activeSymlinks
-            )
-
-            if fileManager.fileExists(atPath: destination.path) {
-                let backupURL = parent.appendingPathComponent(
-                    "\(backupDirectoryPrefix)\(UUID().uuidString)",
-                    isDirectory: true
-                )
-                backup = backupURL
-                var backupSymlinks = Set<String>()
-                try materialize(
-                    from: destination,
-                    to: backupURL,
-                    activeSymlinks: &backupSymlinks
-                )
-            }
-            return PreparedModelGeneration(
-                storageRoot: staging.storageRoot,
-                candidate: candidate,
-                destination: destination,
-                backup: backup
-            )
-        } catch {
-            try? fileManager.removeItem(at: candidate)
-            if let backup {
-                try? fileManager.removeItem(at: backup)
-            }
-            throw error
-        }
+    static func prepareGenerationCommit(kind: ModelDownloadKind, modelID: String, staging: ModelDownloadStaging) throws -> PreparedModelGeneration {
+        let source = kind == .whisper
+            ? whisperVariantDir(modelID, downloadBase: staging.downloadBase)
+            : hubModelRepoDir(modelID, downloadBase: staging.downloadBase)
+        let destination = kind == .whisper
+            ? whisperVariantDir(modelID, downloadBase: staging.storageRoot)
+            : hubModelRepoDir(modelID, downloadBase: staging.storageRoot)
+        return try ModelGenerations.prepare(source: source, destination: destination, storageRoot: staging.storageRoot)
     }
 
     /// Performs preparation on a detached task so the MainActor remains
     /// responsive while large model trees are copied and symlinks resolved.
-    static func prepareGenerationCommitOffMainActor(
-        kind: ModelDownloadKind,
-        modelID: String,
-        staging: ModelDownloadStaging
-    ) async throws -> PreparedModelGeneration {
-        try await Task.detached {
-            try prepareGenerationCommit(
-                kind: kind,
-                modelID: modelID,
-                staging: staging
-            )
-        }.value
+    static func prepareGenerationCommitOffMainActor(kind: ModelDownloadKind, modelID: String, staging: ModelDownloadStaging) async throws -> PreparedModelGeneration {
+        let source = kind == .whisper
+            ? whisperVariantDir(modelID, downloadBase: staging.downloadBase)
+            : hubModelRepoDir(modelID, downloadBase: staging.downloadBase)
+        let destination = kind == .whisper
+            ? whisperVariantDir(modelID, downloadBase: staging.storageRoot)
+            : hubModelRepoDir(modelID, downloadBase: staging.storageRoot)
+        return try await ModelGenerations.prepareOffMainActor(source: source, destination: destination, storageRoot: staging.storageRoot)
     }
 
     /// Retires an unpublished candidate and any rollback backup. The source
@@ -348,145 +217,37 @@ enum ModelStorage {
     /// and their recursive deletion is detached, so a token rejection never
     /// blocks the MainActor on model-sized I/O.
     static func discardPreparedGeneration(_ prepared: PreparedModelGeneration) {
-        retireManagedDirectory(at: prepared.candidate, storageRoot: prepared.storageRoot)
-        if let backup = prepared.backup {
-            retireManagedDirectory(at: backup, storageRoot: prepared.storageRoot)
-        }
+        ModelGenerations.discardPreparedGeneration(prepared)
     }
 
     /// Awaits the detached cleanup when a caller needs deterministic cleanup
     /// before returning (for example a focused regression test). Production
     /// download paths use this async form after publication as well.
-    static func discardPreparedGenerationOffMainActor(
-        _ prepared: PreparedModelGeneration
-    ) async {
-        await Task.detached {
-            removeManagedDirectoryImmediately(at: prepared.candidate)
-            if let backup = prepared.backup {
-                removeManagedDirectoryImmediately(at: backup)
-            }
-        }.value
+    static func discardPreparedGenerationOffMainActor(_ prepared: PreparedModelGeneration) async {
+        await ModelGenerations.discardPreparedGenerationOffMainActor(prepared)
     }
 
-    static func discardPreparedGenerationsOffMainActor(
-        _ prepared: [PreparedModelGeneration]
-    ) async {
-        await Task.detached {
-            for generation in prepared {
-                removeManagedDirectoryImmediately(at: generation.candidate)
-                if let backup = generation.backup {
-                    removeManagedDirectoryImmediately(at: backup)
-                }
-            }
-        }.value
+    static func discardPreparedGenerationsOffMainActor(_ prepared: [PreparedModelGeneration]) async {
+        await ModelGenerations.discardPreparedGenerationsOffMainActor(prepared)
     }
 
     /// Moves a managed directory out of the live model tree without walking
     /// its contents. The detached removal is best effort; a later startup
     /// sweep covers a process that exits before it completes.
-    private static func retireManagedDirectory(at url: URL, storageRoot: URL) {
-        guard isDirectory(url) else { return }
-        let cleanupRoot = storageRoot
-            .appendingPathComponent(cleanupDirectoryName, isDirectory: true)
-        let retired = cleanupRoot.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
-        let fileManager = FileManager.default
-        try? fileManager.createDirectory(at: cleanupRoot, withIntermediateDirectories: true)
-        if (try? fileManager.moveItem(at: url, to: retired)) == nil {
-            Task.detached {
-                removeManagedDirectoryImmediately(at: url)
-            }
-            return
-        }
-        Task.detached {
-            removeManagedDirectoryImmediately(at: retired)
-        }
-    }
 
-    private static func removeManagedDirectoryImmediately(at url: URL) {
-        try? FileManager.default.removeItem(at: url)
-    }
 
-    private static func isDirectory(_ url: URL) -> Bool {
-        var directory = ObjCBool(false)
-        return FileManager.default.fileExists(atPath: url.path, isDirectory: &directory)
-            && directory.boolValue
-    }
 
-    private static func isManagedTemporaryDirectoryName(_ name: String) -> Bool {
-        if name.hasPrefix(promotionDirectoryPrefix) {
-            return UUID(uuidString: String(name.dropFirst(promotionDirectoryPrefix.count))) != nil
-        }
-        if name.hasPrefix(backupDirectoryPrefix) {
-            return UUID(uuidString: String(name.dropFirst(backupDirectoryPrefix.count))) != nil
-        }
-        return false
-    }
 
-    private static func generationChildren(at root: URL) -> [URL] {
-        guard let children = try? FileManager.default.contentsOfDirectory(
-            at: root,
-            includingPropertiesForKeys: [.isDirectoryKey],
-            options: []
-        ) else { return [] }
-        return children.filter { child in
-            UUID(uuidString: child.lastPathComponent) != nil && isDirectory(child)
-        }
-    }
 
-    private static func cleanupChildren(at root: URL) -> [URL] {
-        guard let children = try? FileManager.default.contentsOfDirectory(
-            at: root,
-            includingPropertiesForKeys: [.isDirectoryKey],
-            options: []
-        ) else { return [] }
-        return children.filter(isDirectory)
-    }
 
-    private static func removeEmptyManagedRoot(_ root: URL) {
-        guard isDirectory(root),
-              let contents = try? FileManager.default.contentsOfDirectory(
-                  at: root,
-                  includingPropertiesForKeys: nil,
-                  options: []
-              ), contents.isEmpty else { return }
-        try? FileManager.default.removeItem(at: root)
-    }
 
     /// Commits a prepared generation. Only this short method belongs inside
     /// the MainActor publication critical section. The replacement parameter
     /// is an injectable seam used to force the replacement branch in
     /// regression tests; production calls use the default same-volume
     /// operation.
-    static func publishPreparedGeneration(
-        _ prepared: PreparedModelGeneration,
-        replacement: ((URL, URL) throws -> Void)? = nil
-    ) throws {
-        let replace = replacement ?? replaceCandidate
-        do {
-            try replace(prepared.candidate, prepared.destination)
-        } catch {
-            if let backup = prepared.backup {
-                // The replacement may have moved the candidate before
-                // reporting an error. Retire that tree in O(1), then restore
-                // the complete old model from the same-volume backup.
-                retireManagedDirectory(
-                    at: prepared.destination,
-                    storageRoot: prepared.storageRoot
-                )
-                try? FileManager.default.moveItem(at: backup, to: prepared.destination)
-            } else {
-                // There was no previous model to restore; never leave a
-                // partially replaced tree behind after a failed operation.
-                retireManagedDirectory(
-                    at: prepared.destination,
-                    storageRoot: prepared.storageRoot
-                )
-            }
-            throw error
-        }
+    static func publishPreparedGeneration(_ prepared: PreparedModelGeneration, replacement: ((URL, URL) throws -> Void)? = nil) throws {
+        try ModelGenerations.publishPreparedGeneration(prepared, replacement: replacement)
     }
 
     /// Compatibility wrapper for small synchronous callers and existing
@@ -505,67 +266,7 @@ enum ModelStorage {
         try publishPreparedGeneration(prepared)
     }
 
-    private static func materialize(
-        from source: URL,
-        to destination: URL,
-        activeSymlinks: inout Set<String>
-    ) throws {
-        let fileManager = FileManager.default
-        let attributes = try fileManager.attributesOfItem(atPath: source.path)
-        if let type = attributes[.type] as? FileAttributeType,
-           type == .typeSymbolicLink {
-            guard activeSymlinks.insert(source.path).inserted else {
-                throw ModelGenerationError.symlinkCycle(source)
-            }
-            defer { activeSymlinks.remove(source.path) }
-            let target = try fileManager.destinationOfSymbolicLink(atPath: source.path)
-            let resolved = URL(
-                fileURLWithPath: target,
-                relativeTo: source.deletingLastPathComponent()
-            ).standardizedFileURL
-            try materialize(
-                from: resolved,
-                to: destination,
-                activeSymlinks: &activeSymlinks
-            )
-            return
-        }
 
-        var isDirectory = ObjCBool(false)
-        guard fileManager.fileExists(atPath: source.path, isDirectory: &isDirectory) else {
-            throw ModelGenerationError.missingSource(source)
-        }
-        if isDirectory.boolValue {
-            try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
-            let children = try fileManager.contentsOfDirectory(
-                at: source,
-                includingPropertiesForKeys: nil,
-                options: []
-            ).sorted { $0.path < $1.path }
-            for child in children {
-                try materialize(
-                    from: child,
-                    to: destination.appendingPathComponent(child.lastPathComponent),
-                    activeSymlinks: &activeSymlinks
-                )
-            }
-        } else {
-            try fileManager.createDirectory(
-                at: destination.deletingLastPathComponent(),
-                withIntermediateDirectories: true
-            )
-            try fileManager.copyItem(at: source, to: destination)
-        }
-    }
-
-    private static func replaceCandidate(_ candidate: URL, _ destination: URL) throws {
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: destination.path) {
-            _ = try fileManager.replaceItemAt(destination, withItemAt: candidate)
-        } else {
-            try fileManager.moveItem(at: candidate, to: destination)
-        }
-    }
 
     static func localWhisperURL(_ id: String) -> URL? {
         guard let path = AppSettings.shared.localWhisperModelPaths[id] else { return nil }
