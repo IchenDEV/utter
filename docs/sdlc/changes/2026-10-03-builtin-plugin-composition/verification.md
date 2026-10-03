@@ -26,12 +26,18 @@ the existing project's CI; native behavior evidence is still required.
 
 | Check | Result | Scope |
 | --- | --- | --- |
-| Swift 6.2 portable tests | Pass, 33 tests | Runtime graph/lifecycle faults, async acquisition cancellation, unchanged integration serialization, composition precedence/storage/recovery, and real lexicon plugin replacement. |
+| Swift 6.2 portable tests | Pass, 62 tests | Runtime graph/lifecycle faults, integration serialization/authentication, composition storage/recovery, lexicon replacement, and extracted session state/event contracts. |
 | Module boundary fixtures | Pass, 5 tests | Forbidden feature imports and overlapping source ownership are rejected. |
 | Actual portable module boundary check | Pass | Runtime, contracts, and extracted lexicon/data sources. |
 | Industry vocabulary evaluation | Pass | Real modules: term recall 100%, non-target preservation 100%; unchanged fixture. |
 | First extracted macOS build | Pass | [CI run](https://github.com/IchenDEV/utter/actions/runs/37136510317), commit `3535889`: basic checks and assembled app verification passed, including localization bundles and Metal. CI uses an ad-hoc test signature. |
-| First extracted macOS tests | Fixture corrected; rerun required | 829 tests, 18 skipped, two assertions failed in the newly added XPC identity fixture. Foundation exposes the qualified display name; raw Objective-C names are now checked separately. No existing regression assertion failed. |
+| Extracted macOS tests | Fixture corrected; rerun required | The first run executed 829 tests and the [second run](https://github.com/IchenDEV/utter/actions/runs/37138280093) executed 840 tests, each with 18 skipped and two assertions failing only in the added XPC fixture. Both Objective-C and Foundation expose the original qualified protocol names (`OpenType.OpenTypeXPCProtocol`, `OpenType.OpenTypeXPCEventSink`); the fixture now asserts those observed names. |
+| Composition checkpoint macOS build | Pass | The second run assembled and verified the app at `cb9672f`, including localization bundles and Metal. |
+| Session commit fault injection | Regression demonstrated and corrected | Before notification settlement, the five added tests failed with ten assertions: callbacks could observe an incomplete terminal event pair or reenter history commit. The corrected session owner settles state/history/events before notification and checks stream authorization at delivery. |
+
+Automated native validation uses the existing GitHub macOS CI. The user will
+perform real-window, permission-prompt, microphone, and local-model verification
+on a macOS 26 Apple Silicon machine after the implementation is ready.
 
 These results cover the current extraction checkpoint. Built-in feature mounting,
 effective composition, unified execution, native UI, and full shutdown acceptance

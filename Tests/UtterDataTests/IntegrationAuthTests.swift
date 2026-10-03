@@ -1,7 +1,7 @@
 import UtterContracts
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterData
 
 final class IntegrationAuthTests: XCTestCase {
     func testRegistryStartsEmpty() {
@@ -41,7 +41,7 @@ final class IntegrationAuthTests: XCTestCase {
         )
 
         store.registry.approve(client)
-        let secondRegistry = IntegrationClientRegistry(defaults: store.defaults)
+        let secondRegistry = IntegrationClientRegistry(defaults: store.defaults, reportError: { _ in })
 
         let persisted = try XCTUnwrap(secondRegistry.client(id: client.id))
         XCTAssertEqual(persisted, client)
@@ -170,7 +170,7 @@ final class IntegrationAuthTests: XCTestCase {
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
         return RegistryStore(
-            registry: IntegrationClientRegistry(defaults: defaults),
+            registry: IntegrationClientRegistry(defaults: defaults, reportError: { _ in }),
             defaults: defaults,
             suiteName: suiteName
         )

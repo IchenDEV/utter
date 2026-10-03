@@ -26,6 +26,11 @@ let portableTargets: [Target] = [
         resources: [.copy("Resources/IndustryLexicons.json"), .copy("Resources/THUOCL-LICENSE.txt")],
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
+    .target(
+        name: "UtterSession",
+        dependencies: ["UtterRuntime", "UtterContracts"],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
     .executableTarget(
         name: "UtterLexiconCheck",
         dependencies: ["UtterData", "UtterContracts"],
@@ -45,6 +50,11 @@ let portableTargets: [Target] = [
     .testTarget(
         name: "UtterRuntimeTests",
         dependencies: ["UtterRuntime"],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .testTarget(
+        name: "UtterSessionTests",
+        dependencies: ["UtterSession", "UtterContracts", "UtterData"],
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
 ]
@@ -68,6 +78,7 @@ let package = Package(
                 "UtterRuntime",
                 "UtterContracts",
                 "UtterData",
+                "UtterSession",
                 .product(name: "WhisperKit", package: "argmax-oss-swift"),
                 .product(name: "ANELMRuntime", package: "ANE-LM"),
                 .product(name: "MLXAudioCore", package: "mlx-audio-swift"),
@@ -79,7 +90,7 @@ let package = Package(
                 .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
             ],
             path: "Sources",
-            exclude: ["UtterRuntime", "UtterContracts", "UtterData"],
+            exclude: ["UtterRuntime", "UtterContracts", "UtterData", "UtterSession"],
             resources: [
                 .copy("Resources/AppIcon.png"),
                 .copy("Resources/AppIcon.icon"),
@@ -109,7 +120,7 @@ let package = Package(
         ),
         .testTarget(
             name: "OpenTypeTests",
-            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData"],
+            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession"],
             path: "Tests/OpenTypeTests",
             swiftSettings: [
                 .swiftLanguageMode(.v5)

@@ -1,3 +1,4 @@
+import UtterSession
 import UtterContracts
 import Foundation
 import AppKit

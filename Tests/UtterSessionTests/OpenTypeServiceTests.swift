@@ -1,8 +1,8 @@
+import UtterData
 import UtterContracts
 import Foundation
 import XCTest
-@testable import OpenType
-
+@testable import UtterSession
 @MainActor
 final class OpenTypeServiceTests: XCTestCase {
     func testCreateSessionFailsWhenDeveloperInterfaceDisabled() async {
@@ -272,81 +272,4 @@ final class OpenTypeServiceTests: XCTestCase {
         XCTAssertEqual(newSession.state, .created)
     }
 
-    private var clientID: String {
-        IntegrationClient.localHTTP(tokenID: "token").id
-    }
-
-    private var otherClientID: String {
-        IntegrationClient.localHTTP(tokenID: "other").id
-    }
-
-    private var recordOnlyClient: IntegrationClient {
-        IntegrationClient(
-            id: "http:record-only",
-            displayName: "Record Only",
-            bundleIdentifier: nil,
-            teamIdentifier: nil,
-            codeRequirement: nil,
-            transport: .http,
-            capabilities: [.record],
-            firstApprovedAt: Date(timeIntervalSince1970: 1_700_000_000),
-            lastUsedAt: nil
-        )
-    }
-
-    private func makeService(registry: IntegrationClientRegistry) -> OpenTypeService {
-        OpenTypeService(
-            settings: IntegrationServiceSettings(developerInterfaceEnabled: true, httpToken: "token"),
-            registry: registry
-        )
-    }
-
-    private func request() -> InputSessionRequest {
-        InputSessionRequest(mode: .processed, language: .english, useScreenContext: false)
-    }
-
-    private func approveLocalHTTP(in registry: IntegrationClientRegistry) {
-        registry.approve(IntegrationClient.localHTTP(tokenID: "token"))
-    }
-
-    private func approveOtherLocalHTTP(in registry: IntegrationClientRegistry) {
-        registry.approve(IntegrationClient.localHTTP(tokenID: "other"))
-    }
-
-    private func registry() -> RegistryStore {
-        let suiteName = "OpenTypeServiceTests-\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suiteName)!
-        defaults.removePersistentDomain(forName: suiteName)
-        return RegistryStore(
-            registry: IntegrationClientRegistry(defaults: defaults),
-            defaults: defaults,
-            suiteName: suiteName
-        )
-    }
-
-    private func assertThrowsIntegrationError(
-        _ expected: IntegrationError,
-        operation: () async throws -> Void,
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) async {
-        do {
-            try await operation()
-            XCTFail("Expected \(expected)", file: file, line: line)
-        } catch let error as IntegrationError {
-            XCTAssertEqual(error, expected, file: file, line: line)
-        } catch {
-            XCTFail("Expected \(expected), got \(error)", file: file, line: line)
-        }
-    }
-}
-
-private struct RegistryStore {
-    let registry: IntegrationClientRegistry
-    let defaults: UserDefaults
-    let suiteName: String
-
-    func cleanup() {
-        defaults.removePersistentDomain(forName: suiteName)
-    }
 }

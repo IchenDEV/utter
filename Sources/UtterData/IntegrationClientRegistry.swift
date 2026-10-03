@@ -1,7 +1,7 @@
 import UtterContracts
 import Foundation
 
-final class IntegrationClientRegistry {
+package final class IntegrationClientRegistry: IntegrationClientStore {
     private enum LoadResult {
         case loaded([IntegrationClient])
         case failed
@@ -18,23 +18,25 @@ final class IntegrationClientRegistry {
 
     private let defaults: UserDefaults
     private let key: String
+    private let reportError: (String) -> Void
 
-    init(defaults: UserDefaults = .standard, key: String = "integrationApprovedClients") {
+    package init(defaults: UserDefaults, key: String = "integrationApprovedClients", reportError: @escaping (String) -> Void) {
         self.defaults = defaults
         self.key = key
+        self.reportError = reportError
     }
 
-    func approvedClients() -> [IntegrationClient] {
+    package func approvedClients() -> [IntegrationClient] {
         load().clients.sorted {
             $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
         }
     }
 
-    func client(id: String) -> IntegrationClient? {
+    package func client(id: String) -> IntegrationClient? {
         load().clients.first { $0.id == id }
     }
 
-    func approve(_ client: IntegrationClient) {
+    package func approve(_ client: IntegrationClient) {
         let result = load()
         guard case var .loaded(clients) = result else {
             return
@@ -60,7 +62,7 @@ final class IntegrationClientRegistry {
         save(clients)
     }
 
-    func revoke(clientID: String) {
+    package func revoke(clientID: String) {
         let result = load()
         guard case let .loaded(clients) = result else {
             return
@@ -69,7 +71,7 @@ final class IntegrationClientRegistry {
         save(clients.filter { $0.id != clientID })
     }
 
-    func markUsed(clientID: String, at date: Date = Date()) {
+    package func markUsed(clientID: String, at date: Date = Date()) {
         let result = load()
         guard case var .loaded(clients) = result else {
             return
@@ -82,7 +84,7 @@ final class IntegrationClientRegistry {
         save(clients)
     }
 
-    func isAuthorized(clientID: String, capability: IntegrationClient.Capability) -> Bool {
+    package func isAuthorized(clientID: String, capability: IntegrationClient.Capability) -> Bool {
         guard let client = client(id: clientID) else {
             return false
         }
@@ -98,7 +100,7 @@ final class IntegrationClientRegistry {
         do {
             return .loaded(try JSONDecoder.integration.decode([IntegrationClient].self, from: data))
         } catch {
-            Log.error("Failed to decode integration client registry: \(error.localizedDescription)")
+            reportError("Failed to decode integration client registry: \(error.localizedDescription)")
             return .failed
         }
     }
