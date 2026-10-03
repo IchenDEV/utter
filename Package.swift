@@ -38,6 +38,11 @@ let portableTargets: [Target] = [
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .target(
+        name: "UtterRemoteInference",
+        dependencies: ["UtterRuntime", "UtterContracts"],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .target(
         name: "UtterModels",
         dependencies: ["UtterRuntime", "UtterContracts"] + modelDependencies,
         exclude: modelExclusions,
@@ -67,6 +72,11 @@ let portableTargets: [Target] = [
     .testTarget(
         name: "UtterRuntimeTests",
         dependencies: ["UtterRuntime"],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .testTarget(
+        name: "UtterRemoteInferenceTests",
+        dependencies: ["UtterRemoteInference", "UtterContracts", "UtterRuntime", "UtterModels"],
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .testTarget(
@@ -117,6 +127,7 @@ let package = Package(
                 "UtterData",
                 "UtterSession",
                 "UtterModels",
+                "UtterRemoteInference",
                 "UtterAppleSpeech",
                 "UtterMediaContracts",
                 "UtterPresentationContracts",
@@ -131,7 +142,7 @@ let package = Package(
                 .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
             ],
             path: "Sources",
-            exclude: ["UtterAppleSpeech", "UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
+            exclude: ["UtterRemoteInference", "UtterAppleSpeech", "UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
             resources: [
                 .copy("Resources/AppIcon.png"),
                 .copy("Resources/AppIcon.icon"),
@@ -161,7 +172,7 @@ let package = Package(
         ),
         .testTarget(
             name: "OpenTypeTests",
-            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterAppleSpeech", "UtterMediaContracts", "UtterPresentationContracts"],
+            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterAppleSpeech", "UtterRemoteInference", "UtterMediaContracts", "UtterPresentationContracts"],
             path: "Tests/OpenTypeTests",
             swiftSettings: [
                 .swiftLanguageMode(.v5)

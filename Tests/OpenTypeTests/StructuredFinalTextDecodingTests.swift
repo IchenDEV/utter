@@ -1,3 +1,5 @@
+import UtterRemoteInference
+import UtterContracts
 import XCTest
 @testable import OpenType
 

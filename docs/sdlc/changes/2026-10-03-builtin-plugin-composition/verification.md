@@ -26,7 +26,7 @@ the existing project's CI; native behavior evidence is still required.
 
 | Check | Result | Scope |
 | --- | --- | --- |
-| Swift 6.2 portable tests | Pass, 99 tests | Runtime/lifecycle faults, integration/authentication, composition recovery, session settlement, frozen settings/provider choices, targeted history updates, dictionary learning, resource cancellation/drain, and provider registration/replacement. |
+| Swift 6.2 portable tests | Pass, 250 tests | Runtime/lifecycle faults, integration/authentication, composition recovery, session settlement, frozen settings/provider choices, targeted history updates, dictionary learning, resource cancellation/drain, provider registration/replacement, shared structured-value decoding, and actual remote transport contracts. |
 | Module boundary fixtures | Pass, 5 tests | Forbidden feature imports and overlapping source ownership are rejected. |
 | Actual portable module boundary check | Pass | Runtime, contracts, and extracted lexicon/data sources. |
 | Industry vocabulary evaluation | Pass | Real modules: term recall 100%, non-target preservation 100%; unchanged fixture. |
@@ -36,6 +36,8 @@ the existing project's CI; native behavior evidence is still required.
 | Native settings/session checkpoint tests | Pass | [CI run](https://github.com/IchenDEV/utter/actions/runs/37140908559) at `7702436`: 852 tests, 18 opt-in tests skipped, zero failures. The observed XPC identities and native settings projection contracts passed. An explicit Combine import corrected the preceding checkpoint's compilation failure. |
 | Data checkpoint release-style build | Pass | [CI run](https://github.com/IchenDEV/utter/actions/runs/37141571711) at `bac8a5b`: assembled app verification passed. The test job compiled production sources but rejected four extra arguments in the modified deferred-replacement fixture; `2fac5e5` corrected the fixture, with rerun pending. |
 | Data and model contracts checkpoint | Pass | [CI run](https://github.com/IchenDEV/utter/actions/runs/37142531271) at `4e00d4d`: 863 tests, 18 opt-in tests skipped, zero failures; release-style app assembly and artifact verification also passed. This rerun includes the corrected deferred-replacement fixture. |
+| Apple Speech plugin checkpoint | Pass | [CI run](https://github.com/IchenDEV/utter/actions/runs/37143627313) at `84aa34e`: 866 tests, 18 opt-in tests skipped, zero failures; release-style app assembly passed. Registration preserves permission status and disposal removes its contribution. |
+| Remote HTTP fault contracts | Pass, 6 tests | Actual client and synthetic transport verify OpenAI/Anthropic request formats, one bounded context-budget retry, non-retry errors, cancellation without retry, and shutdown draining a non-cooperative response. No network or production credentials are used. |
 | Session commit fault injection | Regression demonstrated and corrected | Before notification settlement, the five added tests failed with ten assertions: callbacks could observe an incomplete terminal event pair or reenter history commit. The corrected session owner settles state/history/events before notification and checks stream authorization at delivery. |
 | Local basic checks | Native step unavailable | Portable module and script fixtures passed. The full script reaches the macOS `PlistBuddy` step, which is unavailable on Linux; the unmodified native checks run in macOS CI. |
 
