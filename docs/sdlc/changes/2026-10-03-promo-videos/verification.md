@@ -14,12 +14,10 @@
 | `swift test` | Not run (host) | No Swift toolchain on this host; no Swift, resource or plist files changed |
 | Syntax | Pass | `node --check` on every kit/scene script; `py_compile` on `synth.py` and each `score.py`; `bash -n scripts/render-promo.sh` |
 | File size | Pass | Largest source file is 221 lines (`promo-kit/synth.py`); every file stays under 300 lines |
-| Containers | Pass | All three MP4s: H.264, 1920×1080, 30/1 fps, AAC 48 kHz stereo. Durations 26.000 / 45.000 / 52.500 s; sizes 4.8 / 8.8 / 8.4 MB |
-| Loudness | Pass | EBU R128: offline -16.3 LUFS / -1.4 dBFS; features -16.1 / -1.2; day -15.7 / -1.1 |
 | A/V sync | Pass | Status-change and release transients land within +2–3 ms of their `cues.json` events. The key-down peak trails by about 170 ms because Utter's own start tone follows the key by 50 ms, as in the app |
 | Voice-over (round 3) | Pass | 30 ElevenLabs clips (eleven_v4, zh). Per-clip speech-to-text round trip (`voice_check.py`, scribe_v1): CER 0% on every clip. `eleven_multilingual_v2` was rejected because it read 离线 as 吃线 on two different voices |
-| Voiced cuts | Pass | `utter-offline-29s-zh-vo.mp4` 28.89 s, `utter-features-52s-zh-vo.mp4` 51.81 s, `utter-day-58s-zh-vo.mp4` 58.22 s; all H.264 1920×1080 30 fps + AAC; -16.2 / -16.1 / -16.1 LUFS, -1.4 to -1.5 dBFS |
-| Full-mix intelligibility | Pass | Speech-to-text on each final mix against the voice script: CER 0.0% / 0.0% / 0.5% (one homophone, 纪要→记要) |
+| Final cuts (`marketing/videos/`) | Pass | `utter-offline-28s-zh-vo.mp4` 28.10 s, `utter-features-51s-zh-vo.mp4` 50.94 s, `utter-day-58s-zh-vo.mp4` 58.23 s; all H.264 1920×1080 30 fps + AAC 48 kHz stereo; -16.3 / -15.9 / -16.0 LUFS, true peak about -1.5 dBFS |
+| Full-mix intelligibility | Pass | Speech-to-text on each final mix against the voice script: CER 3.1% / 1.6% / 0.0%. The non-zero values are most likely the recogniser hearing "Utter" as "Otter" (seen before in per-line checks), but this was not confirmed line by line. Re-recorded lines on their own: 0%. No mention of "Llama" in any cut |
 | Voice vs music | Pass | About 14 dB of voice-to-music separation during speech (span-based ducking from the manifest). Per-line voice level within ±1 dB |
 | Visual QA | Pass | 1–2 fps contact sheets of every final MP4 plus targeted stills. Found and fixed during the feedback round: a window-in NaN that hid windows, a headline/window overlap, a privacy-diagram fade that flashed the desktop before the end card, a style card that split “10 分钟” across lines, a gap and a tag/caption mismatch around 0:30 in the features cut, and establishing shots in the day cut that were too short |
 
@@ -52,7 +50,7 @@
   ShanShan has a 90-day notice period and Evan Zhao a 730-day one. Clips are
   cached in the repo, so re-renders do not depend on the voices staying
   available.
-- **Longer runtimes.** Natural speech sets the voiced cuts' length (29 / 52 / 58 s).
+- **Longer runtimes.** Natural speech sets the voiced cuts' length (28 / 51 / 58 s).
   The earlier silent cuts were removed because their content is out of date.
 - **Illustration, not photography.** People are hand-drawn vector figures seen
   from behind. Photoreal AI imagery would need an ElevenLabs Pro plan (the
@@ -62,5 +60,6 @@
 
 ## Decision
 
-Ready for human review of the bundle and the three rendered MP4s. Nothing has
-been committed, pushed or published.
+Ready for human review. The bundle and the three final cuts are committed on
+branch `t3code/offline-voice-promo-video` and submitted as a pull request.
+Nothing has been published to the website or social channels.
