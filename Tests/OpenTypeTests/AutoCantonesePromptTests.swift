@@ -84,8 +84,8 @@ final class AutoCantonesePromptTests: XCTestCase {
             AppSettings.shared.useCustomSystemPrompt = true
             AppSettings.shared.customSystemPrompt = "Keep product names exact."
 
-            let automatic = PromptBuilder.buildSystemPrompt(style: .professional, stylePrompt: "", inputLanguage: .auto)
-            let cantonese = PromptBuilder.buildSystemPrompt(style: .professional, stylePrompt: "", inputLanguage: .cantonese)
+            let automatic = PromptBuilder.buildSystemPrompt(style: .professional, stylePrompt: "", inputLanguage: .auto, useCustomSystemPrompt: true, customSystemPrompt: "Keep product names exact.")
+            let cantonese = PromptBuilder.buildSystemPrompt(style: .professional, stylePrompt: "", inputLanguage: .cantonese, useCustomSystemPrompt: true, customSystemPrompt: "Keep product names exact.")
 
             XCTAssertTrue(automatic.contains("输入法输出契约"))
             XCTAssertTrue(automatic.contains("自动判断原文主要语言"))

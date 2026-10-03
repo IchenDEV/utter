@@ -232,12 +232,14 @@ final class MultilingualPromptTests: XCTestCase {
             let japanese = PromptBuilder.buildSystemPrompt(
                 style: .professional,
                 stylePrompt: "",
-                inputLanguage: .japanese
+                inputLanguage: .japanese,
+                useCustomSystemPrompt: true, customSystemPrompt: "Keep product names exact."
             )
             let korean = PromptBuilder.buildSystemPrompt(
                 style: .professional,
                 stylePrompt: "",
-                inputLanguage: .korean
+                inputLanguage: .korean,
+                useCustomSystemPrompt: true, customSystemPrompt: "Keep product names exact."
             )
             XCTAssertTrue(japanese.contains("入力メソッド出力契約"))
             XCTAssertTrue(japanese.contains("挿入可能な最終テキストだけ"))

@@ -7,6 +7,7 @@ import MLX
 package actor LLMEngine {
     private let files: any ModelFilesService
     private var closed = false
+    private var modelLoadAttempted = false
     private let log: Log
 
     package init(files: any ModelFilesService, log: Log) {
@@ -29,6 +30,7 @@ package actor LLMEngine {
         guard let localURL = modelURL ?? files.installedTextModelURL(id) else {
             throw LLMError.modelNotDownloaded
         }
+        modelLoadAttempted = true
         container = try await LLMModelFactory.shared.loadContainer(
             from: localURL,
             using: MLXModelLoading.tokenizerLoader
@@ -124,6 +126,10 @@ package actor LLMEngine {
         container = nil
         currentModelID = nil
         currentModelURL = nil
+        if modelLoadAttempted {
+            modelLoadAttempted = false
+            Memory.clearCache()
+        }
     }
 
     /// Qwen3-family chat templates read `enable_thinking` from the template

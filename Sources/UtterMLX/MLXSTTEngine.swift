@@ -88,7 +88,16 @@ private actor MLXSTTRuntime {
     private let files: any ModelFilesService
     private let log: Log
     init(files: any ModelFilesService, log: Log) { self.files = files; self.log = log }
-    func unload() { model = nil; loadedModelID = nil; Memory.clearCache() }
+    private var modelLoadAttempted = false
+
+    func unload() {
+        model = nil
+        loadedModelID = nil
+        if modelLoadAttempted {
+            modelLoadAttempted = false
+            Memory.clearCache()
+        }
+    }
 
     private var model: (any STTGenerationModel)?
     private var loadedModelID: String?
@@ -147,6 +156,7 @@ private actor MLXSTTRuntime {
             throw MLXSTTError.modelDirectoryMissing
         }
         let modelType = Self.detectModelType(from: modelDir, modelID: modelID)
+        modelLoadAttempted = true
         let loaded = try await Self.loadModelFromDirectory(modelDir, modelType: modelType)
         try Task.checkCancellation()
         model = loaded

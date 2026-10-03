@@ -1,3 +1,4 @@
+import MLX
 import UtterContracts
 import CoreGraphics
 import CoreImage
@@ -8,6 +9,7 @@ import MLXVLM
 package actor VLMEngine {
     private let files: any ModelFilesService
     private var closed = false
+    private var modelLoadAttempted = false
     private let log: Log
 
     package init(files: any ModelFilesService, log: Log) {
@@ -30,6 +32,7 @@ package actor VLMEngine {
         guard let localURL = modelURL ?? files.installedTextModelURL(id) else {
             throw LLMError.modelNotDownloaded
         }
+        modelLoadAttempted = true
         container = try await VLMModelFactory.shared.loadContainer(
             from: localURL,
             using: MLXModelLoading.tokenizerLoader
@@ -82,5 +85,9 @@ package actor VLMEngine {
         container = nil
         currentModelID = nil
         currentModelURL = nil
+        if modelLoadAttempted {
+            modelLoadAttempted = false
+            Memory.clearCache()
+        }
     }
 }

@@ -111,7 +111,16 @@ private actor QwenNativeASRRuntime {
 
     private let log: Log
     init(log: Log) { self.log = log }
-    func unload() { model = nil; loadedDirectory = nil; Memory.clearCache() }
+    private var modelLoadAttempted = false
+
+    func unload() {
+        model = nil
+        loadedDirectory = nil
+        if modelLoadAttempted {
+            modelLoadAttempted = false
+            Memory.clearCache()
+        }
+    }
 
     private var model: Qwen3ASRModel?
     private var loadedDirectory: URL?
@@ -155,6 +164,7 @@ private actor QwenNativeASRRuntime {
             return model
         }
 
+        modelLoadAttempted = true
         let loaded = try await Qwen3ASRModel.fromModelDirectory(standardizedDirectory)
         try Task.checkCancellation()
         model = loaded

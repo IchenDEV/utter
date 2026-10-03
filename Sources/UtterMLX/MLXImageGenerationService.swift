@@ -1,4 +1,3 @@
-import MLX
 import UtterContracts
 import UtterMediaContracts
 
@@ -27,13 +26,11 @@ package struct MLXImageGenerationService: ImageGenerationService {
     package func unload() async {
         try? await access.withAccess {
             await engine.unload()
-            Memory.clearCache()
         }
     }
     package func close() async {
         try? await access.withAccess {
             await engine.close()
-            Memory.clearCache()
         }
     }
 

@@ -1,5 +1,4 @@
 import Foundation
-import MLX
 import UtterContracts
 
 package struct MLXGenerationService: TextGenerationService {
@@ -34,7 +33,6 @@ package struct MLXGenerationService: TextGenerationService {
     package func unload() async {
         try? await access.withAccess {
             await engine.unload()
-            Memory.clearCache()
         }
     }
 
@@ -43,11 +41,9 @@ package struct MLXGenerationService: TextGenerationService {
             do {
                 let result = try await engine.benchmark(modelID: request.modelID, modelURL: request.modelURL)
                 await engine.unload()
-                Memory.clearCache()
                 return result
             } catch {
                 await engine.unload()
-                Memory.clearCache()
                 throw error
             }
         }
@@ -55,7 +51,6 @@ package struct MLXGenerationService: TextGenerationService {
     package func close() async {
         try? await access.withAccess {
             await engine.close()
-            Memory.clearCache()
         }
     }
 

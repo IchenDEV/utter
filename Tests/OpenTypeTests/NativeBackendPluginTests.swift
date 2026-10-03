@@ -33,6 +33,10 @@ final class NativeBackendPluginTests: XCTestCase {
         let aneLoaded = await ane.isLoaded
         XCTAssertFalse(mlxLoaded)
         XCTAssertFalse(aneLoaded)
+        await mlx.unload()
+        let imageProviders = try runtime.service(ImageGenerationServices.providers)
+        let image = try await imageProviders.create(id: "generation.mlx-image", request: .inference)
+        await image.unload()
         let speech = try runtime.service(SpeechServices.providers)
         XCTAssertEqual(speech.descriptors.map(\.id), ["speech.firered", "speech.mega", "speech.qwen", "speech.volc", "speech.whisper"])
         let qwen = try await speech.create(id: SpeechEngineType.qwen3.rawValue, request: SpeechProviderRequest(selection: SpeechSelection(providerID: "speech.qwen", type: .qwen3, modelPath: "/missing")))
