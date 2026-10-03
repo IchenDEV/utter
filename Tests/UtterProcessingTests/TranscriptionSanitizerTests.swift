@@ -1,5 +1,6 @@
+import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterProcessing
 
 final class TranscriptionSanitizerTests: XCTestCase {
     func testCollapsesRepeatedTranscriptOnlyWhenAudioSuggestsHallucination() {

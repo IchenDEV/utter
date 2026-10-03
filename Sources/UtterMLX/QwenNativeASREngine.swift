@@ -61,7 +61,7 @@ package final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
         let started = CFAbsoluteTimeGetCurrent()
         let result = try await QwenAudioPreprocessor.withPreparedAudio(
             from: audioURL,
-            tailPaddingFrames: tailPaddingFrames
+            tailPaddingFrames: tailPaddingFrames, log: log
         ) { preparedURL in
             try await QwenContextRecovery.run(prompt: prompt) { context in
                 try await runtime.transcribe(

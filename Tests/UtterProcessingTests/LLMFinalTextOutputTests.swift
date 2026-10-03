@@ -1,6 +1,6 @@
 import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterProcessing
 
 /// `LLMFinalTextOutput.wholeJSONText` powers the remote-API boundary: it only
 /// resolves payloads that are entirely one structured value. Mixed text is

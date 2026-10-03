@@ -1,7 +1,6 @@
-import UtterANE
-import UtterMLX
-import UtterRemoteInference
+import UtterProcessing
 import UtterModels
+import UtterMediaContracts
 import UtterPresentationContracts
 import UtterContracts
 import CoreGraphics
@@ -12,13 +11,30 @@ final class TextProcessor {
 
     @TaskLocal static var espressoGenerationTracker: EspressoGenerationTracker?
 
-    let llm = LLMEngine()
-    let benchmarkEngine = LLMEngine()
-    let espressoLLM = EspressoLLMEngine()
-    let vlm = VLMEngine()
-    let localModelAccessGate = LocalModelAccessGate()
-    let remoteLLMClient = RemoteLLMClient()
+    let providers: any ProviderCatalog<GenerationPurpose, any TextGenerationService>
+    let imageProviders: any ProviderCatalog<GenerationPurpose, any ImageGenerationService>
+    let localModelAccessGate: any ModelResourceAccess
+    let modelFiles: any ModelFilesService
     private let dictionary = PersonalDictionary.shared
+
+    init(
+        providers: (any ProviderCatalog<GenerationPurpose, any TextGenerationService>)? = nil,
+        imageProviders: (any ProviderCatalog<GenerationPurpose, any ImageGenerationService>)? = nil,
+        access: (any ModelResourceAccess)? = nil, files: (any ModelFilesService)? = nil
+    ) {
+        let access = access ?? LocalModelAccessGate()
+        let files = files ?? LiveModelFiles()
+        if let providers, let imageProviders {
+            self.providers = providers
+            self.imageProviders = imageProviders
+        } else {
+            let legacy = LegacyGenerationServices(access: access, files: files, log: UtterContracts.Log(service: Log.service))
+            self.providers = providers ?? legacy.text
+            self.imageProviders = imageProviders ?? legacy.image
+        }
+        localModelAccessGate = access
+        modelFiles = files
+    }
 
     func basicClean(
         text: String,
@@ -122,9 +138,10 @@ final class TextProcessor {
                             model: options.llmModel,
                             image: screenImage,
                             maxTokens: generationOptions.maxTokens,
-                            temperature: generationOptions.temperature
+                            temperature: generationOptions.temperature, providerID: options.imageProviderID
                         )
                     } catch {
+                        try Task.checkCancellation()
                         Log.error("[TextProcessor] VLM failed, falling back to text LLM: \(error.localizedDescription)")
                         let textFallback = formattingAssembly(
                             options: options,
@@ -170,6 +187,7 @@ final class TextProcessor {
                 enforceSemanticFidelity: options.fidelityPolicy == .faithfulCorrection
             )
         } catch {
+            if Task.isCancelled { return "" }
             if allowsPreparedFallback {
                 Log.error("[TextProcessor] LLM failed, falling back to prepared raw text: \(error.localizedDescription)")
                 return cleanedText
@@ -238,9 +256,10 @@ final class TextProcessor {
                             model: options.llmModel,
                             image: screenImage,
                             maxTokens: 4096,
-                            temperature: 0.3
+                            temperature: 0.3, providerID: options.imageProviderID
                         )
                     } catch {
+                        try Task.checkCancellation()
                         Log.error("[TextProcessor] Command VLM failed, falling back to text LLM: \(error.localizedDescription)")
                         let textFallback = commandAssembly(
                             options: options,

@@ -1,7 +1,6 @@
 import UtterModels
 import UtterContracts
 import Foundation
-import MLX
 
 extension TextProcessor {
     func withLocalModelAccess<Value>(
@@ -35,104 +34,81 @@ extension TextProcessor {
 
     func isLLMReady(for backend: LocalLLMBackend) async -> Bool {
         do {
-            return try await withLocalModelAccess {
-                switch backend {
-                case .mlx:
-                    return await llm.isLoaded
-                case .espresso:
-                    let espressoIsLoaded = await espressoLLM.isLoaded
-                    let mlxIsLoaded = await llm.isLoaded
-                    return espressoIsLoaded || mlxIsLoaded
-                }
-            }
-        } catch {
-            return false
-        }
+            let primary = try await providers.create(id: backend.rawValue, request: .inference)
+            if await primary.isLoaded { return true }
+            guard backend == .espresso else { return false }
+            let fallback = try await providers.create(id: "generation.mlx", request: .inference)
+            return await fallback.isLoaded
+        } catch { return false }
     }
 
     func unloadLLM() async {
-        do {
-            try await withLocalModelAccess {
-                let llmWasLoaded = await llm.isLoaded
-                let benchmarkWasLoaded = await benchmarkEngine.isLoaded
-                let vlmWasLoaded = await vlm.isLoaded
-                await llm.unload()
-                await benchmarkEngine.unload()
-                await espressoLLM.unload()
-                await vlm.unload()
-                if llmWasLoaded || benchmarkWasLoaded || vlmWasLoaded {
-                    Memory.clearCache()
-                }
+        let descriptors = await providers.descriptors
+        for descriptor in descriptors where descriptor.id.hasPrefix("generation.") {
+            for purpose in [GenerationPurpose.inference, .benchmark] {
+                if let provider = try? await providers.create(id: descriptor.id, request: purpose) { await provider.unload() }
             }
-        } catch {
-            Log.info("[TextProcessor] local model unload cancelled")
+        }
+        let imageDescriptors = await imageProviders.descriptors
+        for descriptor in imageDescriptors {
+            if let provider = try? await imageProviders.create(id: descriptor.id, request: .inference) { await provider.unload() }
         }
     }
 
     func benchmarkLLM(modelID: String) async throws -> ModelBenchmarkResult {
-        try await withLocalModelAccess {
-            try Task.checkCancellation()
-            do {
-                let result = try await benchmarkEngine.benchmark(modelID: modelID)
-                let wasLoaded = await benchmarkEngine.isLoaded
-                await benchmarkEngine.unload()
-                if wasLoaded { Memory.clearCache() }
-                return result
-            } catch {
-                let wasLoaded = await benchmarkEngine.isLoaded
-                await benchmarkEngine.unload()
-                if wasLoaded { Memory.clearCache() }
-                throw error
-            }
-        }
+        let request = TextGenerationRequest(prompt: "", modelID: modelID, modelURL: modelFiles.installedTextModelURL(modelID))
+        let provider = try await providers.create(id: "generation.mlx", request: .benchmark)
+        try Task.checkCancellation()
+        return try await provider.benchmark(request)
     }
 
     @discardableResult
     func warmUpLLM(
-        model: String,
-        backend: LocalLLMBackend,
-        espressoModelPath: String,
+        model: String, backend: LocalLLMBackend, espressoModelPath: String,
         fallbackToMLXOnEspressoFailure: Bool
     ) async -> (loaded: Bool, errorMessage: String?, espressoOutcome: EspressoGenerationOutcome?) {
+        let primaryRequest = TextGenerationRequest(
+            prompt: "", modelID: model,
+            modelURL: backend == .espresso
+                ? URL(fileURLWithPath: NSString(string: espressoModelPath).expandingTildeInPath)
+                : modelFiles.installedTextModelURL(model)
+        )
+        let fallbackRequest = TextGenerationRequest(prompt: "", modelID: model, modelURL: modelFiles.installedTextModelURL(model))
         do {
             return try await withLocalModelAccess {
+                let primary = try await self.providers.create(id: backend.rawValue, request: .inference)
+                try Task.checkCancellation()
                 do {
-                    switch backend {
-                    case .mlx:
-                        try await llm.loadModel(id: model)
-                    case .espresso:
+                    if backend == .espresso {
                         let result = try await Self.runEspressoWithMLXFallback(
                             fallbackEnabled: fallbackToMLXOnEspressoFailure,
-                            espresso: { try await self.espressoLLM.loadModel(path: espressoModelPath) },
-                            prepareForMLXFallback: { await self.espressoLLM.unload() },
-                            mlx: { try await self.llm.loadModel(id: model) }
+                            espresso: { try await primary.prepare(primaryRequest) },
+                            prepareForMLXFallback: { await primary.unload() },
+                            mlx: {
+                                let fallback = try await self.providers.create(id: "generation.mlx", request: .inference)
+                                try Task.checkCancellation()
+                                try await fallback.prepare(fallbackRequest)
+                            }
                         )
-                        if result.usedMLX {
-                            return (true, nil, .fallback)
-                        }
+                        return (true, nil, result.usedMLX ? .fallback : nil)
                     }
+                    try await primary.prepare(primaryRequest)
+                    try Task.checkCancellation()
                     return (true, nil, nil)
                 } catch is CancellationError {
                     throw CancellationError()
                 } catch let error as EspressoMLXFallbackError {
                     Log.sensitive("[TextProcessor] ANE-LM and MLX warmup failed: \(error.details)")
-                    Log.error("[TextProcessor] MLX fallback unavailable during warmup")
                     return (false, EspressoGenerationOutcome.unavailable.message, .unavailable)
                 } catch {
-                    Log.error("[TextProcessor] LLM warmup failed: \(error.localizedDescription)")
-                    if backend == .espresso {
-                        _ = await espressoLLM.consumeLastFailureMessage()
-                        if !fallbackToMLXOnEspressoFailure {
-                            return (false, EspressoGenerationOutcome.failed.message, .failed)
-                        }
+                    if backend == .espresso && !fallbackToMLXOnEspressoFailure {
+                        return (false, EspressoGenerationOutcome.failed.message, .failed)
                     }
                     return (false, error.localizedDescription, nil)
                 }
             }
         } catch is CancellationError {
             return (false, nil, nil)
-        } catch {
-            return (false, error.localizedDescription, nil)
-        }
+        } catch { return (false, error.localizedDescription, nil) }
     }
 }

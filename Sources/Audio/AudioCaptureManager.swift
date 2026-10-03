@@ -4,45 +4,6 @@ import AVFoundation
 import CoreAudio
 import AudioToolbox
 
-struct AudioCaptureActivity: Equatable {
-    let thresholds: AudioActivityThresholds
-
-    private(set) var bufferCount = 0
-    private(set) var frameCount = 0
-    private(set) var maxRMS: Float = 0
-    private var weightedRMSSum: Double = 0
-
-    init(thresholds: AudioActivityThresholds = .default) {
-        self.thresholds = thresholds
-    }
-
-    var averageRMS: Float {
-        guard frameCount > 0 else { return 0 }
-        return Float(weightedRMSSum / Double(frameCount))
-    }
-
-    var hasMeaningfulAudio: Bool {
-        guard frameCount > 0 else { return false }
-        let gate = thresholds.gate
-        return averageRMS >= gate.minimumAverageRMS || maxRMS >= gate.minimumPeakRMS
-    }
-
-    var hasWeakSpeechEvidence: Bool {
-        guard frameCount > 0 else { return true }
-        let weak = thresholds.weakSpeechEvidence
-        return averageRMS < weak.averageRMS && maxRMS < weak.peakRMS
-    }
-
-    mutating func record(rms: Float, frameCount: Int) {
-        guard frameCount > 0 else { return }
-        let normalizedRMS = max(0, rms)
-        bufferCount += 1
-        self.frameCount += frameCount
-        maxRMS = max(maxRMS, normalizedRMS)
-        weightedRMSSum += Double(normalizedRMS) * Double(frameCount)
-    }
-}
-
 /// Why a local capture could not start. Remote wiring maps these to localized
 /// messages; the pipeline distinguishes "no usable input" from permission loss.
 enum AudioCaptureStartFailure: Error, Equatable {

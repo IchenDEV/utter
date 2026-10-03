@@ -1,6 +1,7 @@
+import UtterContracts
 import UtterRemoteInference
 import XCTest
-@testable import OpenType
+@testable import UtterProcessing
 
 final class FormattedOutputCleanerTests: XCTestCase {
     func testKeepsOnlyMarkedFinalText() {

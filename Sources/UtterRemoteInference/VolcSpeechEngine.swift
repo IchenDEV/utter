@@ -16,7 +16,7 @@ package final class VolcSpeechEngine: SpeechEngine, @unchecked Sendable {
 
     package private(set) var isReady: Bool
     typealias Connection = (session: URLSession, task: URLSessionWebSocketTask)
-    package var streamingSession: VolcStreamingSession?
+    var streamingSession: VolcStreamingSession?
     let recognitionContextLock = NSLock()
     package var recognitionContext = SpeechRecognitionContext.empty
 

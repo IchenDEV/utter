@@ -1,8 +1,8 @@
 import UtterContracts
 import Foundation
 
-enum TranscriptFidelityGuard {
-    static func violation(
+package enum TranscriptFidelityGuard {
+    package static func violation(
         source: String,
         candidate: String,
         protectedTerms: [String],
@@ -46,7 +46,7 @@ enum TranscriptFidelityGuard {
 }
 
 extension TranscriptFidelityGuard {
-    static func protectedTermCounts(
+    package static func protectedTermCounts(
         in text: String,
         terms: [String]
     ) -> [String: Int] {
@@ -70,7 +70,7 @@ extension TranscriptFidelityGuard {
         return counts
     }
 
-    static func polaritySignatures(
+    package static func polaritySignatures(
         in text: String,
         language: InputLanguage
     ) -> [String: Int] {
@@ -102,7 +102,7 @@ extension TranscriptFidelityGuard {
         return signatures
     }
 
-    static func polarityPatterns(language: InputLanguage) -> [String] {
+    package static func polarityPatterns(language: InputLanguage) -> [String] {
         switch language {
         case .chinese, .cantonese:
             return [chinesePolarityPattern]
@@ -122,7 +122,7 @@ extension TranscriptFidelityGuard {
         }
     }
 
-    static func removingSelfCorrectionNegation(
+    package static func removingSelfCorrectionNegation(
         from text: String,
         language: InputLanguage
     ) -> String {
@@ -153,27 +153,27 @@ extension TranscriptFidelityGuard {
         }
     }
 
-    static let chineseSelfCorrectionPatterns = [
+    package static let chineseSelfCorrectionPatterns = [
         "不对",
         "不是(?=.{0,40}(?:而是|改成|应该是))",
         "(?:没有|没)(?=.{0,40}(?:应该有|改成有))",
         "唔係(?=.{0,40}(?:係|改做|應該係))",
         "冇(?=.{0,40}(?:應該有|改做有))",
     ]
-    static let englishSelfCorrectionPatterns = [
+    package static let englishSelfCorrectionPatterns = [
         #"(?i)\b(?:no|not)\b(?=.{0,50}\b(?:sorry|rather|i mean|correction)\b)"#,
         #"(?i)n['’]t(?=.{0,50}\b(?:sorry|rather|i mean|correction)\b)"#,
     ]
-    static let japaneseSelfCorrectionPatterns = [
+    package static let japaneseSelfCorrectionPatterns = [
         "(?:ではない|じゃない)(?=.{0,40}(?:訂正|ではなく|じゃなく))",
     ]
-    static let koreanSelfCorrectionPatterns = ["아니(?=고)"]
+    package static let koreanSelfCorrectionPatterns = ["아니(?=고)"]
 
-    static let chinesePolarityPattern =
+    package static let chinesePolarityPattern =
         "(?:不同意|不赞成|不能|不要|不会|不是|没有|从未|无需|无法|别|勿|唔(?:係|好|會|能|要)?|冇|不(?!对|同|仅|过|管)|没(?!关系)|未(?!来)|无(?!线|论|数))"
-    static let englishPolarityPattern =
+    package static let englishPolarityPattern =
         #"(?i)(?:\bno\b(?!\s*\.\s*\d)|\b(?:not|never|without|cannot|neither|nor|hardly)\b|n['’]t\b)"#
-    static let japanesePolarityPattern =
+    package static let japanesePolarityPattern =
         "(?:ではない|じゃない|できない|ません|(?<!危|少)ない|ぬ|ず)"
-    static let koreanPolarityPattern = "(?:않|못|아니(?!면|고)|없)"
+    package static let koreanPolarityPattern = "(?:않|못|아니(?!면|고)|없)"
 }

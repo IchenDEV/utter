@@ -1,8 +1,8 @@
 import Foundation
 import UtterContracts
 
-enum TextFormatClassifier {
-    static func classify(text: String, context: InputContext?) -> TextFormatDecision {
+package enum TextFormatClassifier {
+    package static func classify(text: String, context: InputContext?) -> TextFormatDecision {
         let normalized = text
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)

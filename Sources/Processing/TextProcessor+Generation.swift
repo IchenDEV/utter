@@ -1,89 +1,75 @@
-import UtterContracts
 import CoreGraphics
 import Foundation
+import UtterContracts
+import UtterMediaContracts
 
 extension TextProcessor {
-    func generateText(
-        prompt: String,
-        systemPrompt: String,
-        options: TextProcessingOptions,
-        maxTokens: Int,
-        temperature: Double
-    ) async throws -> String {
-        if options.useRemoteLLM {
-            await Self.clearEspressoOutcome()
-            return try await remoteLLMClient.generate(
-                prompt: prompt,
-                systemPrompt: systemPrompt,
-                baseURL: options.remoteBaseURL,
-                apiKey: options.remoteAPIKey,
-                model: options.remoteModel,
-                provider: options.remoteProvider,
-                maxTokens: maxTokens,
-                temperature: temperature
-            )
-        }
+    func generationRequest(
+        prompt: String, systemPrompt: String?, options: TextProcessingOptions,
+        maxTokens: Int, temperature: Double, usesANE: Bool = false
+    ) -> TextGenerationRequest {
+        let modelID = options.useRemoteLLM ? options.remoteModel : options.llmModel
+        let modelURL = usesANE
+            ? URL(fileURLWithPath: NSString(string: options.espressoModelPath).expandingTildeInPath)
+            : modelFiles.installedTextModelURL(modelID)
+        let remote = options.useRemoteLLM
+            ? RemoteGenerationConfiguration(baseURL: options.remoteBaseURL, apiKey: options.remoteAPIKey, provider: options.remoteProvider)
+            : nil
+        return TextGenerationRequest(
+            prompt: prompt, systemPrompt: systemPrompt, modelID: modelID, modelURL: modelURL,
+            maxTokens: maxTokens, temperature: temperature, remote: remote
+        )
+    }
 
-        return try await withLocalModelAccess {
+    func generateText(
+        prompt: String, systemPrompt: String, options: TextProcessingOptions, maxTokens: Int, temperature: Double
+    ) async throws -> String {
+        let providerID = options.textProviderID ?? (options.useRemoteLLM ? "remote" : options.localLLMBackend.rawValue)
+        let usesANE = !options.useRemoteLLM && options.localLLMBackend == .espresso
+        let request = generationRequest(
+            prompt: prompt, systemPrompt: systemPrompt, options: options,
+            maxTokens: maxTokens, temperature: temperature, usesANE: usesANE
+        )
+        let fallbackRequest = generationRequest(
+            prompt: prompt, systemPrompt: systemPrompt, options: options,
+            maxTokens: maxTokens, temperature: temperature
+        )
+        let primary = try await providers.create(id: providerID, request: .inference)
+        try Task.checkCancellation()
+        guard usesANE else {
+            await Self.clearEspressoOutcome()
+            let result = try await primary.generate(request)
             try Task.checkCancellation()
-            switch options.localLLMBackend {
-            case .mlx:
-                await Self.clearEspressoOutcome()
-                await ensureModelLoaded(options.llmModel)
-                return try await llm.generate(
-                    prompt: prompt,
-                    systemPrompt: systemPrompt,
-                    maxTokens: maxTokens,
-                    temperature: temperature
+            return result
+        }
+        return try await withLocalModelAccess {
+            do {
+                let result = try await Self.runEspressoWithMLXFallback(
+                    fallbackEnabled: options.fallbackToMLXOnEspressoFailure,
+                    espresso: { try await primary.generate(request) },
+                    prepareForMLXFallback: { await primary.unload() },
+                    mlx: {
+                        let fallback = try await self.providers.create(id: options.fallbackProviderID, request: .inference)
+                        try Task.checkCancellation()
+                        return try await fallback.generate(fallbackRequest)
+                    }
                 )
-            case .espresso:
-                do {
-                    let result = try await Self.runEspressoWithMLXFallback(
-                        fallbackEnabled: options.fallbackToMLXOnEspressoFailure,
-                        espresso: {
-                            try await self.espressoLLM.loadModel(path: options.espressoModelPath)
-                            return try await self.espressoLLM.generate(
-                                prompt: prompt,
-                                systemPrompt: systemPrompt,
-                                maxTokens: maxTokens,
-                                temperature: temperature
-                            )
-                        },
-                        prepareForMLXFallback: {
-                            await self.espressoLLM.unload()
-                        },
-                        mlx: {
-                            try await self.llm.loadModel(id: options.llmModel)
-                            return try await self.llm.generate(
-                                prompt: prompt,
-                                systemPrompt: systemPrompt,
-                                maxTokens: maxTokens,
-                                temperature: temperature
-                            )
-                        }
-                    )
-                    if result.usedMLX {
-                        await Self.recordEspressoOutcome(.fallback)
-                        Log.info("[TextProcessor] ANE-LM failed; unloaded it and used the selected MLX model")
-                    } else {
-                        await Self.clearEspressoOutcome()
-                    }
-                    return result.value
-                } catch is CancellationError {
-                    throw CancellationError()
-                } catch let error as EspressoMLXFallbackError {
-                    await Self.recordEspressoOutcome(.unavailable)
-                    Log.sensitive("[TextProcessor] ANE-LM and MLX fallback failed: \(error.details)")
-                    Log.error("[TextProcessor] MLX fallback unavailable")
-                    throw error
-                } catch {
-                    if !options.fallbackToMLXOnEspressoFailure {
-                        _ = await espressoLLM.consumeLastFailureMessage()
-                        await Self.recordEspressoOutcome(.failed)
-                        Log.error("[TextProcessor] ANE-LM failed; MLX fallback is disabled")
-                    }
-                    throw error
+                if result.usedMLX {
+                    await Self.recordEspressoOutcome(.fallback)
+                    Log.info("[TextProcessor] ANE-LM failed; unloaded it and used the selected MLX model")
+                } else {
+                    await Self.clearEspressoOutcome()
                 }
+                return result.value
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch let error as EspressoMLXFallbackError {
+                await Self.recordEspressoOutcome(.unavailable)
+                Log.sensitive("[TextProcessor] ANE-LM and MLX fallback failed: \(error.details)")
+                throw error
+            } catch {
+                if !options.fallbackToMLXOnEspressoFailure { await Self.recordEspressoOutcome(.failed) }
+                throw error
             }
         }
     }
@@ -132,42 +118,23 @@ extension TextProcessor {
     }
 
     func generateWithScreenImage(
-        prompt: String,
-        systemPrompt: String,
-        model: String,
-        image: CGImage,
-        maxTokens: Int,
-        temperature: Double
+        prompt: String, systemPrompt: String, model: String, image: CGImage,
+        maxTokens: Int, temperature: Double, providerID: String = "generation.mlx-image"
     ) async throws -> String {
-        try await withLocalModelAccess {
-            try Task.checkCancellation()
-            await Self.clearEspressoOutcome()
-            try await vlm.loadModel(id: model)
-            return try await vlm.generate(
-                prompt: prompt,
-                systemPrompt: systemPrompt,
-                image: image,
-                maxTokens: maxTokens,
-                temperature: temperature
-            )
-        }
+        let request = TextGenerationRequest(
+            prompt: prompt, systemPrompt: systemPrompt, modelID: model, modelURL: modelFiles.installedTextModelURL(model),
+            maxTokens: maxTokens, temperature: temperature
+        )
+        let provider = try await imageProviders.create(id: providerID, request: .inference)
+        try Task.checkCancellation()
+        let result = try await provider.generate(ImageGenerationRequest(text: request, image: image))
+        try Task.checkCancellation()
+        return result
     }
 
     func shouldUseScreenImage(options: TextProcessingOptions, image: CGImage?) -> Bool {
-        guard image != nil else { return false }
-        guard options.screenContextMode == .multimodal,
-              !options.useRemoteLLM,
-              options.localLLMBackend == .mlx else { return false }
+        guard image != nil, options.screenContextMode == .multimodal,
+              !options.useRemoteLLM, options.localLLMBackend == .mlx else { return false }
         return ScreenContextMode.supportsScreenImageContext(modelID: options.llmModel)
     }
-
-    private func ensureModelLoaded(_ model: String) async {
-        guard !(await llm.isLoaded) else { return }
-        do {
-            try await llm.loadModel(id: model)
-        } catch {
-            Log.error("[TextProcessor] on-demand model load failed: \(error.localizedDescription)")
-        }
-    }
-
 }
