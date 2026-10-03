@@ -1,0 +1,146 @@
+[
+ {
+  "id": "n0_intro",
+  "role": "narration",
+  "file": "n0_intro.mp3",
+  "start": 0.3,
+  "speech": [
+   0.3,
+   1.682
+  ],
+  "text": "一天要写多少字？",
+  "gain": 1.0
+ },
+ {
+  "id": "d1_chat",
+  "role": "dictation",
+  "file": "d1_chat.mp3",
+  "start": 4.2,
+  "speech": [
+   4.2,
+   9.081
+  ],
+  "text": "收到。那个，评审会改到周五下午三点，我等下把议程发群里。",
+  "gain": 1.0
+ },
+ {
+  "id": "n1_chat",
+  "role": "narration",
+  "file": "n1_chat.mp3",
+  "start": 9.681,
+  "speech": [
+   9.681,
+   11.79
+  ],
+  "text": "端着咖啡，一句话回完消息。",
+  "gain": 1.0
+ },
+ {
+  "id": "d2_notes",
+  "role": "dictation",
+  "file": "d2_notes.mp3",
+  "start": 14.181,
+  "speech": [
+   14.181,
+   23.062
+  ],
+  "text": "今天定了三件事。第一，登录页周三前改完；第二，支付回归放到下周；第三，发布窗口定在周五晚上。",
+  "gain": 1.0
+ },
+ {
+  "id": "n2_notes",
+  "role": "narration",
+  "file": "n2_notes.mp3",
+  "start": 23.662,
+  "speech": [
+   23.662,
+   26.207
+  ],
+  "text": "会刚开完，口述就是纪要。",
+  "gain": 1.0
+ },
+ {
+  "id": "d3_mail",
+  "role": "dictation",
+  "file": "d3_mail.mp3",
+  "start": 28.162,
+  "speech": [
+   28.162,
+   31.077
+  ],
+  "text": "感谢反馈，修复版本周四前发给你们。",
+  "gain": 1.0
+ },
+ {
+  "id": "n3_mail",
+  "role": "narration",
+  "file": "n3_mail.mp3",
+  "start": 31.677,
+  "speech": [
+   31.677,
+   34.295
+  ],
+  "text": "说中文，写好给客户的英文邮件。",
+  "gain": 1.0
+ },
+ {
+  "id": "d4_reply",
+  "role": "dictation",
+  "file": "d4_reply.mp3",
+  "start": 36.145,
+  "speech": [
+   36.145,
+   40.077
+  ],
+  "text": "帮我回复：同意，但请在周三前发修改版合同。",
+  "gain": 1.0
+ },
+ {
+  "id": "n4_reply",
+  "role": "narration",
+  "file": "n4_reply.mp3",
+  "start": 40.677,
+  "speech": [
+   40.677,
+   43.441
+  ],
+  "text": "看着邮件说一句，回复就起草好了。",
+  "gain": 1.0
+ },
+ {
+  "id": "d5_report",
+  "role": "dictation",
+  "file": "d5_report.mp3",
+  "start": 45.291,
+  "speech": [
+   45.291,
+   49.223
+  ],
+  "text": "这周完成了评审和联调，下周重点是支付回归。",
+  "gain": 1.0
+ },
+ {
+  "id": "n5_report",
+  "role": "narration",
+  "file": "n5_report.mp3",
+  "start": 49.823,
+  "speech": [
+   49.823,
+   53.168
+  ],
+  "text": "高铁上没有网，本地模型照样把周报写完。",
+  "gain": 1.0
+ },
+ {
+  "id": "n6_end",
+  "role": "narration",
+  "file": "n6_end.mp3",
+  "start": 54.323,
+  "speech": [
+   54.323,
+   56.723
+  ],
+  "text": "Utter。说出来，就写好了。",
+  "gain": 1.0
+ }
+]

@@ -1,0 +1,140 @@
+{
+ "voices": {
+  "speaker": {
+   "id": "ByhETIclHirOlWnWKhHc",
+   "name": "ShanShan",
+   "model": "eleven_v4",
+   "settings": {
+    "stability": 0.45,
+    "similarity_boost": 0.8,
+    "style": 0.15,
+    "use_speaker_boost": true
+   },
+   "language": "zh",
+   "tempo": 1.18
+  },
+  "narrator": {
+   "id": "MI36FIkp9wRP7cpWKPTl",
+   "name": "Evan Zhao",
+   "model": "eleven_v4",
+   "settings": {
+    "stability": 0.55,
+    "similarity_boost": 0.8,
+    "style": 0.1,
+    "use_speaker_boost": true
+   },
+   "language": "zh",
+   "tempo": 1.1
+  }
+ },
+ "lines": [
+  {
+   "id": "n0_intro",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "Utter，不只是语音输入。",
+   "at": "0.25",
+   "gain": 1.0,
+   "until": "beats.list.keyDown-0.25",
+   "shiftFrom": "beats.list.winIn"
+  },
+  {
+   "id": "d1_list",
+   "role": "dictation",
+   "voice": "speaker",
+   "text": "第一，先把需求过一下。第二，确认时间。第三，把预算拉出来。",
+   "beat": "beats.list"
+  },
+  {
+   "id": "n1_list",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "口述清单，自动整理成条目。",
+   "at": "beats.list.keyUp+0.3",
+   "gain": 1.0,
+   "until": "beats.command.keyDown-0.25",
+   "shiftFrom": "beats.command.winIn"
+  },
+  {
+   "id": "d2_command",
+   "role": "dictation",
+   "voice": "speaker",
+   "text": "帮我回复：可以，改到周二上午十点。",
+   "beat": "beats.command"
+  },
+  {
+   "id": "n2_command",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "语音指令，读懂屏幕，替你起草回复。",
+   "at": "beats.command.keyUp+0.3",
+   "gain": 1.0,
+   "until": "beats.translate.keyDown-0.25",
+   "shiftFrom": "beats.translate.winIn"
+  },
+  {
+   "id": "d3_translate",
+   "role": "dictation",
+   "voice": "speaker",
+   "text": "没问题，我今晚发给你。",
+   "beat": "beats.translate"
+  },
+  {
+   "id": "n3_translate",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "说中文，直接写英文。",
+   "at": "beats.translate.keyUp+0.3",
+   "gain": 1.0,
+   "until": "beats.lexicon.keyDown-0.25",
+   "shiftFrom": "beats.lexicon.winIn"
+  },
+  {
+   "id": "d4_lexicon",
+   "role": "dictation",
+   "voice": "speaker",
+   "text": "把 Kubernetes 的副本数调到三，再检查一下 Redis 缓存。",
+   "beat": "beats.lexicon"
+  },
+  {
+   "id": "n4_lexicon",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "行业词库，让专业术语一次写对。",
+   "at": "beats.lexicon.keyUp+0.3",
+   "gain": 1.0,
+   "until": "style.start+0.5",
+   "shiftFrom": "style.start"
+  },
+  {
+   "id": "n5_style",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "同一句话，口语还是专业，随你切换。",
+   "at": "style.start+0.6",
+   "gain": 1.0,
+   "until": "models.start-0.1",
+   "shiftFrom": "models.start"
+  },
+  {
+   "id": "n6_models",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "Qwen、Whisper、Gemma、Llama，本地模型随你选，也能接入自己的 API。",
+   "at": "models.start+0.3",
+   "gain": 1.0,
+   "until": "models.end-0.1",
+   "shiftFrom": "models.end"
+  },
+  {
+   "id": "n7_end",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "Utter。说出来，就写好了。",
+   "at": "endCard+0.6",
+   "gain": 1.0,
+   "until": "duration-0.4",
+   "shiftFrom": "duration"
+  }
+ ]
+}

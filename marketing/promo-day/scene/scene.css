@@ -1,0 +1,19 @@
+/* Day-in-the-life specifics: illustrated world, laptop screen, documents. */
+#world { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+#world > svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#screen { position: absolute; overflow: hidden; border-radius: 3px; background: #e3e5ec; }
+#screen .desk { transform-origin: 0 0; }
+#dip { position: absolute; inset: 0; background: #f6f5f2; opacity: 0; pointer-events: none; }
+#keys { transform: scale(.72); transform-origin: left bottom; left: 56px; bottom: 40px; }
+#tag .num { font-variant-numeric: tabular-nums; }
+.field.plain { border: none; box-shadow: none; background: transparent; margin: 0 28px 20px; min-height: 260px; font-size: 21px; line-height: 1.75; padding: 6px 4px; }
+.field.plain.focus { box-shadow: none; }
+.field.plain .ph { left: 6px; top: 6px; }
+.doc-title { font-size: 30px; font-weight: 800; }
+.doc-meta { font-size: 15px; color: var(--faint); margin-top: -10px; }
+.mail-from { display: flex; gap: 14px; align-items: center; }
+.mail-subj { font-size: 22px; font-weight: 800; }
+.mail-body { font-size: 18px; line-height: 1.7; color: #2b2d34; }
+.mail-line { font-size: 16px; color: #2b2d34; padding-bottom: 10px; border-bottom: 1px solid rgba(0, 0, 0, .06); margin-bottom: -8px; }
+.mail-line span { color: var(--faint); margin-right: 14px; }
+.mail-quote { font-size: 17px; color: var(--mut); border-left: 3px solid #d6d8e0; padding-left: 14px; line-height: 1.6; }

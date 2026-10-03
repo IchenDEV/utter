@@ -1,0 +1,80 @@
+{
+ "voices": {
+  "speaker": {
+   "id": "ByhETIclHirOlWnWKhHc",
+   "name": "ShanShan",
+   "model": "eleven_v4",
+   "settings": {
+    "stability": 0.45,
+    "similarity_boost": 0.8,
+    "style": 0.15,
+    "use_speaker_boost": true
+   },
+   "language": "zh",
+   "tempo": 1.18
+  },
+  "narrator": {
+   "id": "MI36FIkp9wRP7cpWKPTl",
+   "name": "Evan Zhao",
+   "model": "eleven_v4",
+   "settings": {
+    "stability": 0.55,
+    "similarity_boost": 0.8,
+    "style": 0.1,
+    "use_speaker_boost": true
+   },
+   "language": "zh",
+   "tempo": 1.1
+  }
+ },
+ "lines": [
+  {
+   "id": "n1_intro",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "Utter，在 Mac 上本地运行的语音输入。",
+   "at": "0.25",
+   "gain": 1.0,
+   "until": "events.keyDown-0.2",
+   "shiftFrom": "events.windowIn"
+  },
+  {
+   "id": "d1_dictation",
+   "role": "dictation",
+   "voice": "speaker",
+   "text": "嗯，那个，评审会改到周四，不对，周五下午三点。接口文档我今晚发群里，大家提前看一下。",
+   "beat": "events",
+   "tokensPath": "speech"
+  },
+  {
+   "id": "n3_local",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "识别和整理都在本机完成，直接写进当前应用。",
+   "at": "events.keyUp+0.35",
+   "gain": 1.0,
+   "until": "events.zoomOut+0.5",
+   "shiftFrom": "events.zoomOut"
+  },
+  {
+   "id": "n4_models",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "识别用 Qwen3-ASR 或 Whisper，整理用 Qwen、Gemma 或 Llama，全部在本地运行。",
+   "at": "events.privacy+0.1",
+   "gain": 1.0,
+   "until": "events.endCard-0.1",
+   "shiftFrom": "events.endCard"
+  },
+  {
+   "id": "n5_end",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "Utter。你的声音，留在你的 Mac。",
+   "at": "events.endCard+0.6",
+   "gain": 1.0,
+   "until": "duration-0.4",
+   "shiftFrom": "duration"
+  }
+ ]
+}

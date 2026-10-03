@@ -1,0 +1,137 @@
+{
+ "voices": {
+  "speaker": {
+   "id": "ByhETIclHirOlWnWKhHc",
+   "name": "ShanShan",
+   "model": "eleven_v4",
+   "settings": {
+    "stability": 0.45,
+    "similarity_boost": 0.8,
+    "style": 0.15,
+    "use_speaker_boost": true
+   },
+   "language": "zh",
+   "tempo": 1.18
+  },
+  "narrator": {
+   "id": "MI36FIkp9wRP7cpWKPTl",
+   "name": "Evan Zhao",
+   "model": "eleven_v4",
+   "settings": {
+    "stability": 0.55,
+    "similarity_boost": 0.8,
+    "style": 0.1,
+    "use_speaker_boost": true
+   },
+   "language": "zh",
+   "tempo": 1.1
+  }
+ },
+ "lines": [
+  {
+   "id": "n0_intro",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "一天要写多少字？",
+   "at": "0.3",
+   "gain": 1.0,
+   "until": "scenes.0.keyDown-0.25",
+   "shiftFrom": "scenes.0.dollyIn"
+  },
+  {
+   "id": "d1_chat",
+   "role": "dictation",
+   "voice": "speaker",
+   "text": "收到。那个，评审会改到周五下午三点，我等下把议程发群里。",
+   "beat": "scenes.0"
+  },
+  {
+   "id": "n1_chat",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "端着咖啡，一句话回完消息。",
+   "at": "scenes.0.keyUp+0.3",
+   "gain": 1.0,
+   "until": "scenes.1.start-0.05",
+   "shiftFrom": "scenes.1.start"
+  },
+  {
+   "id": "d2_notes",
+   "role": "dictation",
+   "voice": "speaker",
+   "text": "今天定了三件事。第一，登录页周三前改完；第二，支付回归放到下周；第三，发布窗口定在周五晚上。",
+   "beat": "scenes.1"
+  },
+  {
+   "id": "n2_notes",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "会刚开完，口述就是纪要。",
+   "at": "scenes.1.keyUp+0.3",
+   "gain": 1.0,
+   "until": "scenes.2.start-0.05",
+   "shiftFrom": "scenes.2.start"
+  },
+  {
+   "id": "d3_mail",
+   "role": "dictation",
+   "voice": "speaker",
+   "text": "感谢反馈，修复版本周四前发给你们。",
+   "beat": "scenes.2"
+  },
+  {
+   "id": "n3_mail",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "说中文，写好给客户的英文邮件。",
+   "at": "scenes.2.keyUp+0.3",
+   "gain": 1.0,
+   "until": "scenes.3.start-0.05",
+   "shiftFrom": "scenes.3.start"
+  },
+  {
+   "id": "d4_reply",
+   "role": "dictation",
+   "voice": "speaker",
+   "text": "帮我回复：同意，但请在周三前发修改版合同。",
+   "beat": "scenes.3"
+  },
+  {
+   "id": "n4_reply",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "看着邮件说一句，回复就起草好了。",
+   "at": "scenes.3.keyUp+0.3",
+   "gain": 1.0,
+   "until": "scenes.4.start-0.05",
+   "shiftFrom": "scenes.4.start"
+  },
+  {
+   "id": "d5_report",
+   "role": "dictation",
+   "voice": "speaker",
+   "text": "这周完成了评审和联调，下周重点是支付回归。",
+   "beat": "scenes.4"
+  },
+  {
+   "id": "n5_report",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "高铁上没有网，本地模型照样把周报写完。",
+   "at": "scenes.4.keyUp+0.3",
+   "gain": 1.0,
+   "until": "endCard-0.1",
+   "shiftFrom": "endCard"
+  },
+  {
+   "id": "n6_end",
+   "role": "narration",
+   "voice": "narrator",
+   "text": "Utter。说出来，就写好了。",
+   "at": "endCard+0.6",
+   "gain": 1.0,
+   "until": "duration-0.4",
+   "shiftFrom": "duration"
+  }
+ ]
+}
