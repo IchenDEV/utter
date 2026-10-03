@@ -50,13 +50,12 @@ final class PluginLifecycleTests: XCTestCase {
         var resume: CheckedContinuation<Void, Never>?
         var began: CheckedContinuation<Void, Never>?
         let plugin = PluginRegistration(descriptor: PluginDescriptor(id: "task")) { context, _ in
-            let task = Task {
+            try context.scope.task {
                 await withCheckedContinuation { continuation in
                     resume = continuation
                     began?.resume()
                 }
             }
-            try context.scope.own(task)
             await withCheckedContinuation { continuation in
                 if resume != nil { continuation.resume() } else { began = continuation }
             }
@@ -103,5 +102,38 @@ final class PluginLifecycleTests: XCTestCase {
         XCTAssertTrue(failures.isEmpty)
         XCTAssertNil(registry.value(for: "speech"))
         XCTAssertThrowsError(try registry.contribute("speech", value: "stale", scope: scope))
+    }
+
+    func testAsyncAcquisitionCompletingAfterCancellationStillReleasesItsResource() async throws {
+        var resume: CheckedContinuation<Int, Never>?
+        var released: [Int] = []
+        let plugin = PluginRegistration(descriptor: PluginDescriptor(id: "acquire")) { context, _ in
+            _ = try await context.scope.acquire({
+                await withCheckedContinuation { resume = $0 }
+            }, dispose: { value in
+                try Task.checkCancellation()
+                released.append(value)
+            })
+        }
+        let runtime = PluginRuntime(catalog: try PluginCatalog([plugin]))
+        let starting = Task { try await runtime.start([PluginSelection("acquire")]) }
+        while resume == nil { await Task.yield() }
+        starting.cancel()
+        resume?.resume(returning: 7)
+        do { try await starting.value; XCTFail("Cancelled acquisition became ready") }
+        catch {
+            XCTAssertTrue((error as? PluginActivationFailure)?.cleanupFailures.isEmpty == true)
+        }
+        XCTAssertEqual(released, [7])
+        try await runtime.stop()
+    }
+
+    func testClosedScopeDoesNotLaunchNewTasks() async throws {
+        let scope = PluginScope(pluginID: "closed")
+        _ = await scope.dispose()
+        var ran = false
+        XCTAssertThrowsError(try scope.task { ran = true })
+        await Task.yield()
+        XCTAssertFalse(ran)
     }
 }

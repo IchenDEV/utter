@@ -77,4 +77,8 @@ package struct PluginCatalog {
     package func validate(_ selections: [PluginSelection]) throws -> [PluginDescriptor] {
         try orderedRegistrations(selections).map { $0.registration.descriptor }
     }
+
+    package func validateConfiguration(_ selection: PluginSelection) throws {
+        try registration(selection.id).validateConfiguration(selection.configuration)
+    }
 }

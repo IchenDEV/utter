@@ -10,7 +10,7 @@ package final class PluginScope {
     package let pluginID: String
     package private(set) var isActive = true
     private var effects: [Effect] = []
-    private var tasks: [UUID: Task<Void, Never>] = [:]
+    private var cancellations: [UUID: () -> Void] = [:]
 
     init(pluginID: String) { self.pluginID = pluginID }
 
@@ -19,23 +19,46 @@ package final class PluginScope {
         effects.append(Effect(id: UUID(), dispose: dispose))
     }
 
-    package func own(_ task: Task<Void, Never>) throws {
-        guard isActive else {
-            task.cancel()
-            throw PluginRuntimeError.scopeClosed(pluginID)
-        }
+    @discardableResult
+    package func task(_ operation: @escaping () async -> Void) throws -> Task<Void, Never> {
+        guard isActive else { throw PluginRuntimeError.scopeClosed(pluginID) }
+        let task = Task { await operation() }
         let id = UUID()
-        tasks[id] = task
+        cancellations[id] = { task.cancel() }
         try onDispose { [self] in
             task.cancel()
             await task.value
-            tasks.removeValue(forKey: id)
+            cancellations.removeValue(forKey: id)
+        }
+        return task
+    }
+
+    package func acquire<Value>(
+        _ operation: @escaping () async throws -> Value,
+        dispose: @escaping (Value) async throws -> Void
+    ) async throws -> Value {
+        guard isActive else { throw PluginRuntimeError.scopeClosed(pluginID) }
+        let task = Task { try await operation() }
+        let id = UUID()
+        cancellations[id] = { task.cancel() }
+        try onDispose { [self] in
+            task.cancel()
+            if case .success(let value) = await task.result { try await dispose(value) }
+            cancellations.removeValue(forKey: id)
+        }
+        return try await withTaskCancellationHandler {
+            let value = try await task.value
+            try Task.checkCancellation()
+            guard isActive else { throw CancellationError() }
+            return value
+        } onCancel: {
+            task.cancel()
         }
     }
 
     func revoke() {
         isActive = false
-        for task in tasks.values { task.cancel() }
+        for cancel in cancellations.values { cancel() }
     }
 
     var hasPendingDisposal: Bool { !effects.isEmpty }

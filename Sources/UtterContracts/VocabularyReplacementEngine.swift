@@ -1,4 +1,3 @@
-import UtterContracts
 import Foundation
 
 package struct VocabularyReplacementRule: Equatable, Sendable {

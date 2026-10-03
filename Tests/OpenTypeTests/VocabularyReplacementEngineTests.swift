@@ -1,4 +1,4 @@
-import UtterData
+import UtterContracts
 import XCTest
 @testable import OpenType
 

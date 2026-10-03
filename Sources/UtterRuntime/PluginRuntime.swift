@@ -48,6 +48,7 @@ package final class PluginRuntime {
         if let task = shutdownTask { return try await task.value }
         if let task = activationTask {
             task.cancel()
+            for scope in scopes { scope.revoke() }
             _ = await task.result
         }
         if let task = shutdownTask { return try await task.value }
@@ -82,7 +83,7 @@ package final class PluginRuntime {
             state = .ready
         } catch {
             for scope in scopes { scope.revoke() }
-            let failures = await disposeScopes()
+            let failures = await Task { await disposeScopes() }.value
             state = .failed
             if scopes.isEmpty { self.generation = nil }
             throw PluginActivationFailure(pluginID: currentID, cause: error, cleanupFailures: failures)
