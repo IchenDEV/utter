@@ -4,6 +4,12 @@ import UtterRuntime
 
 @MainActor
 package enum DataPlugins {
+    package static func diagnostics(_ service: any DiagnosticsService) -> PluginRegistration {
+        PluginRegistration(descriptor: PluginDescriptor(id: "data.diagnostics", provides: [IntegrationServices.diagnostics.reference])) { context, _ in
+            try context.provide(IntegrationServices.diagnostics, value: service)
+        }
+    }
+
     package static func dictionary(directoryURL: URL) -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(id: "data.dictionary", provides: [DataServices.dictionary.reference])) { context, _ in
             try context.provide(DataServices.dictionary, value: DictionaryStore(directoryURL: directoryURL))

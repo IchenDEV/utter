@@ -8,6 +8,7 @@ package protocol SpeechEngine: AnyObject {
     /// Optional warm-up: load models or start helper processes ahead of the
     /// first transcription. Must be safe to call repeatedly.
     func prepare() async
+    func requestPermission() async throws
     func configureRecognition(context: SpeechRecognitionContext)
     func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void)
     func appendAudioBuffer(_ buffer: AVAudioPCMBuffer)
@@ -20,6 +21,8 @@ extension SpeechEngine {
     package var supportsStreaming: Bool { false }
 
     package func prepare() async {}
+
+    package func requestPermission() async throws { try Task.checkCancellation() }
 
     package func configureRecognition(context: SpeechRecognitionContext) {
         let _ = context

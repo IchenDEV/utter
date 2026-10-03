@@ -3,48 +3,57 @@ import UtterContracts
 import AVFoundation
 import Foundation
 
-final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
+package final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
+    private let log: Log
     private let locale: Locale
     private let legacy: LegacyAppleSpeechEngine
     private let recognitionContextLock = NSLock()
     private var recognitionContext = SpeechRecognitionContext.empty
 
-    init(locale: Locale = Locale(identifier: "zh-CN")) {
+    package init(locale: Locale = Locale(identifier: "zh-CN"), log: Log) {
+        self.log = log
         self.locale = locale
-        self.legacy = LegacyAppleSpeechEngine(locale: locale)
+        self.legacy = LegacyAppleSpeechEngine(locale: locale, log: log)
     }
 
-    var isReady: Bool { legacy.isReady }
-    var supportsStreaming: Bool { true }
+    package var isReady: Bool { legacy.isReady }
+    package var supportsStreaming: Bool { true }
 
-    func requestAccess() {
+    package func requestAccess() {
         legacy.requestAccess()
     }
 
-    func configureRecognition(context: SpeechRecognitionContext) {
+    package func requestPermission() async throws {
+        try Task.checkCancellation()
+        guard !isReady else { return }
+        requestAccess()
+        try await Task.sleep(nanoseconds: 500_000_000)
+    }
+
+    package func configureRecognition(context: SpeechRecognitionContext) {
         recognitionContextLock.lock()
         recognitionContext = context
         recognitionContextLock.unlock()
         legacy.configureRecognition(context: context)
     }
 
-    func prepare() async {
+    package func prepare() async {
         do {
             try await AppleSpeechAnalyzer.prepare(locale: locale)
         } catch {
-            Log.info("[AppleSpeech] SpeechAnalyzer preparation deferred: \(error.localizedDescription)")
+            self.log.info("[AppleSpeech] SpeechAnalyzer preparation deferred: \(error.localizedDescription)")
         }
     }
 
-    func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
+    package func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
         legacy.startListening(language: language, onPartialResult: onPartialResult)
     }
 
-    func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+    package func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         legacy.appendAudioBuffer(buffer)
     }
 
-    func finishListening(audioURL: URL?, language: String?) async throws -> String {
+    package func finishListening(audioURL: URL?, language: String?) async throws -> String {
         let fallbackTask = Task {
             try await legacy.finishListening(audioURL: audioURL, language: language)
         }
@@ -55,7 +64,7 @@ final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
             let text = try await AppleSpeechAnalyzer.transcribe(
                 audioURL: audioURL,
                 locale: resolvedLocale(for: language),
-                context: context
+                context: context, log: log
             )
             legacy.cancelListening()
             let fallback = try? await fallbackTask.value
@@ -63,29 +72,29 @@ final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
                 ? fallback ?? ""
                 : text
         } catch {
-            Log.info("[AppleSpeech] SpeechAnalyzer failed, using legacy result: \(error.localizedDescription)")
+            self.log.info("[AppleSpeech] SpeechAnalyzer failed, using legacy result: \(error.localizedDescription)")
             return try await fallbackTask.value
         }
     }
 
-    func cancelListening() {
+    package func cancelListening() {
         legacy.cancelListening()
     }
 
-    func transcribe(audioURL: URL?, language: String?) async throws -> String {
+    package func transcribe(audioURL: URL?, language: String?) async throws -> String {
         guard let audioURL else { throw AppleSpeechError.noAudioFile }
         do {
             let context = recognitionContextSnapshot()
             let text = try await AppleSpeechAnalyzer.transcribe(
                 audioURL: audioURL,
                 locale: resolvedLocale(for: language),
-                context: context
+                context: context, log: log
             )
             if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return text
             }
         } catch {
-            Log.info("[AppleSpeech] SpeechAnalyzer failed, using legacy recognizer: \(error.localizedDescription)")
+            self.log.info("[AppleSpeech] SpeechAnalyzer failed, using legacy recognizer: \(error.localizedDescription)")
         }
         return try await legacy.transcribe(audioURL: audioURL, language: language)
     }

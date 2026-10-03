@@ -3,8 +3,8 @@ import AVFoundation
 import Foundation
 @preconcurrency import Speech
 
-enum AppleSpeechAnalyzer {
-    static func prepare(locale: Locale) async throws {
+package enum AppleSpeechAnalyzer {
+    package static func prepare(locale: Locale) async throws {
         if let transcriber = await makeSpeechTranscriber(locale: locale) {
             try await ensureModel(for: transcriber)
             return
@@ -16,10 +16,11 @@ enum AppleSpeechAnalyzer {
         try await ensureModel(for: transcriber)
     }
 
-    static func transcribe(
+    package static func transcribe(
         audioURL: URL,
         locale: Locale,
-        context: SpeechRecognitionContext = .empty
+        context: SpeechRecognitionContext = .empty,
+        log: Log
     ) async throws -> String {
         let metadataFile = try AVAudioFile(forReading: audioURL)
         let duration = Double(metadataFile.length)
@@ -33,7 +34,7 @@ enum AppleSpeechAnalyzer {
                     context: context
                 )
             } catch {
-                Log.info(
+                log.info(
                     "[AppleSpeech] SpeechTranscriber failed, trying compatible dictation: "
                         + error.localizedDescription
                 )
@@ -52,7 +53,7 @@ enum AppleSpeechAnalyzer {
         )
     }
 
-    static func dictationPreset(
+    package static func dictationPreset(
         forDuration duration: TimeInterval
     ) -> DictationTranscriber.Preset {
         duration > 60 ? .longDictation : .shortDictation
@@ -169,7 +170,7 @@ enum AppleSpeechAnalyzerError: LocalizedError {
     case unsupportedLocale(String)
     case modelUnavailable
 
-    var errorDescription: String? {
+    package var errorDescription: String? {
         switch self {
         case .unsupportedLocale(let locale):
             return "SpeechAnalyzer does not support locale \(locale)"

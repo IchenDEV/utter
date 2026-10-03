@@ -4,9 +4,10 @@ import Foundation
 @preconcurrency import Speech
 import AVFoundation
 
-final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
+package final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
+    private let log: Log
     private var recognizer: SFSpeechRecognizer
-    private(set) var isReady = false
+    package private(set) var isReady = false
     private var recognitionTask: SFSpeechRecognitionTask?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var bestSoFar = ""
@@ -19,7 +20,8 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
     /// so waiting longer than that buys nothing.
     private static let timeoutSeconds: TimeInterval = 60
 
-    init(locale: Locale = Locale(identifier: "zh-CN")) {
+    package init(locale: Locale = Locale(identifier: "zh-CN"), log: Log) {
+        self.log = log
         recognizer = SFSpeechRecognizer(locale: locale)
             ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
             ?? SFSpeechRecognizer()!
@@ -28,15 +30,15 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
         isReady = (status == .authorized)
     }
 
-    var supportsStreaming: Bool { true }
+    package var supportsStreaming: Bool { true }
 
-    func configureRecognition(context: SpeechRecognitionContext) {
+    package func configureRecognition(context: SpeechRecognitionContext) {
         stateQueue.sync {
             recognitionContext = context
         }
     }
 
-    func requestAccess() {
+    package func requestAccess() {
         guard SFSpeechRecognizer.authorizationStatus() != .authorized else {
             isReady = true
             return
@@ -48,7 +50,7 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
         }
     }
 
-    func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
+    package func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
         configureRecognizer(language: language)
         let contextualStrings = stateQueue.sync { recognitionContext.phrases }
 
@@ -82,7 +84,7 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
                         if self.bestSoFar.isEmpty {
                             self.resolveStreamingContinuationLocked(.failure(error))
                         } else {
-                            Log.info("[AppleSpeech] task ended with error but has partial: \(error.localizedDescription)")
+                            self.log.info("[AppleSpeech] task ended with error but has partial: \(error.localizedDescription)")
                             self.resolveStreamingContinuationLocked(.success(self.bestSoFar))
                         }
                     }
@@ -91,13 +93,13 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
         }
     }
 
-    func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+    package func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         stateQueue.async {
             self.recognitionRequest?.append(buffer)
         }
     }
 
-    func finishListening(audioURL: URL?, language: String?) async throws -> String {
+    package func finishListening(audioURL: URL?, language: String?) async throws -> String {
         let hasLiveRequest = stateQueue.sync { self.recognitionRequest != nil }
         if !hasLiveRequest {
             return try await transcribe(audioURL: audioURL, language: language)
@@ -116,13 +118,13 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
                     self.recognitionTask?.cancel()
                     let text = self.bestSoFar
                     self.resolveStreamingContinuationLocked(.success(text))
-                    Log.info("[AppleSpeech] timeout after \(Self.timeoutSeconds)s, returning partial (\(text.count) chars)")
+                    self.log.info("[AppleSpeech] timeout after \(Self.timeoutSeconds)s, returning partial (\(text.count) chars)")
                 }
             }
         }
     }
 
-    func cancelListening() {
+    package func cancelListening() {
         stateQueue.sync {
             self.recognitionRequest?.endAudio()
             self.recognitionTask?.cancel()
@@ -135,7 +137,7 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
         }
     }
 
-    func transcribe(audioURL: URL?, language: String?) async throws -> String {
+    package func transcribe(audioURL: URL?, language: String?) async throws -> String {
         guard let url = audioURL else {
             throw AppleSpeechError.noAudioFile
         }
@@ -149,6 +151,7 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
         configureRecognizer(language: language)
         let contextualStrings = stateQueue.sync { recognitionContext.phrases }
 
+        let log = self.log
         return try await withCheckedThrowingContinuation { continuation in
             let request = SFSpeechURLRecognitionRequest(url: url)
             request.shouldReportPartialResults = true
@@ -178,7 +181,7 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
                     if bestSoFar.isEmpty {
                         continuation.resume(throwing: error)
                     } else {
-                        Log.info("[AppleSpeech] task ended with error but has partial: \(error.localizedDescription)")
+                        log.info("[AppleSpeech] task ended with error but has partial: \(error.localizedDescription)")
                         continuation.resume(returning: bestSoFar)
                     }
                 }
@@ -189,7 +192,7 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
                 guard !hasResumed else { return }
                 hasResumed = true
                 task.cancel()
-                Log.info("[AppleSpeech] timeout after \(Self.timeoutSeconds)s, returning partial (\(bestSoFar.count) chars)")
+                log.info("[AppleSpeech] timeout after \(Self.timeoutSeconds)s, returning partial (\(bestSoFar.count) chars)")
                 continuation.resume(returning: bestSoFar)
             }
         }
@@ -237,11 +240,11 @@ final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
 
 }
 
-enum AppleSpeechError: LocalizedError {
+package enum AppleSpeechError: LocalizedError {
     case noAudioFile
     case notAuthorized
 
-    var errorDescription: String? {
+    package var errorDescription: String? {
         switch self {
         case .noAudioFile: return L("error.no_audio_file")
         case .notAuthorized: return L("error.speech_not_authorized")

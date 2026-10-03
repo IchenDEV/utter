@@ -1,3 +1,4 @@
+import UtterAppleSpeech
 import UtterContracts
 import Foundation
 import XCTest

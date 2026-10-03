@@ -1,3 +1,4 @@
+import UtterAppleSpeech
 import UtterPresentationContracts
 import UtterMediaContracts
 import UtterContracts
@@ -9,31 +10,7 @@ final class SpeechEngineProvider {
     private var cachedSelection: Selection?
     private(set) var failureMessage: String?
 
-    /// Value identity prevents a settings change during an await from selecting another engine.
-    struct Selection: Equatable {
-        let type: SpeechEngineType
-        let model: String
-        let modelPath: String
-        let locale: String
-        let appKey: String
-        let accessKey: String
-        let resourceID: String
-
-        @MainActor
-        init(settings: AppSettings, inputLanguage: InputLanguage? = nil) {
-            type = settings.speechEngine
-            switch type {
-            case .whisper: model = settings.whisperModel
-            case .qwen3: model = settings.qwenASRModel
-            default: model = type.asrModelID ?? ""
-            }
-            modelPath = type == .qwen3 ? ModelCatalog.shared.asrModelPath(for: model) : ""
-            locale = type == .apple ? (inputLanguage ?? settings.inputLanguage).localeIdentifier : ""
-            appKey = type == .volc ? settings.volcAppKey : ""
-            accessKey = type == .volc ? settings.volcAccessKey : ""
-            resourceID = type == .volc ? settings.volcResourceId : ""
-        }
-    }
+    typealias Selection = SpeechSelection
 
     func discardCachedEngine() {
         // An in-flight session retains its own engine until it drains.

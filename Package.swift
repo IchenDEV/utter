@@ -12,6 +12,16 @@ let dependencies: [Package.Dependency] = [
     .package(url: "https://github.com/ml-explore/mlx-swift-lm", exact: "3.31.4"),
 ]
 
+#if os(macOS)
+let dataExclusions: [String] = []
+let modelDependencies: [Target.Dependency] = ["UtterMediaContracts"]
+let modelExclusions: [String] = []
+#else
+let dataExclusions = ["SystemDiagnostics.swift"]
+let modelDependencies: [Target.Dependency] = []
+let modelExclusions = ["SpeechRegistry.swift"]
+#endif
+
 let portableTargets: [Target] = [
     .target(name: "UtterRuntime", swiftSettings: [.swiftLanguageMode(.v5)]),
     .target(
@@ -23,12 +33,14 @@ let portableTargets: [Target] = [
     .target(
         name: "UtterData",
         dependencies: ["UtterRuntime", "UtterContracts"],
+        exclude: dataExclusions,
         resources: [.copy("Resources/IndustryLexicons.json"), .copy("Resources/THUOCL-LICENSE.txt")],
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .target(
         name: "UtterModels",
-        dependencies: ["UtterRuntime", "UtterContracts"],
+        dependencies: ["UtterRuntime", "UtterContracts"] + modelDependencies,
+        exclude: modelExclusions,
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .target(
@@ -83,6 +95,11 @@ let package = Package(
     dependencies: dependencies,
     targets: [
         .target(
+            name: "UtterAppleSpeech",
+            dependencies: ["UtterRuntime", "UtterContracts", "UtterMediaContracts"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .target(
             name: "UtterMediaContracts",
             dependencies: ["UtterRuntime", "UtterContracts"],
             swiftSettings: [.swiftLanguageMode(.v5)]
@@ -100,6 +117,7 @@ let package = Package(
                 "UtterData",
                 "UtterSession",
                 "UtterModels",
+                "UtterAppleSpeech",
                 "UtterMediaContracts",
                 "UtterPresentationContracts",
                 .product(name: "WhisperKit", package: "argmax-oss-swift"),
@@ -113,7 +131,7 @@ let package = Package(
                 .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
             ],
             path: "Sources",
-            exclude: ["UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
+            exclude: ["UtterAppleSpeech", "UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
             resources: [
                 .copy("Resources/AppIcon.png"),
                 .copy("Resources/AppIcon.icon"),
@@ -143,7 +161,7 @@ let package = Package(
         ),
         .testTarget(
             name: "OpenTypeTests",
-            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterMediaContracts", "UtterPresentationContracts"],
+            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterAppleSpeech", "UtterMediaContracts", "UtterPresentationContracts"],
             path: "Tests/OpenTypeTests",
             swiftSettings: [
                 .swiftLanguageMode(.v5)
