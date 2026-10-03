@@ -243,7 +243,8 @@ final class EspressoFallbackTests: XCTestCase {
                 )
                 if index == 0 {
                     outcome = await processor.consumeEspressoOutcome()
-                    let espressoIsLoaded = await processor.espressoLLM.isLoaded
+                    let espresso = try await processor.providers.create(id: "generation.ane", request: .inference)
+                    let espressoIsLoaded = await espresso.isLoaded
                     XCTAssertFalse(espressoIsLoaded)
                     baselineFootprint = currentMemoryFootprint()
                     options.localLLMBackend = .mlx

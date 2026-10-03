@@ -1,6 +1,7 @@
 import Foundation
 
 package protocol DictionaryService: AnyObject {
+    var storageAvailable: Bool { get }
     var entries: [DictionaryEntry] { get set }
     var editRules: [EditRule] { get set }
     func snapshot(industryLexicon: IndustryLexiconSnapshot, bundleIdentifier: String?, languageCode: String?) -> PersonalDictionarySnapshot

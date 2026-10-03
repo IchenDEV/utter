@@ -7,6 +7,7 @@ extension AppSettings {
     static let shared = AppSettings(defaults: .standard)
 
     convenience init(defaults: UserDefaults) {
-        self.init(service: SettingsStore(defaults: defaults))
+        let store = SettingsStore(defaults: defaults)
+        self.init(service: store, credentials: SettingsCredentialsService(settings: store))
     }
 }

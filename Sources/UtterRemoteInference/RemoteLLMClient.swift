@@ -57,38 +57,40 @@ package actor RemoteLLMClient: TextGenerationService {
         defer { finishRequest() }
 
         do {
-            return try await generateOnce(
-                prompt: prompt,
-                systemPrompt: systemPrompt,
-                baseURL: baseURL,
-                apiKey: apiKey,
-                model: model,
-                provider: provider,
-                maxTokens: maxTokens,
-                temperature: temperature
-            )
-        } catch RemoteLLMError.requestFailed(let message) {
-            try Task.checkCancellation()
-            guard !closed else { throw CancellationError() }
-            guard let retryTokens = Self.retryTokenBudget(
-                maxTokens: maxTokens,
-                failureMessage: message
-            ) else {
-                throw RemoteLLMError.requestFailed(message)
+            do {
+                return try await generateOnce(
+                    prompt: prompt,
+                    systemPrompt: systemPrompt,
+                    baseURL: baseURL,
+                    apiKey: apiKey,
+                    model: model,
+                    provider: provider,
+                    maxTokens: maxTokens,
+                    temperature: temperature
+                )
+            } catch RemoteLLMError.requestFailed(let message) {
+                try Task.checkCancellation()
+                guard !closed else { throw CancellationError() }
+                guard let retryTokens = Self.retryTokenBudget(
+                    maxTokens: maxTokens,
+                    failureMessage: message
+                ) else {
+                    throw RemoteLLMError.requestFailed(message)
+                }
+                log.info(
+                    "[RemoteLLM] retrying token-limit failure with \(retryTokens) max tokens"
+                )
+                return try await generateOnce(
+                    prompt: prompt,
+                    systemPrompt: systemPrompt,
+                    baseURL: baseURL,
+                    apiKey: apiKey,
+                    model: model,
+                    provider: provider,
+                    maxTokens: retryTokens,
+                    temperature: temperature
+                )
             }
-            log.info(
-                "[RemoteLLM] retrying token-limit failure with \(retryTokens) max tokens"
-            )
-            return try await generateOnce(
-                prompt: prompt,
-                systemPrompt: systemPrompt,
-                baseURL: baseURL,
-                apiKey: apiKey,
-                model: model,
-                provider: provider,
-                maxTokens: retryTokens,
-                temperature: temperature
-            )
         } catch {
             try Task.checkCancellation()
             guard !closed else { throw CancellationError() }

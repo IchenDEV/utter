@@ -1,3 +1,4 @@
+import UtterContracts
 import Foundation
 
 /// Numeric-only audio activity record used to calibrate the recording gate and

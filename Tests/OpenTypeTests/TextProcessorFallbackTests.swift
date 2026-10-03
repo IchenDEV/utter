@@ -1,3 +1,4 @@
+import UtterContracts
 import UtterProcessing
 import UtterPresentationContracts
 import XCTest

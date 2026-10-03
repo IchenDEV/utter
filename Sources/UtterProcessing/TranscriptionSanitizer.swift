@@ -1,8 +1,8 @@
 import UtterContracts
 import Foundation
 
-enum TranscriptionSanitizer {
-    static func normalizeInput(_ text: String) -> String {
+package enum TranscriptionSanitizer {
+    package static func normalizeInput(_ text: String) -> String {
         text
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
@@ -12,7 +12,7 @@ enum TranscriptionSanitizer {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    static func prepare(
+    package static func prepare(
         _ text: String,
         audioActivity: AudioCaptureActivity? = nil,
         recognitionPhrases: [String] = []
@@ -45,16 +45,16 @@ enum TranscriptionSanitizer {
         return dehallucinated
     }
 
-    static func previewText(_ text: String, inputLanguage: InputLanguage = .auto) -> String {
+    package static func previewText(_ text: String, inputLanguage: InputLanguage = .auto) -> String {
         let normalized = normalizeInput(normalizeTranscript(text))
         return isNonSpeechArtifact(normalized) ? "" : normalized
     }
 
-    static func isNonSpeechArtifact(_ text: String) -> Bool {
+    package static func isNonSpeechArtifact(_ text: String) -> Bool {
         SpeechArtifactPolicy.isNonSpeechArtifact(text)
     }
 
-    static func collapseRepeatedTranscript(_ text: String) -> String {
+    package static func collapseRepeatedTranscript(_ text: String) -> String {
         let normalized = text
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)

@@ -19,8 +19,12 @@ package enum DataPlugins {
     }
 
     package static func dictionary(directoryURL: URL) -> PluginRegistration {
-        PluginRegistration(descriptor: PluginDescriptor(id: "data.dictionary", provides: [DataServices.dictionary.reference])) { context, _ in
-            try context.provide(DataServices.dictionary, value: DictionaryStore(directoryURL: directoryURL))
+        PluginRegistration(descriptor: PluginDescriptor(
+            id: "data.dictionary", requires: [IntegrationServices.diagnostics.optional], provides: [DataServices.dictionary.reference]
+        )) { context, _ in
+            let diagnostics = try context.optional(IntegrationServices.diagnostics)
+            let store = DictionaryStore(directoryURL: directoryURL, reportError: { diagnostics?.error($0) })
+            try context.provide(DataServices.dictionary, value: store)
         }
     }
 

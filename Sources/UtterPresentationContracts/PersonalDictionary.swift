@@ -23,6 +23,8 @@ package final class PersonalDictionary: ObservableObject {
         set { service.entries = newValue; service.save() }
     }
 
+    package var storageAvailable: Bool { service.storageAvailable }
+
     package var editRules: [EditRule] {
         get { service.editRules }
         set { service.editRules = newValue; service.save() }

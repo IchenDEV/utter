@@ -8,17 +8,27 @@ package final class DictionaryStore: DictionaryService {
 
     private let entriesURL: URL
     private let rulesURL: URL
+    private let reportError: (String) -> Void
+    private var entriesWritable = true
+    private var rulesWritable = true
     private var observers: [UUID: () -> Void] = [:]
 
-    package init(directoryURL: URL? = nil) {
+    package var storageAvailable: Bool { entriesWritable && rulesWritable }
+
+    package init(directoryURL: URL? = nil, reportError: @escaping (String) -> Void = { _ in }) {
+        self.reportError = reportError
         let dir = directoryURL ?? FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
         ).first!.appendingPathComponent(ProductBrand.applicationSupportDirectoryName, isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-
         entriesURL = dir.appendingPathComponent("dictionary.json")
         rulesURL = dir.appendingPathComponent("edit_rules.json")
+        do { try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true) }
+        catch {
+            entriesWritable = false
+            rulesWritable = false
+            reportError("Cannot create dictionary directory: \(error.localizedDescription)")
+        }
         load()
     }
 
@@ -157,11 +167,19 @@ package final class DictionaryStore: DictionaryService {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        if let data = try? encoder.encode(entries) {
-            try? data.write(to: entriesURL, options: .atomic)
+        if entriesWritable {
+            do { try encoder.encode(entries).write(to: entriesURL, options: .atomic) }
+            catch {
+                entriesWritable = false
+                reportError("Cannot save dictionary: \(error.localizedDescription)")
+            }
         }
-        if let data = try? encoder.encode(editRules) {
-            try? data.write(to: rulesURL, options: .atomic)
+        if rulesWritable {
+            do { try encoder.encode(editRules).write(to: rulesURL, options: .atomic) }
+            catch {
+                rulesWritable = false
+                reportError("Cannot save edit rules: \(error.localizedDescription)")
+            }
         }
         for id in observers.keys.sorted(by: { $0.uuidString < $1.uuidString }) { observers[id]?() }
     }
@@ -169,9 +187,8 @@ package final class DictionaryStore: DictionaryService {
     private func load() {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        if let data = try? Data(contentsOf: entriesURL),
-           let decoded = try? decoder.decode([DictionaryEntry].self, from: data) {
-            entries = decoded.map { entry in
+        do {
+            entries = try read([DictionaryEntry].self, from: entriesURL, decoder: decoder).map { entry in
                 var entry = entry
                 if entry.origin == .learned,
                    LearnedCorrectionPolicy.isUnsafeSource(entry.original) {
@@ -179,11 +196,20 @@ package final class DictionaryStore: DictionaryService {
                 }
                 return entry
             }
+        } catch {
+            entriesWritable = false
+            reportError("Cannot read dictionary; original file preserved: \(error.localizedDescription)")
         }
-        if let data = try? Data(contentsOf: rulesURL),
-           let decoded = try? decoder.decode([EditRule].self, from: data) {
-            editRules = decoded
+        do { editRules = try read([EditRule].self, from: rulesURL, decoder: decoder) }
+        catch {
+            rulesWritable = false
+            reportError("Cannot read edit rules; original file preserved: \(error.localizedDescription)")
         }
+    }
+
+    private func read<Value: Decodable>(_ type: [Value].Type, from url: URL, decoder: JSONDecoder) throws -> [Value] {
+        do { return try decoder.decode(type, from: Data(contentsOf: url)) }
+        catch let error as CocoaError where error.code == .fileReadNoSuchFile { return [] }
     }
 
     private func normalized(_ text: String) -> String {
