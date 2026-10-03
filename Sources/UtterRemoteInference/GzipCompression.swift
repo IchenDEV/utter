@@ -2,7 +2,7 @@ import Compression
 import Foundation
 
 enum Gzip {
-    static func compress(_ data: Data) -> Data? {
+    package static func compress(_ data: Data) -> Data? {
         guard !data.isEmpty else { return Data() }
         guard let deflated = deflate(data) else { return nil }
 
@@ -16,7 +16,7 @@ enum Gzip {
         return result
     }
 
-    static func decompress(_ data: Data) -> Data? {
+    package static func decompress(_ data: Data) -> Data? {
         guard data.count >= 18, data[0] == 0x1f, data[1] == 0x8b else { return nil }
 
         var offset = 10

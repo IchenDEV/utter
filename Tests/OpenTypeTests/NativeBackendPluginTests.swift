@@ -7,6 +7,7 @@ import UtterModels
 import UtterMLX
 import UtterANE
 import UtterWhisper
+import UtterRemoteInference
 
 @MainActor
 final class NativeBackendPluginTests: XCTestCase {
@@ -17,7 +18,11 @@ final class NativeBackendPluginTests: XCTestCase {
             try context.provide(ModelServices.files, value: EmptyModelFiles())
             try context.provide(IntegrationServices.diagnostics, value: QuietNativeDiagnostics())
         }
-        let registrations = [environment, ModelPlugins.resourceAccess(), ModelPlugins.textProviders(), ModelPlugins.imageProviders(), ModelPlugins.speechProviders(), MLXPlugins.text(), MLXPlugins.image(), ANEPlugins.text(), WhisperPlugins.speech()]
+        let registrations = [
+            environment, ModelPlugins.resourceAccess(), ModelPlugins.textProviders(), ModelPlugins.imageProviders(), ModelPlugins.speechProviders(),
+            MLXPlugins.text(), MLXPlugins.image(), ANEPlugins.text(), WhisperPlugins.speech(),
+            MLXPlugins.qwenSpeech(), MLXPlugins.fireredSpeech(), MLXPlugins.megaSpeech(), RemoteInferencePlugins.speech(),
+        ]
         let runtime = PluginRuntime(catalog: try PluginCatalog(registrations))
         try await runtime.start(registrations.map { PluginSelection($0.descriptor.id) })
         let providers = try runtime.service(GenerationServices.providers)
@@ -29,7 +34,9 @@ final class NativeBackendPluginTests: XCTestCase {
         XCTAssertFalse(mlxLoaded)
         XCTAssertFalse(aneLoaded)
         let speech = try runtime.service(SpeechServices.providers)
-        XCTAssertEqual(speech.descriptors.map(\.id), ["speech.whisper"])
+        XCTAssertEqual(speech.descriptors.map(\.id), ["speech.firered", "speech.mega", "speech.qwen", "speech.volc", "speech.whisper"])
+        let qwen = try await speech.create(id: SpeechEngineType.qwen3.rawValue, request: SpeechProviderRequest(selection: SpeechSelection(providerID: "speech.qwen", type: .qwen3, modelPath: "/missing")))
+        XCTAssertFalse(qwen.isReady)
         try await runtime.stop()
         XCTAssertTrue(providers.descriptors.isEmpty)
         for service in [mlx, ane] {

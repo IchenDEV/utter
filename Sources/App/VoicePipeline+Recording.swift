@@ -1,3 +1,4 @@
+import UtterMLX
 import UtterContracts
 import AppKit
 import Foundation

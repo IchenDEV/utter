@@ -3,12 +3,13 @@ import UtterContracts
 import AVFoundation
 import Foundation
 
-enum QwenAudioPreprocessor {
-    static let sampleRate = 16_000.0
+package enum QwenAudioPreprocessor {
+    package static let sampleRate = 16_000.0
 
-    static func withPreparedAudio<T>(
+    package static func withPreparedAudio<T>(
         from sourceURL: URL,
         tailPaddingFrames: AVAudioFrameCount = 0,
+        log: Log? = nil,
         operation: (URL) async throws -> T
     ) async throws -> T {
         let preparedURL = FileManager.default.temporaryDirectory
@@ -23,7 +24,7 @@ enum QwenAudioPreprocessor {
                 tailPaddingFrames: tailPaddingFrames
             )
         } catch {
-            Log.error("[Qwen3ASR] audio preprocessing failed: \(error.localizedDescription)")
+            log?.error("[Qwen3ASR] audio preprocessing failed: \(error.localizedDescription)")
             throw QwenAudioPreprocessorError.conversionFailed
         }
 
@@ -169,7 +170,7 @@ enum QwenAudioPreprocessor {
     }
 }
 
-enum QwenAudioPreprocessorError: LocalizedError {
+package enum QwenAudioPreprocessorError: LocalizedError {
     case conversionFailed
 
     var errorDescription: String? {

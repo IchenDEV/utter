@@ -98,7 +98,6 @@ final class WhisperStreamingSession: @unchecked Sendable {
             self.pendingWorkItem = nil
             self.updateScheduler.cancelScheduledUpdate()
             self.activeTask?.cancel()
-            self.activeTask = nil
         }
     }
 

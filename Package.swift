@@ -16,10 +16,14 @@ let dependencies: [Package.Dependency] = [
 let dataExclusions: [String] = []
 let modelDependencies: [Target.Dependency] = ["UtterMediaContracts"]
 let modelExclusions: [String] = []
+let remoteDependencies: [Target.Dependency] = ["UtterMediaContracts"]
+let remoteExclusions: [String] = []
 #else
 let dataExclusions = ["SystemDiagnostics.swift"]
 let modelDependencies: [Target.Dependency] = []
 let modelExclusions = ["SpeechRegistry.swift", "ImageRegistry.swift"]
+let remoteDependencies: [Target.Dependency] = []
+let remoteExclusions = ["GzipCompression.swift", "VolcASRError.swift", "VolcSpeechEngine+Audio.swift", "VolcSpeechEngine+Codec.swift", "VolcSpeechEngine+Requests.swift", "VolcSpeechEngine+Transport.swift", "VolcSpeechEngine.swift", "VolcSpeechPlugins.swift", "VolcStreamingSession.swift"]
 #endif
 
 let portableTargets: [Target] = [
@@ -39,7 +43,8 @@ let portableTargets: [Target] = [
     ),
     .target(
         name: "UtterRemoteInference",
-        dependencies: ["UtterRuntime", "UtterContracts"],
+        dependencies: ["UtterRuntime", "UtterContracts"] + remoteDependencies,
+        exclude: remoteExclusions,
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .target(
@@ -116,6 +121,8 @@ let package = Package(
             name: "UtterMLX",
             dependencies: [
                 "UtterRuntime", "UtterContracts", "UtterMediaContracts",
+                .product(name: "MLXAudioCore", package: "mlx-audio-swift"),
+                .product(name: "MLXAudioSTT", package: "mlx-audio-swift"),
                 .product(name: "Hub", package: "swift-transformers"),
                 .product(name: "Tokenizers", package: "swift-transformers"),
                 .product(name: "MLXLLM", package: "mlx-swift-lm"),

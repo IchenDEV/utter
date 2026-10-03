@@ -1,8 +1,10 @@
+import UtterContracts
 import UtterMediaContracts
 import AVFoundation
 import Foundation
 
 final class VolcStreamingSession: @unchecked Sendable {
+    private let log: Log
     private let engine: VolcSpeechEngine
     private let language: String?
     private let partialHandler: @Sendable (String) -> Void
@@ -25,8 +27,9 @@ final class VolcStreamingSession: @unchecked Sendable {
     init(
         engine: VolcSpeechEngine,
         language: String?,
-        partialHandler: @escaping @Sendable (String) -> Void
+        partialHandler: @escaping @Sendable (String) -> Void, log: Log
     ) {
+        self.log = log
         self.engine = engine
         self.language = language
         self.partialHandler = partialHandler
@@ -40,7 +43,7 @@ final class VolcStreamingSession: @unchecked Sendable {
             }
 
             guard let normalizer = self.normalizer else {
-                Log.error("[VolcASR] failed to create streaming audio normalizer")
+                self.log.error("[VolcASR] failed to create streaming audio normalizer")
                 return
             }
 
@@ -52,7 +55,7 @@ final class VolcStreamingSession: @unchecked Sendable {
                 self.pcmData.append(chunkData)
                 self.schedulePartialUpdate()
             } catch {
-                Log.error("[VolcASR] streaming buffer conversion failed: \(error.localizedDescription)")
+                self.log.error("[VolcASR] streaming buffer conversion failed: \(error.localizedDescription)")
             }
         }
     }
@@ -89,8 +92,19 @@ final class VolcStreamingSession: @unchecked Sendable {
             self.pendingWorkItem = nil
             self.updateScheduler.cancelScheduledUpdate()
             self.activeTask?.cancel()
-            self.activeTask = nil
         }
+    }
+
+    func shutdown() async {
+        let task = queue.sync { () -> Task<String, Error>? in
+            closed = true
+            pendingWorkItem?.cancel()
+            pendingWorkItem = nil
+            activeTask?.cancel()
+            return activeTask
+        }
+        _ = await task?.result
+        queue.sync { activeTask = nil; pcmData.removeAll(); normalizer = nil }
     }
 
     private func schedulePartialUpdate() {
@@ -132,9 +146,15 @@ final class VolcStreamingSession: @unchecked Sendable {
         self.submittedByteCount = submittedByteCount
 
         activeTask = Task(priority: .utility) { [weak self, engine, language] in
-            let text = try await engine.transcribePCMData(snapshot, language: language)
-            await self?.finishPartialTask(text: text, submittedByteCount: submittedByteCount)
-            return text
+            do {
+                let text = try await engine.transcribePCMData(snapshot, language: language)
+                try Task.checkCancellation()
+                await self?.finishPartialTask(text: text, submittedByteCount: submittedByteCount)
+                return text
+            } catch {
+                await self?.finishPartialTask(text: "", submittedByteCount: submittedByteCount)
+                throw error
+            }
         }
     }
 

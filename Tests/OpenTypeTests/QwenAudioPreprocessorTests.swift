@@ -1,3 +1,4 @@
+import UtterMLX
 import AVFoundation
 import XCTest
 @testable import OpenType

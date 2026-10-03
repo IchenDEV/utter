@@ -1,3 +1,4 @@
+import MLX
 import UtterMediaContracts
 import UtterContracts
 import AVFoundation
@@ -5,40 +6,51 @@ import Foundation
 import MLXAudioCore
 import MLXAudioSTT
 
-final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
+package final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
     private let modelDirectory: URL
     private let tailPaddingFrames: AVAudioFrameCount
-    private let runtime = QwenNativeASRRuntime()
+    private let runtime: QwenNativeASRRuntime
+    private let access: any ModelResourceAccess
+    private let log: Log
+    private var closed = false
     private let contextLock = NSLock()
     private var recognitionContext = SpeechRecognitionContext.empty
 
-    init(modelPath: String, modelID: String = QwenASRModel.defaultID) {
+    package init(modelPath: String, modelID: String = QwenASRModel.defaultID, access: any ModelResourceAccess, log: Log) {
+        self.access = access
+        self.log = log
+        runtime = QwenNativeASRRuntime(log: log)
         modelDirectory = URL(fileURLWithPath: modelPath).standardizedFileURL
         tailPaddingFrames = modelID == QwenASRModel.confuciusR2T2ID ? 8_000 : 0
     }
 
-    var isReady: Bool {
-        Self.modelDirectoryIsReady(modelDirectory)
+    package var isReady: Bool {
+        !closed && Self.modelDirectoryIsReady(modelDirectory)
     }
 
-    func usesModel(at modelPath: String) -> Bool {
+    package func usesModel(at modelPath: String) -> Bool {
         modelDirectory == URL(fileURLWithPath: modelPath).standardizedFileURL
     }
 
-    func configureRecognition(context: SpeechRecognitionContext) {
+    package func configureRecognition(context: SpeechRecognitionContext) {
         contextLock.withLock { recognitionContext = context }
     }
 
-    func prepare() async {
+    package func prepare() async {
         guard isReady else { return }
         do {
-            try await runtime.prepare(modelDirectory: modelDirectory)
+            try await access.withAccess { try await self.runtime.prepare(modelDirectory: self.modelDirectory) }
         } catch {
-            Log.error("[Qwen3ASRNative] model warm-up failed: \(error.localizedDescription)")
+            log.error("[Qwen3ASRNative] model warm-up failed: \(error.localizedDescription)")
         }
     }
 
-    func transcribe(audioURL: URL?, language: String?) async throws -> String {
+    package func transcribe(audioURL: URL?, language: String?) async throws -> String {
+        try await access.withAccess { try await self.transcribeFile(audioURL: audioURL, language: language) }
+    }
+
+    private func transcribeFile(audioURL: URL?, language: String?) async throws -> String {
+        try Task.checkCancellation()
         guard isReady else { throw QwenNativeASRError.notConfigured }
         guard let audioURL else { throw QwenNativeASRError.noAudioFile }
 
@@ -62,7 +74,7 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
         }
         guard let result else { return "" }
         let elapsed = CFAbsoluteTimeGetCurrent() - started
-        Log.info(
+        log.info(
             "[Qwen3ASRNative] transcribed \(result.text.count) chars in "
                 + "\(String(format: "%.1f", elapsed))s; model \(String(format: "%.1f", result.modelTime))s; "
                 + "peak \(String(format: "%.2f", result.peakMemoryGB)) GB"
@@ -70,7 +82,12 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
         return result.text
     }
 
-    static func modelDirectoryIsReady(_ directory: URL) -> Bool {
+    package func shutdown() async {
+        closed = true
+        try? await access.withAccess { await self.runtime.unload() }
+    }
+
+    package static func modelDirectoryIsReady(_ directory: URL) -> Bool {
         [
             "config.json",
             "model.safetensors",
@@ -85,11 +102,11 @@ final class QwenNativeASREngine: SpeechEngine, @unchecked Sendable {
     }
 }
 
-enum QwenNativeASRError: LocalizedError {
+package enum QwenNativeASRError: LocalizedError {
     case notConfigured
     case noAudioFile
 
-    var errorDescription: String? {
+    package var errorDescription: String? {
         switch self {
         case .notConfigured: return L("error.local_asr_not_configured")
         case .noAudioFile: return L("error.no_audio")
@@ -103,6 +120,10 @@ private actor QwenNativeASRRuntime {
         let modelTime: Double
         let peakMemoryGB: Double
     }
+
+    private let log: Log
+    init(log: Log) { self.log = log }
+    func unload() { model = nil; loadedDirectory = nil; Memory.clearCache() }
 
     private var model: Qwen3ASRModel?
     private var loadedDirectory: URL?
@@ -147,9 +168,10 @@ private actor QwenNativeASRRuntime {
         }
 
         let loaded = try await Qwen3ASRModel.fromModelDirectory(standardizedDirectory)
+        try Task.checkCancellation()
         model = loaded
         loadedDirectory = standardizedDirectory
-        Log.info("[Qwen3ASRNative] loaded existing model from \(standardizedDirectory.path)")
+        log.info("[Qwen3ASRNative] loaded existing model from \(standardizedDirectory.path)")
         return loaded
     }
 }

@@ -1,13 +1,13 @@
 import Foundation
 
-struct QwenRecognitionPrompt: Sendable {
-    static let maximumPhrases = 8
-    static let maximumTermsLength = 160
+package struct QwenRecognitionPrompt: Sendable {
+    package static let maximumPhrases = 8
+    package static let maximumTermsLength = 160
 
-    let phrases: [String]
-    let text: String
+    package let phrases: [String]
+    package let text: String
 
-    init(phrases: [String]) {
+    package init(phrases: [String]) {
         var accepted: [String] = []
         var seen = Set<String>()
         for raw in phrases {
@@ -24,8 +24,8 @@ struct QwenRecognitionPrompt: Sendable {
     }
 }
 
-enum QwenPromptEcho {
-    static func matches(_ transcript: String, prompt: QwenRecognitionPrompt) -> Bool {
+package enum QwenPromptEcho {
+    package static func matches(_ transcript: String, prompt: QwenRecognitionPrompt) -> Bool {
         guard !prompt.text.isEmpty else { return false }
         let text = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
         let lowered = text.lowercased()
@@ -50,15 +50,17 @@ enum QwenPromptEcho {
     }
 }
 
-enum QwenContextRecovery {
-    static func run<Result>(
+package enum QwenContextRecovery {
+    package static func run<Result>(
         prompt: QwenRecognitionPrompt,
         recognize: (String) async throws -> Result,
         text: (Result) -> String
     ) async throws -> Result? {
         let first = try await recognize(prompt.text)
+        try Task.checkCancellation()
         guard QwenPromptEcho.matches(text(first), prompt: prompt) else { return first }
         let retry = try await recognize("")
+        try Task.checkCancellation()
         return QwenPromptEcho.matches(text(retry), prompt: prompt) ? nil : retry
     }
 }

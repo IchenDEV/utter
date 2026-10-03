@@ -15,6 +15,7 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
     package private(set) var isReady = false
     package private(set) var isLoading = false
     private var loadError: String?
+    private var retiredStreams: [WhisperStreamingSession] = []
     private var streamingSession: WhisperStreamingSession?
     private let recognitionContextLock = NSLock()
     private var recognitionContext = SpeechRecognitionContext.empty
@@ -118,6 +119,12 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         }
     }
 
+    package func prepare() async {
+        let retired = retiredStreams
+        retiredStreams.removeAll()
+        for stream in retired { await stream.shutdown() }
+    }
+
     package var supportsStreaming: Bool { true }
 
     package func configureRecognition(context: SpeechRecognitionContext) {
@@ -164,6 +171,7 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
     }
 
     package func cancelListening() {
+        if let streamingSession { retiredStreams.append(streamingSession) }
         streamingSession?.cancel()
         streamingSession = nil
     }
@@ -202,6 +210,8 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
     package func shutdown() async {
         closed = true
         await streamingSession?.shutdown()
+        for stream in retiredStreams { await stream.shutdown() }
+        retiredStreams.removeAll()
         try? await access.withAccess { self.unload() }
     }
 

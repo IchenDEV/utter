@@ -1,7 +1,20 @@
+import UtterMLX
 import XCTest
 @testable import OpenType
 
 final class QwenRecognitionContextTests: XCTestCase {
+    func testCancellationAfterEchoPreventsContextFreeRetry() async throws {
+        let prompt = QwenRecognitionPrompt(phrases: ["Alpha", "Beta", "Gamma", "Delta"])
+        let task = Task {
+            try await QwenContextRecovery.run(prompt: prompt) { context in
+                withUnsafeCurrentTask { $0?.cancel() }
+                return "Vocabulary: Alpha, Beta, Gamma, Delta."
+            } text: { $0 }
+        }
+        do { _ = try await task.value; XCTFail("Cancelled recognition should stop") }
+        catch is CancellationError { }
+    }
+
     func testPromptIsBoundedAndDoesNotContainWholeLexicon() {
         let phrases = (1...30).map { "Term\($0)" }
         let prompt = QwenRecognitionPrompt(phrases: phrases)

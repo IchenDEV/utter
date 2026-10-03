@@ -1,6 +1,7 @@
 import UtterContracts
 import Foundation
 import Hub
+import HuggingFace
 import MLXLMCommon
 import Tokenizers
 

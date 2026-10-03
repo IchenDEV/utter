@@ -1,3 +1,4 @@
+import UtterMLX
 import UtterPresentationContracts
 import UtterContracts
 import AVFoundation

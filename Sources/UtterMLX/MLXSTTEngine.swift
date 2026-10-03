@@ -1,3 +1,4 @@
+import MLX
 import UtterMediaContracts
 import UtterContracts
 import Foundation
@@ -6,21 +7,29 @@ import MLXAudioSTT
 
 /// Generic speech engine backed by any mlx-audio-swift STT model.
 /// Supports Qwen3-ASR, FireRedASR2-AED, Mega-ASR, SenseVoice, and others.
-final class MLXSTTEngine: SpeechEngine, @unchecked Sendable {
+package final class MLXSTTEngine: SpeechEngine, @unchecked Sendable {
     let modelID: String
-    private let runtime = MLXSTTRuntime()
+    private let runtime: MLXSTTRuntime
+    private let files: any ModelFilesService
+    private let access: any ModelResourceAccess
+    private let log: Log
+    private var closed = false
 
-    init(modelID: String) {
+    package init(modelID: String, files: any ModelFilesService, access: any ModelResourceAccess, log: Log) {
+        self.files = files
+        self.access = access
+        self.log = log
+        runtime = MLXSTTRuntime(files: files, log: log)
         self.modelID = modelID
     }
 
-    var isReady: Bool {
-        Self.checkModelReady(modelID)
+    package var isReady: Bool {
+        !closed && checkModelReady(modelID)
     }
 
-    private static func checkModelReady(_ id: String) -> Bool {
-        guard let dir = ModelStorage.asrRepoDir(id) else { return false }
-        let requiredFiles = ModelCatalog.asrRequiredFiles(for: id)
+    private func checkModelReady(_ id: String) -> Bool {
+        guard let dir = files.installedSpeechModelURL(id) else { return false }
+        let requiredFiles = files.speechRequiredFiles(id)
         return requiredFiles.allSatisfy { relativePath in
             let file = dir.appendingPathComponent(relativePath)
             let size = (try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
@@ -28,21 +37,26 @@ final class MLXSTTEngine: SpeechEngine, @unchecked Sendable {
         }
     }
 
-    func prepare() async {
+    package func prepare() async {
         guard isReady else { return }
         do {
-            try await runtime.prepare(modelID: modelID)
+            try await access.withAccess { try await self.runtime.prepare(modelID: self.modelID) }
         } catch {
-            Log.error("[MLXSTTEngine] model warm-up failed (\(modelID)): \(error.localizedDescription)")
+            log.error("[MLXSTTEngine] model warm-up failed (\(modelID)): \(error.localizedDescription)")
         }
     }
 
-    func transcribe(audioURL: URL?, language: String?) async throws -> String {
+    package func transcribe(audioURL: URL?, language: String?) async throws -> String {
+        try await access.withAccess { try await self.transcribeFile(audioURL: audioURL, language: language) }
+    }
+
+    private func transcribeFile(audioURL: URL?, language: String?) async throws -> String {
+        try Task.checkCancellation()
         guard isReady else { throw MLXSTTError.notConfigured }
         guard let audioURL else { throw MLXSTTError.noAudioFile }
 
         let started = CFAbsoluteTimeGetCurrent()
-        let result = try await QwenAudioPreprocessor.withPreparedAudio(from: audioURL) { preparedURL in
+        let result = try await QwenAudioPreprocessor.withPreparedAudio(from: audioURL, log: log) { preparedURL in
             try await runtime.transcribe(
                 audioURL: preparedURL,
                 modelID: modelID,
@@ -50,21 +64,26 @@ final class MLXSTTEngine: SpeechEngine, @unchecked Sendable {
             )
         }
         let elapsed = CFAbsoluteTimeGetCurrent() - started
-        Log.info(
+        log.info(
             "[MLXSTTEngine] \(modelID) transcribed \(result.text.count) chars in "
                 + "\(String(format: "%.1f", elapsed))s; model \(String(format: "%.1f", result.modelTime))s; "
                 + "peak \(String(format: "%.2f", result.peakMemoryGB)) GB"
         )
         return result.text
     }
+    package func shutdown() async {
+        closed = true
+        try? await access.withAccess { await self.runtime.unload() }
+    }
+
 }
 
-enum MLXSTTError: LocalizedError {
+package enum MLXSTTError: LocalizedError {
     case notConfigured
     case noAudioFile
     case modelDirectoryMissing
 
-    var errorDescription: String? {
+    package var errorDescription: String? {
         switch self {
         case .notConfigured: return L("error.local_asr_not_configured")
         case .noAudioFile: return L("error.no_audio")
@@ -79,6 +98,11 @@ private actor MLXSTTRuntime {
         let modelTime: Double
         let peakMemoryGB: Double
     }
+
+    private let files: any ModelFilesService
+    private let log: Log
+    init(files: any ModelFilesService, log: Log) { self.files = files; self.log = log }
+    func unload() { model = nil; loadedModelID = nil; Memory.clearCache() }
 
     private var model: (any STTGenerationModel)?
     private var loadedModelID: String?
@@ -133,14 +157,15 @@ private actor MLXSTTRuntime {
             return model
         }
 
-        guard let modelDir = ModelStorage.asrRepoDir(modelID) else {
+        guard let modelDir = files.installedSpeechModelURL(modelID) else {
             throw MLXSTTError.modelDirectoryMissing
         }
         let modelType = Self.detectModelType(from: modelDir, modelID: modelID)
         let loaded = try await Self.loadModelFromDirectory(modelDir, modelType: modelType)
+        try Task.checkCancellation()
         model = loaded
         loadedModelID = modelID
-        Log.info("[MLXSTTRuntime] loaded model: \(modelID) (type: \(modelType))")
+        log.info("[MLXSTTRuntime] loaded model: \(modelID) (type: \(modelType))")
         return loaded
     }
 
