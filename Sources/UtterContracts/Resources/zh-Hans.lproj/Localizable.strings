@@ -546,3 +546,4 @@
 "device.marginal_ram" = "本机内存有限，运行此模型可能较慢。建议选择更小的模型以获得更好的性能。";
 "device.badge_marginal" = "可能较慢";
 "device.badge_incompatible" = "超出配置";
+"mode.selection_edit" = "编辑选中文本";

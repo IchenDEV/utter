@@ -1,5 +1,4 @@
 import Foundation
-import UtterContracts
 import UtterRuntime
 
 @MainActor
@@ -23,7 +22,13 @@ package final class ProviderRegistry<Request, Value>: ProviderCatalog {
         if let duplicate = proposed.first(where: { existing.contains($0) }) {
             throw ProviderCatalogError.duplicateIdentifier(duplicate)
         }
-        try definitions.contribute(definition.descriptor.id, value: definition, scope: scope)
+        let scoped = ProviderDefinition<Request, Value>(descriptor: definition.descriptor) { request in
+            guard scope.isActive else { throw ProviderCatalogError.closed }
+            let value = try await scope.run { try await definition.create(request) }
+            guard scope.isActive else { throw ProviderCatalogError.closed }
+            return value
+        }
+        try definitions.contribute(definition.descriptor.id, value: scoped, scope: scope)
     }
 
     package func create(id: String, request: Request) async throws -> Value {

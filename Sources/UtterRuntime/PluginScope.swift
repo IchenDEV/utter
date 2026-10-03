@@ -52,6 +52,30 @@ package final class PluginScope {
         return task
     }
 
+    package func run<Value>(_ operation: @escaping () async throws -> Value) async throws -> Value {
+        guard isActive else { throw PluginRuntimeError.scopeClosed(pluginID) }
+        let id = UUID()
+        let task = Task { try await operation() }
+        cancellations[id] = { task.cancel() }
+        effects.append(Effect(id: id, dispose: { [self] in
+            task.cancel()
+            _ = await task.result
+            cancellations.removeValue(forKey: id)
+        }))
+        defer {
+            effects.removeAll { $0.id == id }
+            cancellations.removeValue(forKey: id)
+        }
+        return try await withTaskCancellationHandler {
+            let value = try await task.value
+            try Task.checkCancellation()
+            guard isActive else { throw PluginRuntimeError.scopeClosed(pluginID) }
+            return value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
     package func acquire<Value>(
         _ operation: @escaping () async throws -> Value,
         dispose: @escaping (Value) async throws -> Void

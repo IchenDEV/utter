@@ -119,7 +119,7 @@ let portableTargets: [Target] = [
     ),
     .testTarget(
         name: "UtterContractsTests",
-        dependencies: ["UtterContracts"],
+        dependencies: ["UtterContracts", "UtterRuntime"],
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .testTarget(

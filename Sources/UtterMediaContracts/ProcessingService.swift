@@ -40,6 +40,12 @@ package struct ProcessingRequest {
         self.formatKind = formatKind
         self.allowsPreparedFallback = allowsPreparedFallback
     }
+
+    package func withMode(_ mode: TextProcessingMode) -> ProcessingRequest {
+        ProcessingRequest(mode: mode, text: text, options: options, dictionary: dictionary,
+            screenContext: screenContext, screenImage: screenImage, memoryContext: memoryContext,
+            inputContext: inputContext, formatKind: formatKind, allowsPreparedFallback: allowsPreparedFallback)
+    }
 }
 
 package struct ProcessingResult: Sendable {

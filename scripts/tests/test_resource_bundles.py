@@ -67,6 +67,19 @@ class ResourceBundleTests(unittest.TestCase):
             source.rename(old)
             self.assertTrue(CHECKS.resource_errors(MANIFEST, ROOT, app))
 
+    def test_compiled_icon_requires_source_at_build_time_and_catalog_at_runtime(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            app = Path(temporary)
+            self.populate(app)
+            self.assertEqual(CHECKS.resource_errors(MANIFEST, ROOT, app), [])
+            (app / "Contents/Resources/Assets.car").unlink()
+            self.assertTrue(CHECKS.resource_errors(MANIFEST, ROOT, app))
+        self.assertEqual(CHECKS.resource_errors(MANIFEST, ROOT), [])
+        owner = next(item for item in MANIFEST["bundles"] if item.get("sourceFiles"))
+        manifest = copy.deepcopy(MANIFEST)
+        next(item for item in manifest["bundles"] if item["target"] == owner["target"])["sourceFiles"].append("missing.icon/icon.json")
+        self.assertTrue(CHECKS.resource_errors(manifest, ROOT))
+
     def test_duplicate_bundle_and_unknown_schema_are_rejected(self):
         manifest = copy.deepcopy(MANIFEST)
         manifest["bundles"].append(manifest["bundles"][0])

@@ -1,8 +1,6 @@
 import XCTest
-import UtterContracts
 import UtterRuntime
-@testable import UtterModels
-
+@testable import UtterContracts
 @MainActor
 final class ProviderRegistryTests: XCTestCase {
     func testMetadataRegistrationDoesNotConstructAProviderAndLegacyIDResolvesTheSameFactory() async throws {

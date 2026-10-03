@@ -18,7 +18,7 @@ def resource_errors(manifest, root, app=None):
             errors.append(f"duplicate resource bundle {name}")
         owners.add(name)
         base = app / "Contents/Resources" / name / "Contents/Resources" if app else root / owner["source"]
-        for relative in owner["files"]:
+        for relative in owner["files"] + ([] if app else owner.get("sourceFiles", [])):
             path = base / relative
             allow_empty = relative in owner.get("allowEmpty", [])
             if not path.is_file() or (not allow_empty and path.stat().st_size == 0):

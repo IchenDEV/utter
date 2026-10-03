@@ -546,3 +546,4 @@
 "device.marginal_ram" = "This model may run slowly on this Mac due to limited memory. A smaller model is recommended for better performance.";
 "device.badge_marginal" = "May Be Slow";
 "device.badge_incompatible" = "Too Large";
+"mode.selection_edit" = "Edit selection";
