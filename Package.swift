@@ -19,7 +19,7 @@ let modelExclusions: [String] = []
 #else
 let dataExclusions = ["SystemDiagnostics.swift"]
 let modelDependencies: [Target.Dependency] = []
-let modelExclusions = ["SpeechRegistry.swift"]
+let modelExclusions = ["SpeechRegistry.swift", "ImageRegistry.swift"]
 #endif
 
 let portableTargets: [Target] = [
@@ -105,6 +105,35 @@ let package = Package(
     dependencies: dependencies,
     targets: [
         .target(
+            name: "UtterWhisper",
+            dependencies: [
+                "UtterRuntime", "UtterContracts", "UtterMediaContracts",
+                .product(name: "WhisperKit", package: "argmax-oss-swift"),
+            ],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .target(
+            name: "UtterMLX",
+            dependencies: [
+                "UtterRuntime", "UtterContracts", "UtterMediaContracts",
+                .product(name: "Hub", package: "swift-transformers"),
+                .product(name: "Tokenizers", package: "swift-transformers"),
+                .product(name: "MLXLLM", package: "mlx-swift-lm"),
+                .product(name: "MLXVLM", package: "mlx-swift-lm"),
+                .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
+            ],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .target(
+            name: "UtterANE",
+            dependencies: [
+                "UtterRuntime", "UtterContracts",
+                .product(name: "ANELMRuntime", package: "ANE-LM"),
+                .product(name: "Tokenizers", package: "swift-transformers"),
+            ],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .target(
             name: "UtterAppleSpeech",
             dependencies: ["UtterRuntime", "UtterContracts", "UtterMediaContracts"],
             swiftSettings: [.swiftLanguageMode(.v5)]
@@ -129,6 +158,9 @@ let package = Package(
                 "UtterModels",
                 "UtterRemoteInference",
                 "UtterAppleSpeech",
+                "UtterWhisper",
+                "UtterMLX",
+                "UtterANE",
                 "UtterMediaContracts",
                 "UtterPresentationContracts",
                 .product(name: "WhisperKit", package: "argmax-oss-swift"),
@@ -142,7 +174,7 @@ let package = Package(
                 .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
             ],
             path: "Sources",
-            exclude: ["UtterRemoteInference", "UtterAppleSpeech", "UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
+            exclude: ["UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterAppleSpeech", "UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
             resources: [
                 .copy("Resources/AppIcon.png"),
                 .copy("Resources/AppIcon.icon"),
@@ -172,7 +204,7 @@ let package = Package(
         ),
         .testTarget(
             name: "OpenTypeTests",
-            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterAppleSpeech", "UtterRemoteInference", "UtterMediaContracts", "UtterPresentationContracts"],
+            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterAppleSpeech", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterMediaContracts", "UtterPresentationContracts"],
             path: "Tests/OpenTypeTests",
             swiftSettings: [
                 .swiftLanguageMode(.v5)

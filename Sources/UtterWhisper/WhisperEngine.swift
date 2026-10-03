@@ -5,48 +5,61 @@ import AVFoundation
 import WhisperKit
 import CoreML
 
-final class WhisperEngine: SpeechEngine, @unchecked Sendable {
+package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
+    private let files: any ModelFilesService
+    private let access: any ModelResourceAccess
+    private let log: Log
+    private var closed = false
     private var whisperKit: WhisperKit?
     private let modelName: String?
-    private(set) var isReady = false
-    private(set) var isLoading = false
+    package private(set) var isReady = false
+    package private(set) var isLoading = false
     private var loadError: String?
     private var streamingSession: WhisperStreamingSession?
     private let recognitionContextLock = NSLock()
     private var recognitionContext = SpeechRecognitionContext.empty
 
-    init(modelName: String = "large-v3") {
+    package init(modelName: String = "large-v3", files: any ModelFilesService, access: any ModelResourceAccess, log: Log) {
+        self.files = files
+        self.access = access
+        self.log = log
         self.modelName = modelName.isEmpty ? nil : modelName
     }
 
-    func loadModel(progress: @escaping (SpeechModelProgress) -> Void) async throws {
+    package func loadModel(progress: @escaping (SpeechModelProgress) -> Void) async throws {
+        try await access.withAccess { try await self.loadLocalModel(progress: progress) }
+    }
+
+    private func loadLocalModel(progress: @escaping (SpeechModelProgress) -> Void) async throws {
+        try Task.checkCancellation()
+        guard !closed else { throw ProviderCatalogError.closed }
         guard !isLoading && !isReady else { return }
         isLoading = true
 
         do {
             let recommended = WhisperKit.recommendedModels()
             let requestedModel = modelName ?? recommended.default
-            var selectedModel = ModelStorage.localWhisperURL(requestedModel) != nil
+            var selectedModel = files.installedWhisperURL(requestedModel) != nil
                 ? requestedModel
                 : WhisperModelSelection.resolve(
                     requested: requestedModel,
                     available: recommended.supported,
                     fallback: recommended.default
                 )
-            let localFolder = ModelStorage.localWhisperURL(selectedModel)
+            let localFolder = files.installedWhisperURL(selectedModel)
 
             if localFolder == nil, !recommended.supported.contains(selectedModel) {
-                Log.info("[WhisperEngine] '\(selectedModel)' is unavailable, fallback: \(recommended.default)")
+                log.info("[WhisperEngine] '\(selectedModel)' is unavailable, fallback: \(recommended.default)")
                 selectedModel = recommended.default
             }
-            Log.info("[WhisperEngine] using model: \(selectedModel)")
+            log.info("[WhisperEngine] using model: \(selectedModel)")
 
-            let folder = localFolder ?? ModelStorage.whisperVariantDir(selectedModel)
-            guard ModelStorage.whisperModelIsComplete(at: folder) else {
+            let folder = localFolder ?? files.whisperVariantURL(selectedModel)
+            guard files.whisperModelIsComplete(at: folder) else {
                 isLoading = false
                 throw WhisperError.modelNotLoaded(L("model.download_required"))
             }
-            Log.info("[WhisperEngine] loading local model assets")
+            log.info("[WhisperEngine] loading local model assets")
 
             progress(dp(0.62, stage: .compiling))
 
@@ -83,35 +96,37 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
                 throw WhisperError.loadFailed(error.localizedDescription)
             }
 
+            try Task.checkCancellation()
+            guard !closed else { throw ProviderCatalogError.closed }
             whisperKit = kit
             isReady = true
             isLoading = false
             loadError = nil
             progress(dp(1.0, stage: .done))
-            Log.info("[WhisperEngine] model loaded")
+            log.info("[WhisperEngine] model loaded")
         } catch let error as WhisperError {
             loadError = error.localizedDescription
             isReady = false
-            Log.error("[WhisperEngine] \(error.localizedDescription)")
+            log.error("[WhisperEngine] \(error.localizedDescription)")
             throw error
         } catch {
             loadError = error.localizedDescription
             isReady = false
             isLoading = false
-            Log.error("[WhisperEngine] model load failed: \(error.localizedDescription)")
+            log.error("[WhisperEngine] model load failed: \(error.localizedDescription)")
             throw error
         }
     }
 
-    var supportsStreaming: Bool { true }
+    package var supportsStreaming: Bool { true }
 
-    func configureRecognition(context: SpeechRecognitionContext) {
+    package func configureRecognition(context: SpeechRecognitionContext) {
         recognitionContextLock.lock()
         defer { recognitionContextLock.unlock() }
         recognitionContext = context
     }
 
-    func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
+    package func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
         guard let whisperKit, isReady else { return }
         let options = decodingOptions(
             language: language,
@@ -121,15 +136,16 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
             whisperKit: whisperKit,
             language: language,
             partialHandler: onPartialResult,
-            optionsBuilder: { options }
+            optionsBuilder: { options },
+            access: access, log: log
         )
     }
 
-    func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+    package func appendAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         streamingSession?.append(buffer)
     }
 
-    func finishListening(audioURL: URL?, language: String?) async throws -> String {
+    package func finishListening(audioURL: URL?, language: String?) async throws -> String {
         defer { streamingSession = nil }
         if let streamingSession {
             let outcome = await streamingSession.finishLivePreview()
@@ -138,7 +154,7 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
                 audioURL: audioURL,
                 livePreviewText: outcome.livePreviewText,
                 metrics: outcome.metrics,
-                unitLabel: "samples"
+                unitLabel: "samples", log: log
             ) { [weak self] in
                 guard let self else { return "" }
                 return try await self.transcribe(audioURL: audioURL, language: language)
@@ -147,12 +163,18 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         return try await transcribe(audioURL: audioURL, language: language)
     }
 
-    func cancelListening() {
+    package func cancelListening() {
         streamingSession?.cancel()
         streamingSession = nil
     }
 
-    func transcribe(audioURL: URL?, language: String?) async throws -> String {
+    package func transcribe(audioURL: URL?, language: String?) async throws -> String {
+        try await access.withAccess { try await self.transcribeFile(audioURL: audioURL, language: language) }
+    }
+
+    private func transcribeFile(audioURL: URL?, language: String?) async throws -> String {
+        try Task.checkCancellation()
+        guard !closed else { throw ProviderCatalogError.closed }
         guard let whisperKit, isReady else {
             throw WhisperError.modelNotLoaded(loadError ?? "未知原因")
         }
@@ -173,11 +195,17 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         )
 
         let elapsed = CFAbsoluteTimeGetCurrent() - t0
-        Log.info("[WhisperEngine] transcribed \(text.count) chars in \(String(format: "%.1f", elapsed))s")
+        log.info("[WhisperEngine] transcribed \(text.count) chars in \(String(format: "%.1f", elapsed))s")
         return text
     }
 
-    func unload() {
+    package func shutdown() async {
+        closed = true
+        await streamingSession?.shutdown()
+        try? await access.withAccess { self.unload() }
+    }
+
+    package func unload() {
         cancelListening()
         whisperKit = nil
         isReady = false

@@ -5,17 +5,29 @@ import Foundation
 import MLXLMCommon
 import MLXVLM
 
-actor VLMEngine {
+package actor VLMEngine {
+    private let files: any ModelFilesService
+    private var closed = false
+    private let log: Log
+
+    package init(files: any ModelFilesService, log: Log) {
+        self.files = files
+        self.log = log
+    }
+
     private var container: ModelContainer?
     private var currentModelID: String?
+    private var currentModelURL: URL?
 
-    func loadModel(id: String) async throws {
-        if currentModelID == id, container != nil { return }
+    package func loadModel(id: String, modelURL: URL? = nil) async throws {
+        try Task.checkCancellation()
+        guard !closed else { throw GenerationServiceError.unsupportedOperation }
+        if currentModelID == id, currentModelURL == modelURL, container != nil { return }
 
-        Log.info("[VLMEngine] loading model: \(id)")
+        log.info("[VLMEngine] loading model: \(id)")
         let started = CFAbsoluteTimeGetCurrent()
 
-        guard let localURL = ModelStorage.installedLLMURL(id) else {
+        guard let localURL = modelURL ?? files.installedTextModelURL(id) else {
             throw LLMError.modelNotDownloaded
         }
         container = try await VLMModelFactory.shared.loadContainer(
@@ -23,18 +35,22 @@ actor VLMEngine {
             using: MLXModelLoading.tokenizerLoader
         )
 
+        try Task.checkCancellation()
         currentModelID = id
+        currentModelURL = modelURL
         let elapsed = CFAbsoluteTimeGetCurrent() - started
-        Log.info("[VLMEngine] model loaded in \(String(format: "%.1f", elapsed))s")
+        log.info("[VLMEngine] model loaded in \(String(format: "%.1f", elapsed))s")
     }
 
-    func generate(
+    package func generate(
         prompt: String,
         systemPrompt: String? = nil,
         image: CGImage,
         maxTokens: Int = 2048,
         temperature: Double = 0.3
     ) async throws -> String {
+        try Task.checkCancellation()
+        guard !closed else { throw GenerationServiceError.unsupportedOperation }
         guard let container else {
             throw LLMError.modelNotLoaded
         }
@@ -51,14 +67,20 @@ actor VLMEngine {
         let result = try await session.respond(to: prompt, image: .ciImage(ciImage))
 
         let elapsed = CFAbsoluteTimeGetCurrent() - started
-        Log.info("[VLMEngine] generated \(result.count) chars in \(String(format: "%.1f", elapsed))s")
+        log.info("[VLMEngine] generated \(result.count) chars in \(String(format: "%.1f", elapsed))s")
         return result
     }
 
-    var isLoaded: Bool { container != nil }
+    package var isLoaded: Bool { container != nil }
 
-    func unload() {
+    package func close() {
+        closed = true
+        unload()
+    }
+
+    package func unload() {
         container = nil
         currentModelID = nil
+        currentModelURL = nil
     }
 }

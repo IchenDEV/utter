@@ -4,17 +4,29 @@ import MLXLLM
 import MLXLMCommon
 import MLX
 
-actor LLMEngine {
+package actor LLMEngine {
+    private let files: any ModelFilesService
+    private var closed = false
+    private let log: Log
+
+    package init(files: any ModelFilesService, log: Log) {
+        self.files = files
+        self.log = log
+    }
+
     private var container: ModelContainer?
     private var currentModelID: String?
+    private var currentModelURL: URL?
 
-    func loadModel(id: String) async throws {
-        if currentModelID == id, container != nil { return }
+    package func loadModel(id: String, modelURL: URL? = nil) async throws {
+        try Task.checkCancellation()
+        guard !closed else { throw GenerationServiceError.unsupportedOperation }
+        if currentModelID == id, currentModelURL == modelURL, container != nil { return }
 
-        Log.info("[LLMEngine] loading model: \(id)")
+        log.info("[LLMEngine] loading model: \(id)")
         let t0 = CFAbsoluteTimeGetCurrent()
 
-        guard let localURL = ModelStorage.installedLLMURL(id) else {
+        guard let localURL = modelURL ?? files.installedTextModelURL(id) else {
             throw LLMError.modelNotDownloaded
         }
         container = try await LLMModelFactory.shared.loadContainer(
@@ -22,17 +34,21 @@ actor LLMEngine {
             using: MLXModelLoading.tokenizerLoader
         )
 
+        try Task.checkCancellation()
         currentModelID = id
+        currentModelURL = modelURL
         let elapsed = CFAbsoluteTimeGetCurrent() - t0
-        Log.info("[LLMEngine] model loaded in \(String(format: "%.1f", elapsed))s")
+        log.info("[LLMEngine] model loaded in \(String(format: "%.1f", elapsed))s")
     }
 
-    func generate(
+    package func generate(
         prompt: String,
         systemPrompt: String? = nil,
         maxTokens: Int = 2048,
         temperature: Double = 0.3
     ) async throws -> String {
+        try Task.checkCancellation()
+        guard !closed else { throw GenerationServiceError.unsupportedOperation }
         guard let container else {
             throw LLMError.modelNotLoaded
         }
@@ -49,13 +65,13 @@ actor LLMEngine {
         let result = try await session.respond(to: prompt)
 
         let elapsed = CFAbsoluteTimeGetCurrent() - t0
-        Log.info("[LLMEngine] generated \(result.count) chars in \(String(format: "%.1f", elapsed))s")
+        log.info("[LLMEngine] generated \(result.count) chars in \(String(format: "%.1f", elapsed))s")
         return result
     }
 
-    func benchmark(modelID: String) async throws -> ModelBenchmarkResult {
+    package func benchmark(modelID: String, modelURL: URL? = nil) async throws -> ModelBenchmarkResult {
         let loadT0 = CFAbsoluteTimeGetCurrent()
-        try await loadModel(id: modelID)
+        try await loadModel(id: modelID, modelURL: modelURL)
         let loadTime = CFAbsoluteTimeGetCurrent() - loadT0
 
         guard let container else { throw LLMError.modelNotLoaded }
@@ -87,7 +103,7 @@ actor LLMEngine {
         let genTime = CFAbsoluteTimeGetCurrent() - genT0
         let tps = genTime > 0 ? Double(tokenCount) / genTime : 0
 
-        Log.info("[LLMEngine] benchmark: \(tokenCount) tokens in \(String(format: "%.1f", genTime))s = \(String(format: "%.1f", tps)) tok/s")
+        log.info("[LLMEngine] benchmark: \(tokenCount) tokens in \(String(format: "%.1f", genTime))s = \(String(format: "%.1f", tps)) tok/s")
 
         return ModelBenchmarkResult(
             loadTimeSeconds: loadTime,
@@ -97,32 +113,38 @@ actor LLMEngine {
         )
     }
 
-    var isLoaded: Bool { container != nil }
+    package var isLoaded: Bool { container != nil }
 
-    func unload() {
+    package func close() {
+        closed = true
+        unload()
+    }
+
+    package func unload() {
         container = nil
         currentModelID = nil
+        currentModelURL = nil
     }
 
     /// Qwen3-family chat templates read `enable_thinking` from the template
     /// context — the official switch for suppressing `<think>` blocks. The old
     /// `/no_think` soft prefix is ignored by Qwen3.5 and only added prompt noise.
-    static func chatTemplateContext(modelID: String?) -> [String: any Sendable]? {
+    package static func chatTemplateContext(modelID: String?) -> [String: any Sendable]? {
         guard let id = modelID?.lowercased(), id.contains("qwen3") else { return nil }
         return ["enable_thinking": false]
     }
 
-    static func modelConfiguration(for id: String) -> ModelConfiguration {
+    package static func modelConfiguration(for id: String) -> ModelConfiguration {
         let extraEOSTokens: Set<String> = id.lowercased().contains("gemma-4") ? ["<turn|>"] : []
         return ModelConfiguration(id: id, extraEOSTokens: extraEOSTokens)
     }
 }
 
-enum LLMError: LocalizedError {
+package enum LLMError: LocalizedError {
     case modelNotLoaded
     case modelNotDownloaded
 
-    var errorDescription: String? {
+    package var errorDescription: String? {
         switch self {
         case .modelNotLoaded: return L("error.llm_not_loaded")
         case .modelNotDownloaded: return L("error.llm_not_downloaded")

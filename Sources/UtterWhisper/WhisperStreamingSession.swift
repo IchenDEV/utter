@@ -1,8 +1,13 @@
+import UtterContracts
+import UtterMediaContracts
+import UtterMediaContracts
 import AVFoundation
 import Foundation
 import WhisperKit
 
 final class WhisperStreamingSession: @unchecked Sendable {
+    private let access: any ModelResourceAccess
+    private let log: Log
     private let whisperKit: WhisperKit
     private let language: String?
     private let partialHandler: @Sendable (String) -> Void
@@ -26,8 +31,11 @@ final class WhisperStreamingSession: @unchecked Sendable {
         whisperKit: WhisperKit,
         language: String? = nil,
         partialHandler: @escaping @Sendable (String) -> Void,
-        optionsBuilder: @escaping () -> DecodingOptions
+        optionsBuilder: @escaping () -> DecodingOptions,
+        access: any ModelResourceAccess, log: Log
     ) {
+        self.access = access
+        self.log = log
         self.whisperKit = whisperKit
         self.language = language
         self.partialHandler = partialHandler
@@ -42,7 +50,7 @@ final class WhisperStreamingSession: @unchecked Sendable {
             }
 
             guard let normalizer = self.normalizer else {
-                Log.error("[WhisperEngine] failed to create streaming audio normalizer")
+                self.log.error("[WhisperEngine] failed to create streaming audio normalizer")
                 return
             }
 
@@ -53,7 +61,7 @@ final class WhisperStreamingSession: @unchecked Sendable {
                 self.samples.append(contentsOf: chunk.samples)
                 self.schedulePartialUpdate()
             } catch {
-                Log.error("[WhisperEngine] streaming buffer conversion failed: \(error.localizedDescription)")
+                self.log.error("[WhisperEngine] streaming buffer conversion failed: \(error.localizedDescription)")
             }
         }
     }
@@ -114,6 +122,22 @@ final class WhisperStreamingSession: @unchecked Sendable {
         startPartialTask()
     }
 
+    func shutdown() async {
+        let task = queue.sync { () -> Task<String, Error>? in
+            closed = true
+            pendingWorkItem?.cancel()
+            pendingWorkItem = nil
+            activeTask?.cancel()
+            return activeTask
+        }
+        _ = await task?.result
+        queue.sync {
+            activeTask = nil
+            samples.removeAll()
+            normalizer = nil
+        }
+    }
+
     private func startFinalPartialTaskIfNeeded() {
         guard activeTask == nil, samples.count >= WhisperKit.sampleRate else { return }
         guard samples.count > submittedSampleCount else { return }
@@ -132,17 +156,25 @@ final class WhisperStreamingSession: @unchecked Sendable {
         let submittedSampleCount = samples.count
         self.submittedSampleCount = submittedSampleCount
 
-        activeTask = Task(priority: .utility) { [weak self, whisperKit, optionsBuilder] in
-            let results = try await whisperKit.transcribe(
-                audioArray: snapshot,
-                decodeOptions: optionsBuilder()
-            )
-            let text = TranscriptSegmentJoiner.joined(
-                results.compactMap(\.text),
-                language: self?.language
-            )
-            await self?.finishPartialTask(text: text, submittedSampleCount: submittedSampleCount)
-            return text
+        activeTask = Task(priority: .utility) { [weak self, whisperKit, optionsBuilder, access] in
+            do {
+                let results = try await access.withAccess {
+                    try await whisperKit.transcribe(
+                        audioArray: snapshot,
+                        decodeOptions: optionsBuilder()
+                    )
+                }
+                try Task.checkCancellation()
+                let text = TranscriptSegmentJoiner.joined(
+                    results.compactMap(\.text),
+                    language: self?.language
+                )
+                await self?.finishPartialTask(text: text, submittedSampleCount: submittedSampleCount)
+                return text
+            } catch {
+                await self?.finishPartialTask(text: "", submittedSampleCount: submittedSampleCount)
+                throw error
+            }
         }
     }
 

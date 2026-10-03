@@ -1,3 +1,4 @@
+import UtterWhisper
 import UtterAppleSpeech
 import UtterContracts
 import AppKit

@@ -1,7 +1,7 @@
 import Foundation
 
-enum NoSpaceScript {
-    static func contains(_ scalar: Unicode.Scalar) -> Bool {
+package enum NoSpaceScript {
+    package static func contains(_ scalar: Unicode.Scalar) -> Bool {
         switch scalar.value {
         case 0x3005,
              0x303B,

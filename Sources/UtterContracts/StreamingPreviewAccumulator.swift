@@ -1,111 +1,15 @@
 import Foundation
 
-struct StreamingSessionMetrics: Equatable {
-    var receivedBufferCount = 0
-    var capturedUnitCount = 0
-    var partialUpdateCount = 0
-    var startedAt = Date()
-    var lastPartialAt: Date?
-    var lastPartialUnitCount = 0
-
-    var hasCapturedAudio: Bool {
-        capturedUnitCount > 0
-    }
-
-    var livePreviewCoversCapturedAudio: Bool {
-        partialUpdateCount > 0 && lastPartialUnitCount >= capturedUnitCount
-    }
-
-    mutating func recordBuffer(unitCount: Int) {
-        guard unitCount > 0 else { return }
-        receivedBufferCount += 1
-        capturedUnitCount += unitCount
-    }
-
-    mutating func markPartial(unitCount: Int, at date: Date = Date()) {
-        partialUpdateCount += 1
-        lastPartialAt = date
-        lastPartialUnitCount = max(lastPartialUnitCount, unitCount)
-    }
-}
-
-struct StreamingSessionOutcome: Equatable {
-    let livePreviewText: String
-    let metrics: StreamingSessionMetrics
-}
-
-struct StreamingPartialUpdateScheduler: Equatable {
-    private var hasScheduledUpdate = false
-
-    mutating func requestSchedule() -> Bool {
-        guard !hasScheduledUpdate else { return false }
-        hasScheduledUpdate = true
-        return true
-    }
-
-    mutating func markScheduledUpdateFired() {
-        hasScheduledUpdate = false
-    }
-
-    mutating func cancelScheduledUpdate() {
-        hasScheduledUpdate = false
-    }
-}
-
-enum StreamingTranscriptResolver {
-    /// The live preview is a heuristic merge of sliding-window partials and can
-    /// lock in mis-heard characters at window boundaries. It is only ever used
-    /// for HUD display and as a last-resort fallback — the final transcript is
-    /// always re-transcribed from the recorded audio file when one exists.
-    static func resolveFinalTranscript(
-        engineName: String,
-        audioURL: URL?,
-        livePreviewText: String,
-        metrics: StreamingSessionMetrics,
-        unitLabel: String,
-        transcribeFromFile: @escaping () async throws -> String
-    ) async throws -> String {
-        let elapsed = Date().timeIntervalSince(metrics.startedAt)
-        let partialAgeText: String
-        if let lastPartialAt = metrics.lastPartialAt {
-            partialAgeText = String(format: "%.2fs", Date().timeIntervalSince(lastPartialAt))
-        } else {
-            partialAgeText = "n/a"
-        }
-
-        Log.info(
-            "[\(engineName)] streaming summary: buffers=\(metrics.receivedBufferCount) " +
-            "\(unitLabel)=\(metrics.capturedUnitCount) partials=\(metrics.partialUpdateCount) " +
-            "elapsed=\(String(format: "%.2fs", elapsed)) lastPartialAgo=\(partialAgeText)"
-        )
-
-        if !metrics.hasCapturedAudio {
-            Log.error("[\(engineName)] streaming session captured 0 \(unitLabel)")
-        }
-
-        let trimmedPreview = livePreviewText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard audioURL != nil else {
-            Log.info("[\(engineName)] no recorded audio file available, using live preview fallback")
-            return trimmedPreview
-        }
-
-        let finalText = try await transcribeFromFile()
-        if finalText.isEmpty, !trimmedPreview.isEmpty {
-            Log.info("[\(engineName)] recorded-audio transcription was empty, falling back to live preview")
-            return trimmedPreview
-        }
-        return finalText
-    }
-}
-
-final class StreamingPreviewAccumulator {
+package final class StreamingPreviewAccumulator {
     private static let minimumMeaningfulOverlap = 2
     private static let minimumLatinFuzzyOverlap = 4, minimumLatinContinuationOverlap = 3
 
-    private(set) var previewText = ""
+    package init() {}
+
+    package private(set) var previewText = ""
     private var latestWindow = ""
 
-    func merge(_ rawText: String) -> String {
+    package func merge(_ rawText: String) -> String {
         let windowText = Self.normalize(rawText)
         guard !windowText.isEmpty else { return previewText }
         defer { latestWindow = windowText }
@@ -137,7 +41,7 @@ final class StreamingPreviewAccumulator {
         return previewText
     }
 
-    static func merge(existing: String, incoming: String) -> String {
+    package static func merge(existing: String, incoming: String) -> String {
         let current = normalize(existing)
         let next = normalize(incoming)
 

@@ -4,8 +4,8 @@ import Foundation
 /// recording. Latin scripts need a separating space; CJK scripts must not get
 /// one. When the language is auto-detected (`nil`), fall back to inspecting the
 /// boundary characters so CJK output still joins without spaces.
-enum TranscriptSegmentJoiner {
-    static func joined(_ segments: [String], language: String?) -> String {
+package enum TranscriptSegmentJoiner {
+    package static func joined(_ segments: [String], language: String?) -> String {
         let cleaned = segments
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
@@ -18,7 +18,7 @@ enum TranscriptSegmentJoiner {
         return result
     }
 
-    static func separator(previous: String, next: String, language: String?) -> String {
+    package static func separator(previous: String, next: String, language: String?) -> String {
         if let language, !language.isEmpty {
             return usesNoSpaceScript(language) ? "" : " "
         }

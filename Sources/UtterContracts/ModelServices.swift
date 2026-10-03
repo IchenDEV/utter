@@ -9,6 +9,17 @@ package enum ModelResourceError: Error, Equatable {
     case closed
 }
 
+package protocol ModelFilesService: Sendable {
+    func installedTextModelURL(_ id: String) -> URL?
+    func installedSpeechModelURL(_ id: String) -> URL?
+    func speechRequiredFiles(_ id: String) -> [String]
+    func textModelIsComplete(at url: URL) -> Bool
+    func installedWhisperURL(_ id: String) -> URL?
+    func whisperVariantURL(_ id: String) -> URL
+    func whisperModelIsComplete(at url: URL) -> Bool
+}
+
 package enum ModelServices {
     package static let resourceAccess = ServiceKey<any ModelResourceAccess>("models.resource-access")
+    package static let files = ServiceKey<any ModelFilesService>("models.files")
 }

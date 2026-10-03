@@ -1,19 +1,17 @@
+import UtterContracts
 import Foundation
 import Hub
 import MLXLMCommon
 import Tokenizers
 
-enum MLXModelLoading {
-    static let downloader: any MLXLMCommon.Downloader = HubDownloader(
-        hubApi: HubApi(downloadBase: ModelStorage.huggingFaceBase)
-    )
-    static let tokenizerLoader: any MLXLMCommon.TokenizerLoader = TransformersTokenizerLoader()
+package enum MLXModelLoading {
+    package static let tokenizerLoader: any MLXLMCommon.TokenizerLoader = TransformersTokenizerLoader()
 
-    static func downloader(for staging: ModelDownloadStaging) -> any MLXLMCommon.Downloader {
+    package static func downloader(downloadBase: URL, cache: HubCache) -> any MLXLMCommon.Downloader {
         HubDownloader(
             hubApi: HubApi(
-                downloadBase: staging.downloadBase,
-                cache: staging.hubCache
+                downloadBase: downloadBase,
+                cache: cache
             )
         )
     }

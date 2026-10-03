@@ -15,6 +15,7 @@ package protocol SpeechEngine: AnyObject {
     func finishListening(audioURL: URL?, language: String?) async throws -> String
     func cancelListening()
     func transcribe(audioURL: URL?, language: String?) async throws -> String
+    func shutdown() async
 }
 
 extension SpeechEngine {
@@ -42,4 +43,5 @@ extension SpeechEngine {
     }
 
     package func cancelListening() {}
+    package func shutdown() async { cancelListening() }
 }

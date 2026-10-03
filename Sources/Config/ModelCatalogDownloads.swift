@@ -1,3 +1,4 @@
+import UtterMLX
 import UtterContracts
 import Foundation
 import MLXLLM
@@ -233,7 +234,7 @@ extension ModelCatalog {
             )
             _ = try await MLXLMCommon.resolve(
                 configuration: ModelConfiguration(id: id),
-                from: MLXModelLoading.downloader(for: staging),
+                from: MLXModelLoading.downloader(downloadBase: staging.downloadBase, cache: staging.hubCache),
                 useLatest: false
             ) { [weak self] progress in
                 Task { @MainActor in

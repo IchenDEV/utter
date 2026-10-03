@@ -2,7 +2,7 @@ import AVFoundation
 import Foundation
 
 extension AVAudioPCMBuffer {
-    func copied() -> AVAudioPCMBuffer? {
+    package func copied() -> AVAudioPCMBuffer? {
         guard let copy = AVAudioPCMBuffer(
             pcmFormat: format,
             frameCapacity: frameCapacity
@@ -45,19 +45,20 @@ extension AVAudioPCMBuffer {
     }
 }
 
-struct StreamingAudioChunk {
-    let samples: [Float]
+package struct StreamingAudioChunk {
+    package let samples: [Float]
+    package init(samples: [Float]) { self.samples = samples }
 
-    var sampleCount: Int { samples.count }
-    var pcm16Data: Data { RealtimeAudioConverter.pcm16Data(from: samples) }
+    package var sampleCount: Int { samples.count }
+    package var pcm16Data: Data { RealtimeAudioConverter.pcm16Data(from: samples) }
 }
 
-final class RealtimeAudioConverter {
+package final class RealtimeAudioConverter {
     private let inputFormat: AVAudioFormat
     private let outputFormat: AVAudioFormat
     private let converter: AVAudioConverter
 
-    init?(
+    package init?(
         inputFormat: AVAudioFormat,
         outputCommonFormat: AVAudioCommonFormat,
         sampleRate: Double = 16_000,
@@ -80,21 +81,21 @@ final class RealtimeAudioConverter {
         self.converter = converter
     }
 
-    func convertToPCMData(_ buffer: AVAudioPCMBuffer) throws -> Data {
+    package func convertToPCMData(_ buffer: AVAudioPCMBuffer) throws -> Data {
         let converted = try convertBuffer(buffer)
         guard let data = converted.int16ChannelData else { return Data() }
         let byteCount = Int(converted.frameLength) * MemoryLayout<Int16>.size
         return Data(bytes: data[0], count: byteCount)
     }
 
-    func convertToFloatArray(_ buffer: AVAudioPCMBuffer) throws -> [Float] {
+    package func convertToFloatArray(_ buffer: AVAudioPCMBuffer) throws -> [Float] {
         let converted = try convertBuffer(buffer)
         guard let data = converted.floatChannelData else { return [] }
         let count = Int(converted.frameLength)
         return Array(UnsafeBufferPointer(start: data[0], count: count))
     }
 
-    func convertBuffer(_ buffer: AVAudioPCMBuffer) throws -> AVAudioPCMBuffer {
+    package func convertBuffer(_ buffer: AVAudioPCMBuffer) throws -> AVAudioPCMBuffer {
         let ratio = outputFormat.sampleRate / buffer.format.sampleRate
         let frameCapacity = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 256
         guard let outputBuffer = AVAudioPCMBuffer(
@@ -125,7 +126,7 @@ final class RealtimeAudioConverter {
         return outputBuffer
     }
 
-    static func pcm16Data(from samples: [Float]) -> Data {
+    package static func pcm16Data(from samples: [Float]) -> Data {
         guard !samples.isEmpty else { return Data() }
 
         var values: [Int16] = []
@@ -140,10 +141,10 @@ final class RealtimeAudioConverter {
     }
 }
 
-final class StreamingAudioNormalizer {
+package final class StreamingAudioNormalizer {
     private let floatConverter: RealtimeAudioConverter
 
-    init?(inputFormat: AVAudioFormat) {
+    package init?(inputFormat: AVAudioFormat) {
         guard let floatConverter = RealtimeAudioConverter(
             inputFormat: inputFormat,
             outputCommonFormat: .pcmFormatFloat32,
@@ -155,7 +156,7 @@ final class StreamingAudioNormalizer {
         self.floatConverter = floatConverter
     }
 
-    func convert(_ buffer: AVAudioPCMBuffer) throws -> StreamingAudioChunk {
+    package func convert(_ buffer: AVAudioPCMBuffer) throws -> StreamingAudioChunk {
         let converted = try floatConverter.convertBuffer(buffer)
         guard let data = converted.floatChannelData else {
             return StreamingAudioChunk(samples: [])
@@ -167,7 +168,7 @@ final class StreamingAudioNormalizer {
     }
 }
 
-enum AudioConversionError: LocalizedError {
+package enum AudioConversionError: LocalizedError {
     case converterCreationFailed
     case outputBufferCreationFailed
     case conversionFailed

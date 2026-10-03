@@ -1,7 +1,7 @@
 import Foundation
 
-enum WhisperModelSelection {
-    static func resolve(
+package enum WhisperModelSelection {
+    package static func resolve(
         requested: String,
         available: [String],
         fallback: String
@@ -24,12 +24,12 @@ enum WhisperModelSelection {
         return available.first ?? fallback
     }
 
-    static func matches(_ modelID: String, variant: String) -> Bool {
+    package static func matches(_ modelID: String, variant: String) -> Bool {
         let requested = canonicalVariant(variant)
         return !requested.isEmpty && canonicalVariant(modelID) == requested
     }
 
-    static func canonicalVariant(_ value: String) -> String {
+    package static func canonicalVariant(_ value: String) -> String {
         var result = value.lowercased()
         if let slash = result.lastIndex(of: "/") {
             result = String(result[result.index(after: slash)...])

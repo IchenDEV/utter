@@ -1,7 +1,7 @@
 import Foundation
 
-enum ANELMTokenizerValidation {
-    static func samplerVocabularySize(
+package enum ANELMTokenizerValidation {
+    package static func samplerVocabularySize(
         tokenizer: [String: Any],
         tokenizerConfig: [String: Any],
         modelVocabularySize: Int

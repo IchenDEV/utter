@@ -1,14 +1,14 @@
 import UtterContracts
 import Foundation
 
-enum WhisperError: LocalizedError {
+package enum WhisperError: LocalizedError {
     case modelNotLoaded(String)
     case noAudioFile
     case downloadFailed(String)
     case compileFailed(String)
     case loadFailed(String)
 
-    var errorDescription: String? {
+    package var errorDescription: String? {
         switch self {
         case .modelNotLoaded(let detail):
             return String(format: L("error.whisper_not_loaded"), detail)

@@ -16,8 +16,8 @@ private func aneLMTokenCallback(_ token: Int32, _ context: UnsafeMutableRawPoint
     return 1
 }
 
-actor EspressoLLMEngine {
-    static let maximumContextTokens = 2_048
+package actor EspressoLLMEngine {
+    package static let maximumContextTokens = 2_048
 
     private final class LoadedModel {
         let path: String
@@ -42,18 +42,29 @@ actor EspressoLLMEngine {
         }
     }
 
+    private let files: any ModelFilesService
+    private var closed = false
+    private let log: Log
+
+    package init(files: any ModelFilesService, log: Log) {
+        self.files = files
+        self.log = log
+    }
+
     private var model: LoadedModel?
     private var lastFailureMessage: String?
 
-    func loadModel(path: String) async throws {
+    package func loadModel(path: String) async throws {
+        try Task.checkCancellation()
+        guard !closed else { throw GenerationServiceError.unsupportedOperation }
         let expandedPath = NSString(string: path).expandingTildeInPath
         let url = URL(fileURLWithPath: expandedPath, isDirectory: true).standardizedFileURL
         lastFailureMessage = nil
         guard model?.path != url.path else { return }
 
-        Log.info("[ANELMEngine] loading Qwen3 model: \(url.lastPathComponent)")
+        log.info("[ANELMEngine] loading Qwen3 model: \(url.lastPathComponent)")
         do {
-            let validated = try await Self.makeValidatedTokenizer(at: url)
+            let validated = try await Self.makeValidatedTokenizer(at: url, files: files, log: log)
             model = nil
             var nativeError: UnsafeMutablePointer<CChar>?
             let runtime = url.path.withCString { ane_lm_create($0, &nativeError) }
@@ -70,7 +81,7 @@ actor EspressoLLMEngine {
                 tokenizer: validated.tokenizer,
                 samplerVocabularySize: validated.samplerVocabularySize
             )
-            Log.info("[ANELMEngine] Qwen3 model ready for ANE inference")
+            log.info("[ANELMEngine] Qwen3 model ready for ANE inference")
         } catch is CancellationError {
             throw CancellationError()
         } catch {
@@ -78,12 +89,14 @@ actor EspressoLLMEngine {
         }
     }
 
-    func generate(
+    package func generate(
         prompt: String,
         systemPrompt: String,
         maxTokens: Int,
         temperature: Double
     ) throws -> String {
+        try Task.checkCancellation()
+        guard !closed else { throw GenerationServiceError.unsupportedOperation }
         guard let model else { throw EspressoLLMError.modelNotLoaded }
         lastFailureMessage = nil
 
@@ -145,30 +158,35 @@ actor EspressoLLMEngine {
         )
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         let speed = elapsed > 0 ? Double(context.tokens.count) / elapsed : 0
-        Log.info(
+        log.info(
             "[ANELMEngine] generated \(context.tokens.count) tokens on ANE in "
                 + "\(String(format: "%.1f", elapsed))s (\(String(format: "%.1f", speed)) tok/s)"
         )
         return output
     }
 
-    var isLoaded: Bool { model != nil }
+    package var isLoaded: Bool { model != nil }
 
-    func unload() {
+    package func close() {
+        closed = true
+        unload()
+    }
+
+    package func unload() {
         model = nil
         lastFailureMessage = nil
     }
 
-    func consumeLastFailureMessage() -> String? {
+    package func consumeLastFailureMessage() -> String? {
         defer { lastFailureMessage = nil }
         return lastFailureMessage
     }
 
-    static func validateModelDirectory(at url: URL) async throws {
-        _ = try await makeValidatedTokenizer(at: url)
+    package static func validateModelDirectory(at url: URL, files: any ModelFilesService, log: Log) async throws {
+        _ = try await makeValidatedTokenizer(at: url, files: files, log: log)
     }
 
-    static func requestFitsContextWindow(
+    package static func requestFitsContextWindow(
         promptTokenCount: Int,
         maxTokens: Int
     ) -> Bool {
@@ -183,8 +201,8 @@ actor EspressoLLMEngine {
         let samplerVocabularySize: Int
     }
 
-    private static func makeValidatedTokenizer(at url: URL) async throws -> ValidatedTokenizer {
-        guard ModelStorage.llmRepoIsComplete(at: url) else {
+    private static func makeValidatedTokenizer(at url: URL, files: any ModelFilesService, log: Log) async throws -> ValidatedTokenizer {
+        guard files.textModelIsComplete(at: url) else {
             throw EspressoLLMError.invalidModelDirectory
         }
         let configURL = url.appendingPathComponent("config.json")
@@ -217,7 +235,7 @@ actor EspressoLLMEngine {
         let status = url.path.withCString { ane_lm_validate_model($0, &nativeError) }
         guard status == ANE_LM_STATUS_OK else {
             let detail = consumeNativeError(&nativeError)
-            Log.sensitive("[ANELMEngine] rejected model directory: \(detail)")
+            log.sensitive("[ANELMEngine] rejected model directory: \(detail)")
             throw EspressoLLMError.invalidModelDirectory
         }
         do {
@@ -227,12 +245,12 @@ actor EspressoLLMEngine {
                 samplerVocabularySize: samplerVocabularySize
             )
         } catch {
-            Log.sensitive("[ANELMEngine] rejected tokenizer: \(error.localizedDescription)")
+            log.sensitive("[ANELMEngine] rejected tokenizer: \(error.localizedDescription)")
             throw EspressoLLMError.invalidModelDirectory
         }
     }
 
-    static func formatPrompt(user: String, system: String, modelName: String) -> String {
+    package static func formatPrompt(user: String, system: String, modelName: String) -> String {
         let normalizedModelName = modelName.lowercased()
         if normalizedModelName.contains("qwen") {
             let assistantPrefix = normalizedModelName.contains("qwen3")
@@ -256,8 +274,8 @@ actor EspressoLLMEngine {
 
     private func recordFailure(_ error: Error) -> EspressoLLMError {
         let mapped = error as? EspressoLLMError ?? .runtimeFailure
-        Log.sensitive("[ANELMEngine] runtime detail: \(error.localizedDescription)")
-        Log.error("[ANELMEngine] \(mapped.localizedDescription)")
+        log.sensitive("[ANELMEngine] runtime detail: \(error.localizedDescription)")
+        log.error("[ANELMEngine] \(mapped.localizedDescription)")
         lastFailureMessage = mapped.localizedDescription
         return mapped
     }
@@ -271,22 +289,4 @@ private struct ANELMNativeError: LocalizedError {
     }
 
     var errorDescription: String? { message }
-}
-
-enum EspressoLLMError: LocalizedError {
-    case modelNotLoaded
-    case aneBackendUnavailable
-    case invalidModelDirectory
-    case unsupportedModel
-    case runtimeFailure
-
-    var errorDescription: String? {
-        switch self {
-        case .modelNotLoaded: return L("error.espresso_not_loaded")
-        case .aneBackendUnavailable: return L("error.espresso_ane_unavailable")
-        case .invalidModelDirectory: return L("error.espresso_invalid_model")
-        case .unsupportedModel: return L("error.espresso_unsupported_model")
-        case .runtimeFailure: return L("error.espresso_runtime_failed")
-        }
-    }
 }

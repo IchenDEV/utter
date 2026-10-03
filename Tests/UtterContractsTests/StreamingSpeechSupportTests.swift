@@ -1,9 +1,22 @@
-import UtterContracts
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterContracts
 
 final class StreamingSpeechSupportTests: XCTestCase {
+    func testCancelledFinalTranscriptionCannotReturnPreviewFallback() async throws {
+        let task = Task {
+            try await StreamingTranscriptResolver.resolveFinalTranscript(
+                engineName: "fixture", audioURL: URL(fileURLWithPath: "/fixture.wav"),
+                livePreviewText: "stale preview", metrics: StreamingSessionMetrics(), unitLabel: "samples"
+            ) {
+                withUnsafeCurrentTask { $0?.cancel() }
+                return ""
+            }
+        }
+        do { _ = try await task.value; XCTFail("Cancellation must not publish a preview") }
+        catch is CancellationError { }
+    }
+
     func testPartialUpdateSchedulerKeepsExistingTimerWhenBuffersContinueArriving() {
         var scheduler = StreamingPartialUpdateScheduler()
 

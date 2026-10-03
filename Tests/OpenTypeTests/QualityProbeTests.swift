@@ -1,4 +1,5 @@
 import XCTest
+import UtterContracts
 @testable import OpenType
 
 /// End-to-end regression cases distilled from previously observed failures.
