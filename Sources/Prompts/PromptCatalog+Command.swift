@@ -1,3 +1,4 @@
+import UtterContracts
 extension PromptCatalog {
     static func commandUserPrompt(text: String, inputLanguage: InputLanguage) -> String {
         switch inputLanguage {

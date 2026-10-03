@@ -1,3 +1,4 @@
+import UtterContracts
 import XCTest
 import MLX
 @testable import OpenType

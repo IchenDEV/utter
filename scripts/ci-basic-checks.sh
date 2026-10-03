@@ -19,6 +19,8 @@ step() {
 
 step "Checking Package.swift"
 swift package describe >/dev/null
+python3 scripts/check-module-boundaries.py
+python3 scripts/tests/test_module_boundaries.py
 
 step "Checking SDLC artifacts and harness regression tests"
 bash scripts/sdlc-checks.sh
@@ -30,8 +32,8 @@ bash scripts/tests/test_release_workflow_contract.sh
 step "Linting property lists and localized strings"
 plutil -lint Resources/Info.plist
 plutil -lint Resources/OpenType.entitlements
-plutil -lint Sources/Resources/en.lproj/Localizable.strings
-plutil -lint Sources/Resources/zh-Hans.lproj/Localizable.strings
+plutil -lint Sources/UtterContracts/Resources/en.lproj/Localizable.strings
+plutil -lint Sources/UtterContracts/Resources/zh-Hans.lproj/Localizable.strings
 
 step "Checking brand and compatibility identifiers"
 test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' Resources/Info.plist)" = "Utter" \
@@ -48,10 +50,10 @@ en_keys="$(mktemp)"
 zh_keys="$(mktemp)"
 trap 'rm -f "$en_keys" "$zh_keys"' EXIT
 
-grep -E '^"[^"]+"\s*=' Sources/Resources/en.lproj/Localizable.strings \
+grep -E '^"[^"]+"\s*=' Sources/UtterContracts/Resources/en.lproj/Localizable.strings \
     | sed -E 's/^"([^"]+)".*/\1/' \
     | sort >"$en_keys"
-grep -E '^"[^"]+"\s*=' Sources/Resources/zh-Hans.lproj/Localizable.strings \
+grep -E '^"[^"]+"\s*=' Sources/UtterContracts/Resources/zh-Hans.lproj/Localizable.strings \
     | sed -E 's/^"([^"]+)".*/\1/' \
     | sort >"$zh_keys"
 

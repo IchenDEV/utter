@@ -1,3 +1,5 @@
+import UtterData
+import UtterContracts
 import XCTest
 @testable import OpenType
 
@@ -18,7 +20,7 @@ final class IndustryLexiconTests: XCTestCase {
     }
 
     func testImportedPacksHaveLicensedTermsWithoutAutomaticRewrites() throws {
-        let license = try XCTUnwrap(AppResources.bundle.url(forResource: "THUOCL-LICENSE", withExtension: "txt"))
+        let license = try XCTUnwrap(DataResources.bundle.url(forResource: "THUOCL-LICENSE", withExtension: "txt"))
         XCTAssertTrue(try String(contentsOf: license).contains("Copyright (c) 2018 THUNLP"))
         for pack in catalog.packs {
             XCTAssertEqual(pack.terms.count, 2030)

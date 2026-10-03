@@ -81,6 +81,7 @@ verify_app() {
     local helper="$app/Contents/MacOS/opentype-cli"
     local resources="$app/Contents/Resources"
     local product_resources="$resources/OpenType_OpenType.bundle/Contents/Resources"
+    local localization_resources="$resources/OpenType_UtterContracts.bundle/Contents/Resources"
 
     [ -f "$plist" ] || fail "missing Info.plist in $app"
     [ -x "$executable" ] || fail "missing executable in $app"
@@ -88,9 +89,9 @@ verify_app() {
     [ -s "$resources/Assets.car" ] || fail "missing compiled AppIcon asset catalog in $app"
     find "$resources" -name default.metallib -type f -size +0 -print -quit | grep -q . \
         || fail "missing compiled MLX Metal library in $app"
-    [ -s "$product_resources/en.lproj/Localizable.strings" ] \
+    [ -s "$localization_resources/en.lproj/Localizable.strings" ] \
         || fail "missing English localization in $app"
-    [ -s "$product_resources/zh-Hans.lproj/Localizable.strings" ] \
+    [ -s "$localization_resources/zh-Hans.lproj/Localizable.strings" ] \
         || fail "missing Simplified Chinese localization in $app"
     [ -f "$product_resources/Sounds/start.caf" ] || fail "missing start sound in $app"
     [ -f "$product_resources/Sounds/stop.caf" ] || fail "missing stop sound in $app"

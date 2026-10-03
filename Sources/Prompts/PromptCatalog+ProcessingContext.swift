@@ -1,3 +1,4 @@
+import UtterContracts
 extension PromptCatalog {
     static func processingContextSections(
         screenContext: String,

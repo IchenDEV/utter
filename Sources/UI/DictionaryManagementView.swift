@@ -1,3 +1,4 @@
+import UtterContracts
 import SwiftUI
 
 private enum DictionaryFilter: String, CaseIterable {

@@ -1,3 +1,4 @@
+import UtterContracts
 import CryptoKit
 import Foundation
 import XCTest

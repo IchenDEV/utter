@@ -1,3 +1,4 @@
+import UtterContracts
 import SwiftUI
 
 enum FormattingModelType: String, CaseIterable {

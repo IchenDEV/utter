@@ -1,6 +1,39 @@
 // swift-tools-version: 6.2
 import PackageDescription
 
+let portableTargets: [Target] = [
+    .target(name: "UtterRuntime", swiftSettings: [.swiftLanguageMode(.v5)]),
+    .target(
+        name: "UtterContracts",
+        dependencies: ["UtterRuntime"],
+        resources: [.process("Resources/en.lproj"), .process("Resources/zh-Hans.lproj")],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .target(
+        name: "UtterData",
+        dependencies: ["UtterRuntime", "UtterContracts"],
+        resources: [.copy("Resources/IndustryLexicons.json"), .copy("Resources/THUOCL-LICENSE.txt")],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .executableTarget(
+        name: "UtterLexiconCheck",
+        dependencies: ["UtterData", "UtterContracts"],
+        path: "scripts/tests/industry-lexicon",
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .testTarget(
+        name: "UtterContractsTests",
+        dependencies: ["UtterContracts"],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .testTarget(
+        name: "UtterRuntimeTests",
+        dependencies: ["UtterRuntime"],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+]
+
+#if os(macOS)
 let package = Package(
     name: "OpenType",
     defaultLocalization: "en",
@@ -25,6 +58,9 @@ let package = Package(
         .executableTarget(
             name: "OpenType",
             dependencies: [
+                "UtterRuntime",
+                "UtterContracts",
+                "UtterData",
                 .product(name: "WhisperKit", package: "argmax-oss-swift"),
                 .product(name: "ANELMRuntime", package: "ANE-LM"),
                 .product(name: "MLXAudioCore", package: "mlx-audio-swift"),
@@ -36,6 +72,7 @@ let package = Package(
                 .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
             ],
             path: "Sources",
+            exclude: ["UtterRuntime", "UtterContracts", "UtterData"],
             resources: [
                 .copy("Resources/AppIcon.png"),
                 .copy("Resources/AppIcon.icon"),
@@ -47,14 +84,10 @@ let package = Package(
                 .copy("Resources/SettingsStyleIllustration.png"),
                 .copy("Resources/SettingsIntegrationsIllustration.png"),
                 .copy("Resources/SettingsAboutIllustration.png"),
-                .copy("Resources/IndustryLexicons.json"),
-                .copy("Resources/THUOCL-LICENSE.txt"),
                 .copy("Resources/Sounds"),
                 .copy("Resources/AppIcon.icns"),
                 .copy("Resources/AppIconLight.icns"),
                 .copy("Resources/AppIconDark.icns"),
-                .process("Resources/en.lproj"),
-                .process("Resources/zh-Hans.lproj"),
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v5)
@@ -69,11 +102,15 @@ let package = Package(
         ),
         .testTarget(
             name: "OpenTypeTests",
-            dependencies: ["OpenType"],
+            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData"],
             path: "Tests/OpenTypeTests",
             swiftSettings: [
                 .swiftLanguageMode(.v5)
             ]
         )
-    ]
+    ] + portableTargets
 )
+#else
+// Linux tests the actual Foundation-only modules; the macOS app requires its SDK.
+let package = Package(name: "OpenType", defaultLocalization: "en", targets: portableTargets)
+#endif

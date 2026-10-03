@@ -1,3 +1,5 @@
+import UtterData
+import UtterContracts
 import SwiftUI
 
 struct IndustryLexiconView: View {

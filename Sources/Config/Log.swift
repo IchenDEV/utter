@@ -1,3 +1,4 @@
+import UtterContracts
 import os
 
 /// Centralized logging with privacy-aware output.

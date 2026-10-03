@@ -1,3 +1,4 @@
+import UtterContracts
 import AVFoundation
 import Foundation
 import WhisperKit

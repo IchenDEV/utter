@@ -1,3 +1,4 @@
+import UtterContracts
 import SwiftUI
 
 struct RemoteLLMConfigView: View {

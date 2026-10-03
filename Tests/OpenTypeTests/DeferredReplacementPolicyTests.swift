@@ -1,3 +1,4 @@
+import UtterContracts
 import AppKit
 import XCTest
 @testable import OpenType

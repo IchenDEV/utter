@@ -1,3 +1,4 @@
+import UtterContracts
 import Foundation
 
 /// Immutable choices for one utterance; settings changes apply to the next session.

@@ -1,3 +1,4 @@
+import UtterContracts
 enum PromptCatalog {
     static func baseSystemPrompt(inputLanguage: InputLanguage) -> String {
         switch inputLanguage {

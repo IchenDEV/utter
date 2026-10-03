@@ -1,3 +1,4 @@
+import UtterContracts
 import Foundation
 
 enum InputAnalyticsRange: String, CaseIterable, Identifiable {

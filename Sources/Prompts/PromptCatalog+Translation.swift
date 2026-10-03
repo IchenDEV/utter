@@ -1,3 +1,4 @@
+import UtterContracts
 extension PromptCatalog {
     static func translationSystemPrompt(
         targetLanguage: TranslationLanguage,

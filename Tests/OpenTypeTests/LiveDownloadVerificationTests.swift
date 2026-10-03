@@ -1,3 +1,4 @@
+import UtterContracts
 import XCTest
 @testable import OpenType
 import WhisperKit

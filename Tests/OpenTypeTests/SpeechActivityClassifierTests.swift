@@ -1,3 +1,4 @@
+import UtterContracts
 import AVFoundation
 import XCTest
 @testable import OpenType

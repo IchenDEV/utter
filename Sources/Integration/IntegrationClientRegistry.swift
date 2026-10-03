@@ -1,3 +1,4 @@
+import UtterContracts
 import Foundation
 
 final class IntegrationClientRegistry {

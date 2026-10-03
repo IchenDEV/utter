@@ -1,3 +1,4 @@
+import UtterContracts
 extension PromptCatalog {
     static func editCommandResolverContextPreview(
         _ context: SpokenEditCommandResolutionContext,

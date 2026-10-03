@@ -1,3 +1,4 @@
+import UtterContracts
 enum EditCommandResolverPromptCatalog {
     static let intentList = """
     formal, casual, expand, title, key_points, decisions, questions, risks, deadlines, owners, meeting_notes, reply, reply_brief, reply_formal, reply_friendly, reply_in_english, reply_in_chinese, reply_accept, reply_decline, reply_clarify, summary, concise, proofread, table, bullet_list, numbered_list, action_items, checklist, translate_to_english, translate_to_chinese
