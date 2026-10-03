@@ -1,3 +1,4 @@
+import UtterContracts
 import UtterModels
 import Foundation
 import XCTest
