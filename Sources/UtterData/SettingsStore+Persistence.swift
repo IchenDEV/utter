@@ -3,6 +3,7 @@ import UtterContracts
 
 extension SettingsStore {
     func persist(_ values: SettingsValues) {
+        defaults.set(values.hotkeyAccessibilityPrompted, forKey: Key.hotkeyAccessibilityPrompted.rawValue)
         defaults.set(values.hotkeyType.rawValue, forKey: Key.hotkeyType.rawValue)
         defaults.set(values.translationHotkeyModifier.rawValue, forKey: Key.translationHotkeyModifier.rawValue)
         defaults.set(values.activationMode.rawValue, forKey: Key.activationMode.rawValue)

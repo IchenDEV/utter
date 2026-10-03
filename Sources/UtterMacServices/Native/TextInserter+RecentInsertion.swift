@@ -10,32 +10,9 @@ struct RecentInsertionAnchor {
     let text: String
 }
 
-enum RecentInsertionGuard {
-    static func isReplacementSafe(
-        sameTarget: Bool,
-        currentSelection: NSRange?,
-        insertedRange: NSRange,
-        currentText: String?,
-        inserted: String
-    ) -> Bool {
-        guard sameTarget,
-              !inserted.isEmpty,
-              let currentSelection,
-              currentSelection.length == 0,
-              currentSelection.location == NSMaxRange(insertedRange),
-              insertedRange.length == inserted.utf16.count,
-              let currentText,
-              insertedRange.location >= 0,
-              NSMaxRange(insertedRange) <= currentText.utf16.count else {
-            return false
-        }
-        return (currentText as NSString).substring(with: insertedRange) == inserted
-    }
-}
-
 @MainActor
 extension TextInserter {
-    func replaceRecentInsertion(
+    package func replaceRecentInsertion(
         text: String,
         previouslyInserted: String,
         targetApp: NSRunningApplication? = nil
@@ -45,15 +22,16 @@ extension TextInserter {
         }
         guard selectRecentInsertion(expectedText: previouslyInserted) else {
             let reason = L("pipeline.replacement_reason_text_changed")
-            Log.info("[TextInserter] replacement skipped: insertion target changed")
+            log.info("[TextInserter] replacement skipped: insertion target changed")
             return .probablyFailed(reason: reason)
         }
+        selectionPrepared?()
 
         let pasted = await insertViaClipboard(text: text)
         guard pasted else {
             forgetRecentInsertion()
             let reason = "Could not paste replacement text"
-            Log.info("[TextInserter] replacement probably failed: \(reason)")
+            log.info("[TextInserter] replacement probably failed: \(reason)")
             return .probablyFailed(reason: reason)
         }
 
@@ -61,7 +39,7 @@ extension TextInserter {
         return .success
     }
 
-    func undoRecentInsertion(
+    package func undoRecentInsertion(
         previouslyInserted: String,
         targetApp: NSRunningApplication? = nil
     ) async -> InsertResult {
@@ -70,14 +48,15 @@ extension TextInserter {
         }
         guard selectRecentInsertion(expectedText: previouslyInserted) else {
             let reason = L("pipeline.replacement_reason_text_changed")
-            Log.info("[TextInserter] undo skipped: insertion target changed")
+            log.info("[TextInserter] undo skipped: insertion target changed")
             return .probablyFailed(reason: reason)
         }
+        selectionPrepared?()
 
         let deleted = await simulateKeyPress(keyCode: CGKeyCode(kVK_Delete), scriptKeyCode: 51)
         guard deleted else {
             let reason = "Could not delete the previous insertion"
-            Log.info("[TextInserter] undo probably failed: \(reason)")
+            log.info("[TextInserter] undo probably failed: \(reason)")
             return .probablyFailed(reason: reason)
         }
 
@@ -85,7 +64,7 @@ extension TextInserter {
         return .success
     }
 
-    func rememberRecentInsertion(text: String) {
+    package func rememberRecentInsertion(text: String) {
         guard !text.isEmpty,
               let front = NSWorkspace.shared.frontmostApplication,
               let element = focusedElementInFrontmostApplication(),
@@ -119,11 +98,11 @@ extension TextInserter {
         )
     }
 
-    func forgetRecentInsertion() {
+    package func forgetRecentInsertion() {
         recentInsertionAnchor = nil
     }
 
-    func correctionCaptureSeed(
+    package func correctionCaptureSeed(
         expectedText: String,
         context: InputContext
     ) -> CorrectionCaptureSeed? {
@@ -144,10 +123,11 @@ extension TextInserter {
             return nil
         }
         return CorrectionCaptureSeed(
-            processIdentifier: anchor.processIdentifier,
-            element: anchor.element,
+            observation: AXCorrectionObservation(
+                processIdentifier: anchor.processIdentifier, element: anchor.element,
+                locator: locator, context: context
+            ),
             insertedText: expectedText,
-            locator: locator,
             context: context
         )
     }

@@ -5,7 +5,7 @@ import UtterContracts
 
 extension InputContext {
     @MainActor
-    static func capture(
+    package static func capture(
         targetApp: NSRunningApplication?,
         screenContext: String,
         selectedTextOverride: String? = nil,

@@ -4,25 +4,27 @@ import AppKit
 import CoreGraphics
 import Carbon.HIToolbox
 
-enum InsertResult {
-    case success
-    case probablyFailed(reason: String)
-}
-
 @MainActor
-final class TextInserter {
+package final class TextInserter {
+    let log: UtterContracts.Log
+
+    package init(log: UtterContracts.Log) { self.log = log }
+
     var recentInsertionAnchor: RecentInsertionAnchor?
+    var canCommit: () -> Bool = { !Task.isCancelled }
+    var commitEffect: ((DeliveryEffect) -> Bool)?
+    var selectionPrepared: (() -> Void)?
     #if DEBUG
-    var insertOverrideForTesting: ((String) -> InsertResult)?
+    package var insertOverrideForTesting: ((String) -> InsertResult)?
     #endif
 
-    func insert(text: String, targetApp: NSRunningApplication? = nil) async -> InsertResult {
+    package func insert(text: String, targetApp: NSRunningApplication? = nil) async -> InsertResult {
         guard !Task.isCancelled else { return .probablyFailed(reason: L("error.operation_failed")) }
         #if DEBUG
         if let insertOverrideForTesting { return insertOverrideForTesting(text) }
         #endif
         guard AXIsProcessTrusted() else {
-            Log.error("[TextInserter] no AX trust")
+            log.error("[TextInserter] no AX trust")
             return .probablyFailed(reason: "Accessibility permission not granted")
         }
 
@@ -40,14 +42,14 @@ final class TextInserter {
             let reason = activated
                 ? "Paste command may not have reached the target"
                 : "Could not activate target application"
-            Log.info("[TextInserter] probably failed: \(reason)")
+            log.info("[TextInserter] probably failed: \(reason)")
             return .probablyFailed(reason: reason)
         }
         rememberRecentInsertion(text: text)
         return .success
     }
 
-    func replaceSelectedText(text: String, targetApp: NSRunningApplication? = nil) async -> InsertResult {
+    package func replaceSelectedText(text: String, targetApp: NSRunningApplication? = nil) async -> InsertResult {
         if let failure = await prepareSelectedTextOperation(
             targetApp: targetApp,
             logContext: "selection replacement"
@@ -58,7 +60,7 @@ final class TextInserter {
         let pasted = await insertViaClipboard(text: text)
         guard pasted else {
             let reason = "Could not paste replacement text"
-            Log.info("[TextInserter] selection replacement probably failed: \(reason)")
+            log.info("[TextInserter] selection replacement probably failed: \(reason)")
             return .probablyFailed(reason: reason)
         }
 
@@ -66,7 +68,7 @@ final class TextInserter {
         return .success
     }
 
-    func deleteSelectedText(targetApp: NSRunningApplication? = nil) async -> InsertResult {
+    package func deleteSelectedText(targetApp: NSRunningApplication? = nil) async -> InsertResult {
         if let failure = await prepareSelectedTextOperation(
             targetApp: targetApp,
             logContext: "selection deletion"
@@ -77,7 +79,7 @@ final class TextInserter {
         let deleted = await simulateKeyPress(keyCode: CGKeyCode(kVK_Delete), scriptKeyCode: 51)
         guard deleted else {
             let reason = "Could not delete selected text"
-            Log.info("[TextInserter] selection deletion probably failed: \(reason)")
+            log.info("[TextInserter] selection deletion probably failed: \(reason)")
             return .probablyFailed(reason: reason)
         }
 
@@ -85,9 +87,9 @@ final class TextInserter {
         return .success
     }
 
-    func selectedText(targetApp: NSRunningApplication? = nil) async -> String? {
+    package func selectedText(targetApp: NSRunningApplication? = nil) async -> String? {
         guard AXIsProcessTrusted() else {
-            Log.error("[TextInserter] no AX trust")
+            log.error("[TextInserter] no AX trust")
             return nil
         }
 
@@ -128,7 +130,7 @@ final class TextInserter {
         return selectedValue as? String
     }
 
-    func focusedElementInFrontmostApplication() -> AXUIElement? {
+    package func focusedElementInFrontmostApplication() -> AXUIElement? {
         guard let front = NSWorkspace.shared.frontmostApplication else { return nil }
         let appElement = AXUIElementCreateApplication(front.processIdentifier)
 
@@ -153,19 +155,19 @@ final class TextInserter {
 
         guard selectedTextInFrontmostApplication()?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
             let reason = L("pipeline.no_selected_text_to_replace")
-            Log.info("[TextInserter] \(logContext) probably failed: \(reason)")
+            log.info("[TextInserter] \(logContext) probably failed: \(reason)")
             return .probablyFailed(reason: reason)
         }
 
         return nil
     }
 
-    func prepareTargetOperation(
+    package func prepareTargetOperation(
         targetApp: NSRunningApplication?,
         logContext: String
     ) async -> InsertResult? {
         guard AXIsProcessTrusted() else {
-            Log.error("[TextInserter] no AX trust")
+            log.error("[TextInserter] no AX trust")
             return .probablyFailed(reason: "Accessibility permission not granted")
         }
 
@@ -177,7 +179,7 @@ final class TextInserter {
         let activated = targetPID == nil || front?.processIdentifier == targetPID
         guard activated else {
             let reason = "Could not activate target application"
-            Log.info("[TextInserter] \(logContext) probably failed: \(reason)")
+            log.info("[TextInserter] \(logContext) probably failed: \(reason)")
             return .probablyFailed(reason: reason)
         }
 
@@ -187,12 +189,12 @@ final class TextInserter {
     // MARK: - Clipboard + Cmd+V
 
     /// Returns true if at least one paste method was executed without errors.
-    func insertViaClipboard(
+    package func insertViaClipboard(
         text: String,
         pasteboard: NSPasteboard = .general,
         paste: (() async -> Bool)? = nil
     ) async -> Bool {
-        guard !Task.isCancelled else { return false }
+        guard !Task.isCancelled, canCommit() else { return false }
         let previousItems = (pasteboard.pasteboardItems ?? []).map { item in
             let copy = NSPasteboardItem()
             for type in item.types {
@@ -213,7 +215,7 @@ final class TextInserter {
 
         try? await Task.sleep(nanoseconds: 50_000_000)
 
-        guard !Task.isCancelled else { return false }
+        guard !Task.isCancelled, canCommit() else { return false }
         let pasteOK: Bool
         if let paste {
             pasteOK = await paste()
@@ -230,13 +232,13 @@ final class TextInserter {
 
     private func performPaste() async -> Bool {
         if await simulatePaste() { return true }
-        guard !Task.isCancelled else { return false }
-        Log.info("[TextInserter] CGEvent failed, trying AppleScript")
+        guard !Task.isCancelled, canCommit() else { return false }
+        log.info("[TextInserter] CGEvent failed, trying AppleScript")
         return pasteViaAppleScript()
     }
 
     /// Place text on the clipboard so the user can manually Cmd+V.
-    static func copyToClipboard(_ text: String) {
+    package static func copyToClipboard(_ text: String) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
     }

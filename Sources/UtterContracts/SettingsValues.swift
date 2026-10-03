@@ -18,6 +18,7 @@ package struct SettingsValues: Equatable, Sendable {
             }
         }
     }
+    package var hotkeyAccessibilityPrompted = false
     package var activationMode: ActivationMode = .longPress
     package var tapInterval: Double = 0.4
     package var speechEngine: SpeechEngineType = .apple

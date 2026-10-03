@@ -1,14 +1,14 @@
 import Foundation
 
-struct CorrectionCaptureRegionLocator: Equatable, Sendable {
+package struct CorrectionCaptureRegionLocator: Equatable, Sendable {
     private static let anchorLength = 48
-    let originalRange: NSRange
-    let baselineDocumentLength: Int
-    let trailingDocumentLength: Int
-    let prefixAnchor: String
-    let suffixAnchor: String
+    package let originalRange: NSRange
+    package let baselineDocumentLength: Int
+    package let trailingDocumentLength: Int
+    package let prefixAnchor: String
+    package let suffixAnchor: String
 
-    init?(documentText: String, insertedRange: NSRange) {
+    package init?(documentText: String, insertedRange: NSRange) {
         let document = documentText as NSString
         guard insertedRange.location >= 0,
               insertedRange.length > 0,
@@ -31,7 +31,7 @@ struct CorrectionCaptureRegionLocator: Equatable, Sendable {
         ))
     }
 
-    func editedText(in currentText: String) -> String? {
+    package func editedText(in currentText: String) -> String? {
         let current = currentText as NSString
         let start: Int
         if prefixAnchor.isEmpty {
@@ -72,7 +72,7 @@ struct CorrectionCaptureRegionLocator: Equatable, Sendable {
     }
 }
 private extension CorrectionCaptureRegionLocator {
-    func nearbyRange(
+    package func nearbyRange(
         of needle: String,
         in text: NSString,
         expectedLocation: Int,

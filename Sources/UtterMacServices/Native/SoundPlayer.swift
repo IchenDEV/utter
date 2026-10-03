@@ -1,20 +1,28 @@
-import UtterPresentationContracts
+import Foundation
 import AVFoundation
 import AppKit
+import UtterContracts
 
-final class SoundPlayer {
+@MainActor
+package final class SoundPlayer: SoundService {
     private var startPlayer: AVAudioPlayer?
     private var stopPlayer: AVAudioPlayer?
     private var useSystemSounds = true
     private var engine: AVAudioEngine?
     private var playerNode: AVAudioPlayerNode?
 
-    init() {
-        loadSounds()
-    }
+    private let enabled: () -> Bool
+    private var soundsLoaded = false
+    private var closed = false
 
-    func playStart() {
-        guard AppSettings.shared.playSounds else { return }
+    package init(enabled: @escaping () -> Bool) { self.enabled = enabled }
+
+    package func playStart() {
+        guard !closed, enabled() else { return }
+        if !soundsLoaded {
+            loadSounds()
+            soundsLoaded = true
+        }
         if useSystemSounds {
             playTone(frequencies: [523, 659], duration: 0.16, volume: 0.22)
         } else {
@@ -23,8 +31,12 @@ final class SoundPlayer {
         }
     }
 
-    func playStop() {
-        guard AppSettings.shared.playSounds else { return }
+    package func playStop() {
+        guard !closed, enabled() else { return }
+        if !soundsLoaded {
+            loadSounds()
+            soundsLoaded = true
+        }
         if useSystemSounds {
             playTone(frequencies: [494, 392], duration: 0.14, volume: 0.18)
         } else {
@@ -33,14 +45,26 @@ final class SoundPlayer {
         }
     }
 
+    package func close() {
+        closed = true
+        startPlayer?.stop()
+        stopPlayer?.stop()
+        playerNode?.stop()
+        engine?.stop()
+        startPlayer = nil
+        stopPlayer = nil
+        playerNode = nil
+        engine = nil
+    }
+
     private func loadSounds() {
-        if let startURL = AppResources.bundle.url(forResource: "start", withExtension: "caf", subdirectory: "Sounds"),
+        if let startURL = MacServiceResources.bundle.url(forResource: "start", withExtension: "caf", subdirectory: "Sounds"),
            let data = try? Data(contentsOf: startURL), data.count > 100 {
             startPlayer = try? AVAudioPlayer(contentsOf: startURL)
             startPlayer?.prepareToPlay()
             useSystemSounds = false
         }
-        if let stopURL = AppResources.bundle.url(forResource: "stop", withExtension: "caf", subdirectory: "Sounds"),
+        if let stopURL = MacServiceResources.bundle.url(forResource: "stop", withExtension: "caf", subdirectory: "Sounds"),
            let data = try? Data(contentsOf: stopURL), data.count > 100 {
             stopPlayer = try? AVAudioPlayer(contentsOf: stopURL)
             stopPlayer?.prepareToPlay()

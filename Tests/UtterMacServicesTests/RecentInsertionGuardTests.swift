@@ -1,5 +1,5 @@
 import XCTest
-@testable import OpenType
+@testable import UtterMacServices
 
 final class RecentInsertionGuardTests: XCTestCase {
     func testSafeWhenCaretSitsRightAfterInsertedText() {

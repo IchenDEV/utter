@@ -3,6 +3,7 @@ import UtterContracts
 
 extension SettingsStore {
     enum Key: String {
+        case hotkeyAccessibilityPrompted
         case hotkeyType, translationHotkeyModifier, activationMode, tapInterval, speechEngine, whisperModel, llmModel
         case microphoneID, remoteMicEnabled, remoteMicGainDB, outputMode, languageStyle, customStylePrompt, playSounds
         case audioGateSensitivity, audioWeakSpeechSensitivity
@@ -27,6 +28,7 @@ extension SettingsStore {
         Loc.use(loadedUILanguage)
         var values = SettingsValues()
         let loadedHotkeyType = HotkeyType(rawValue: ud.string(forKey: Key.hotkeyType.rawValue) ?? "") ?? .fn
+        values.hotkeyAccessibilityPrompted = ud.bool(forKey: Key.hotkeyAccessibilityPrompted.rawValue)
         values.hotkeyType = loadedHotkeyType
         let loadedTranslationModifier = HotkeyType(
             rawValue: ud.string(forKey: Key.translationHotkeyModifier.rawValue) ?? ""

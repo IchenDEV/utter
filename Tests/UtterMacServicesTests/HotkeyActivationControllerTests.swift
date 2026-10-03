@@ -1,15 +1,14 @@
-import UtterPresentationContracts
+import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterMacServices
 
 final class HotkeyActivationControllerTests: XCTestCase {
     func testLongPressKeepsTranslationActionThroughRelease() {
-        let (settings, cleanup) = makeHotkeySettings()
-        defer { cleanup() }
+        var settings = SettingsValues()
         settings.activationMode = .longPress
         var events: [String] = []
         let controller = HotkeyActivationController(
-            settings: settings,
+            settings: { settings },
             onStart: { events.append("start:\($0)") },
             onStop: { events.append("stop:\($0)") }
         )
@@ -21,12 +20,11 @@ final class HotkeyActivationControllerTests: XCTestCase {
     }
 
     func testToggleStopsTheActiveModeBeforeStartingAnother() {
-        let (settings, cleanup) = makeHotkeySettings()
-        defer { cleanup() }
+        var settings = SettingsValues()
         settings.activationMode = .toggle
         var events: [String] = []
         let controller = HotkeyActivationController(
-            settings: settings,
+            settings: { settings },
             onStart: { events.append("start:\($0)") },
             onStop: { events.append("stop:\($0)") }
         )
@@ -37,14 +35,4 @@ final class HotkeyActivationControllerTests: XCTestCase {
 
         XCTAssertEqual(events, ["start:translation", "stop:translation"])
     }
-}
-
-private func makeHotkeySettings() -> (AppSettings, () -> Void) {
-    let suiteName = "OpenTypeTests.Hotkey.\(UUID().uuidString)"
-    let defaults = UserDefaults(suiteName: suiteName)!
-    defaults.removePersistentDomain(forName: suiteName)
-    return (
-        AppSettings(defaults: defaults),
-        { defaults.removePersistentDomain(forName: suiteName) }
-    )
 }

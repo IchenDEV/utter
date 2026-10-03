@@ -21,6 +21,8 @@ step "Checking Package.swift"
 swift package describe >/dev/null
 python3 scripts/check-module-boundaries.py
 python3 scripts/tests/test_module_boundaries.py
+python3 scripts/check-resource-bundles.py
+python3 scripts/tests/test_resource_bundles.py
 
 step "Checking SDLC artifacts and harness regression tests"
 bash scripts/sdlc-checks.sh
@@ -65,8 +67,6 @@ step "Checking industry vocabulary"
 ./scripts/test-industry-lexicons.sh
 
 step "Checking required app resources"
-test -f Sources/Resources/Sounds/start.caf || fail "missing start sound"
-test -f Sources/Resources/Sounds/stop.caf || fail "missing stop sound"
 test -s Resources/Info.plist || fail "missing Info.plist"
 test -s Resources/OpenType.entitlements || fail "missing entitlements"
 test -s Sources/Resources/AppIconLight.png || fail "missing light app icon"

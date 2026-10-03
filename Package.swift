@@ -24,6 +24,8 @@ let audioDependencies: [Target.Dependency] = ["UtterMediaContracts"]
 let audioExclusions: [String] = []
 let remoteMicDependencies: [Target.Dependency] = ["UtterMediaContracts"]
 let remoteMicExclusions: [String] = []
+let macServiceDependencies: [Target.Dependency] = ["UtterMediaContracts"]
+let macServiceExclusions: [String] = []
 #else
 let dataExclusions = ["SystemDiagnostics.swift"]
 let modelDependencies: [Target.Dependency] = []
@@ -34,6 +36,8 @@ let audioDependencies: [Target.Dependency] = []
 let audioExclusions = ["Native"]
 let remoteMicDependencies: [Target.Dependency] = []
 let remoteMicExclusions = ["Native"]
+let macServiceDependencies: [Target.Dependency] = []
+let macServiceExclusions = ["Native"]
 let remoteDependencies: [Target.Dependency] = []
 let remoteExclusions = ["GzipCompression.swift", "VolcSpeechEngine+Audio.swift", "VolcSpeechEngine+Codec.swift", "VolcSpeechEngine+Requests.swift", "VolcSpeechEngine+Transport.swift", "VolcSpeechEngine.swift", "VolcSpeechPlugins.swift", "VolcStreamingSession.swift"]
 #endif
@@ -51,6 +55,15 @@ let portableTargets: [Target] = [
         dependencies: ["UtterRuntime", "UtterContracts"],
         exclude: dataExclusions,
         resources: [.copy("Resources/IndustryLexicons.json"), .copy("Resources/THUOCL-LICENSE.txt")],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .target(
+        name: "UtterMacServices", dependencies: ["UtterRuntime", "UtterContracts"] + macServiceDependencies,
+        exclude: macServiceExclusions, resources: [.copy("Resources/Sounds")],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .testTarget(
+        name: "UtterMacServicesTests", dependencies: ["UtterMacServices", "UtterContracts", "UtterRuntime", "UtterData"],
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .target(
@@ -206,6 +219,7 @@ let package = Package(
                 "UtterRemoteInference",
                 "UtterProcessing",
                 "UtterAudio",
+                "UtterMacServices",
                 "UtterRemoteMic",
                 "UtterAppleSpeech",
                 "UtterWhisper",
@@ -224,7 +238,7 @@ let package = Package(
                 .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
             ],
             path: "Sources",
-            exclude: ["UtterRemoteMic", "UtterAudio", "UtterProcessing", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterAppleSpeech", "UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
+            exclude: ["UtterMacServices", "UtterRemoteMic", "UtterAudio", "UtterProcessing", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterAppleSpeech", "UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
             resources: [
                 .copy("Resources/AppIcon.png"),
                 .copy("Resources/AppIcon.icon"),
@@ -236,7 +250,6 @@ let package = Package(
                 .copy("Resources/SettingsStyleIllustration.png"),
                 .copy("Resources/SettingsIntegrationsIllustration.png"),
                 .copy("Resources/SettingsAboutIllustration.png"),
-                .copy("Resources/Sounds"),
                 .copy("Resources/AppIcon.icns"),
                 .copy("Resources/AppIconLight.icns"),
                 .copy("Resources/AppIconDark.icns"),
@@ -254,7 +267,7 @@ let package = Package(
         ),
         .testTarget(
             name: "OpenTypeTests",
-            dependencies: ["OpenType", "UtterRemoteMic", "UtterAudio", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterAppleSpeech", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterProcessing", "UtterMediaContracts", "UtterPresentationContracts"],
+            dependencies: ["OpenType", "UtterMacServices", "UtterRemoteMic", "UtterAudio", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterAppleSpeech", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterProcessing", "UtterMediaContracts", "UtterPresentationContracts"],
             path: "Tests/OpenTypeTests",
             swiftSettings: [
                 .swiftLanguageMode(.v5)

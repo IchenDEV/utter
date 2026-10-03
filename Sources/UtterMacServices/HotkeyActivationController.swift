@@ -1,23 +1,19 @@
-import UtterPresentationContracts
+import UtterContracts
 import Foundation
 
-enum HotkeyAction: Equatable {
-    case dictation
-    case translation
-}
-
-final class HotkeyActivationController {
-    private let settings: AppSettings
+package final class HotkeyActivationController {
+    private let settings: () -> SettingsValues
     private let onStart: (HotkeyAction) -> Void
     private let onStop: (HotkeyAction) -> Void
 
+    private var gestureMode: ActivationMode?
     private var lastPressTime: Date = .distantPast
     private var lastTapAction: HotkeyAction?
     private var tapCount = 0
     private var activeCaptureAction: HotkeyAction?
 
-    init(
-        settings: AppSettings,
+    package init(
+        settings: @escaping () -> SettingsValues,
         onStart: @escaping (HotkeyAction) -> Void,
         onStop: @escaping (HotkeyAction) -> Void
     ) {
@@ -26,8 +22,10 @@ final class HotkeyActivationController {
         self.onStop = onStop
     }
 
-    func beginGesture(_ action: HotkeyAction) {
-        switch settings.activationMode {
+    package func beginGesture(_ action: HotkeyAction) {
+        let mode = settings().activationMode
+        gestureMode = mode
+        switch mode {
         case .longPress:
             startCapture(action)
         case .doubleTap:
@@ -37,14 +35,22 @@ final class HotkeyActivationController {
         }
     }
 
-    func endGesture(_ action: HotkeyAction) {
-        guard settings.activationMode == .longPress else { return }
+    package func endGesture(_ action: HotkeyAction) {
+        guard gestureMode == .longPress else { return }
         stopCapture(action)
+    }
+
+    package func reset() {
+        if let action = activeCaptureAction { stopCapture(action) }
+        gestureMode = nil
+        lastPressTime = .distantPast
+        lastTapAction = nil
+        tapCount = 0
     }
 
     private func registerDoubleTap(_ action: HotkeyAction) {
         let now = Date()
-        if lastTapAction == action, now.timeIntervalSince(lastPressTime) < settings.tapInterval {
+        if lastTapAction == action, now.timeIntervalSince(lastPressTime) < settings().tapInterval {
             tapCount += 1
         } else {
             tapCount = 1

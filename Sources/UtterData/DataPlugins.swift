@@ -4,6 +4,14 @@ import UtterRuntime
 
 @MainActor
 package enum DataPlugins {
+    package static func correctionClassification() -> PluginRegistration {
+        PluginRegistration(descriptor: PluginDescriptor(
+            id: "data.correction-classification", provides: [DataServices.correctionClassification.reference]
+        )) { context, _ in
+            try context.provide(DataServices.correctionClassification, value: BuiltinCorrectionClassification())
+        }
+    }
+
     package static func credentials() -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(
             id: "data.credentials", requires: [DataServices.settings.required], provides: [DataServices.credentials.reference]

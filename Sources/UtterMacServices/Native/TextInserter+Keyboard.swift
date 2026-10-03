@@ -7,13 +7,13 @@ import Foundation
 @MainActor
 extension TextInserter {
     @discardableResult
-    func simulatePaste() async -> Bool {
+    package func simulatePaste() async -> Bool {
         await simulateCommandShortcut(keyCode: CGKeyCode(kVK_ANSI_V), scriptKey: "v")
     }
 
     @discardableResult
-    func simulateCommandShortcut(keyCode: CGKeyCode, scriptKey: String) async -> Bool {
-        guard !Task.isCancelled, AXIsProcessTrusted() else { return false }
+    package func simulateCommandShortcut(keyCode: CGKeyCode, scriptKey: String) async -> Bool {
+        guard !Task.isCancelled, canCommit(), AXIsProcessTrusted() else { return false }
 
         let source = CGEventSource(stateID: .combinedSessionState)
         guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true),
@@ -21,6 +21,7 @@ extension TextInserter {
             return simulateCommandShortcutViaAppleScript(scriptKey)
         }
 
+        guard canCommit(), commitEffect?(.paste) ?? true else { return false }
         keyDown.flags = .maskCommand
         keyDown.post(tap: .cgAnnotatedSessionEventTap)
         try? await Task.sleep(nanoseconds: 12_000_000)
@@ -31,8 +32,8 @@ extension TextInserter {
     }
 
     @discardableResult
-    func simulateKeyPress(keyCode: CGKeyCode, scriptKeyCode: Int) async -> Bool {
-        guard !Task.isCancelled, AXIsProcessTrusted() else { return false }
+    package func simulateKeyPress(keyCode: CGKeyCode, scriptKeyCode: Int) async -> Bool {
+        guard !Task.isCancelled, canCommit(), AXIsProcessTrusted() else { return false }
 
         let source = CGEventSource(stateID: .combinedSessionState)
         guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true),
@@ -40,6 +41,7 @@ extension TextInserter {
             return simulateKeyPressViaAppleScript(scriptKeyCode)
         }
 
+        guard canCommit(), commitEffect?(.keyPress) ?? true else { return false }
         keyDown.post(tap: .cgAnnotatedSessionEventTap)
         try? await Task.sleep(nanoseconds: 12_000_000)
         keyUp.post(tap: .cgAnnotatedSessionEventTap)
@@ -47,7 +49,7 @@ extension TextInserter {
         return true
     }
 
-    func pasteViaAppleScript() -> Bool {
+    package func pasteViaAppleScript() -> Bool {
         simulateCommandShortcutViaAppleScript("v")
     }
 }
@@ -58,9 +60,10 @@ private extension TextInserter {
         tell application "System Events" to key code \(keyCode)
         """)
         var errInfo: NSDictionary?
-        script?.executeAndReturnError(&errInfo)
+        guard let script, canCommit(), commitEffect?(.keyPress) ?? true else { return false }
+        script.executeAndReturnError(&errInfo)
         if let errInfo {
-            Log.error("[TextInserter] AppleScript error: \(errInfo)")
+            log.error("[TextInserter] AppleScript error: \(errInfo)")
             return false
         }
         return true
@@ -71,9 +74,10 @@ private extension TextInserter {
         tell application "System Events" to keystroke "\(key)" using command down
         """)
         var errInfo: NSDictionary?
-        script?.executeAndReturnError(&errInfo)
+        guard let script, canCommit(), commitEffect?(.paste) ?? true else { return false }
+        script.executeAndReturnError(&errInfo)
         if let errInfo {
-            Log.error("[TextInserter] AppleScript error: \(errInfo)")
+            log.error("[TextInserter] AppleScript error: \(errInfo)")
             return false
         }
         return true
