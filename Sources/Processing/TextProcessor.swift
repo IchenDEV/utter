@@ -1,3 +1,4 @@
+import UtterModels
 import UtterPresentationContracts
 import UtterContracts
 import CoreGraphics
@@ -7,7 +8,6 @@ final class TextProcessor {
     static let defaultAllowsPreparedFallback = false
 
     @TaskLocal static var espressoGenerationTracker: EspressoGenerationTracker?
-    @TaskLocal static var hasLocalModelAccess = false
 
     let llm = LLMEngine()
     let benchmarkEngine = LLMEngine()

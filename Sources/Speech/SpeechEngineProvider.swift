@@ -45,7 +45,7 @@ final class SpeechEngineProvider {
         settings: AppSettings,
         requestPermission: Bool = true,
         selection requestedSelection: Selection? = nil,
-        progress: @escaping (WhisperEngine.DownloadProgress) -> Void = { _ in }
+        progress: @escaping (SpeechModelProgress) -> Void = { _ in }
     ) async -> (any SpeechEngine)? {
         let selection = requestedSelection ?? Selection(settings: settings)
         failureMessage = nil
@@ -86,7 +86,7 @@ final class SpeechEngineProvider {
 
     private func loadWhisper(
         _ modelID: String,
-        progress: @escaping (WhisperEngine.DownloadProgress) -> Void
+        progress: @escaping (SpeechModelProgress) -> Void
     ) async -> WhisperEngine? {
         let catalog = ModelCatalog.shared
         catalog.refreshStatus(recheckingErrors: true)

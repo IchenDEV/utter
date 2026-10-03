@@ -1,73 +1,13 @@
+import UtterModels
 import UtterContracts
 import Foundation
 import MLX
-
-actor LocalModelAccessGate {
-    private struct Waiter {
-        let id: UUID
-        let continuation: CheckedContinuation<Void, Error>
-    }
-
-    private var isOccupied = false
-    private var waiters: [Waiter] = []
-
-    var waitingTaskCount: Int { waiters.count }
-
-    func acquire() async throws {
-        try Task.checkCancellation()
-        guard isOccupied else {
-            isOccupied = true
-            return
-        }
-
-        let id = UUID()
-        try await withTaskCancellationHandler(operation: {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                guard !Task.isCancelled else {
-                    continuation.resume(throwing: CancellationError())
-                    return
-                }
-                waiters.append(Waiter(id: id, continuation: continuation))
-            }
-        }, onCancel: {
-            Task { await self.cancelWaiter(id: id) }
-        })
-    }
-
-    func release() {
-        guard !waiters.isEmpty else {
-            isOccupied = false
-            return
-        }
-        waiters.removeFirst().continuation.resume()
-    }
-
-    private func cancelWaiter(id: UUID) {
-        guard let index = waiters.firstIndex(where: { $0.id == id }) else { return }
-        waiters.remove(at: index).continuation.resume(throwing: CancellationError())
-    }
-}
 
 extension TextProcessor {
     func withLocalModelAccess<Value>(
         _ operation: () async throws -> Value
     ) async throws -> Value {
-        if Self.hasLocalModelAccess {
-            return try await operation()
-        }
-
-        try await localModelAccessGate.acquire()
-        do {
-            let value = try await Self.$hasLocalModelAccess.withValue(true) {
-                try Task.checkCancellation()
-                return try await operation()
-            }
-            await localModelAccessGate.release()
-            return value
-        } catch {
-            await localModelAccessGate.release()
-            throw error
-        }
+        try await localModelAccessGate.withAccess(operation)
     }
 
     static func withEspressoOutcomeTracking<Value>(
@@ -129,7 +69,7 @@ extension TextProcessor {
         }
     }
 
-    func benchmarkLLM(modelID: String) async throws -> LLMEngine.BenchmarkResult {
+    func benchmarkLLM(modelID: String) async throws -> ModelBenchmarkResult {
         try await withLocalModelAccess {
             try Task.checkCancellation()
             do {

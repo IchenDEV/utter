@@ -27,6 +27,11 @@ let portableTargets: [Target] = [
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .target(
+        name: "UtterModels",
+        dependencies: ["UtterRuntime", "UtterContracts"],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .target(
         name: "UtterSession",
         dependencies: ["UtterRuntime", "UtterContracts"],
         swiftSettings: [.swiftLanguageMode(.v5)]
@@ -50,6 +55,11 @@ let portableTargets: [Target] = [
     .testTarget(
         name: "UtterRuntimeTests",
         dependencies: ["UtterRuntime"],
+        swiftSettings: [.swiftLanguageMode(.v5)]
+    ),
+    .testTarget(
+        name: "UtterModelsTests",
+        dependencies: ["UtterModels", "UtterContracts", "UtterRuntime"],
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .testTarget(
@@ -89,6 +99,7 @@ let package = Package(
                 "UtterContracts",
                 "UtterData",
                 "UtterSession",
+                "UtterModels",
                 "UtterMediaContracts",
                 "UtterPresentationContracts",
                 .product(name: "WhisperKit", package: "argmax-oss-swift"),
@@ -102,7 +113,7 @@ let package = Package(
                 .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
             ],
             path: "Sources",
-            exclude: ["UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
+            exclude: ["UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
             resources: [
                 .copy("Resources/AppIcon.png"),
                 .copy("Resources/AppIcon.icon"),
@@ -132,7 +143,7 @@ let package = Package(
         ),
         .testTarget(
             name: "OpenTypeTests",
-            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
+            dependencies: ["OpenType", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterMediaContracts", "UtterPresentationContracts"],
             path: "Tests/OpenTypeTests",
             swiftSettings: [
                 .swiftLanguageMode(.v5)

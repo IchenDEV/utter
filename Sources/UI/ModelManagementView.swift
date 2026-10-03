@@ -11,7 +11,7 @@ struct ModelManagementView: View {
     var onUnloadWhisper: (() -> Void)?
     var onUnloadLLM: (() -> Void)?
     var onLoadLLM: (() -> Void)?
-    var onBenchmarkLLM: ((String) async throws -> LLMEngine.BenchmarkResult)?
+    var onBenchmarkLLM: ((String) async throws -> ModelBenchmarkResult)?
     var onUnloadLocalASR: (() -> Void)?
 
     @State var customLLMInput = ""

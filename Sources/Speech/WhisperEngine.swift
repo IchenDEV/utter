@@ -19,7 +19,7 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         self.modelName = modelName.isEmpty ? nil : modelName
     }
 
-    func loadModel(progress: @escaping (DownloadProgress) -> Void) async throws {
+    func loadModel(progress: @escaping (SpeechModelProgress) -> Void) async throws {
         guard !isLoading && !isReady else { return }
         isLoading = true
 
@@ -220,8 +220,8 @@ final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         return recognitionContext
     }
 
-    private func dp(_ fraction: Double, stage: DownloadProgress.Stage) -> DownloadProgress {
-        DownloadProgress(
+    private func dp(_ fraction: Double, stage: SpeechModelProgress.Stage) -> SpeechModelProgress {
+        SpeechModelProgress(
             fraction: fraction,
             completedBytes: 0,
             totalBytes: 0,

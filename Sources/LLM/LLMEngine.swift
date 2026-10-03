@@ -53,14 +53,7 @@ actor LLMEngine {
         return result
     }
 
-    struct BenchmarkResult: Sendable {
-        let loadTimeSeconds: Double
-        let generateTimeSeconds: Double
-        let outputTokenEstimate: Int
-        let tokensPerSecond: Double
-    }
-
-    func benchmark(modelID: String) async throws -> BenchmarkResult {
+    func benchmark(modelID: String) async throws -> ModelBenchmarkResult {
         let loadT0 = CFAbsoluteTimeGetCurrent()
         try await loadModel(id: modelID)
         let loadTime = CFAbsoluteTimeGetCurrent() - loadT0
@@ -96,7 +89,7 @@ actor LLMEngine {
 
         Log.info("[LLMEngine] benchmark: \(tokenCount) tokens in \(String(format: "%.1f", genTime))s = \(String(format: "%.1f", tps)) tok/s")
 
-        return BenchmarkResult(
+        return ModelBenchmarkResult(
             loadTimeSeconds: loadTime,
             generateTimeSeconds: genTime,
             outputTokenEstimate: tokenCount,
