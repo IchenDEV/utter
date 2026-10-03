@@ -1,5 +1,5 @@
 import XCTest
-@testable import OpenType
+@testable import UtterRemoteMic
 
 /// The release path must not discard the recording it is about to transcribe.
 ///
@@ -11,7 +11,7 @@ final class RemoteMicReleasePathTests: XCTestCase {
     /// A committed recording must stop, not be cancelled: cancelling nils the
     /// WAV that the pipeline is about to transcribe. This drives the production
     /// `applyRelease` wiring, not just the decision value.
-    func testCommittedRecordingIsStoppedAndNotCancelled() {
+    func testCommittedRecordingIsStoppedAndNotCancelled() async {
         let target = FakeCaptureTarget(hasActiveRecording: true, isRunning: true)
         var stopped = false
         let decision = RemoteMicReleaseDecision.applyRelease(
@@ -25,7 +25,7 @@ final class RemoteMicReleasePathTests: XCTestCase {
     }
 
     /// A start that never committed is cancelled, so nothing is recorded.
-    func testUncommittedStartIsCancelledAndPipelineNotStopped() {
+    func testUncommittedStartIsCancelledAndPipelineNotStopped() async {
         let target = FakeCaptureTarget(hasActiveRecording: false, isRunning: true)
         var stopped = false
         _ = RemoteMicReleaseDecision.applyRelease(
@@ -38,7 +38,7 @@ final class RemoteMicReleasePathTests: XCTestCase {
     }
 
     /// With no session at all, a release does nothing.
-    func testIdleReleaseDoesNothing() {
+    func testIdleReleaseDoesNothing() async {
         let target = FakeCaptureTarget(hasActiveRecording: false, isRunning: false)
         var stopped = false
         _ = RemoteMicReleaseDecision.applyRelease(
@@ -52,12 +52,12 @@ final class RemoteMicReleasePathTests: XCTestCase {
 
     /// Disabling the feature while recording must stop the pipeline, because the
     /// bridge's release callback is suppressed once the setting is off.
-    func testDisablingWhileRecordingStillStopsThePipeline() {
+    func testDisablingWhileRecordingStillStopsThePipeline() async {
         let decision = RemoteMicShutdownDecision.decide(hasActiveRecording: true)
         XCTAssertTrue(decision.shouldStopPipeline)
     }
 
-    func testDisablingWhileIdleDoesNotStop() {
+    func testDisablingWhileIdleDoesNotStop() async {
         let decision = RemoteMicShutdownDecision.decide(hasActiveRecording: false)
         XCTAssertFalse(decision.shouldStopPipeline)
     }
@@ -81,19 +81,19 @@ private final class FakeCaptureTarget: RemoteMicReleaseTarget {
 /// Idle or late audio must not enter the next session's pre-roll. This exercises
 /// the production routing rule the bridge uses, not a copy of it.
 final class RemoteMicAudioRoutingTests: XCTestCase {
-    func testIdleAudioIsDropped() {
+    func testIdleAudioIsDropped() async {
         XCTAssertEqual(RemoteMicAudioRouting.destination(for: .idle), .drop)
     }
 
-    func testStartingAudioIsPreRolled() {
+    func testStartingAudioIsPreRolled() async {
         XCTAssertEqual(RemoteMicAudioRouting.destination(for: .starting), .preRoll)
     }
 
-    func testRecordingAudioIsForwarded() {
+    func testRecordingAudioIsForwarded() async {
         XCTAssertEqual(RemoteMicAudioRouting.destination(for: .recording), .forward)
     }
 
-    func testIdleToPressToReleaseKeepsOnlyTheStartingChunk() {
+    func testIdleToPressToReleaseKeepsOnlyTheStartingChunk() async {
         var session = RemoteMicSession()
         var preRoll = RemoteMicPreRoll(frameCapacity: 4)
         var forwarded = 0

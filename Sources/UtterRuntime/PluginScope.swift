@@ -11,6 +11,7 @@ package final class PluginScope {
     package private(set) var isActive = true
     private var effects: [Effect] = []
     private var cancellations: [UUID: () -> Void] = [:]
+    private var readyActions: [() throws -> Void] = []
     private var revocations: [() -> Void] = []
 
     init(pluginID: String) { self.pluginID = pluginID }
@@ -18,6 +19,18 @@ package final class PluginScope {
     package func onDispose(_ dispose: @escaping () async throws -> Void) throws {
         guard isActive else { throw PluginRuntimeError.scopeClosed(pluginID) }
         effects.append(Effect(id: UUID(), dispose: dispose))
+    }
+
+    package func onReady(_ prepare: @escaping () throws -> Void) throws {
+        guard isActive else { throw PluginRuntimeError.scopeClosed(pluginID) }
+        readyActions.append(prepare)
+    }
+
+    func prepareIngress() throws {
+        guard isActive else { throw PluginRuntimeError.scopeClosed(pluginID) }
+        let actions = readyActions
+        readyActions.removeAll()
+        for action in actions { try action() }
     }
 
     package func onRevoke(_ revoke: @escaping () -> Void) throws {
@@ -65,6 +78,7 @@ package final class PluginScope {
     func revoke() {
         guard isActive else { return }
         isActive = false
+        readyActions.removeAll()
         for cancel in cancellations.values { cancel() }
         for revoke in revocations.reversed() { revoke() }
         revocations.removeAll()

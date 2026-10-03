@@ -6,42 +6,51 @@ import Foundation
 /// The GATT service, the control opcodes, and the IMA/DVI ADPCM sample format
 /// are open specifications; this is an independent implementation of those
 /// specifications for a single 16 kHz mono stream, not a copy of any app.
-enum RemoteMicProtocol {
-    static let serviceUUID = "AB5E0001-5A21-4F05-BC7D-AF01F617B664"
-    static let transmitUUID = "AB5E0002-5A21-4F05-BC7D-AF01F617B664"
-    static let audioUUID = "AB5E0003-5A21-4F05-BC7D-AF01F617B664"
-    static let controlUUID = "AB5E0004-5A21-4F05-BC7D-AF01F617B664"
+package enum RemoteMicProtocol {
+    package static let serviceUUID = "AB5E0001-5A21-4F05-BC7D-AF01F617B664"
+    package static let transmitUUID = "AB5E0002-5A21-4F05-BC7D-AF01F617B664"
+    package static let audioUUID = "AB5E0003-5A21-4F05-BC7D-AF01F617B664"
+    package static let controlUUID = "AB5E0004-5A21-4F05-BC7D-AF01F617B664"
 
-    static let supportedSampleRate: Double = 16_000
-    static let defaultFrameSize = 120
-    static let defaultGainDB: Double = 12
+    package static let supportedSampleRate: Double = 16_000
+    package static let defaultFrameSize = 120
+    package static let defaultGainDB: Double = 12
 
     /// Host -> remote capability request (`GET_CAPABILITIES` for ATVV v1.0).
-    static let getCapabilities = Data([0x0A, 0x01, 0x00, 0x00, 0x03, 0x03])
+    package static let getCapabilities = Data([0x0A, 0x01, 0x00, 0x00, 0x03, 0x03])
 
-    static func supportsAudio(sampleRate: Double) -> Bool {
+    package static func supportsAudio(sampleRate: Double) -> Bool {
         sampleRate == supportedSampleRate
     }
 
-    static func microphoneOpen(version: UInt16, codec: UInt8) -> Data {
+    package static func microphoneOpen(version: UInt16, codec: UInt8) -> Data {
         version >= 0x0100 ? Data([0x0C, 0x00]) : Data([0x0C, 0x00, codec])
     }
 
-    static func microphoneClose(version: UInt16, sessionID: UInt8) -> Data {
+    package static func microphoneClose(version: UInt16, sessionID: UInt8) -> Data {
         version >= 0x0100 ? Data([0x0D, sessionID]) : Data([0x0D])
     }
 }
 
 /// Remote capabilities reported by the `0x0B` control response.
-struct RemoteMicCapabilities: Equatable {
-    var version: UInt16
-    var codecs: UInt8
-    var interaction: UInt8
-    var frameSize: Int
-    var selectedCodec: UInt8
-    var sampleRate: Double
+package struct RemoteMicCapabilities: Equatable {
+    package init(version: UInt16, codecs: UInt8, interaction: UInt8, frameSize: Int, selectedCodec: UInt8, sampleRate: Double) {
+        self.version = version
+        self.codecs = codecs
+        self.interaction = interaction
+        self.frameSize = frameSize
+        self.selectedCodec = selectedCodec
+        self.sampleRate = sampleRate
+    }
 
-    static let `default` = RemoteMicCapabilities(
+    package var version: UInt16
+    package var codecs: UInt8
+    package var interaction: UInt8
+    package var frameSize: Int
+    package var selectedCodec: UInt8
+    package var sampleRate: Double
+
+    package static let `default` = RemoteMicCapabilities(
         version: 0x0100,
         codecs: 0x02,
         interaction: 0x03,
@@ -51,7 +60,7 @@ struct RemoteMicCapabilities: Equatable {
     )
 
     /// Parses the `0x0B` payload. Returns `nil` when it is not a capability frame.
-    static func parse(_ data: Data) -> RemoteMicCapabilities? {
+    package static func parse(_ data: Data) -> RemoteMicCapabilities? {
         let bytes = Array(data)
         guard bytes.count >= 7, bytes[0] == 0x0B else { return nil }
 
@@ -94,7 +103,7 @@ struct RemoteMicCapabilities: Equatable {
 /// AOSP ATVV reference firmware a PTT press sends `AUDIO_START` (0x04) directly
 /// and does not require the host to open the microphone first. The session is
 /// therefore latched on `AUDIO_START`.
-enum RemoteMicControlOpcode: UInt8 {
+package enum RemoteMicControlOpcode: UInt8 {
     case streamStop = 0x00
     case streamStart = 0x04
     case startSearch = 0x08
@@ -103,12 +112,12 @@ enum RemoteMicControlOpcode: UInt8 {
 }
 
 /// Fields carried by an ATVV v1.0 `AUDIO_START` notification.
-struct RemoteMicStreamStart: Equatable {
-    let reason: UInt8
-    let codec: UInt8
-    let streamID: UInt8
+package struct RemoteMicStreamStart: Equatable {
+    package let reason: UInt8
+    package let codec: UInt8
+    package let streamID: UInt8
 
-    static func parse(_ data: Data) -> RemoteMicStreamStart? {
+    package static func parse(_ data: Data) -> RemoteMicStreamStart? {
         let bytes = Array(data)
         guard bytes.first == RemoteMicControlOpcode.streamStart.rawValue else { return nil }
         return RemoteMicStreamStart(
@@ -122,7 +131,8 @@ struct RemoteMicStreamStart: Equatable {
 /// Stateful IMA/DVI ADPCM decoder. The remote encodes four-bit nibbles per
 /// sample; the sequence's predictor and step index persist across frames and can
 /// be reset by a sync packet.
-final class RemoteMicADPCMDecoder {
+package final class RemoteMicADPCMDecoder {
+    package init() {}
     private static let stepTable: [Int] = [
         7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31,
         34, 37, 41, 45, 50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130,
@@ -135,16 +145,16 @@ final class RemoteMicADPCMDecoder {
     ]
     private static let indexTable = [-1, -1, -1, -1, 2, 4, 6, 8]
 
-    private(set) var predictor = 0
-    private(set) var stepIndex = 0
+    package private(set) var predictor = 0
+    package private(set) var stepIndex = 0
 
-    func reset(predictor: Int = 0, stepIndex: Int = 0) {
+    package func reset(predictor: Int = 0, stepIndex: Int = 0) {
         self.predictor = min(32_767, max(-32_768, predictor))
         self.stepIndex = min(88, max(0, stepIndex))
     }
 
     /// Decodes high-nibble-first, the RC003/`MI RC` ordering.
-    func decode(_ data: Data) -> [Int16] {
+    package func decode(_ data: Data) -> [Int16] {
         var samples: [Int16] = []
         samples.reserveCapacity(data.count * 2)
         for byte in data {
@@ -170,8 +180,8 @@ final class RemoteMicADPCMDecoder {
 }
 
 /// Three-point smoothing plus a bounded gain, applied after decoding.
-enum RemoteMicPCM {
-    static func process(_ input: [Int16], gainDB: Double) -> [Int16] {
+package enum RemoteMicPCM {
+    package static func process(_ input: [Int16], gainDB: Double) -> [Int16] {
         guard !input.isEmpty else { return [] }
         var filtered = input.map(Int.init)
         if input.count >= 3 {
@@ -191,10 +201,11 @@ enum RemoteMicPCM {
 
 /// Reassembles the remote's declared fixed-size audio frames from the byte
 /// stream delivered by CoreBluetooth notifications.
-struct RemoteMicFrameAccumulator {
-    private(set) var pending = Data()
+package struct RemoteMicFrameAccumulator {
+    package init() {}
+    package private(set) var pending = Data()
 
-    mutating func append(_ data: Data, frameSize: Int) -> [Data] {
+    package mutating func append(_ data: Data, frameSize: Int) -> [Data] {
         guard frameSize > 0 else { return [] }
         pending.append(data)
         var frames: [Data] = []
@@ -205,7 +216,7 @@ struct RemoteMicFrameAccumulator {
         return frames
     }
 
-    mutating func reset() {
+    package mutating func reset() {
         pending.removeAll(keepingCapacity: false)
     }
 }

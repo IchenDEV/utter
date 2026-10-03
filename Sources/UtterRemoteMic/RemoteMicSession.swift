@@ -11,20 +11,21 @@ import Foundation
 /// - a release that arrives before the start commits cancels the pending start
 ///   instead of being ignored; and
 /// - a late start completion for a cancelled generation cannot begin recording.
-struct RemoteMicSession: Equatable {
-    enum Phase: Equatable {
+package struct RemoteMicSession: Equatable {
+    package init() {}
+    package enum Phase: Equatable {
         case idle
         case starting
         case recording
     }
 
-    private(set) var phase: Phase = .idle
+    package private(set) var phase: Phase = .idle
     /// Increments on every press so completions from an older press are stale.
-    private(set) var generation: UInt64 = 0
+    package private(set) var generation: UInt64 = 0
 
     /// A press: starts a new generation and enters `starting`.
     /// Returns the token the async start must present when it completes.
-    mutating func press() -> UInt64 {
+    package mutating func press() -> UInt64 {
         generation &+= 1
         phase = .starting
         return generation
@@ -32,7 +33,7 @@ struct RemoteMicSession: Equatable {
 
     /// Commits a pending start. Returns false when the token is stale or the
     /// session has moved on, so the caller must not begin recording.
-    mutating func commitStart(token: UInt64) -> Bool {
+    package mutating func commitStart(token: UInt64) -> Bool {
         guard phase == .starting, token == generation else { return false }
         phase = .recording
         return true
@@ -40,7 +41,7 @@ struct RemoteMicSession: Equatable {
 
     /// A release. Returns whether this generation was still live, i.e. whether
     /// the caller must stop or cancel the in-flight recording.
-    mutating func release() -> Bool {
+    package mutating func release() -> Bool {
         switch phase {
         case .idle:
             return false
@@ -52,12 +53,12 @@ struct RemoteMicSession: Equatable {
     }
 
     /// A disconnect or feature shutdown behaves like a release.
-    mutating func invalidate() -> Bool {
+    package mutating func invalidate() -> Bool {
         release()
     }
 
     /// True while the caller must still act on this generation.
-    var isLive: Bool { phase != .idle }
-    var isStarting: Bool { phase == .starting }
-    var isRecording: Bool { phase == .recording }
+    package var isLive: Bool { phase != .idle }
+    package var isStarting: Bool { phase == .starting }
+    package var isRecording: Bool { phase == .recording }
 }

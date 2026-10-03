@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterRemoteMic
 
 /// Counterexamples for the remote voice-key session lifecycle.
 final class RemoteMicSessionTests: XCTestCase {

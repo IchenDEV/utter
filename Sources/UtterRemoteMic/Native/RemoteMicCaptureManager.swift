@@ -1,4 +1,3 @@
-import UtterAudio
 import UtterMediaContracts
 import UtterContracts
 import AVFoundation
@@ -11,10 +10,11 @@ import Foundation
 /// without knowing where the samples came from. Samples arrive as 16 kHz mono
 /// Int16 and are written as 16 kHz mono Float32, which is the format every
 /// speech engine normalizes to anyway.
-final class RemoteMicCaptureManager: RemoteCaptureSource {
-    static let shared = RemoteMicCaptureManager()
+package final class RemoteMicCaptureManager: RemoteCaptureSource {
 
+    private let log: UtterContracts.Log
     private let bridge: XiaomiRemoteMicBridge
+    private let temporaryDirectory: URL
     private let format = AVAudioFormat(
         commonFormat: .pcmFormatFloat32,
         sampleRate: 16_000,
@@ -22,33 +22,37 @@ final class RemoteMicCaptureManager: RemoteCaptureSource {
         interleaved: false
     )!
 
-    private(set) var lastRecordingURL: URL?
-    private(set) var lastActivity = AudioCaptureActivity()
-    var thresholds = AudioActivityThresholds.default
+    package private(set) var lastRecordingURL: URL?
+    package private(set) var lastActivity = AudioCaptureActivity()
+    package var thresholds = AudioActivityThresholds.default
 
+    private var isClosed = false
     private var audioFile: AVAudioFile?
     private var levelCallback: ((Float) -> Void)?
     private var bufferCallback: ((AVAudioPCMBuffer) -> Void)?
-    private(set) var isRunning = false
+    package private(set) var isRunning = false
 
-    init(bridge: XiaomiRemoteMicBridge = .shared) {
+    package init(bridge: XiaomiRemoteMicBridge, log: UtterContracts.Log, temporaryDirectory: URL = FileManager.default.temporaryDirectory) {
         self.bridge = bridge
+        self.log = log
+        self.temporaryDirectory = temporaryDirectory
     }
 
-    var isAvailable: Bool { bridge.state.isReady }
-    var state: RemoteMicBridgeState { bridge.state }
+    package var isAvailable: Bool { bridge.state.isReady }
+    package var state: RemoteMicBridgeState { bridge.state }
     /// The latched voice-key session this source would commit, if any.
-    var currentSessionToken: UInt64? { bridge.currentSessionToken }
+    package var currentSessionToken: UInt64? { bridge.currentSessionToken }
 
-    func activate() {
+    package func activate() {
+        guard !isClosed else { return }
         bridge.activate()
     }
 
-    func deactivate() {
+    package func deactivate() {
         bridge.deactivate()
     }
 
-    func cleanupLastRecording() {
+    package func cleanupLastRecording() {
         guard let url = lastRecordingURL else { return }
         try? FileManager.default.removeItem(at: url)
         lastRecordingURL = nil
@@ -60,7 +64,7 @@ final class RemoteMicCaptureManager: RemoteCaptureSource {
     /// in which case the caller must not record. The preparatory work (temp file,
     /// readiness) is synchronous today, but is awaited so a future model load on
     /// this path does not change the caller's contract.
-    func startSession(token: UInt64) async -> Bool {
+    package func startSession(token: UInt64) async -> Bool {
         prepareCapture(token: token)
     }
 
@@ -70,17 +74,18 @@ final class RemoteMicCaptureManager: RemoteCaptureSource {
     /// This discards the recording, so it must only be used *before* the
     /// pipeline commits to recording — never on a normal stop, where the WAV is
     /// still needed for transcription. Use `stop()` for a committed recording.
-    func cancelSession() {
+    package func cancelSession() {
         guard isRunning || bridge.isSessionLive else { return }
         tearDownFailedStart()
     }
 
     /// True when capture has committed and a recording file exists.
-    var hasActiveRecording: Bool { isRunning && audioFile != nil }
+    package var hasActiveRecording: Bool { isRunning && audioFile != nil }
 
     /// The synchronous startup body shared by the session and direct paths.
     @discardableResult
-    func prepareCapture(token: UInt64) -> Bool {
+    package func prepareCapture(token: UInt64) -> Bool {
+        guard !isClosed, currentSessionToken == token else { return false }
         if isRunning { stop() }
         cleanupLastRecording()
         lastActivity = AudioCaptureActivity(thresholds: thresholds)
@@ -96,11 +101,12 @@ final class RemoteMicCaptureManager: RemoteCaptureSource {
     /// caller must not begin recording (and must not fall back either, because
     /// the user already let go).
     @discardableResult
-    func start(
+    package func start(
         token: UInt64,
         levelUpdate: @escaping (Float) -> Void,
         bufferUpdate: ((AVAudioPCMBuffer) -> Void)? = nil
     ) -> Bool {
+        guard !isClosed, currentSessionToken == token else { return false }
         if !bridge.state.isReady { bridge.activate() }
         guard bridge.state.isReady else { return false }
 
@@ -110,7 +116,7 @@ final class RemoteMicCaptureManager: RemoteCaptureSource {
         levelCallback = levelUpdate
         bufferCallback = bufferUpdate
 
-        let url = FileManager.default.temporaryDirectory
+        let url = temporaryDirectory
             .appendingPathComponent("opentype_remotemic_\(UUID().uuidString).wav")
         do {
             audioFile = try AVAudioFile(
@@ -120,7 +126,10 @@ final class RemoteMicCaptureManager: RemoteCaptureSource {
                 interleaved: format.isInterleaved
             )
         } catch {
-            Log.error("[RemoteMic] cannot create recording: \(error.localizedDescription)")
+            log.error("[RemoteMic] cannot create recording: \(error.localizedDescription)")
+            try? FileManager.default.removeItem(at: url)
+            levelCallback = nil
+            bufferCallback = nil
             return false
         }
         lastRecordingURL = url
@@ -149,13 +158,26 @@ final class RemoteMicCaptureManager: RemoteCaptureSource {
         bridge.onSamples = nil
         bridge.endCapture()
         audioFile = nil
-        lastRecordingURL = nil
+        cleanupLastRecording()
         levelCallback = nil
         bufferCallback = nil
         isRunning = false
     }
 
-    func stop() {
+    package func revoke() {
+        guard !isClosed else { return }
+        isClosed = true
+        levelCallback = nil
+        bufferCallback = nil
+    }
+
+    package func close() {
+        revoke()
+        stop()
+        cleanupLastRecording()
+    }
+
+    package func stop() {
         guard isRunning else { return }
         isRunning = false
         bridge.endCapture()
@@ -167,7 +189,7 @@ final class RemoteMicCaptureManager: RemoteCaptureSource {
 
     /// Mirrors `AudioCaptureManager.lastActivity` semantics: an empty session
     /// must not report meaningful audio.
-    var hasRecordedActivity: Bool { lastActivity.frameCount > 0 }
+    package var hasRecordedActivity: Bool { lastActivity.frameCount > 0 }
 
     private func ingest(_ samples: [Int16]) {
         guard isRunning, !samples.isEmpty,

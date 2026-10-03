@@ -7,24 +7,24 @@ import Foundation
 /// bounded pre-roll keeps the first moments so the opening word is not clipped,
 /// and drops the oldest data once the bound is hit so a session that never
 /// starts cannot grow without limit.
-struct RemoteMicPreRoll {
+package struct RemoteMicPreRoll {
     /// Thirty seconds of 16 kHz mono audio is under 1 MB as `Int16` samples and
     /// covers a normal cold model load without clipping the beginning.
-    static let defaultFrameCapacity = 16_000 * 30
+    package static let defaultFrameCapacity = 16_000 * 30
 
     private let frameCapacity: Int
     private var chunks: [[Int16]] = []
     private var frameCount = 0
 
-    init(frameCapacity: Int = Self.defaultFrameCapacity) {
+    package init(frameCapacity: Int = Self.defaultFrameCapacity) {
         self.frameCapacity = max(1, frameCapacity)
     }
 
-    var isEmpty: Bool { chunks.isEmpty }
-    var retainedChunks: Int { chunks.count }
-    var retainedFrames: Int { frameCount }
+    package var isEmpty: Bool { chunks.isEmpty }
+    package var retainedChunks: Int { chunks.count }
+    package var retainedFrames: Int { frameCount }
 
-    mutating func append(_ samples: [Int16]) {
+    package mutating func append(_ samples: [Int16]) {
         guard !samples.isEmpty else { return }
         chunks.append(samples)
         frameCount += samples.count
@@ -38,14 +38,14 @@ struct RemoteMicPreRoll {
     }
 
     /// Returns the retained audio in order and empties the buffer.
-    mutating func drain() -> [[Int16]] {
+    package mutating func drain() -> [[Int16]] {
         let drained = chunks
         chunks.removeAll(keepingCapacity: false)
         frameCount = 0
         return drained
     }
 
-    mutating func reset() {
+    package mutating func reset() {
         chunks.removeAll(keepingCapacity: false)
         frameCount = 0
     }
@@ -56,14 +56,14 @@ struct RemoteMicPreRoll {
 /// Extracted so the bridge's routing is the exact rule a test exercises: audio
 /// with no live session (before a press, or late after a stop) is dropped so it
 /// cannot pollute the next session's pre-roll.
-enum RemoteMicAudioRouting {
-    enum Destination: Equatable {
+package enum RemoteMicAudioRouting {
+    package enum Destination: Equatable {
         case forward
         case preRoll
         case drop
     }
 
-    static func destination(for phase: RemoteMicSession.Phase) -> Destination {
+    package static func destination(for phase: RemoteMicSession.Phase) -> Destination {
         switch phase {
         case .recording: return .forward
         case .starting: return .preRoll

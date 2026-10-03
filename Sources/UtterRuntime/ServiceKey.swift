@@ -30,6 +30,7 @@ package struct ServiceRequirement: Equatable {
 
 @MainActor
 final class ServiceStore {
+    var isReady = false
     private struct Entry {
         let owner: String
         let reference: ServiceReference

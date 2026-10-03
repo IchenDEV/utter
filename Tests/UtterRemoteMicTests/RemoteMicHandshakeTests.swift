@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterRemoteMic
 
 final class RemoteMicHandshakeTests: XCTestCase {
     func testCapabilitiesWaitForBothNotificationSubscriptions() {
@@ -110,45 +110,6 @@ final class RemoteMicHandshakeTests: XCTestCase {
         handshake.confirmSubscription(.control)
 
         XCTAssertFalse(handshake.shouldRequestCapabilities, "audio confirmation from before the reset must not count")
-    }
-}
-
-/// The wanted-state invariant behind the fallback-leak fix: a failed start must
-/// leave the bridge with nothing to adopt later.
-final class RemoteMicWantedStateTests: XCTestCase {
-    func testFailedStartLeavesNothingWanted() {
-        var state = RemoteMicWantedState()
-        // A start that wants, then fails before the stream begins.
-        state.want()
-        XCTAssertTrue(state.isActive)
-
-        XCTAssertTrue(state.reset(), "the attempted session was live")
-        XCTAssertFalse(state.isActive, "no residue may remain after a failed start")
-    }
-
-    func testReleaseReportsOnlyWhenThereWasAWant() {
-        var state = RemoteMicWantedState()
-        XCTAssertFalse(state.release(), "nothing to release before wanting")
-
-        state.want()
-        XCTAssertTrue(state.release())
-        XCTAssertFalse(state.release(), "a second release must not report again")
-    }
-
-    func testResetReportsLiveSessionOnce() {
-        var state = RemoteMicWantedState()
-        state.want()
-        state.beginStreaming()
-
-        XCTAssertTrue(state.reset())
-        XCTAssertFalse(state.isActive)
-        XCTAssertFalse(state.reset(), "already reset")
-    }
-
-    func testStreamingAloneStillCountsAsActive() {
-        var state = RemoteMicWantedState()
-        state.beginStreaming()
-        XCTAssertTrue(state.isActive, "implicit audio start without an explicit want")
     }
 }
 

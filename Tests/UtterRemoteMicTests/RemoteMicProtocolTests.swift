@@ -1,7 +1,6 @@
-import UtterPresentationContracts
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterRemoteMic
 
 final class RemoteMicProtocolTests: XCTestCase {
     func testCapabilityFrameParsesV10StereoCodec() throws {
@@ -45,25 +44,9 @@ final class RemoteMicProtocolTests: XCTestCase {
         )
     }
 
-    func testRemoteMicGainAllowsPersistedZeroDB() {
-        let suite = "RemoteMicProtocolTests.\(#function).\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suite)!
-        defer { defaults.removePersistentDomain(forName: suite) }
 
-        defaults.set(0.0, forKey: "remoteMicGainDB")
-        XCTAssertEqual(AppSettings(defaults: defaults).remoteMicGainDB, 0)
-    }
 
-    func testRemoteMicGainDefaultsOnlyWhenTheKeyIsAbsent() {
-        let suite = "RemoteMicProtocolTests.\(#function).\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: suite)!
-        defer { defaults.removePersistentDomain(forName: suite) }
 
-        XCTAssertEqual(
-            AppSettings(defaults: defaults).remoteMicGainDB,
-            RemoteMicProtocol.defaultGainDB
-        )
-    }
 
     func testADPCMDecodesHighNibbleFirst() {
         let decoder = RemoteMicADPCMDecoder()

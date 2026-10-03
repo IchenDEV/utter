@@ -14,6 +14,8 @@ package final class PluginContext {
         self.store = store
     }
 
+    package var isReady: Bool { scope.isActive && store.isReady }
+
     package var isCurrent: Bool { scope.isActive }
 
     package func require<Value>(_ key: ServiceKey<Value>) throws -> Value {

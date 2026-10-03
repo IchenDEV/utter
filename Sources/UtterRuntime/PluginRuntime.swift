@@ -53,6 +53,7 @@ package final class PluginRuntime {
         }
         if let task = shutdownTask { return try await task.value }
         guard state != .stopped else { return }
+        store.isReady = false
         state = .stopping
         for scope in scopes { scope.revoke() }
         let task = Task {
@@ -80,8 +81,15 @@ package final class PluginRuntime {
                 try Task.checkCancellation()
                 try context.checkRegistrations()
             }
+            for scope in scopes {
+                currentID = scope.pluginID
+                try Task.checkCancellation()
+                try scope.prepareIngress()
+            }
+            store.isReady = true
             state = .ready
         } catch {
+            store.isReady = false
             for scope in scopes { scope.revoke() }
             let failures = await Task { await disposeScopes() }.value
             state = .failed

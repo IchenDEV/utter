@@ -7,14 +7,14 @@ import Foundation
 /// one the tests exercise: a start whose key was released, or whose task was
 /// cancelled, must not begin recording and must not fall back to the system
 /// microphone.
-enum RemoteMicStartGuard {
+package enum RemoteMicStartGuard {
     /// - Parameters:
     ///   - remoteSessionToken: the latch the start was created for, or nil for a
     ///     local (hotkey) start that has no remote latch.
     ///   - isCancelled: whether the owning task was cancelled.
     ///   - isSessionCurrent: predicate asking the bridge whether the latch is
     ///     still live.
-    static func shouldCommit(
+    package static func shouldCommit(
         remoteSessionToken: UInt64?,
         isCancelled: Bool,
         isSessionCurrent: (UInt64) -> Bool
