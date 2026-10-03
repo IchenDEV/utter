@@ -7,22 +7,18 @@ import XCTest
 final class DeferredReplacementPolicyTests: XCTestCase {
     func testOnlyAppliesToSmartFormat() {
         XCTAssertTrue(DeferredReplacementPolicy.shouldUseDeferredReplacement(
-            historyRecordID: UUID(),
             outputMode: .processed,
             enableInstantInsert: true
         ))
         XCTAssertFalse(DeferredReplacementPolicy.shouldUseDeferredReplacement(
-            historyRecordID: UUID(),
             outputMode: .processed,
             enableInstantInsert: false
         ))
         XCTAssertFalse(DeferredReplacementPolicy.shouldUseDeferredReplacement(
-            historyRecordID: UUID(),
             outputMode: .direct,
             enableInstantInsert: true
         ))
         XCTAssertFalse(DeferredReplacementPolicy.shouldUseDeferredReplacement(
-            historyRecordID: UUID(),
             outputMode: .command,
             enableInstantInsert: true
         ))
