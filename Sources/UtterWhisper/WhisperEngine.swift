@@ -58,7 +58,7 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
             let folder = localFolder ?? files.whisperVariantURL(selectedModel)
             guard files.whisperModelIsComplete(at: folder) else {
                 isLoading = false
-                throw WhisperError.modelNotLoaded(L("model.download_required"))
+                throw UtterContracts.WhisperError.modelNotLoaded(L("model.download_required"))
             }
             log.info("[WhisperEngine] loading local model assets")
 
@@ -86,7 +86,7 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
                 try await kit.prewarmModels()
             } catch {
                 isLoading = false
-                throw WhisperError.compileFailed(error.localizedDescription)
+                throw UtterContracts.WhisperError.compileFailed(error.localizedDescription)
             }
 
             progress(dp(0.85, stage: .loading))
@@ -94,7 +94,7 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
                 try await kit.loadModels()
             } catch {
                 isLoading = false
-                throw WhisperError.loadFailed(error.localizedDescription)
+                throw UtterContracts.WhisperError.loadFailed(error.localizedDescription)
             }
 
             try Task.checkCancellation()
@@ -105,7 +105,7 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
             loadError = nil
             progress(dp(1.0, stage: .done))
             log.info("[WhisperEngine] model loaded")
-        } catch let error as WhisperError {
+        } catch let error as UtterContracts.WhisperError {
             loadError = error.localizedDescription
             isReady = false
             log.error("[WhisperEngine] \(error.localizedDescription)")
@@ -184,10 +184,10 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         try Task.checkCancellation()
         guard !closed else { throw ProviderCatalogError.closed }
         guard let whisperKit, isReady else {
-            throw WhisperError.modelNotLoaded(loadError ?? "未知原因")
+            throw UtterContracts.WhisperError.modelNotLoaded(loadError ?? "未知原因")
         }
         guard let url = audioURL else {
-            throw WhisperError.noAudioFile
+            throw UtterContracts.WhisperError.noAudioFile
         }
 
         let options = decodingOptions(language: language)
