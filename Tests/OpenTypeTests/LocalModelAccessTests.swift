@@ -1,3 +1,4 @@
+@testable import UtterModels
 import XCTest
 @testable import OpenType
 
@@ -65,7 +66,8 @@ final class LocalModelAccessTests: XCTestCase {
     }
 
     func testCancelledLocalModelWaiterDoesNotRunAfterGateOpens() async {
-        let processor = TextProcessor()
+        let gate = LocalModelAccessGate()
+        let processor = TextProcessor(access: gate)
         let recorder = EventRecorder()
         let holderStarted = expectation(description: "Gate holder started")
         let (releaseStream, releaseContinuation) = AsyncStream<Void>.makeStream()
@@ -84,10 +86,10 @@ final class LocalModelAccessTests: XCTestCase {
             }
         }
         for _ in 0..<1_000 {
-            if await processor.localModelAccessGate.waitingTaskCount == 1 { break }
+            if await gate.waitingTaskCount == 1 { break }
             await Task.yield()
         }
-        let queuedWaiters = await processor.localModelAccessGate.waitingTaskCount
+        let queuedWaiters = await gate.waitingTaskCount
         XCTAssertEqual(queuedWaiters, 1)
         waiter.cancel()
 
@@ -98,7 +100,7 @@ final class LocalModelAccessTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
-        let remainingWaiters = await processor.localModelAccessGate.waitingTaskCount
+        let remainingWaiters = await gate.waitingTaskCount
         XCTAssertEqual(remainingWaiters, 0)
 
         releaseContinuation.yield()

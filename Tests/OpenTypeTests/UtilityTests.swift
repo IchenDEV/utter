@@ -1,3 +1,4 @@
+import UtterRemoteInference
 import UtterContracts
 import Foundation
 import XCTest

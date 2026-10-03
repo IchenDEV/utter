@@ -1,3 +1,4 @@
+import UtterMediaContracts
 import AVFoundation
 import XCTest
 @testable import OpenType

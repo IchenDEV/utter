@@ -1,6 +1,5 @@
 import UtterContracts
 import UtterMediaContracts
-import UtterMediaContracts
 import AVFoundation
 import Foundation
 import WhisperKit

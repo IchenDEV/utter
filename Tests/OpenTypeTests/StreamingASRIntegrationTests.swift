@@ -1,3 +1,5 @@
+@testable import UtterWhisper
+import UtterModels
 import UtterRemoteInference
 import UtterContracts
 import AVFoundation
@@ -44,7 +46,8 @@ final class StreamingASRIntegrationTests: XCTestCase {
                     withoutTimestamps: true,
                     suppressBlank: true
                 )
-            }
+            },
+            access: LocalModelAccessGate(), log: UtterContracts.Log(service: OpenType.Log.service)
         )
 
         let feedTask = Task {

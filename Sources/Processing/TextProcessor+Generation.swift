@@ -1,3 +1,4 @@
+import UtterProcessing
 import CoreGraphics
 import Foundation
 import UtterContracts
@@ -74,47 +75,18 @@ extension TextProcessor {
         }
     }
 
+    typealias EspressoMLXFallbackError = UtterContracts.EspressoMLXFallbackError
+
     static func runEspressoWithMLXFallback<Value>(
         fallbackEnabled: Bool = true,
         espresso: () async throws -> Value,
         prepareForMLXFallback: () async -> Void = {},
         mlx: () async throws -> Value
     ) async throws -> (value: Value, usedMLX: Bool) {
-        do {
-            let value = try await espresso()
-            try Task.checkCancellation()
-            return (value, false)
-        } catch {
-            try Task.checkCancellation()
-            guard fallbackEnabled else { throw error }
-            let espressoFailure = error.localizedDescription
-            await prepareForMLXFallback()
-            try Task.checkCancellation()
-            do {
-                let value = try await mlx()
-                try Task.checkCancellation()
-                return (value, true)
-            } catch {
-                try Task.checkCancellation()
-                throw EspressoMLXFallbackError(
-                    espressoFailure: espressoFailure,
-                    mlxFailure: error.localizedDescription
-                )
-            }
-        }
-    }
-
-    struct EspressoMLXFallbackError: LocalizedError {
-        let espressoFailure: String
-        let mlxFailure: String
-
-        var errorDescription: String? {
-            L("error.espresso_mlx_fallback_unavailable")
-        }
-
-        var details: String {
-            "ANE-LM: \(espressoFailure); MLX: \(mlxFailure)"
-        }
+        try await GenerationFallback.run(
+            fallbackEnabled: fallbackEnabled, espresso: espresso,
+            prepareForMLXFallback: prepareForMLXFallback, mlx: mlx
+        )
     }
 
     func generateWithScreenImage(
