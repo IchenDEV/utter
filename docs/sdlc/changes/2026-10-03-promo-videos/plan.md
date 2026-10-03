@@ -21,6 +21,7 @@
 - [x] Punctuation pass: on-screen titles, captions, tags and end cards carry no trailing period or comma; message and dictation body text keeps full punctuation (rule in `marketing/README.md`).
 - [x] Final cuts copied to `marketing/videos/` for the push.
 - [x] Llama 4 removed from all three cuts (user decision 2026-10-03): model diagram, model wall, narration, end card; the LLM-types screenshot replaced with the real "Qwen3.5 2B 当前" row.
+- [x] Publish: final cuts moved to `docs/assets/videos/` (served by GitHub Pages); new “演示视频 / See it in action” section on the website; demo video block added to both READMEs, which were also refreshed (local model list, style presets, disk and first-download sizes, insertion method, project structure).
 - [ ] Real-device pass: run the same utterances on an Apple Silicon Mac
       (Wi-Fi off for the offline scenes) and replace illustrative outputs with
       captured ones (needs a human and a Mac).

@@ -10,7 +10,7 @@
 
 ## 成片
 
-最终成片和封面放在 `videos/`（随仓库提交）：`utter-offline-28s-zh-vo.mp4`、`utter-features-51s-zh-vo.mp4`、`utter-day-58s-zh-vo.mp4`。重新渲染后，需要把 `promo-*/dist/` 里的新成片复制到这里，再提交。
+最终成片和封面放在 `docs/assets/videos/`，官网的“演示视频”区和 README 都直接引用这里的文件：`utter-offline-28s-zh-vo.mp4`、`utter-features-51s-zh-vo.mp4`、`utter-day-58s-zh-vo.mp4`。重新渲染后，把 `promo-*/dist/` 里的新成片和封面复制到这里；如果文件名变了，要同步修改 `docs/index.html` 和两份 README。
 
 ## 渲染
 

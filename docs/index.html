@@ -34,7 +34,7 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="apple-touch-icon" href="assets/AppIconLight.png" />
   <link rel="preconnect" href="https://github.com" crossorigin />
-  <link rel="stylesheet" href="assets/styles.css?v=20260831-native" />
+  <link rel="stylesheet" href="assets/styles.css?v=20261003-videos" />
 
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Utter","applicationCategory":"UtilitiesApplication","applicationSubCategory":"Voice Input & Dictation","operatingSystem":"macOS 26+","runtimePlatform":"Apple Silicon","url":"https://utter.idevlab.dev/","downloadUrl":"https://github.com/IchenDEV/utter/releases/latest","codeRepository":"https://github.com/IchenDEV/utter","license":"https://github.com/IchenDEV/utter/blob/main/LICENSE","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Utter is a native macOS menu bar app for AI-powered voice input and dictation. Hold a hotkey, speak, and polished text appears at your cursor. WhisperKit, Apple Speech, and Qwen3-ASR run on-device, with MLX LLM cleanup on Apple Silicon. Optional remote LLM providers.","featureList":["On-device speech recognition with WhisperKit, Apple Speech, or Qwen3-ASR","Streaming recognition (beta) and Volc streaming ASR","LLM text cleanup with local MLX Qwen, Gemma, or Llama models, or remote providers","One-key translation with a dedicated hotkey","Voice command mode with screen context via ScreenCaptureKit and Vision","Global hotkey insertion works in any macOS app","Input history, memory, correction learning, and personal dictionary","Bilingual UI in English and Simplified Chinese","Device performance check with model compatibility recommendations"],"author":{"@type":"Organization","name":"Utter","url":"https://github.com/IchenDEV/utter"}}
@@ -61,6 +61,7 @@
         <img class="alt-icon" src="assets/AppIconDark.png" alt="" /><strong>Utter</strong>
       </a>
       <div class="nav-links">
+        <a href="#videos" data-en="videos" data-zh="视频">videos</a>
         <a href="#pipeline" data-en="pipeline" data-zh="流程">pipeline</a>
         <a href="#features" data-en="features" data-zh="功能">features</a>
         <a href="#models" data-en="models" data-zh="模型">models</a>
@@ -114,6 +115,47 @@
             <span data-en="LLM cleanup" data-zh="LLM 润色">LLM cleanup</span>
             <span data-en="Screen context" data-zh="屏幕上下文">Screen context</span>
             <span data-en="Any app" data-zh="任意应用">Any app</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="videos" class="content-section">
+        <div class="wrap">
+          <p class="kicker">$ utter --demo</p>
+          <h2 data-en="See it in action." data-zh="看看它怎么用。">See it in action.</h2>
+          <p class="section-lead" data-en="Three short films: the feature tour, a day at the office, and local dictation. The interface is an animated reconstruction of the real app; sample texts are illustrative."
+             data-zh="三支短片：功能一览、办公室里的一天、本地语音输入。界面为真实应用的动画重建，示例文本仅作演示。">Three short films: the feature tour, a day at the office, and local dictation. The interface is an animated reconstruction of the real app; sample texts are illustrative.</p>
+          <div class="video-grid">
+            <figure class="video-card video-card--wide">
+              <video controls preload="none" playsinline poster="assets/videos/utter-features-51s-poster.png" aria-label="Feature tour">
+                <source src="assets/videos/utter-features-51s-zh-vo.mp4" type="video/mp4" />
+              </video>
+              <figcaption>
+                <h3 data-en="Feature tour" data-zh="功能一览">Feature tour</h3>
+                <p data-en="Smart format, voice command, translation dictation, industry lexicon, writing styles, and the local or remote models you can choose." data-zh="智能整理、语音指令、翻译听写、行业词库、表达风格，以及可选的本地或远程模型。">Smart format, voice command, translation dictation, industry lexicon, writing styles, and the local or remote models you can choose.</p>
+                <span class="video-meta">0:51 · <span data-en="Mandarin voice-over" data-zh="普通话配音">Mandarin voice-over</span> · <a href="assets/videos/utter-features-51s-zh-vo.mp4" download>MP4</a></span>
+              </figcaption>
+            </figure>
+            <figure class="video-card">
+              <video controls preload="none" playsinline poster="assets/videos/utter-day-58s-poster.png" aria-label="A day at the office">
+                <source src="assets/videos/utter-day-58s-zh-vo.mp4" type="video/mp4" />
+              </video>
+              <figcaption>
+                <h3 data-en="A day at the office" data-zh="办公室里的一天">A day at the office</h3>
+                <p data-en="Replying to chat, meeting notes, an English email, a voice-drafted reply, and a weekly report on a train with no signal." data-zh="回消息、会议纪要、英文邮件、看着邮件起草回复，再到没信号的高铁上写周报。">Replying to chat, meeting notes, an English email, a voice-drafted reply, and a weekly report on a train with no signal.</p>
+                <span class="video-meta">0:58 · <span data-en="Mandarin voice-over" data-zh="普通话配音">Mandarin voice-over</span> · <a href="assets/videos/utter-day-58s-zh-vo.mp4" download>MP4</a></span>
+              </figcaption>
+            </figure>
+            <figure class="video-card">
+              <video controls preload="none" playsinline poster="assets/videos/utter-offline-28s-poster.png" aria-label="Local voice input">
+                <source src="assets/videos/utter-offline-28s-zh-vo.mp4" type="video/mp4" />
+              </video>
+              <figcaption>
+                <h3 data-en="Local voice input" data-zh="本地语音输入">Local voice input</h3>
+                <p data-en="Hold fn, speak, and cleaned-up text lands at the cursor — recognition and cleanup both run on this Mac." data-zh="按住 fn 说话，整理好的文字落在光标处——识别和整理都在这台 Mac 上完成。">Hold fn, speak, and cleaned-up text lands at the cursor — recognition and cleanup both run on this Mac.</p>
+                <span class="video-meta">0:28 · <span data-en="Mandarin voice-over" data-zh="普通话配音">Mandarin voice-over</span> · <a href="assets/videos/utter-offline-28s-zh-vo.mp4" download>MP4</a></span>
+              </figcaption>
+            </figure>
           </div>
         </div>
       </section>
