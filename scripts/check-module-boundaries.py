@@ -11,7 +11,7 @@ CONTRACT_IMPORTS = {
     "UtterRuntime": {"Foundation"},
     "UtterContracts": {"Foundation", "UtterRuntime"},
     "UtterMediaContracts": {"Foundation", "AVFoundation", "CoreGraphics", "UtterRuntime", "UtterContracts"},
-    "UtterPresentationContracts": {"Foundation", "AppKit", "SwiftUI", "UtterRuntime", "UtterContracts", "UtterMediaContracts"},
+    "UtterPresentationContracts": {"Foundation", "AppKit", "SwiftUI", "Combine", "UtterRuntime", "UtterContracts", "UtterMediaContracts"},
 }
 CONTRACTS = set(CONTRACT_IMPORTS)
 IMPORT = re.compile(r"^\s*(?:@\w+\s+)*import\s+(?:(?:struct|class|enum|protocol|func|var|let|typealias)\s+)?(\w+)", re.MULTILINE)
