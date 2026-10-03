@@ -1,6 +1,6 @@
 import UtterContracts
-enum PromptCatalog {
-    static func baseSystemPrompt(inputLanguage: InputLanguage) -> String {
+package enum PromptCatalog {
+    package static func baseSystemPrompt(inputLanguage: InputLanguage) -> String {
         switch inputLanguage {
         case .auto:
             return autoSystemPrompt()
@@ -17,7 +17,7 @@ enum PromptCatalog {
         }
     }
 
-    static func userPrompt(text: String, inputLanguage: InputLanguage) -> String {
+    package static func userPrompt(text: String, inputLanguage: InputLanguage) -> String {
         switch inputLanguage {
         case .auto:
             return "以下是自动语言 ASR 原文。先在内部判断主要语言，再做忠实纠错：只在原文本身、自我纠正、个人词典或提供的上下文有明确依据时修正误识别、同音词和专有名词；不要猜测漏字或补写未口述的实词。处理口述标点、数字、单位和时间范围，保持原语言及自然混排，只输出最终文本：\n\(PromptTextBlock.block(text))"
@@ -34,7 +34,7 @@ enum PromptCatalog {
         }
     }
 
-    static func customUserPrompt(
+    package static func customUserPrompt(
         text: String,
         inputLanguage: InputLanguage
     ) -> String {
@@ -50,7 +50,7 @@ enum PromptCatalog {
         }
     }
 
-    static func customSystemPromptOutputContract(inputLanguage: InputLanguage) -> String {
+    package static func customSystemPromptOutputContract(inputLanguage: InputLanguage) -> String {
         switch inputLanguage {
         case .auto:
             return """

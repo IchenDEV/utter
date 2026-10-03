@@ -1,5 +1,4 @@
 import Foundation
-import UtterContracts
 
 package enum VolcASRError: LocalizedError {
     case notConfigured

@@ -1,3 +1,4 @@
+import UtterProcessing
 import UtterPresentationContracts
 import UtterContracts
 import XCTest
@@ -209,7 +210,9 @@ final class PromptBuilderTests: XCTestCase {
                 stylePrompt: "ignored",
                 screenContext: "visible text",
                 memoryContext: "",
-                inputLanguage: .english
+                inputLanguage: .english,
+                useCustomSystemPrompt: AppSettings.shared.snapshot.useCustomSystemPrompt,
+                customSystemPrompt: AppSettings.shared.snapshot.customSystemPrompt
             )
 
             XCTAssertTrue(prompt.hasPrefix("Only normalize names."))

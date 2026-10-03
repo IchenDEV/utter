@@ -1,9 +1,8 @@
-import UtterPresentationContracts
 import UtterContracts
 import Foundation
 
-enum PromptBuilder {
-    static func buildSystemPrompt(
+package enum PromptBuilder {
+    package static func buildSystemPrompt(
         style: LanguageStyle,
         stylePrompt: String,
         screenContext: String = "",
@@ -29,7 +28,7 @@ enum PromptBuilder {
         ).systemPrompt
     }
 
-    static func buildFormattingAssembly(
+    package static func buildFormattingAssembly(
         style: LanguageStyle,
         stylePrompt: String,
         screenContext: String = "",
@@ -43,9 +42,9 @@ enum PromptBuilder {
     ) -> PromptAssembly {
         var stableParts = promptParts(
             useCustomSystemPrompt: useCustomSystemPrompt
-                ?? AppSettings.shared.useCustomSystemPrompt,
+                ?? false,
             customSystemPrompt: customSystemPrompt
-                ?? AppSettings.shared.customSystemPrompt,
+                ?? "",
             style: style,
             stylePrompt: stylePrompt,
             inputLanguage: inputLanguage
@@ -70,26 +69,26 @@ enum PromptBuilder {
         )
     }
 
-    static func buildUserPrompt(text: String, inputLanguage: InputLanguage = .chinese) -> String {
+    package static func buildUserPrompt(text: String, inputLanguage: InputLanguage = .chinese) -> String {
         PromptCatalog.userPrompt(text: text, inputLanguage: inputLanguage)
     }
 
-    static func buildCustomUserPrompt(
+    package static func buildCustomUserPrompt(
         text: String,
         inputLanguage: InputLanguage = .chinese
     ) -> String {
         PromptCatalog.customUserPrompt(text: text, inputLanguage: inputLanguage)
     }
 
-    static func buildCommandUserPrompt(text: String, inputLanguage: InputLanguage = .chinese) -> String {
+    package static func buildCommandUserPrompt(text: String, inputLanguage: InputLanguage = .chinese) -> String {
         PromptCatalog.commandUserPrompt(text: text, inputLanguage: inputLanguage)
     }
 
-    static func buildEditCommandResolverSystemPrompt(inputLanguage: InputLanguage = .chinese) -> String {
+    package static func buildEditCommandResolverSystemPrompt(inputLanguage: InputLanguage = .chinese) -> String {
         PromptCatalog.editCommandResolverSystemPrompt(inputLanguage: inputLanguage)
     }
 
-    static func buildEditCommandResolverUserPrompt(
+    package static func buildEditCommandResolverUserPrompt(
         text: String,
         inputLanguage: InputLanguage = .chinese,
         context: SpokenEditCommandResolutionContext = .unknown
@@ -97,7 +96,7 @@ enum PromptBuilder {
         PromptCatalog.editCommandResolverUserPrompt(text: text, inputLanguage: inputLanguage, context: context)
     }
 
-    static func buildCommandSystemPrompt(
+    package static func buildCommandSystemPrompt(
         screenContext: String,
         screenImageAvailable: Bool = false,
         memoryContext: String = "",
@@ -113,7 +112,7 @@ enum PromptBuilder {
         ).systemPrompt
     }
 
-    static func buildCommandAssembly(
+    package static func buildCommandAssembly(
         screenContext: String,
         screenImageAvailable: Bool = false,
         memoryContext: String = "",

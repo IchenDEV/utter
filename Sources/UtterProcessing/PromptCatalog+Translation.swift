@@ -1,6 +1,6 @@
 import UtterContracts
 extension PromptCatalog {
-    static func translationSystemPrompt(
+    package static func translationSystemPrompt(
         targetLanguage: TranslationLanguage,
         inputLanguage: InputLanguage
     ) -> String {
@@ -48,7 +48,7 @@ extension PromptCatalog {
         }
     }
 
-    static func translationUserPrompt(
+    package static func translationUserPrompt(
         text: String,
         targetLanguage: TranslationLanguage
     ) -> String {

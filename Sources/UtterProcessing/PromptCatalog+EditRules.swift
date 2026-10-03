@@ -2,7 +2,7 @@ import UtterContracts
 import Foundation
 
 extension PromptCatalog {
-    static func activePersonalDictionarySection(_ entries: String, inputLanguage: InputLanguage) -> String? {
+    package static func activePersonalDictionarySection(_ entries: String, inputLanguage: InputLanguage) -> String? {
         let entries = entries.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !entries.isEmpty else { return nil }
 
@@ -30,7 +30,7 @@ extension PromptCatalog {
         }
     }
 
-    static func activeEditRulesSection(_ rules: String, inputLanguage: InputLanguage) -> String? {
+    package static func activeEditRulesSection(_ rules: String, inputLanguage: InputLanguage) -> String? {
         let rules = rules.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !rules.isEmpty else { return nil }
 

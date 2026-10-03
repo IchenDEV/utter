@@ -1,7 +1,8 @@
-enum PromptTextBlock {
+import UtterContracts
+package enum PromptTextBlock {
     /// Uses a deterministic fence that does not occur in the payload. This
     /// preserves dictated text verbatim without letting it close its own block.
-    static func block(_ text: String) -> String {
+    package static func block(_ text: String) -> String {
         let index = boundaryIndex(for: text)
         let opening = "<<<OPENTYPE_TEXT_\(index)>>>"
         let closing = "<<<END_OPENTYPE_TEXT_\(index)>>>"

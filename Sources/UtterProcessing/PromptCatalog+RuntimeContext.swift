@@ -2,7 +2,7 @@ import UtterContracts
 import Foundation
 
 extension PromptCatalog {
-    static func runtimeContextSection(
+    package static func runtimeContextSection(
         now: Date = Date(),
         timeZone: TimeZone = .current,
         inputLanguage: InputLanguage

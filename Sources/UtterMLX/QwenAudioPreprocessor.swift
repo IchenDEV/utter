@@ -169,11 +169,3 @@ package enum QwenAudioPreprocessor {
         }
     }
 }
-
-package enum QwenAudioPreprocessorError: LocalizedError {
-    case conversionFailed
-
-    var errorDescription: String? {
-        L("error.local_asr_audio_conversion")
-    }
-}

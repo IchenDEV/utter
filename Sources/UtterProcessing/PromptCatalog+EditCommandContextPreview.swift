@@ -1,6 +1,6 @@
 import UtterContracts
 extension PromptCatalog {
-    static func editCommandResolverContextPreview(
+    package static func editCommandResolverContextPreview(
         _ context: SpokenEditCommandResolutionContext,
         inputLanguage: InputLanguage
     ) -> String {

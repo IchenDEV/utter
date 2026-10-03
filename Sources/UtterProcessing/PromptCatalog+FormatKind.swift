@@ -2,7 +2,7 @@ import UtterContracts
 import Foundation
 
 extension PromptCatalog {
-    static func formatContractSection(
+    package static func formatContractSection(
         kind: TextFormatKind,
         inputLanguage: InputLanguage
     ) -> String {

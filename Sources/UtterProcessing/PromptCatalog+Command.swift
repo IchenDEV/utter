@@ -1,6 +1,6 @@
 import UtterContracts
 extension PromptCatalog {
-    static func commandUserPrompt(text: String, inputLanguage: InputLanguage) -> String {
+    package static func commandUserPrompt(text: String, inputLanguage: InputLanguage) -> String {
         switch inputLanguage {
         case .auto:
             return "以下是自动语言语音指令转写。请先在内部判断主要语言、真实指令意图和自然混排方式，处理同音词、误识别、漏字、多字、自我纠正和口述格式，再只输出可直接插入或发送的结果；除非指令要求翻译或指定语言，否则保持原语言：\n\(PromptTextBlock.block(text))"
@@ -17,7 +17,7 @@ extension PromptCatalog {
         }
     }
 
-    static func commandSystemPrompt(inputLanguage: InputLanguage) -> String {
+    package static func commandSystemPrompt(inputLanguage: InputLanguage) -> String {
         switch inputLanguage {
         case .auto:
             return """
@@ -148,7 +148,7 @@ extension PromptCatalog {
         }
     }
 
-    static func commandContextSections(
+    package static func commandContextSections(
         screenContext: String,
         screenImageAvailable: Bool,
         memoryContext: String,

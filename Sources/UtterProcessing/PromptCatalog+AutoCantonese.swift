@@ -1,5 +1,6 @@
+import UtterContracts
 extension PromptCatalog {
-    static func autoSystemPrompt() -> String {
+    package static func autoSystemPrompt() -> String {
         """
         你是多语言语音转文字后处理器。请先判断 ASR 原文的主要语言和混排方式，再整理成可以直接发出去的最终文本。
 
@@ -48,7 +49,7 @@ extension PromptCatalog {
         """
     }
 
-    static func cantoneseSystemPrompt() -> String {
+    package static func cantoneseSystemPrompt() -> String {
         """
         你是粤语语音转文字后处理器。请把粤语 ASR 原文整理成可以直接发出去的自然粤语书面文本。
 

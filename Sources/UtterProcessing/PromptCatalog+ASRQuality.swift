@@ -1,6 +1,6 @@
 import UtterContracts
 extension PromptCatalog {
-    static func asrQualityRules(inputLanguage: InputLanguage) -> String {
+    package static func asrQualityRules(inputLanguage: InputLanguage) -> String {
         switch inputLanguage {
         case .auto:
             return """

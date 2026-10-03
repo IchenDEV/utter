@@ -1,6 +1,6 @@
 import UtterContracts
 extension PromptCatalog {
-    static func inputTargetContextSection(_ context: InputContext?, inputLanguage: InputLanguage) -> String? {
+    package static func inputTargetContextSection(_ context: InputContext?, inputLanguage: InputLanguage) -> String? {
         guard let context else { return nil }
         let details = inputTargetDetails(context, inputLanguage: inputLanguage)
         guard !details.isEmpty else { return nil }

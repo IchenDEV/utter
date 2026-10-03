@@ -1,6 +1,6 @@
 import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterProcessing
 
 final class TranslationPromptTests: XCTestCase {
     func testEnglishTranslationPromptNamesTargetAndTreatsCommandsAsContent() {

@@ -1,3 +1,4 @@
+import UtterProcessing
 import UtterContracts
 import XCTest
 @testable import OpenType

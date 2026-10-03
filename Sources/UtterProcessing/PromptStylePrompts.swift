@@ -1,8 +1,8 @@
 import UtterContracts
 import Foundation
 
-enum PromptStylePrompts {
-    static func customStyleSection(stylePrompt: String, inputLanguage: InputLanguage) -> String? {
+package enum PromptStylePrompts {
+    package static func customStyleSection(stylePrompt: String, inputLanguage: InputLanguage) -> String? {
         guard !stylePrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return nil
         }
@@ -18,7 +18,7 @@ enum PromptStylePrompts {
         }
     }
 
-    static func section(style: LanguageStyle, inputLanguage: InputLanguage) -> String {
+    package static func section(style: LanguageStyle, inputLanguage: InputLanguage) -> String {
         switch (inputLanguage, style) {
         case (.auto, .casual):
             return "风格：自动语言、自然直接。先判断原文主要语言并保持；保留自然混排。主动修正明显误识别、同音词、断句和语序小问题，但不要过度书面化，也不要无故翻译。"
@@ -51,7 +51,7 @@ enum PromptStylePrompts {
         }
     }
 
-    static func fewShotSection(style: LanguageStyle, inputLanguage: InputLanguage) -> String {
+    package static func fewShotSection(style: LanguageStyle, inputLanguage: InputLanguage) -> String {
         switch (inputLanguage, style) {
         case (.auto, .professional):
             return """

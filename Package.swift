@@ -23,7 +23,7 @@ let dataExclusions = ["SystemDiagnostics.swift"]
 let modelDependencies: [Target.Dependency] = []
 let modelExclusions = ["SpeechRegistry.swift", "ImageRegistry.swift"]
 let remoteDependencies: [Target.Dependency] = []
-let remoteExclusions = ["GzipCompression.swift", "VolcASRError.swift", "VolcSpeechEngine+Audio.swift", "VolcSpeechEngine+Codec.swift", "VolcSpeechEngine+Requests.swift", "VolcSpeechEngine+Transport.swift", "VolcSpeechEngine.swift", "VolcSpeechPlugins.swift", "VolcStreamingSession.swift"]
+let remoteExclusions = ["GzipCompression.swift", "VolcSpeechEngine+Audio.swift", "VolcSpeechEngine+Codec.swift", "VolcSpeechEngine+Requests.swift", "VolcSpeechEngine+Transport.swift", "VolcSpeechEngine.swift", "VolcSpeechPlugins.swift", "VolcStreamingSession.swift"]
 #endif
 
 let portableTargets: [Target] = [

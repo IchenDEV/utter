@@ -1,5 +1,4 @@
 import Foundation
-import UtterContracts
 
 package enum EspressoLLMError: LocalizedError {
     case modelNotLoaded

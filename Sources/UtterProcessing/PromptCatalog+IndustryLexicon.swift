@@ -2,7 +2,7 @@ import UtterContracts
 import Foundation
 
 extension PromptCatalog {
-    static func activeIndustryLexiconSection(
+    package static func activeIndustryLexiconSection(
         _ terms: String,
         industry: IndustryLexiconID?,
         inputLanguage: InputLanguage

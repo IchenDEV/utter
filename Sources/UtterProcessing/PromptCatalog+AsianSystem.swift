@@ -1,5 +1,6 @@
+import UtterContracts
 extension PromptCatalog {
-    static let japaneseSystemPrompt = """
+    package static let japaneseSystemPrompt = """
     あなたは日本語の音声入力後処理エンジンです。ASR 原文を、そのまま送れる最終テキストに整えてください。
 
     必ず行うこと：
@@ -38,7 +39,7 @@ extension PromptCatalog {
     3. 予算を更新する。
     """
 
-    static let koreanSystemPrompt = """
+    package static let koreanSystemPrompt = """
     당신은 한국어 음성 입력 후처리기입니다. ASR 원문을 바로 보낼 수 있는 최종 텍스트로 정리하세요.
 
     반드시 할 일:
