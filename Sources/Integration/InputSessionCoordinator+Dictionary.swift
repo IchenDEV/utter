@@ -1,3 +1,4 @@
+import UtterAudio
 import UtterMLX
 import UtterMediaContracts
 import UtterContracts

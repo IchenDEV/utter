@@ -6,16 +6,14 @@ import IOKit
 /// Apple hardware disconnects the built-in microphone in hardware while the lid
 /// is closed, so capture must route elsewhere instead of trying to re-enable it.
 /// Desktops without a lid report no clamshell entry and are treated as open.
-enum ClamshellState {
-    static var isClosed: Bool {
+package enum ClamshellState {
+    package static var isClosed: Bool {
         isClosed(fromClamshellState: registryClamshellValue)
     }
 
     /// Pure parse of the `AppleClamshellState` registry value; unit-testable.
-    static func isClosed(fromClamshellState value: Any?) -> Bool {
-        if let number = value as? NSNumber { return number.boolValue }
-        if let flag = value as? Bool { return flag }
-        return false
+    package static func isClosed(fromClamshellState value: Any?) -> Bool {
+        ClamshellValue.isClosed(value)
     }
 
     private static var registryClamshellValue: Any? {

@@ -1,3 +1,4 @@
+import UtterAudio
 import UtterProcessing
 import UtterMediaContracts
 import UtterSession
@@ -11,7 +12,7 @@ final class VoicePipeline {
     let soundPlayer = SoundPlayer()
     let audioCapture: AudioCaptureManager = {
         let capture = AudioCaptureManager()
-        capture.remoteMicSource = .shared
+        capture.remoteMicSource = RemoteMicCaptureManager.shared
         return capture
     }()
     let textInserter = TextInserter()

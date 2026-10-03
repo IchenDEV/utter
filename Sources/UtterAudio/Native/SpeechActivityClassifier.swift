@@ -3,12 +3,12 @@ import AVFoundation
 import Foundation
 import SoundAnalysis
 
-enum SpeechActivityClassifier {
-    static let minimumSpeechConfidence = 0.6
+package enum SpeechActivityClassifier {
+    package static let minimumSpeechConfidence = 0.6
     private static let windowSeconds = 0.5
     private static let minimumFileSeconds = 0.75
 
-    static func containsSpeech(at audioURL: URL?) async -> Bool {
+    package static func containsSpeech(at audioURL: URL?, diagnostics: Log) async -> Bool {
         guard let audioURL, !Task.isCancelled else { return false }
         var paddedURL: URL?
         defer {
@@ -31,7 +31,7 @@ enum SpeechActivityClassifier {
             return completed && !Task.isCancelled && !result.failed
                 && result.windows > 0 && result.maxSpeech >= minimumSpeechConfidence
         } catch {
-            Log.error("[SpeechActivity] classification failed")
+            diagnostics.error("[SpeechActivity] classification failed")
             return false
         }
     }

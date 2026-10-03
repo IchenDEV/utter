@@ -1,6 +1,6 @@
 import Foundation
 
-package struct AudioCaptureActivity: Equatable {
+package struct AudioCaptureActivity: Equatable, Sendable {
     package let thresholds: AudioActivityThresholds
 
     package private(set) var bufferCount = 0

@@ -1,3 +1,5 @@
+import UtterAudio
+import UtterMediaContracts
 import UtterContracts
 import AVFoundation
 import Foundation
@@ -9,7 +11,7 @@ import Foundation
 /// without knowing where the samples came from. Samples arrive as 16 kHz mono
 /// Int16 and are written as 16 kHz mono Float32, which is the format every
 /// speech engine normalizes to anyway.
-final class RemoteMicCaptureManager {
+final class RemoteMicCaptureManager: RemoteCaptureSource {
     static let shared = RemoteMicCaptureManager()
 
     private let bridge: XiaomiRemoteMicBridge

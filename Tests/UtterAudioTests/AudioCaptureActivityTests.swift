@@ -1,6 +1,6 @@
 import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterAudio
 
 final class AudioCaptureActivityTests: XCTestCase {
     private let sampleRMS: Float = 0.002

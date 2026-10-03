@@ -44,10 +44,14 @@ final class ScopedProcessingService: ProcessingService {
         }
     }
 
-    func close() async {
+    func revoke() {
         closed = true
+        for operation in operations.values { operation.cancel() }
+    }
+
+    func close() async {
+        revoke()
         let pending = Array(operations.values)
-        for operation in pending { operation.cancel() }
         for operation in pending { await operation.drain() }
     }
 

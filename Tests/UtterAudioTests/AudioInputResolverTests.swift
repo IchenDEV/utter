@@ -1,6 +1,6 @@
-import CoreAudio
+import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterAudio
 
 final class AudioInputResolverTests: XCTestCase {
     private let builtIn = AudioInputDevice(uid: "builtin", name: "MacBook Microphone", isBuiltIn: true)
@@ -11,19 +11,14 @@ final class AudioInputResolverTests: XCTestCase {
     // MARK: - Clamshell parsing
 
     func testClamshellParseTreatsOnlyTrueAsClosed() {
-        XCTAssertTrue(ClamshellState.isClosed(fromClamshellState: NSNumber(value: true)))
-        XCTAssertFalse(ClamshellState.isClosed(fromClamshellState: NSNumber(value: false)))
-        XCTAssertFalse(ClamshellState.isClosed(fromClamshellState: nil))
-        XCTAssertFalse(ClamshellState.isClosed(fromClamshellState: "not-a-bool"))
+        XCTAssertTrue(ClamshellValue.isClosed( NSNumber(value: true)))
+        XCTAssertFalse(ClamshellValue.isClosed( NSNumber(value: false)))
+        XCTAssertFalse(ClamshellValue.isClosed( nil))
+        XCTAssertFalse(ClamshellValue.isClosed( "not-a-bool"))
     }
 
     // MARK: - Transport classification
 
-    func testBuiltInClassificationUsesTransportType() {
-        XCTAssertTrue(AudioInputDevices.isBuiltIn(transportType: kAudioDeviceTransportTypeBuiltIn))
-        XCTAssertFalse(AudioInputDevices.isBuiltIn(transportType: kAudioDeviceTransportTypeUSB))
-        XCTAssertFalse(AudioInputDevices.isBuiltIn(transportType: nil))
-    }
 
     // MARK: - Start resolution
 

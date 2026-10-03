@@ -32,6 +32,7 @@ package enum ProcessingPlugins {
                 log: Log(service: try context.require(IntegrationServices.diagnostics))
             )
             let service = ScopedProcessingService(processor: processor, isCurrent: { context.isCurrent })
+            try context.scope.onRevoke { service.revoke() }
             try context.scope.onDispose { await service.close() }
             try context.provide(ProcessingServices.text, value: service)
         }

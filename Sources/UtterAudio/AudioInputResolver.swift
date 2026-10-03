@@ -1,11 +1,12 @@
+import UtterContracts
 import Foundation
 
-enum AudioInputResolution: Equatable {
+package enum AudioInputResolution: Equatable {
     case use(uid: String)
     case unavailable
 }
 
-enum MicFailoverAction: Equatable {
+package enum MicFailoverAction: Equatable {
     case keep
     case switchTo(uid: String)
     case fail
@@ -16,8 +17,8 @@ enum MicFailoverAction: Equatable {
 ///
 /// A device is unusable only when it is the built-in microphone and the lid is
 /// closed, which is the case Apple disconnects in hardware.
-enum AudioInputResolver {
-    static func resolve(
+package enum AudioInputResolver {
+    package static func resolve(
         devices: [AudioInputDevice],
         preferredUID: String?,
         systemDefaultUID: String?,
@@ -42,7 +43,7 @@ enum AudioInputResolver {
         return .unavailable
     }
 
-    static func isUsable(_ device: AudioInputDevice, lidClosed: Bool) -> Bool {
+    package static func isUsable(_ device: AudioInputDevice, lidClosed: Bool) -> Bool {
         !(device.isBuiltIn && lidClosed)
     }
 }
@@ -51,8 +52,8 @@ enum AudioInputResolver {
 ///
 /// Keeps the active device whenever it is still usable so a reopened lid does
 /// not cause churn; switches only when the active device became unusable.
-enum MicFailoverDecision {
-    static func decide(
+package enum MicFailoverDecision {
+    package static func decide(
         activeUID: String?,
         devices: [AudioInputDevice],
         preferredUID: String?,

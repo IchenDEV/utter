@@ -1,3 +1,4 @@
+import UtterAudio
 import Foundation
 
 /// A capture surface the release decision can act on. `AudioCaptureManager` is

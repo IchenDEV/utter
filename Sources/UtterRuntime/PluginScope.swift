@@ -11,12 +11,18 @@ package final class PluginScope {
     package private(set) var isActive = true
     private var effects: [Effect] = []
     private var cancellations: [UUID: () -> Void] = [:]
+    private var revocations: [() -> Void] = []
 
     init(pluginID: String) { self.pluginID = pluginID }
 
     package func onDispose(_ dispose: @escaping () async throws -> Void) throws {
         guard isActive else { throw PluginRuntimeError.scopeClosed(pluginID) }
         effects.append(Effect(id: UUID(), dispose: dispose))
+    }
+
+    package func onRevoke(_ revoke: @escaping () -> Void) throws {
+        guard isActive else { throw PluginRuntimeError.scopeClosed(pluginID) }
+        revocations.append(revoke)
     }
 
     @discardableResult
@@ -57,8 +63,11 @@ package final class PluginScope {
     }
 
     func revoke() {
+        guard isActive else { return }
         isActive = false
         for cancel in cancellations.values { cancel() }
+        for revoke in revocations.reversed() { revoke() }
+        revocations.removeAll()
     }
 
     var hasPendingDisposal: Bool { !effects.isEmpty }

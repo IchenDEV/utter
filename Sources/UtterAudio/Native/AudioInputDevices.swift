@@ -1,17 +1,9 @@
+import UtterContracts
 import CoreAudio
 import Foundation
 
-/// One CoreAudio input device, classified by transport so callers can tell the
-/// built-in microphone apart from external inputs (USB, Bluetooth, display,
-/// aggregate, and Continuity/iPhone).
-struct AudioInputDevice: Equatable, Sendable {
-    let uid: String
-    let name: String
-    let isBuiltIn: Bool
-}
-
-enum AudioInputDevices {
-    static func available() -> [AudioInputDevice] {
+package enum AudioInputDevices {
+    package static func available() -> [AudioInputDevice] {
         deviceIDs().compactMap { deviceID in
             guard hasInputChannels(deviceID: deviceID) else { return nil }
             let name = deviceName(deviceID: deviceID) ?? "Unknown"
@@ -24,7 +16,7 @@ enum AudioInputDevices {
         }
     }
 
-    static func systemDefaultUID() -> String? {
+    package static func systemDefaultUID() -> String? {
         var address = AudioObjectPropertyAddress(
             mSelector: kAudioHardwarePropertyDefaultInputDevice,
             mScope: kAudioObjectPropertyScopeGlobal,
@@ -39,11 +31,11 @@ enum AudioInputDevices {
         return deviceUID(deviceID: deviceID)
     }
 
-    static func deviceID(forUID uid: String) -> AudioDeviceID? {
+    package static func deviceID(forUID uid: String) -> AudioDeviceID? {
         deviceIDs().first { deviceUID(deviceID: $0) == uid }
     }
 
-    static func isBuiltIn(transportType: UInt32?) -> Bool {
+    package static func isBuiltIn(transportType: UInt32?) -> Bool {
         transportType == kAudioDeviceTransportTypeBuiltIn
     }
 
