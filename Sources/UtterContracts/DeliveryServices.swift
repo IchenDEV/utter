@@ -9,6 +9,7 @@ package protocol OutputTargetLease: AnyObject {
     var id: UUID { get }
     var processIdentifier: Int32 { get }
     var context: InputContext { get }
+    var selectedText: String? { get }
     var isValid: Bool { get }
     var isCurrent: Bool { get }
 }
@@ -76,4 +77,9 @@ package enum DeliveryError: Error, Equatable { case busy, closed, invalidTarget 
 
 package enum MacServices {
     package static let output = ServiceKey<any OutputService>("mac.output")
+}
+
+@MainActor
+extension OutputTargetLease {
+    package var selectedText: String? { context.selectedText }
 }

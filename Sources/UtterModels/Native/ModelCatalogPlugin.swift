@@ -1,4 +1,5 @@
 import UtterContracts
+import UtterMediaContracts
 import UtterPresentationContracts
 import UtterRuntime
 

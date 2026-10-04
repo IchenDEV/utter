@@ -243,7 +243,7 @@ package final class ModelCatalog: ObservableObject, ModelCatalogService {
         }
     }
 
-    private func appendLocalLLMModels() {
+    func appendLocalLLMModels() {
         for (id, path) in settings.localLLMModelPaths.sorted(by: { $0.key < $1.key }) {
             guard !llmModels.contains(where: { $0.id == id }) else { continue }
             let name = URL(fileURLWithPath: path).lastPathComponent

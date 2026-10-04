@@ -1,26 +1,25 @@
-import UtterContracts
 import Foundation
 
-enum DeferredReplacementCopyReason: Equatable {
+package enum DeferredReplacementCopyReason: Equatable {
     case notReady
     case expired
     case missingTarget
     case appChanged
 }
 
-enum DeferredReplacementDecision: Equatable {
+package enum DeferredReplacementDecision: Equatable {
     case replace
     case copy(DeferredReplacementCopyReason)
 }
 
-enum DeferredReplacementPolicy {
-    static let expirationInterval: TimeInterval = 15
+package enum DeferredReplacementPolicy {
+    package static let expirationInterval: TimeInterval = 15
 
-    static func shouldUseDeferredReplacement(outputMode: OutputMode, enableInstantInsert: Bool) -> Bool {
+    package static func shouldUseDeferredReplacement(outputMode: OutputMode, enableInstantInsert: Bool) -> Bool {
         outputMode == .processed && enableInstantInsert
     }
 
-    static func decision(
+    package static func decision(
         for replacement: DeferredReplacement,
         currentBundleIdentifier: String?,
         now: Date = Date()

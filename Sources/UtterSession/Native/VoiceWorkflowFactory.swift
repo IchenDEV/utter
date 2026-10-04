@@ -54,8 +54,9 @@ final class VoiceWorkflowFactory: SessionWorkflowFactory {
     }
 
     func settle(_ intent: SessionIntent, result: Result<SessionCompletion, Error>) {
-        guard case .success(let completion) = result, completion.accepted,
-              case .delivery(let receipt) = completion.acceptance, let context = completion.record?.context,
+        guard case .success(let completion) = result, completion.accepted else { return }
+        dependencies.outputs?.remember(completion, recordID: intent.id)
+        guard case .delivery(let receipt) = completion.acceptance, let context = completion.record?.context,
               let seed = receipt.anchor?.correctionSeed(context: context) else { return }
         dependencies.correction?.start(seed: seed, recordID: intent.id)
     }

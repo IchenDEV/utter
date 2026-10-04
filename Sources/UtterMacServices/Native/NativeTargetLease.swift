@@ -23,6 +23,8 @@ final class NativeTargetLease: OutputTargetLease {
         isOwnerCurrent = isCurrent
     }
 
+    var selectedText: String? { state?.selected ?? context.selectedText }
+
     var isValid: Bool { isOwnerCurrent() && NSRunningApplication(processIdentifier: processIdentifier)?.isTerminated == false }
 
     var isCurrent: Bool {

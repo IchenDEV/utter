@@ -3,6 +3,15 @@ import UtterRuntime
 
 @MainActor
 package enum SessionPlugins {
+    package static func outputs() -> PluginRegistration {
+        PluginRegistration(descriptor: PluginDescriptor(id: "session.outputs", requires: [DataServices.notifications.required],
+            provides: [SessionServices.outputs.reference])) { context, _ in
+            let state = SessionOutputState(notifications: try context.require(DataServices.notifications))
+            try context.scope.onRevoke { state.close() }
+            try context.provide(SessionServices.outputs, value: state)
+        }
+    }
+
     package static func execution() -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(
             id: "session.execution",

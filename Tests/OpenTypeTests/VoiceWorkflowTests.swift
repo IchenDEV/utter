@@ -160,6 +160,7 @@ final class VoiceWorkflowTests: XCTestCase {
         try await maintenance.value
         XCTAssertEqual(driver.snapshot.phase, .completed)
         XCTAssertEqual(history.records.map(\.id), [intent.id])
+        XCTAssertEqual(try fixture.runtime.service(SessionServices.outputs).snapshot.recentText, driver.snapshot.text)
         XCTAssertTrue(fixture.capture.recording.closed)
         XCTAssertEqual(fixture.output.requests.count, 1)
         try await fixture.runtime.stop()
