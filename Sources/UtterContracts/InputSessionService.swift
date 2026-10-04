@@ -4,6 +4,7 @@ import UtterRuntime
 @MainActor
 package protocol InputSessionService: AnyObject {
     func createSession(_ request: InputSessionRequest, clientID: String) async throws -> InputSession
+    func createSession(_ request: InputSessionRequest, input: SessionInput, clientID: String) async throws -> InputSession
     func startRecording(sessionID: UUID, clientID: String) async throws
     func beginProcessing(sessionID: UUID, clientID: String) async throws
     func completeSession(sessionID: UUID, clientID: String, finalText: String?) async throws

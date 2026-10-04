@@ -24,7 +24,7 @@ package struct SessionIntent: Equatable, Sendable {
 }
 
 package enum SessionExecutionPhase: Equatable, Sendable {
-    case preparing, recording, transcribing, processing, delivering, completed, cancelled, failed
+    case created, preparing, recording, transcribing, processing, delivering, completed, cancelled, failed
 }
 
 package struct SessionExecutionSnapshot: Equatable, Sendable {
@@ -88,11 +88,17 @@ package protocol SessionWorkflowFactory: AnyObject {
 @MainActor
 package protocol SessionExecutionService: AnyObject {
     var snapshot: SessionExecutionSnapshot { get }
+    func reserve(_ intent: SessionIntent) throws
+    func activate(_ id: UUID) throws
     func start(_ intent: SessionIntent) throws
     func stop() async
     func cancel()
     func observe(_ callback: @escaping (SessionExecutionSnapshot) -> Void) -> UUID
     func removeObserver(_ id: UUID)
+    func observeProgress(_ callback: @escaping (SessionIntent, SessionExecutionSnapshot) -> Void) -> UUID
+    func removeProgressObserver(_ id: UUID)
+    func observeSettlement(_ callback: @escaping (SessionIntent, Result<SessionCompletion, Error>) -> Void) -> UUID
+    func removeSettlementObserver(_ id: UUID)
 }
 
 extension SessionServices {

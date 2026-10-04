@@ -8,11 +8,10 @@ package final class StateNotifications {
 
     package init() {}
 
-    package func settle(_ operation: () -> Void) {
+    package func settle<Value>(_ operation: () throws -> Value) rethrows -> Value {
         transactionDepth += 1
-        operation()
-        transactionDepth -= 1
-        deliver()
+        defer { transactionDepth -= 1; deliver() }
+        return try operation()
     }
 
     package func enqueue(_ notification: @escaping () -> Void) {

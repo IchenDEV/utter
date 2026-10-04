@@ -22,9 +22,10 @@ package enum SessionPlugins {
         PluginRegistration(descriptor: PluginDescriptor(
             id: "session.api",
             requires: [DataServices.settings.required, DataServices.credentials.required,
-                       DataServices.notifications.required, IntegrationServices.clients.required],
+                       DataServices.notifications.required, IntegrationServices.clients.required, SessionServices.execution.optional],
             provides: [SessionServices.api.reference]
         )) { context, _ in
+            let execution = try context.optional(SessionServices.execution)
             let settings = try context.require(DataServices.settings)
             let credentials = try context.require(DataServices.credentials)
             let service = OpenTypeService(
@@ -32,8 +33,15 @@ package enum SessionPlugins {
                     IntegrationServiceSettings(developerInterfaceEnabled: settings.values.developerInterfaceEnabled,
                                                httpToken: credentials.snapshot.developerHTTPToken)
                 }, registry: try context.require(IntegrationServices.clients),
-                notifications: try context.require(DataServices.notifications)
+                notifications: try context.require(DataServices.notifications),
+                execution: execution
             )
+            if let execution {
+                let progress = execution.observeProgress { service.projectExecution($0, snapshot: $1) }
+                try context.scope.onDispose { execution.removeProgressObserver(progress) }
+                let observation = execution.observeSettlement { service.settleExecution($0, result: $1) }
+                try context.scope.onDispose { execution.removeSettlementObserver(observation) }
+            }
             try context.scope.onDispose { service.close() }
             try context.provide(SessionServices.api, value: service)
         }

@@ -7,6 +7,8 @@ final class SessionControl: SessionJobControl {
     private let updateSnapshot: (SessionExecutionPhase, String) -> Void
     private var cancelled = false
     private var stopped = false
+    private var activated = false
+    private var activationWaiter: CheckedContinuation<Void, Error>?
     private var waiter: CheckedContinuation<Void, Error>?
 
     init(isCurrent: @escaping () -> Bool, update: @escaping (SessionExecutionPhase, String) -> Void) {
@@ -18,6 +20,14 @@ final class SessionControl: SessionJobControl {
         guard isCurrent else { return }
         updateSnapshot(phase, transcript)
     }
+    func activate() { activated = true; activationWaiter?.resume(); activationWaiter = nil }
+    func waitForActivation() async throws {
+        try Task.checkCancellation()
+        guard isCurrent else { throw CancellationError() }
+        if !activated { try await withCheckedThrowingContinuation { activationWaiter = $0 } }
+        try Task.checkCancellation()
+        guard isCurrent else { throw CancellationError() }
+    }
     func waitForStop() async throws {
         try Task.checkCancellation()
         guard isCurrent else { throw CancellationError() }
@@ -27,5 +37,9 @@ final class SessionControl: SessionJobControl {
         guard isCurrent else { throw CancellationError() }
     }
     func stop() { stopped = true; waiter?.resume(); waiter = nil }
-    func revoke() { cancelled = true; waiter?.resume(throwing: CancellationError()); waiter = nil }
+    func revoke() {
+        cancelled = true
+        waiter?.resume(throwing: CancellationError()); waiter = nil
+        activationWaiter?.resume(throwing: CancellationError()); activationWaiter = nil
+    }
 }

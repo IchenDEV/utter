@@ -4,16 +4,17 @@ import Foundation
 @MainActor
 package final class OpenTypeService: InputSessionService {
     private var closed = false
+    let execution: (any SessionExecutionService)?
     private typealias EventSubscriber = @MainActor (InputSessionEvent) -> Void
 
-    private var sessions: [UUID: InputSession]
-    private var sessionOwners: [UUID: String]
-    private var eventsBySession: [UUID: [InputSessionEvent]]
-    private var nextSequenceBySession: [UUID: Int]
+    var sessions: [UUID: InputSession]
+    var sessionOwners: [UUID: String]
+    var eventsBySession: [UUID: [InputSessionEvent]]
+    var nextSequenceBySession: [UUID: Int]
     private var eventSubscribers: [UUID: [UUID: EventSubscriber]]
     private let settingsProvider: @MainActor () -> IntegrationServiceSettings
-    private let registry: any IntegrationClientStore
-    private let notifications: StateNotifications
+    let registry: any IntegrationClientStore
+    let notifications: StateNotifications
 
     package convenience init(settings: IntegrationServiceSettings, registry: any IntegrationClientStore, notifications: StateNotifications? = nil) {
         self.init(settingsProvider: { settings }, registry: registry, notifications: notifications)
@@ -22,8 +23,10 @@ package final class OpenTypeService: InputSessionService {
     package init(
         settingsProvider: @escaping @MainActor () -> IntegrationServiceSettings,
         registry: any IntegrationClientStore,
-        notifications: StateNotifications? = nil
+        notifications: StateNotifications? = nil,
+        execution: (any SessionExecutionService)? = nil
     ) {
+        self.execution = execution
         self.notifications = notifications ?? StateNotifications()
         self.sessions = [:]
         self.sessionOwners = [:]
@@ -32,29 +35,6 @@ package final class OpenTypeService: InputSessionService {
         self.eventSubscribers = [:]
         self.settingsProvider = settingsProvider
         self.registry = registry
-    }
-
-    package func createSession(_ request: InputSessionRequest, clientID: String) async throws -> InputSession {
-        try requireAuthorized(clientID: clientID, capability: .record)
-        guard sessions.values.allSatisfy({ $0.state.isTerminal }) else {
-            throw IntegrationError.busy
-        }
-
-        let now = Date()
-        let session = InputSession(
-            id: UUID(),
-            request: request,
-            state: .created,
-            createdAt: now,
-            updatedAt: now
-        )
-        sessions[session.id] = session
-        sessionOwners[session.id] = clientID
-        nextSequenceBySession[session.id] = 1
-        appendEvent(.sessionCreated, sessionID: session.id, at: now)
-        registry.markUsed(clientID: clientID, at: now)
-
-        return session
     }
 
     package func startRecording(sessionID: UUID, clientID: String) async throws {
@@ -70,6 +50,10 @@ package final class OpenTypeService: InputSessionService {
             throw IntegrationError.busy
         }
 
+        if let execution {
+            try execution.activate(sessionID)
+            return
+        }
         let now = Date()
         session.state = .recording
         session.updatedAt = now
@@ -78,6 +62,7 @@ package final class OpenTypeService: InputSessionService {
     }
 
     package func beginProcessing(sessionID: UUID, clientID: String) async throws {
+        guard execution == nil else { throw IntegrationError.invalidSessionState }
         try requireAuthorized(clientID: clientID, capability: .record)
         guard var session = sessions[sessionID] else {
             throw IntegrationError.sessionNotFound
@@ -100,6 +85,7 @@ package final class OpenTypeService: InputSessionService {
 
     /// Result and history commit without an await between the terminal-state check and publication.
     package func commitSession(sessionID: UUID, clientID: String, finalText: String?, record: () -> Void = {}) throws {
+        guard execution == nil else { throw IntegrationError.invalidSessionState }
         try requireAuthorized(clientID: clientID, capability: .record)
         guard var session = sessions[sessionID] else {
             throw IntegrationError.sessionNotFound
@@ -125,6 +111,7 @@ package final class OpenTypeService: InputSessionService {
     }
 
     package func failSession(sessionID: UUID, clientID: String, error: IntegrationError) async throws {
+        guard execution == nil else { throw IntegrationError.invalidSessionState }
         try requireAuthorized(clientID: clientID, capability: .record)
         guard var session = sessions[sessionID] else {
             throw IntegrationError.sessionNotFound
@@ -163,6 +150,12 @@ package final class OpenTypeService: InputSessionService {
             return
         }
 
+        if let execution {
+            guard execution.snapshot.id == sessionID else { throw IntegrationError.invalidSessionState }
+            execution.cancel()
+            await execution.stop()
+            return
+        }
         let now = Date()
         session.state = .cancelled
         session.updatedAt = now
@@ -229,7 +222,7 @@ package final class OpenTypeService: InputSessionService {
         eventSubscribers.removeAll()
     }
 
-    private func requireAuthorized(clientID: String, capability: IntegrationClient.Capability) throws {
+    func requireAuthorized(clientID: String, capability: IntegrationClient.Capability) throws {
         guard !closed else { throw IntegrationError.developerInterfaceDisabled }
         let settings = settingsProvider()
         guard settings.developerInterfaceEnabled else {
@@ -266,7 +259,7 @@ package final class OpenTypeService: InputSessionService {
         appendEvent(type, sessionID: sessionID, at: Date(), text: text)
     }
 
-    private func appendEvent(
+    func appendEvent(
         _ type: InputSessionEvent.EventType,
         sessionID: UUID,
         at timestamp: Date,

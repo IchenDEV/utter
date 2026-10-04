@@ -7,6 +7,47 @@ import UtterRuntime
 
 @MainActor
 final class SessionDriverTests: XCTestCase {
+    func testCreatedSessionReservesOneColdJobAndActivationReusesIt() async throws {
+        let fixture = try DriverFixture()
+        defer { fixture.remove() }
+        let job = HeldSessionJob()
+        let factory = DriverFactory(job: job)
+        let driver = fixture.driver(factory)
+        let intent = SessionIntent(clientID: "api", input: .local)
+        try driver.reserve(intent)
+        for _ in 0..<10 { await Task.yield() }
+        XCTAssertFalse(job.entered)
+        XCTAssertEqual(driver.snapshot.phase, .created)
+        XCTAssertThrowsError(try driver.start(SessionIntent(input: .remote(token: 1))))
+        try driver.activate(intent.id)
+        while !job.entered { await Task.yield() }
+        XCTAssertEqual(factory.constructed, 1)
+        driver.cancel()
+        job.release()
+        while !job.closing { await Task.yield() }
+        job.finishClose()
+        await driver.close()
+    }
+
+    func testCancellingACreatedSessionDrainsWithoutEnteringTheJob() async throws {
+        let fixture = try DriverFixture()
+        defer { fixture.remove() }
+        let job = HeldSessionJob()
+        let driver = fixture.driver(DriverFactory(job: job))
+        let intent = SessionIntent(clientID: "api", input: .file(URL(fileURLWithPath: "/borrowed.wav")))
+        try driver.reserve(intent)
+        driver.cancel()
+        while !job.closing { await Task.yield() }
+        XCTAssertFalse(job.entered)
+        XCTAssertTrue(driver.snapshot.isBusy)
+        XCTAssertThrowsError(try driver.activate(intent.id))
+        job.finishClose()
+        while driver.snapshot.isBusy { await Task.yield() }
+        XCTAssertEqual(driver.snapshot.phase, .cancelled)
+        XCTAssertFalse(job.entered)
+        await driver.close()
+    }
+
     func testEveryEntryWaitsForCancellationAndResourceDrain() async throws {
         let fixture = try DriverFixture()
         defer { fixture.remove() }
