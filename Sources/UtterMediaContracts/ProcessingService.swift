@@ -68,6 +68,6 @@ package enum ProcessingError: LocalizedError {
     }
 }
 
-package enum ProcessingServices {
+extension ProcessingServices {
     package static let text = ServiceKey<any ProcessingService>("processing.text")
 }

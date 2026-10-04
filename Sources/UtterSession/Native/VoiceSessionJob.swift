@@ -83,13 +83,13 @@ final class VoiceSessionJob: SessionJob {
             raw = try await selected.transcribe(audioURL: audio.url, language: settings.inputLanguage.whisperCode)
         }
         try check(control)
-        guard let transcript = TranscriptionSanitizer.prepare(raw, audioActivity: audio.activity,
+        guard let transcript = dependencies.preparation.transcript(raw, activity: audio.activity,
             recognitionPhrases: settings.dictionary.recognitionPhrases) else { throw IntegrationError.noSpeechDetected }
         control.update(phase: .processing, transcript: transcript)
         let screen = await screenTask?.value ?? .empty
         try check(control)
         let inputContext = contextWithScreen(screen.text)
-        let formatKind = mode == .formatting ? TextFormatClassifier.classify(text: transcript, context: inputContext).kind : nil
+        let formatKind = mode == .formatting ? dependencies.preparation.format(text: transcript, context: inputContext).kind : nil
         let memory = settings.enableMemory && mode != .direct
             ? dependencies.memory?.recentContext(limit: 5, windowMinutes: settings.memoryWindowMinutes, currentContext: inputContext) ?? "" : ""
         let recipe = try await dependencies.recipes.create(id: recipeID, request: ())

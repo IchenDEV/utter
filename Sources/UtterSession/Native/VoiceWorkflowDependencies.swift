@@ -14,6 +14,7 @@ struct VoiceWorkflowDependencies {
     let speech: any ProviderCatalog<SpeechProviderRequest, any SpeechEngine>
     let generation: any ProviderCatalog<GenerationPurpose, any TextGenerationService>
     let recipes: any ProviderCatalog<Void, any ModeRecipeService>
+    let preparation: any TextPreparationService
     let capture: any CaptureService
     let audioFiles: any AudioFileService
     let evidence: any SpeechEvidenceService

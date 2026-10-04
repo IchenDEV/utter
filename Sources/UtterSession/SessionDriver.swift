@@ -17,6 +17,7 @@ package final class SessionDriver: SessionExecutionService {
     private var closed = false
     private var reserving = false
     private var settling = false
+    private var terminalFailures: [UUID: Error] = [:]
     private var admittedIDs: Set<UUID> = []
     private var progressObservers: [UUID: (SessionIntent, SessionExecutionSnapshot) -> Void] = [:]
     private var settlementObservers: [UUID: (SessionIntent, Result<SessionCompletion, Error>) -> Void] = [:]
@@ -39,6 +40,28 @@ package final class SessionDriver: SessionExecutionService {
         guard !closed, isReady(), active.control.isCurrent else { throw CancellationError() }
         active.control.activate()
         publish(SessionExecutionSnapshot(id: id, phase: .preparing, isBusy: true))
+    }
+
+    package func waitForRecording(_ id: UUID) async throws {
+        guard snapshot.id == id else { throw IntegrationError.invalidSessionState }
+        let (stream, continuation) = AsyncStream<SessionExecutionSnapshot>.makeStream(bufferingPolicy: .bufferingNewest(1))
+        let observation = observe { value in
+            if value.id == id { continuation.yield(value) }
+        }
+        defer { removeObserver(observation); continuation.finish() }
+        continuation.yield(snapshot)
+        for await value in stream {
+            if Task.isCancelled { break }
+            switch value.phase {
+            case .recording, .transcribing, .processing, .delivering, .completed: return
+            case .failed: throw terminalFailures[id] ?? IntegrationError.operationFailed
+            case .cancelled: throw CancellationError()
+            default: continue
+            }
+        }
+        cancel()
+        await stop()
+        throw CancellationError()
     }
 
     private func admit(_ intent: SessionIntent, activate: Bool) throws {
@@ -133,6 +156,7 @@ package final class SessionDriver: SessionExecutionService {
                 snapshot = SessionExecutionSnapshot(id: intent.id, phase: .failed,
                     transcript: completion.transcript, text: completion.text)
             case .failure(let error):
+                terminalFailures[intent.id] = error
                 snapshot = SessionExecutionSnapshot(id: intent.id,
                     phase: error is CancellationError ? .cancelled : .failed, error: error.localizedDescription)
             }

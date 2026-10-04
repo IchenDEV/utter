@@ -48,6 +48,29 @@ final class SessionDriverTests: XCTestCase {
         await driver.close()
     }
 
+    func testStartWaitPreservesTheFailureAndWaitsForCleanup() async throws {
+        let fixture = try DriverFixture()
+        defer { fixture.remove() }
+        let job = HeldSessionJob()
+        job.startupFailure = IntegrationError.permissionDenied
+        let driver = fixture.driver(DriverFactory(job: job))
+        let intent = SessionIntent(input: .local)
+        try driver.start(intent)
+        let wait = Task { () -> Result<Void, Error> in
+            do { try await driver.waitForRecording(intent.id); return .success(()) }
+            catch { return .failure(error) }
+        }
+        while !job.closing { await Task.yield() }
+        XCTAssertTrue(driver.snapshot.isBusy)
+        job.finishClose()
+        switch await wait.value {
+        case .success: XCTFail("A failed preparation reported recording readiness")
+        case .failure(let error): XCTAssertEqual(error as? IntegrationError, .permissionDenied)
+        }
+        XCTAssertEqual(driver.snapshot.phase, .failed)
+        await driver.close()
+    }
+
     func testEveryEntryWaitsForCancellationAndResourceDrain() async throws {
         let fixture = try DriverFixture()
         defer { fixture.remove() }
@@ -204,10 +227,12 @@ private final class HeldSessionJob: SessionJob {
     var closing = false
     var accepted = false
     var disposition = DeliveryDisposition.accepted
+    var startupFailure: Error?
     private var waiter: CheckedContinuation<Void, Never>?
     private var closeWaiter: CheckedContinuation<Void, Never>?
     func run(control: any SessionJobControl) async throws -> SessionCompletion {
         entered = true
+        if let startupFailure { throw startupFailure }
         control.update(phase: .recording, transcript: "")
         await withCheckedContinuation { waiter = $0 }
         if !accepted { throw CancellationError() }

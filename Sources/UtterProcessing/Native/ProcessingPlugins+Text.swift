@@ -3,7 +3,7 @@ import UtterMediaContracts
 import UtterRuntime
 
 @MainActor
-package enum ProcessingPlugins {
+extension ProcessingPlugins {
     package static func text(additionalDependencies: [ServiceRequirement] = []) -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(
             id: "processing.text",

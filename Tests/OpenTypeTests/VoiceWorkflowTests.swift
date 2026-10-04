@@ -34,6 +34,37 @@ final class VoiceWorkflowTests: XCTestCase {
         try await fixture.runtime.stop()
     }
 
+    func testCancelledAPIStartWaitDrainsPreparationBeforeReturning() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        fixture.engine.holdPreparation = true
+        try await fixture.start()
+        let api = try fixture.runtime.service(SessionServices.api)
+        let driver = try fixture.runtime.service(SessionServices.execution)
+        let credentials = try fixture.runtime.service(DataServices.credentials)
+        credentials.update { $0.developerHTTPToken = "token" }
+        let client = IntegrationClient.localHTTP(tokenID: "token")
+        try fixture.runtime.service(IntegrationServices.clients).approve(client)
+        let row = try await api.createSession(InputSessionRequest(), clientID: client.id)
+        let start = Task { () -> Result<Void, Error> in
+            do { try await api.startRecording(sessionID: row.id, clientID: client.id); return .success(()) }
+            catch { return .failure(error) }
+        }
+        while !fixture.engine.preparing { await Task.yield() }
+        start.cancel()
+        for _ in 0..<20 { await Task.yield() }
+        XCTAssertTrue(driver.snapshot.isBusy)
+        fixture.engine.release()
+        switch await start.value {
+        case .success: XCTFail("Cancelled start reported readiness")
+        case .failure(let error): XCTAssertTrue(error is CancellationError)
+        }
+        XCTAssertEqual(driver.snapshot.phase, .cancelled)
+        XCTAssertTrue(fixture.capture.requests.isEmpty)
+        XCTAssertEqual(try api.session(row.id, clientID: client.id)?.state, .cancelled)
+        try await fixture.runtime.stop()
+    }
+
     func testCreatedFileJobFreezesPathsAndCredentialsBeforeActivation() async throws {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }

@@ -52,6 +52,7 @@ package final class OpenTypeService: InputSessionService {
 
         if let execution {
             try execution.activate(sessionID)
+            try await execution.waitForRecording(sessionID)
             return
         }
         let now = Date()

@@ -20,7 +20,7 @@ extension VoiceSessionJob {
             engine.startListening(language: settings.inputLanguage.whisperCode) { [weak self, weak control] text in
                 callbacks.enqueue {
                     guard let self, let control, self.capturing, (try? self.check(control)) != nil else { return }
-                    control.update(phase: .recording, transcript: TranscriptionSanitizer.previewText(text, inputLanguage: self.settings.inputLanguage))
+                    control.update(phase: .recording, transcript: self.dependencies.preparation.preview(text, language: self.settings.inputLanguage))
                 }
             }
         }

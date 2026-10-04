@@ -91,6 +91,7 @@ package protocol SessionExecutionService: AnyObject {
     var snapshot: SessionExecutionSnapshot { get }
     func reserve(_ intent: SessionIntent) throws
     func activate(_ id: UUID) throws
+    func waitForRecording(_ id: UUID) async throws
     func start(_ intent: SessionIntent) throws
     func stop() async
     func cancel()

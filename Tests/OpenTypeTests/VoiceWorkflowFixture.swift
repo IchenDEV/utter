@@ -4,6 +4,7 @@ import UtterContracts
 import UtterData
 import UtterMediaContracts
 import UtterModels
+import UtterProcessing
 import UtterRuntime
 @testable import UtterSession
 
@@ -58,7 +59,7 @@ final class VoiceWorkflowFixture {
                    DataPlugins.integrationClients(defaults: defaults), DataPlugins.dictionary(directoryURL: directory),
                    DataPlugins.lexicons(), DataPlugins.history(directoryURL: directory, reportError: { _ in }),
                    DataPlugins.diagnostics(WorkflowLog()), ModelPlugins.resourceAccess(), capabilities,
-                   SessionPlugins.voiceWorkflows(), SessionPlugins.execution(), SessionPlugins.api()]
+                   ProcessingPlugins.preparation(), SessionPlugins.voiceWorkflows(), SessionPlugins.execution(), SessionPlugins.api()]
         runtime = PluginRuntime(catalog: try PluginCatalog(plugins))
     }
     func start() async throws { try await runtime.start(plugins.map { PluginSelection($0.descriptor.id) }) }
