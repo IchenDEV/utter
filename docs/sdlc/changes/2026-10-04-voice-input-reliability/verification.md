@@ -24,6 +24,7 @@
 | 翻译语言与交付门槛 | Linux 全套 593 tests，0 failures | 覆盖 0.7/0.2 门槛、非语言内容、目标证明和旧决策读取；系统语言识别及共享会话拒绝写入待 macOS CI |
 | 原生翻译检查 `e0bf4d1` | [macOS CI](https://github.com/IchenDEV/utter/actions/runs/37224413746)：应用构建通过；1102 tests，18 skips，4 failures | 系统语言识别、UTF-16 和采集新用例通过；三处撤权结果错归为失败、一处测试未捕获预期失败已修正，待下次 CI |
 | 队列前采集、计时和呈现投影 | Linux 全套 603 tests，0 failures | 覆盖首段音频选择、首个停止时间、分段计时、默认无正文记录和交付状态投影；原生模型锁期间采集及读屏错误用例待 CI |
+| 原生队列检查 `a8b7fe1` | [macOS CI](https://github.com/IchenDEV/utter/actions/runs/37227742799)：重复的诊断构造器阻断编译；测试未运行 | 已删除重复声明；其余 SDK 适配尚待下一次 CI |
 | `ci-basic-checks.sh` | 模块、资源、脚本与 plist 检查通过；在缺少 `PlistBuddy` 时停止 | 完整检查必须在 macOS 运行 |
 | 真实模型质量 | 未运行 | 合成语料和宿主已建立，仍需明确的已安装模型 |
 | 原生窗口、权限、麦克风与剪贴板 | 未运行 | 按约定由用户本机验证 |
