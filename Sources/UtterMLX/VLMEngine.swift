@@ -19,12 +19,11 @@ package actor VLMEngine {
 
     private var container: ModelContainer?
     private var currentModelID: String?
-    private var currentModelURL: URL?
+    private var currentModelRevision: String?
 
     package func loadModel(id: String, modelURL: URL? = nil) async throws {
         try Task.checkCancellation()
         guard !closed else { throw GenerationServiceError.unsupportedOperation }
-        if currentModelID == id, currentModelURL == modelURL, container != nil { return }
 
         log.info("[VLMEngine] loading model: \(id)")
         let started = CFAbsoluteTimeGetCurrent()
@@ -32,15 +31,19 @@ package actor VLMEngine {
         guard let localURL = modelURL ?? files.installedTextModelURL(id) else {
             throw LLMError.modelNotDownloaded
         }
+        let revision = ModelLocationLease.identity(localURL)
+        if currentModelID == id, currentModelRevision == revision, container != nil { return }
         modelLoadAttempted = true
-        container = try await VLMModelFactory.shared.loadContainer(
+        let loaded = try await VLMModelFactory.shared.loadContainer(
             from: localURL,
             using: MLXModelLoading.tokenizerLoader
         )
 
         try Task.checkCancellation()
+        guard !closed else { throw GenerationServiceError.unsupportedOperation }
+        container = loaded
         currentModelID = id
-        currentModelURL = modelURL
+        currentModelRevision = revision
         let elapsed = CFAbsoluteTimeGetCurrent() - started
         log.info("[VLMEngine] model loaded in \(String(format: "%.1f", elapsed))s")
     }
@@ -84,7 +87,7 @@ package actor VLMEngine {
     package func unload() {
         container = nil
         currentModelID = nil
-        currentModelURL = nil
+        currentModelRevision = nil
         if modelLoadAttempted {
             modelLoadAttempted = false
             Memory.clearCache()

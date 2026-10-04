@@ -30,6 +30,8 @@ extension SessionPlugins {
                 log: try context.require(IntegrationServices.diagnostics)
             )
             let factory = VoiceWorkflowFactory(dependencies: dependencies, isReady: { context.isReady })
+            try context.scope.onRevoke { factory.revoke() }
+            try context.scope.onDispose { await factory.close() }
             try context.provide(SessionServices.workflows, value: factory)
         }
     }

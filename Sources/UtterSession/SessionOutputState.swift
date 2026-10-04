@@ -22,10 +22,13 @@ package final class SessionOutputState: SessionOutputStateService {
     }
 
     @discardableResult
-    package func installPending(_ replacement: DeferredReplacement, anchor: any OutputAnchor) -> Bool {
-        guard !closed, let recentAnchor = recent?.anchor, recentAnchor === anchor,
-              recent?.recordID == replacement.historyRecordID,
-              recent?.text == replacement.insertedText, anchor.text == replacement.insertedText else { return false }
+    package func installPending(_ replacement: DeferredReplacement, anchor: (any OutputAnchor)?) -> Bool {
+        guard !closed, recent?.recordID == replacement.historyRecordID,
+              recent?.text == replacement.insertedText else { return false }
+        if let anchor {
+            guard let recentAnchor = recent?.anchor, recentAnchor === anchor,
+                  anchor.text == replacement.insertedText else { return false }
+        } else if recent?.anchor != nil { return false }
         pending = replacement
         pendingAnchor = anchor
         notify()

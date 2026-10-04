@@ -25,16 +25,7 @@ package struct FrozenModelFiles: ModelFilesService {
     package var isCurrent: Bool { revision == Self.identity([speechURL, textURL, whisperURL]) }
 
     private static func identity(_ urls: [URL?]) -> String {
-        urls.map { url in
-            guard let url else { return "missing" }
-            guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path) else { return url.path + ":missing" }
-            let device = attributes[.systemNumber] as? NSNumber
-            let inode = attributes[.systemFileNumber] as? NSNumber
-            let modified = (attributes[.modificationDate] as? Date)?.timeIntervalSince1970
-            return url.path + ":" + String(describing: device) + ":" + String(describing: inode)
-                + ":" + String(describing: modified)
-
-        }.joined(separator: "|")
+        urls.map(ModelLocationLease.identity).joined(separator: "|")
     }
 
     package func installedTextModelURL(_ id: String) -> URL? { id == modelID ? textURL : nil }

@@ -51,6 +51,7 @@ package actor EspressoLLMEngine {
         self.log = log
     }
 
+    private var modelRevision: String?
     private var model: LoadedModel?
     private var lastFailureMessage: String?
 
@@ -60,11 +61,14 @@ package actor EspressoLLMEngine {
         let expandedPath = NSString(string: path).expandingTildeInPath
         let url = URL(fileURLWithPath: expandedPath, isDirectory: true).standardizedFileURL
         lastFailureMessage = nil
-        guard model?.path != url.path else { return }
+        let revision = ModelLocationLease.identity(url)
+        guard model?.path != url.path || modelRevision != revision else { return }
 
         log.info("[ANELMEngine] loading Qwen3 model: \(url.lastPathComponent)")
         do {
             let validated = try await Self.makeValidatedTokenizer(at: url, files: files, log: log)
+            try Task.checkCancellation()
+            guard !closed else { throw GenerationServiceError.unsupportedOperation }
             model = nil
             var nativeError: UnsafeMutablePointer<CChar>?
             let runtime = url.path.withCString { ane_lm_create($0, &nativeError) }
@@ -81,6 +85,7 @@ package actor EspressoLLMEngine {
                 tokenizer: validated.tokenizer,
                 samplerVocabularySize: validated.samplerVocabularySize
             )
+            modelRevision = revision
             log.info("[ANELMEngine] Qwen3 model ready for ANE inference")
         } catch is CancellationError {
             throw CancellationError()

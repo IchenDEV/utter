@@ -52,11 +52,18 @@ package struct ProcessingResult: Sendable {
 
 @MainActor
 package protocol ProcessingService: AnyObject {
+    func cleanReplacement(_ text: String, language: InputLanguage) throws -> String
     func process(_ request: ProcessingRequest) async throws -> ProcessingResult
     func resolveEditCommand(
         text: String, options: TextProcessingOptions, dictionary: PersonalDictionarySnapshot,
         context: SpokenEditCommandResolutionContext
     ) async throws -> SpokenEditCommandLLMResolution?
+}
+
+extension ProcessingService {
+    package func cleanReplacement(_ text: String, language: InputLanguage) throws -> String {
+        SpokenEditCommandPayloadCleaner.cleanReplacement(text)
+    }
 }
 
 package enum ProcessingError: LocalizedError {

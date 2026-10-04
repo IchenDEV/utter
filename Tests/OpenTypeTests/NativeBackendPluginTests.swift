@@ -55,6 +55,25 @@ final class NativeBackendPluginTests: XCTestCase {
         XCTAssertEqual(providers.descriptors.map(\.id), ["generation.ane", "generation.mlx"])
         let mlx = try await providers.create(id: "mlx", request: .inference)
         let ane = try await providers.create(id: "espresso", request: .inference)
+        for service in [mlx, ane] {
+            do {
+                try await service.prepare(TextGenerationRequest(prompt: "", modelID: "missing", frozenModel: ModelLocationLease(nil)))
+                XCTFail("Frozen absence must reject before backend loading")
+            } catch { XCTAssertEqual(error as? GenerationServiceError, .modelUnavailable) }
+        }
+        let modelRoot = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let modelURL = modelRoot.appendingPathComponent("model")
+        defer { try? FileManager.default.removeItem(at: modelRoot) }
+        try FileManager.default.createDirectory(at: modelURL, withIntermediateDirectories: true)
+        let frozen = ModelLocationLease(modelURL)
+        try FileManager.default.moveItem(at: modelURL, to: modelRoot.appendingPathComponent("old"))
+        try FileManager.default.createDirectory(at: modelURL, withIntermediateDirectories: true)
+        for service in [mlx, ane] {
+            do {
+                try await service.prepare(TextGenerationRequest(prompt: "", modelID: "replacement", frozenModel: frozen))
+                XCTFail("A frozen request loaded a later published model")
+            } catch { XCTAssertEqual(error as? GenerationServiceError, .modelChanged) }
+        }
         let mlxLoaded = await mlx.isLoaded
         let aneLoaded = await ane.isLoaded
         XCTAssertFalse(mlxLoaded)

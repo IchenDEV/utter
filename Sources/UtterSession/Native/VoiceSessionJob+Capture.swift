@@ -10,7 +10,7 @@ extension VoiceSessionJob {
     }
 
     func capture(using engine: any SpeechEngine, control: any SessionJobControl) async throws -> Audio {
-        if case .file(let url) = intent.input {
+        if case .file(let url) = input {
             _ = try dependencies.audioFiles.inspect(url)
             return Audio(url: url, activity: nil, streaming: false)
         }
@@ -25,10 +25,12 @@ extension VoiceSessionJob {
             }
         }
         let source: CaptureSource
-        switch intent.input {
+        switch input {
         case .local: source = .local(deviceID: settings.microphoneID)
         case .remote(let token): source = .remote(token: token)
         case .file: preconditionFailure("File input is handled before capture")
+        case .unselected: throw IntegrationError.invalidSessionState
+        case .text: throw IntegrationError.invalidSessionState
         }
         let callbackTasks = callbacks
         recording = try await dependencies.capture.begin(CaptureRequest(source: source, thresholds: settings.audioActivityThresholds),

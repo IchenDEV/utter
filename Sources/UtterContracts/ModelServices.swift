@@ -3,6 +3,12 @@ import UtterRuntime
 
 package protocol ModelResourceAccess: Sendable {
     func withAccess<Value>(_ operation: () async throws -> Value) async throws -> Value
+    /// Queue-launched inference shares the current lease and drains before its owner releases access.
+    func inheritingCurrentAccess() -> any ModelResourceAccess
+}
+
+extension ModelResourceAccess {
+    package func inheritingCurrentAccess() -> any ModelResourceAccess { self }
 }
 
 package enum ModelResourceError: Error, Equatable {

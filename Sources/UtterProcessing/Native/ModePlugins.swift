@@ -65,4 +65,16 @@ private final class BuiltinModeRecipe: ModeRecipeService {
         guard isCurrent(), !Task.isCancelled else { throw CancellationError() }
         return result
     }
+    func resolveEditCommand(_ request: ProcessingRequest, context: SpokenEditCommandResolutionContext) async throws -> SpokenEditCommandLLMResolution? {
+        guard try mode(request.mode) == .command else { return nil }
+        guard isCurrent(), !Task.isCancelled else { throw CancellationError() }
+        let result = try await processor.resolveEditCommand(text: request.text, options: request.options,
+            dictionary: request.dictionary, context: context)
+        guard isCurrent(), !Task.isCancelled else { throw CancellationError() }
+        return result
+    }
+    func cleanReplacement(_ text: String, language: InputLanguage) throws -> String {
+        guard isCurrent(), !Task.isCancelled else { throw CancellationError() }
+        return try processor.cleanReplacement(text, language: language)
+    }
 }

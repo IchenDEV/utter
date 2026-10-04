@@ -12,13 +12,18 @@ final class CallbackTasksTests: XCTestCase {
         var lateCallbackRan = false
         owner.enqueue {
             entered = true
-            await gate.wait()
+            await withTaskCancellationHandler {
+                await gate.wait()
+            } onCancel: {
+                Task { await gate.recordCancellation() }
+            }
             finished = true
         }
         while !entered { await Task.yield() }
+        while !(await gate.isWaiting) { await Task.yield() }
         var closed = false
         let closer = Task { await owner.close(); closed = true }
-        await Task.yield()
+        while !(await gate.wasCancelled) { await Task.yield() }
         owner.enqueue { lateCallbackRan = true }
         for _ in 0..<10 { await Task.yield() }
         XCTAssertFalse(closed)
@@ -44,6 +49,9 @@ final class CallbackTasksTests: XCTestCase {
 
 private actor CallbackGate {
     private var continuation: CheckedContinuation<Void, Never>?
+    private(set) var wasCancelled = false
+    var isWaiting: Bool { continuation != nil }
+    func recordCancellation() { wasCancelled = true }
     func wait() async { await withCheckedContinuation { continuation = $0 } }
     func release() { continuation?.resume(); continuation = nil }
 }

@@ -63,7 +63,8 @@ extension TextProcessor {
                             model: options.llmModel,
                             image: screenImage,
                             maxTokens: 4096,
-                            temperature: 0.3, providerID: options.imageProviderID, modelLocations: options.modelLocations
+                            temperature: 0.3, providerID: options.imageProviderID,
+                            modelLocations: options.modelLocations, modelVersions: options.modelVersions
                         )
                     } catch {
                         try Task.checkCancellation()

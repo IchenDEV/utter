@@ -240,7 +240,7 @@ package final class OpenTypeService: InputSessionService {
         }
     }
 
-    private func requireOwner(sessionID: UUID, clientID: String) throws {
+    func requireOwner(sessionID: UUID, clientID: String) throws {
         guard sessionOwners[sessionID] == clientID else {
             throw IntegrationError.unauthorizedClient
         }

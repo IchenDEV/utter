@@ -17,12 +17,11 @@ package actor LLMEngine {
 
     private var container: ModelContainer?
     private var currentModelID: String?
-    private var currentModelURL: URL?
+    private var currentModelRevision: String?
 
     package func loadModel(id: String, modelURL: URL? = nil) async throws {
         try Task.checkCancellation()
         guard !closed else { throw GenerationServiceError.unsupportedOperation }
-        if currentModelID == id, currentModelURL == modelURL, container != nil { return }
 
         log.info("[LLMEngine] loading model: \(id)")
         let t0 = CFAbsoluteTimeGetCurrent()
@@ -30,15 +29,19 @@ package actor LLMEngine {
         guard let localURL = modelURL ?? files.installedTextModelURL(id) else {
             throw LLMError.modelNotDownloaded
         }
+        let revision = ModelLocationLease.identity(localURL)
+        if currentModelID == id, currentModelRevision == revision, container != nil { return }
         modelLoadAttempted = true
-        container = try await LLMModelFactory.shared.loadContainer(
+        let loaded = try await LLMModelFactory.shared.loadContainer(
             from: localURL,
             using: MLXModelLoading.tokenizerLoader
         )
 
         try Task.checkCancellation()
+        guard !closed else { throw GenerationServiceError.unsupportedOperation }
+        container = loaded
         currentModelID = id
-        currentModelURL = modelURL
+        currentModelRevision = revision
         let elapsed = CFAbsoluteTimeGetCurrent() - t0
         log.info("[LLMEngine] model loaded in \(String(format: "%.1f", elapsed))s")
     }
@@ -125,7 +128,7 @@ package actor LLMEngine {
     package func unload() {
         container = nil
         currentModelID = nil
-        currentModelURL = nil
+        currentModelRevision = nil
         if modelLoadAttempted {
             modelLoadAttempted = false
             Memory.clearCache()

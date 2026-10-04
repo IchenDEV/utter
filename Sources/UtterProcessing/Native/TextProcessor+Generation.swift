@@ -28,9 +28,17 @@ extension TextProcessor {
         let remote = options.useRemoteLLM
             ? RemoteGenerationConfiguration(baseURL: options.remoteBaseURL, apiKey: options.remoteAPIKey, provider: options.remoteProvider)
             : nil
+        let frozenModel: ModelLocationLease?
+        switch options.modelLocations {
+        case .unresolved: frozenModel = nil
+        case .frozen:
+            frozenModel = options.useRemoteLLM ? nil
+                : (usesANE ? options.modelVersions?.bundle : options.modelVersions?.directory) ?? ModelLocationLease(modelURL)
+        }
         return TextGenerationRequest(
             prompt: prompt, systemPrompt: systemPrompt, modelID: modelID, modelURL: modelURL,
-            maxTokens: maxTokens, temperature: temperature, remote: remote
+            maxTokens: maxTokens, temperature: temperature, remote: remote,
+            frozenModel: frozenModel
         )
     }
 
@@ -90,16 +98,20 @@ extension TextProcessor {
 
     package func generateWithScreenImage(
         prompt: String, systemPrompt: String, model: String, image: CGImage,
-        maxTokens: Int, temperature: Double, providerID: String = "generation.mlx-image", modelLocations: FrozenGenerationLocations = .unresolved
+        maxTokens: Int, temperature: Double, providerID: String = "generation.mlx-image",
+        modelLocations: FrozenGenerationLocations = .unresolved, modelVersions: FrozenGenerationVersions? = nil
     ) async throws -> String {
         let modelURL: URL?
+        let frozenModel: ModelLocationLease?
         switch modelLocations {
-        case .unresolved: modelURL = modelFiles.installedTextModelURL(model)
-        case .frozen(_, let directory): modelURL = directory
+        case .unresolved: modelURL = modelFiles.installedTextModelURL(model); frozenModel = nil
+        case .frozen(_, let directory):
+            modelURL = directory
+            frozenModel = modelVersions?.directory ?? ModelLocationLease(directory)
         }
         let request = TextGenerationRequest(
             prompt: prompt, systemPrompt: systemPrompt, modelID: model, modelURL: modelURL,
-            maxTokens: maxTokens, temperature: temperature
+            maxTokens: maxTokens, temperature: temperature, frozenModel: frozenModel
         )
         guard let imageProviders else { throw GenerationServiceError.unsupportedOperation }
         let provider = try await imageProviders.create(id: providerID, request: .inference)

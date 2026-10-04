@@ -7,7 +7,7 @@ import AVFoundation
 package final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
     private let log: Log
     private var recognizer: SFSpeechRecognizer
-    package private(set) var isReady = false
+    package var isReady: Bool { SFSpeechRecognizer.authorizationStatus() == .authorized }
     private var recognitionTask: SFSpeechRecognitionTask?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var bestSoFar = ""
@@ -26,8 +26,6 @@ package final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
             ?? SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
             ?? SFSpeechRecognizer()!
 
-        let status = SFSpeechRecognizer.authorizationStatus()
-        isReady = (status == .authorized)
     }
 
     package var supportsStreaming: Bool { true }
@@ -39,15 +37,18 @@ package final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
     }
 
     package func requestAccess() {
-        guard SFSpeechRecognizer.authorizationStatus() != .authorized else {
-            isReady = true
-            return
+        guard !isReady else { return }
+        SFSpeechRecognizer.requestAuthorization { _ in }
+    }
+
+    package func requestPermission() async throws {
+        try Task.checkCancellation()
+        guard !isReady else { return }
+        let allowed = try await PermissionRequest.wait { completion in
+            SFSpeechRecognizer.requestAuthorization { completion($0 == .authorized) }
         }
-        SFSpeechRecognizer.requestAuthorization { [weak self] status in
-            DispatchQueue.main.async {
-                self?.isReady = (status == .authorized)
-            }
-        }
+        try Task.checkCancellation()
+        guard allowed else { throw AppleSpeechError.notAuthorized }
     }
 
     package func startListening(language: String?, onPartialResult: @escaping @Sendable (String) -> Void) {
@@ -143,9 +144,7 @@ package final class LegacyAppleSpeechEngine: SpeechEngine, @unchecked Sendable {
         }
 
         if !isReady {
-            requestAccess()
-            try await Task.sleep(nanoseconds: 500_000_000)
-            guard isReady else { throw AppleSpeechError.notAuthorized }
+            try await requestPermission()
         }
 
         configureRecognizer(language: language)

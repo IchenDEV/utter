@@ -4,16 +4,18 @@ import UtterContracts
 package struct MLXGenerationService: TextGenerationService {
     private let engine: LLMEngine
     private let access: any ModelResourceAccess
+    private let files: any ModelFilesService
 
     package init(files: any ModelFilesService, access: any ModelResourceAccess, log: Log) {
         engine = LLMEngine(files: files, log: log)
         self.access = access
+        self.files = files
     }
 
     package func generate(_ request: TextGenerationRequest) async throws -> String {
         try await access.withAccess {
             try Task.checkCancellation()
-            try await engine.loadModel(id: request.modelID, modelURL: request.modelURL)
+            try await engine.loadModel(id: request.modelID, modelURL: request.localModelURL(using: files))
             try Task.checkCancellation()
             let result = try await engine.generate(
                 prompt: request.prompt, systemPrompt: request.systemPrompt,
@@ -25,7 +27,7 @@ package struct MLXGenerationService: TextGenerationService {
     }
 
     package func prepare(_ request: TextGenerationRequest) async throws {
-        try await access.withAccess { try await engine.loadModel(id: request.modelID, modelURL: request.modelURL) }
+        try await access.withAccess { try await engine.loadModel(id: request.modelID, modelURL: request.localModelURL(using: files)) }
     }
 
     package var isLoaded: Bool { get async { await engine.isLoaded } }
@@ -39,7 +41,7 @@ package struct MLXGenerationService: TextGenerationService {
     package func benchmark(_ request: TextGenerationRequest) async throws -> ModelBenchmarkResult {
         try await access.withAccess {
             do {
-                let result = try await engine.benchmark(modelID: request.modelID, modelURL: request.modelURL)
+                let result = try await engine.benchmark(modelID: request.modelID, modelURL: request.localModelURL(using: files))
                 await engine.unload()
                 return result
             } catch {

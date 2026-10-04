@@ -144,7 +144,7 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
             language: language,
             partialHandler: onPartialResult,
             optionsBuilder: { options },
-            access: access, log: log
+            access: access.inheritingCurrentAccess(), log: log
         )
     }
 
@@ -209,10 +209,15 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
 
     package func shutdown() async {
         closed = true
-        await streamingSession?.shutdown()
-        for stream in retiredStreams { await stream.shutdown() }
-        retiredStreams.removeAll()
+        await drainRecognition()
         try? await access.withAccess { self.unload() }
+    }
+
+    package func drainRecognition() async {
+        cancelListening()
+        let streams = retiredStreams
+        retiredStreams.removeAll()
+        for stream in streams { await stream.shutdown() }
     }
 
     package func unload() {

@@ -18,21 +18,29 @@ package struct TextGenerationRequest: Sendable {
     package let systemPrompt: String?
     package let modelID: String
     package let modelURL: URL?
+    package let frozenModel: ModelLocationLease?
     package let maxTokens: Int
     package let temperature: Double
     package let remote: RemoteGenerationConfiguration?
 
     package init(
         prompt: String, systemPrompt: String? = nil, modelID: String, modelURL: URL? = nil,
-        maxTokens: Int = 2048, temperature: Double = 0.3, remote: RemoteGenerationConfiguration? = nil
+        maxTokens: Int = 2048, temperature: Double = 0.3, remote: RemoteGenerationConfiguration? = nil,
+        frozenModel: ModelLocationLease? = nil
     ) {
         self.prompt = prompt
         self.systemPrompt = systemPrompt
         self.modelID = modelID
         self.modelURL = modelURL
+        self.frozenModel = frozenModel
         self.maxTokens = maxTokens
         self.temperature = temperature
         self.remote = remote
+    }
+
+    package func localModelURL(using files: any ModelFilesService) throws -> URL? {
+        if let frozenModel { return try frozenModel.requireInstalledURL() }
+        return modelURL ?? files.installedTextModelURL(modelID)
     }
 }
 
@@ -47,8 +55,8 @@ package protocol TextGenerationService: Sendable {
     func validateModel(at url: URL) async throws
 }
 
-package enum GenerationServiceError: Error {
-    case unsupportedOperation
+package enum GenerationServiceError: Error, Equatable {
+    case unsupportedOperation, modelUnavailable, modelChanged
 }
 
 extension TextGenerationService {

@@ -134,7 +134,8 @@ package final class TextProcessor {
                             model: options.llmModel,
                             image: screenImage,
                             maxTokens: generationOptions.maxTokens,
-                            temperature: generationOptions.temperature, providerID: options.imageProviderID, modelLocations: options.modelLocations
+                            temperature: generationOptions.temperature, providerID: options.imageProviderID,
+                            modelLocations: options.modelLocations, modelVersions: options.modelVersions
                         )
                     } catch {
                         try Task.checkCancellation()

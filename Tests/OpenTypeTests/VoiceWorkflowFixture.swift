@@ -18,6 +18,7 @@ final class VoiceWorkflowFixture {
     let output = WorkflowOutput()
     let files = WorkflowFiles()
     let recipe = WorkflowRecipe()
+    let target = WorkflowTarget()
     var speechRequests: [SpeechProviderRequest] = []
     private(set) var runtime: PluginRuntime!
     private var plugins: [PluginRegistration] = []
@@ -53,11 +54,11 @@ final class VoiceWorkflowFixture {
             try context.provide(AudioServices.files, value: WorkflowAudioFiles())
             try context.provide(AudioServices.evidence, value: WorkflowEvidence())
             try context.provide(MacServices.output, value: output)
-            try context.provide(MacServices.target, value: WorkflowTargets())
+            try context.provide(MacServices.target, value: WorkflowTargets(target: target))
         }
         plugins = [DataPlugins.settings(defaults: defaults), DataPlugins.credentials(), DataPlugins.notifications(),
                    DataPlugins.integrationClients(defaults: defaults), DataPlugins.dictionary(directoryURL: directory),
-                   DataPlugins.lexicons(), DataPlugins.history(directoryURL: directory, reportError: { _ in }),
+                   DataPlugins.lexicons(), DataPlugins.history(directoryURL: directory, reportError: { _ in }), DataPlugins.memory(),
                    DataPlugins.diagnostics(WorkflowLog()), ModelPlugins.resourceAccess(), capabilities,
                    ProcessingPlugins.preparation(), SessionPlugins.outputs(), SessionPlugins.voiceWorkflows(), SessionPlugins.execution(), SessionPlugins.api()]
         runtime = PluginRuntime(catalog: try PluginCatalog(plugins))
@@ -70,6 +71,9 @@ final class VoiceWorkflowFixture {
 }
 
 final class WorkflowSpeech: SpeechEngine {
+    var draining = false
+    var holdDrain = false
+    private var drainWaiter: CheckedContinuation<Void, Never>?
     var isReady = true
     var preparing = false
     var holdPreparation = false
@@ -88,6 +92,11 @@ final class WorkflowSpeech: SpeechEngine {
         return "Hello world."
     }
     func release() { preparation?.resume(); preparation = nil }
+    func drainRecognition() async {
+        draining = true
+        if holdDrain { await withCheckedContinuation { drainWaiter = $0 } }
+    }
+    func releaseDrain() { drainWaiter?.resume(); drainWaiter = nil }
 }
 
 @MainActor
@@ -128,6 +137,7 @@ final class WorkflowOutput: OutputService {
 
 @MainActor
 final class WorkflowDelivery: PreparedDelivery {
+    var anchor: (any OutputAnchor)?
     var receipt: DeliveryReceipt?
     var committing = false
     var closing = false
@@ -138,7 +148,7 @@ final class WorkflowDelivery: PreparedDelivery {
     func commit() async -> DeliveryReceipt {
         committing = true
         if heldCommit { await withCheckedContinuation { commitWaiter = $0 } }
-        let value = DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste)
+        let value = DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor)
         receipt = value
         return value
     }
@@ -153,10 +163,25 @@ final class WorkflowDelivery: PreparedDelivery {
 @MainActor
 final class WorkflowRecipe: ModeRecipeService {
     var requests: [ProcessingRequest] = []
+    var resolution: SpokenEditCommandLLMResolution?
+    var resolutionContexts: [SpokenEditCommandResolutionContext] = []
+    var holdFormatting = false
+    var formatting = false
+    private var formattingWaiter: CheckedContinuation<Void, Never>?
+    func resolveEditCommand(_ request: ProcessingRequest, context: SpokenEditCommandResolutionContext) async throws -> SpokenEditCommandLLMResolution? {
+        resolutionContexts.append(context)
+        return resolution
+    }
     func process(_ request: ProcessingRequest) async throws -> ProcessingResult {
         requests.append(request)
+        if request.mode == .direct { return ProcessingResult(text: request.text) }
+        if request.mode == .formatting {
+            formatting = true
+            if holdFormatting { await withCheckedContinuation { formattingWaiter = $0 } }
+        }
         return ProcessingResult(text: request.text + " Formatted.")
     }
+    func releaseFormatting() { formattingWaiter?.resume(); formattingWaiter = nil }
 }
 
 final class WorkflowGeneration: TextGenerationService, @unchecked Sendable {
@@ -184,15 +209,18 @@ private final class WorkflowEvidence: SpeechEvidenceService {
 }
 @MainActor
 private final class WorkflowTargets: TargetCaptureService {
-    func capture(_ request: TargetCaptureRequest) throws -> any OutputTargetLease { WorkflowTarget() }
+    let target: WorkflowTarget
+    init(target: WorkflowTarget) { self.target = target }
+    func capture(_ request: TargetCaptureRequest) throws -> any OutputTargetLease { target }
 }
 @MainActor
-private final class WorkflowTarget: OutputTargetLease {
+final class WorkflowTarget: OutputTargetLease {
     let id = UUID()
     let processIdentifier: Int32 = 123
     let context = InputContext(appName: "Editor", bundleIdentifier: "fixture.editor", outputMode: .processed, inputLanguage: .english, source: .menuBar)
-    let isValid = true
-    let isCurrent = true
+    var selectedText: String?
+    var isValid = true
+    var isCurrent = true
 }
 private struct WorkflowLog: DiagnosticsService {
     func info(_ message: String) {}

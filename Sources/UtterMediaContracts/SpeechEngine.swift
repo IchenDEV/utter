@@ -14,6 +14,7 @@ package protocol SpeechEngine: AnyObject {
     func appendAudioBuffer(_ buffer: AVAudioPCMBuffer)
     func finishListening(audioURL: URL?, language: String?) async throws -> String
     func cancelListening()
+    func drainRecognition() async
     func transcribe(audioURL: URL?, language: String?) async throws -> String
     func shutdown() async
 }
@@ -43,5 +44,6 @@ extension SpeechEngine {
     }
 
     package func cancelListening() {}
+    package func drainRecognition() async { cancelListening() }
     package func shutdown() async { cancelListening() }
 }

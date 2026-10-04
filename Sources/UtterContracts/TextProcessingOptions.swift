@@ -13,6 +13,7 @@ package struct TextProcessingOptions {
     }
 
     package var modelLocations = FrozenGenerationLocations.unresolved
+    package var modelVersions: FrozenGenerationVersions?
     package var inputLanguage: InputLanguage
     package var languageStyle: LanguageStyle
     package var customStylePrompt: String

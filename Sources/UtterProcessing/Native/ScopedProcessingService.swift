@@ -33,6 +33,11 @@ final class ScopedProcessingService: ProcessingService {
         }
     }
 
+    func cleanReplacement(_ text: String, language: InputLanguage) throws -> String {
+        guard !closed, isCurrent(), !Task.isCancelled else { throw CancellationError() }
+        return processor.cleanCommandGeneratedOutput(text, inputLanguage: language)
+    }
+
     func resolveEditCommand(
         text: String, options: TextProcessingOptions, dictionary: PersonalDictionarySnapshot,
         context: SpokenEditCommandResolutionContext

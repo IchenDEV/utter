@@ -24,10 +24,7 @@ package final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
     }
 
     package func requestPermission() async throws {
-        try Task.checkCancellation()
-        guard !isReady else { return }
-        requestAccess()
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await legacy.requestPermission()
     }
 
     package func configureRecognition(context: SpeechRecognitionContext) {
@@ -83,20 +80,15 @@ package final class AppleSpeechEngine: SpeechEngine, @unchecked Sendable {
 
     package func transcribe(audioURL: URL?, language: String?) async throws -> String {
         guard let audioURL else { throw AppleSpeechError.noAudioFile }
-        do {
-            let context = recognitionContextSnapshot()
-            let text = try await AppleSpeechAnalyzer.transcribe(
+        let context = recognitionContextSnapshot()
+        return try await AppleSpeechTranscriptionFallback.run(analyzer: {
+            try await AppleSpeechAnalyzer.transcribe(
                 audioURL: audioURL,
                 locale: resolvedLocale(for: language),
                 context: context, log: log
             )
-            if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                return text
-            }
-        } catch {
-            self.log.info("[AppleSpeech] SpeechAnalyzer failed, using legacy recognizer: \(error.localizedDescription)")
-        }
-        return try await legacy.transcribe(audioURL: audioURL, language: language)
+        }, legacy: { try await legacy.transcribe(audioURL: audioURL, language: language) },
+            reportFailure: { log.info("[AppleSpeech] SpeechAnalyzer failed, using legacy recognizer: \($0.localizedDescription)") })
     }
 
     private func recognitionContextSnapshot() -> SpeechRecognitionContext {

@@ -6,14 +6,19 @@ import UtterRuntime
 @MainActor
 final class VoiceSessionJob: SessionJob {
     let intent: SessionIntent
+    var input: SessionInput
     let settings: VoiceInputSettings
     let options: TextProcessingOptions
     let mode: TextProcessingMode
     let recipeID: String
-    let speechDescriptor: ProviderDescriptor
-    let speechFiles: FrozenModelFiles
+    let directRecipeID: String
+    let editRecipeID: String
+    let speechDescriptor: ProviderDescriptor?
+    let speechFiles: FrozenModelFiles?
     let context: InputContext
     let target: (any OutputTargetLease)?
+    let recentOutput: RecentSessionOutput?
+    let memoryContext: String
     let dependencies: VoiceWorkflowDependencies
     let authorize: () throws -> Void
     let callbacks = CallbackTasks()
@@ -29,19 +34,33 @@ final class VoiceSessionJob: SessionJob {
     var clientObservation: UUID?
 
     init(intent: SessionIntent, settings: VoiceInputSettings, options: TextProcessingOptions, mode: TextProcessingMode,
-         recipeID: String, speechDescriptor: ProviderDescriptor, speechFiles: FrozenModelFiles, context: InputContext,
-         target: (any OutputTargetLease)?, dependencies: VoiceWorkflowDependencies, authorize: @escaping () throws -> Void) {
+         recipeID: String, directRecipeID: String, editRecipeID: String,
+         speechDescriptor: ProviderDescriptor?, speechFiles: FrozenModelFiles?, context: InputContext,
+         target: (any OutputTargetLease)?, recentOutput: RecentSessionOutput?, memoryContext: String,
+         dependencies: VoiceWorkflowDependencies, authorize: @escaping () throws -> Void) {
         self.intent = intent
+        self.input = intent.input
         self.settings = settings
         self.options = options
         self.mode = mode
         self.recipeID = recipeID
+        self.directRecipeID = directRecipeID
+        self.editRecipeID = editRecipeID
         self.speechDescriptor = speechDescriptor
         self.speechFiles = speechFiles
         self.context = context
         self.target = target
+        self.recentOutput = recentOutput
+        self.memoryContext = memoryContext
         self.dependencies = dependencies
         self.authorize = authorize
+    }
+
+    func bind(input: SessionInput) throws {
+        guard self.input == .unselected, input != .unselected, !revoked, !closed else {
+            throw IntegrationError.invalidSessionState
+        }
+        self.input = input
     }
 
     func run(control: any SessionJobControl) async throws -> SessionCompletion {
@@ -59,47 +78,25 @@ final class VoiceSessionJob: SessionJob {
 
     private func execute(control: any SessionJobControl) async throws -> SessionCompletion {
         try check(control)
-        guard speechFiles.isCurrent else { throw IntegrationError.modelNotReady }
         dependencies.correction?.finishCurrentSession()
-        let selected = try await dependencies.speech.create(id: settings.speech.providerID,
-            request: SpeechProviderRequest(selection: settings.speech, modelFiles: speechFiles))
-        engine = selected
-        try check(control)
-        try await selected.requestPermission()
-        try check(control)
-        await selected.prepare()
-        try check(control)
-        guard selected.isReady else { throw IntegrationError.modelNotReady }
-        selected.configureRecognition(context: SpeechRecognitionContext(phrases: speechDescriptor.recognitionVocabulary == .personal
-            ? settings.dictionary.personalRecognitionPhrases : settings.dictionary.recognitionPhrases))
-        startScreenCapture()
-        let audio = try await capture(using: selected, control: control)
-        try check(control)
-        control.update(phase: .transcribing, transcript: "")
-        if let activity = audio.activity, !activity.hasMeaningfulAudio { throw IntegrationError.noSpeechDetected }
-        guard try await dependencies.evidence.containsSpeech(at: audio.url) else { throw IntegrationError.noSpeechDetected }
-        try check(control)
-        let raw: String
-        if audio.streaming {
-            raw = try await selected.finishListening(audioURL: audio.url, language: settings.inputLanguage.whisperCode)
-        } else {
-            raw = try await selected.transcribe(audioURL: audio.url, language: settings.inputLanguage.whisperCode)
-        }
-        try check(control)
-        guard let transcript = dependencies.preparation.transcript(raw, activity: audio.activity,
-            recognitionPhrases: settings.dictionary.recognitionPhrases) else { throw IntegrationError.noSpeechDetected }
+        let transcript = try await transcription(control: control)
         control.update(phase: .processing, transcript: transcript)
+        if intent.clientID == nil, mode == .formatting, settings.enableInstantInsert,
+           let outputs = dependencies.outputs {
+            return try await insertThenFormat(transcript, outputs: outputs, control: control)
+        }
         let screen = await screenTask?.value ?? .empty
         try check(control)
         let inputContext = contextWithScreen(screen.text)
         let formatKind = mode == .formatting ? dependencies.preparation.format(text: transcript, context: inputContext).kind : nil
-        let memory = settings.enableMemory && mode != .direct
-            ? dependencies.memory?.recentContext(limit: 5, windowMinutes: settings.memoryWindowMinutes, currentContext: inputContext) ?? "" : ""
         let recipe = try await dependencies.recipes.create(id: recipeID, request: ())
         try check(control)
-        let output = try await recipe.process(ProcessingRequest(mode: mode, text: transcript, options: options,
+        let request = ProcessingRequest(mode: mode, text: processingText(transcript), options: options,
             dictionary: settings.dictionary, screenContext: screen.text, screenImage: screen.image,
-            memoryContext: memory, inputContext: inputContext, formatKind: formatKind))
+            memoryContext: memoryContext, inputContext: inputContext, formatKind: formatKind)
+        if intent.clientID == nil, mode == .command,
+           let edited = try await performSpokenEdit(request, recipe: recipe, control: control) { return edited }
+        let output = try await recipe.process(request)
         try check(control)
         let text = output.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { throw IntegrationError.operationFailed }
@@ -108,14 +105,12 @@ final class VoiceSessionJob: SessionJob {
             acceptance = .returnedText
         } else {
             control.update(phase: .delivering, transcript: transcript)
-            let prepared = try dependencies.output.prepare(DeliveryRequest(id: intent.id,
-                command: target == nil ? .clipboard(text) : .insert(text), target: target),
-                isSessionCurrent: { [weak self, weak control] in
-                    guard let self, let control else { return false }
-                    return (try? self.check(control)) != nil
-                })
-            delivery = prepared
-            acceptance = .delivery(await prepared.commit())
+            let command: DeliveryCommand
+            if case .selectionEdit = mode {
+                guard target?.selectedText?.isEmpty == false else { throw DeliveryError.invalidTarget }
+                command = .replaceSelection(text)
+            } else { command = target == nil ? .clipboard(text) : .insert(text) }
+            acceptance = try await deliver(command, target: target, control: control)
         }
         return SessionCompletion(transcript: transcript, text: text, acceptance: acceptance,
             record: InputRecord(id: intent.id, date: Date(), rawText: transcript, processedText: text, wasProcessed: mode != .direct,
@@ -142,6 +137,7 @@ final class VoiceSessionJob: SessionJob {
         revoke()
         await callbacks.close()
         if let screenTask { _ = await screenTask.value }
+        await engine?.drainRecognition()
         await delivery?.close()
         await recording?.close()
         screenTask = nil

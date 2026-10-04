@@ -23,6 +23,7 @@ extension TextProcessingOptions {
         let bundle = espressoModelPath.isEmpty ? nil
             : URL(fileURLWithPath: NSString(string: espressoModelPath).expandingTildeInPath)
         frozen.modelLocations = .frozen(bundle: bundle, directory: directory)
+        frozen.modelVersions = FrozenGenerationVersions(bundle: bundle, directory: directory)
         return frozen
     }
 }

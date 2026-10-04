@@ -4,7 +4,7 @@ import UtterContracts
 @MainActor
 package final class SessionDriver: SessionExecutionService {
     private struct Active {
-        let intent: SessionIntent
+        var intent: SessionIntent
         let job: any SessionJob
         let control: SessionControl
         let task: Task<Void, Never>
@@ -18,6 +18,7 @@ package final class SessionDriver: SessionExecutionService {
     private var reserving = false
     private var settling = false
     private var terminalFailures: [UUID: Error] = [:]
+    private var terminalSnapshots: [UUID: SessionExecutionSnapshot] = [:]
     private var admittedIDs: Set<UUID> = []
     private var progressObservers: [UUID: (SessionIntent, SessionExecutionSnapshot) -> Void] = [:]
     private var settlementObservers: [UUID: (SessionIntent, Result<SessionCompletion, Error>) -> Void] = [:]
@@ -35,32 +36,56 @@ package final class SessionDriver: SessionExecutionService {
 
     package func start(_ intent: SessionIntent) throws { try admit(intent, activate: true) }
 
-    package func activate(_ id: UUID) throws {
-        guard let active, active.intent.id == id, snapshot.phase == .created else { throw IntegrationError.invalidSessionState }
+    package func activate(_ id: UUID, input: SessionInput?) throws {
+        guard var active, active.intent.id == id, snapshot.phase == .created else { throw IntegrationError.invalidSessionState }
         guard !closed, isReady(), active.control.isCurrent else { throw CancellationError() }
+        let source = input ?? (active.intent.input == .unselected ? .local : active.intent.input)
+        guard source != .unselected else { throw IntegrationError.invalidSessionState }
+        if active.intent.input == .unselected {
+            try active.job.bind(input: source)
+            active.intent = SessionIntent(id: id, clientID: active.intent.clientID, input: source,
+                request: active.intent.request, mode: active.intent.mode, operation: active.intent.operation)
+            self.active = active
+        } else if source != active.intent.input {
+            throw IntegrationError.invalidSessionState
+        }
+        workflows.willActivate(active.intent)
         active.control.activate()
         publish(SessionExecutionSnapshot(id: id, phase: .preparing, isBusy: true))
     }
 
     package func waitForRecording(_ id: UUID) async throws {
-        guard snapshot.id == id else { throw IntegrationError.invalidSessionState }
+        _ = try await waitForPhase(id, recording: true)
+    }
+
+    package func waitForCompletion(_ id: UUID) async throws -> SessionExecutionSnapshot {
+        try await waitForPhase(id, recording: false)
+    }
+
+    private func waitForPhase(_ id: UUID, recording: Bool) async throws -> SessionExecutionSnapshot {
+        guard let initial = terminalSnapshots[id] ?? (snapshot.id == id ? snapshot : nil) else {
+            throw IntegrationError.invalidSessionState
+        }
         let (stream, continuation) = AsyncStream<SessionExecutionSnapshot>.makeStream(bufferingPolicy: .bufferingNewest(1))
         let observation = observe { value in
             if value.id == id { continuation.yield(value) }
         }
         defer { removeObserver(observation); continuation.finish() }
-        continuation.yield(snapshot)
+        continuation.yield(initial)
         for await value in stream {
             if Task.isCancelled { break }
             switch value.phase {
-            case .recording, .transcribing, .processing, .delivering, .completed: return
+            case .completed: return value
+            case .recording, .transcribing, .processing, .delivering: if recording { return value }
             case .failed: throw terminalFailures[id] ?? IntegrationError.operationFailed
             case .cancelled: throw CancellationError()
             default: continue
             }
         }
-        cancel()
-        await stop()
+        if active?.intent.id == id {
+            cancel()
+            await stop()
+        }
         throw CancellationError()
     }
 
@@ -71,6 +96,7 @@ package final class SessionDriver: SessionExecutionService {
         reserving = true
         defer { reserving = false }
         let job = try workflows.make(intent)
+        if activate, intent.input == .unselected { try job.bind(input: .local) }
         let control = SessionControl(isCurrent: { [weak self] in
             self?.active?.intent.id == intent.id && self?.closed == false && self?.isReady() == true && self?.active?.task.isCancelled == false
         }, cancel: { [weak self] in self?.cancel() }, update: { [weak self] phase, transcript in self?.update(intent.id, phase: phase, transcript: transcript) })
@@ -87,7 +113,7 @@ package final class SessionDriver: SessionExecutionService {
         admittedIDs.insert(intent.id)
         active = Active(intent: intent, job: job, control: control, task: task)
         job.attach(control: control)
-        if activate { control.activate() }
+        if activate { workflows.willActivate(intent); control.activate() }
         publish(SessionExecutionSnapshot(id: intent.id, phase: activate ? .preparing : .created, isBusy: true))
     }
 
@@ -144,8 +170,8 @@ package final class SessionDriver: SessionExecutionService {
         publish(SessionExecutionSnapshot(id: id, phase: phase, transcript: transcript, isBusy: true))
     }
 
-    private func finish(_ intent: SessionIntent, result: Result<SessionCompletion, Error>) {
-        guard active?.intent.id == intent.id else { return }
+    private func finish(_ original: SessionIntent, result: Result<SessionCompletion, Error>) {
+        guard let intent = active?.intent, intent.id == original.id else { return }
         settling = true
         notifications.settle {
             active = nil
@@ -161,11 +187,17 @@ package final class SessionDriver: SessionExecutionService {
                 snapshot = SessionExecutionSnapshot(id: intent.id,
                     phase: error is CancellationError ? .cancelled : .failed, error: error.localizedDescription)
             }
+            terminalSnapshots[intent.id] = snapshot
             for (id, callback) in Array(settlementObservers) where settlementObservers[id] != nil { callback(intent, result) }
-            if case .success(let completion) = result, completion.accepted, let record = completion.record {
-                history.addRecord(InputRecord(id: intent.id, date: record.date, rawText: record.rawText,
+            if case .success(let completion) = result, completion.accepted {
+                if let replacement = completion.historyReplacement {
+                    history.replaceRecord(recordID: replacement.recordID, processedText: completion.text,
+                        context: replacement.context, formatKind: replacement.formatKind)
+                } else if let record = completion.record {
+                    history.addRecord(InputRecord(id: intent.id, date: record.date, rawText: record.rawText,
                         processedText: record.processedText, wasProcessed: record.wasProcessed,
                         context: record.context, userFinalText: record.userFinalText, formatKind: record.formatKind))
+                }
             }
             workflows.settle(intent, result: result)
             settling = false

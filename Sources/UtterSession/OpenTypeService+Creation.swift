@@ -3,7 +3,7 @@ import UtterContracts
 
 extension OpenTypeService {
     package func createSession(_ request: InputSessionRequest, clientID: String) async throws -> InputSession {
-        try await createSession(request, input: .local, clientID: clientID)
+        try await createSession(request, input: execution == nil ? .local : .unselected, clientID: clientID)
     }
 
     package func createSession(_ request: InputSessionRequest, input: SessionInput, clientID: String) async throws -> InputSession {

@@ -6,6 +6,7 @@ package protocol InputSessionService: AnyObject {
     func createSession(_ request: InputSessionRequest, clientID: String) async throws -> InputSession
     func createSession(_ request: InputSessionRequest, input: SessionInput, clientID: String) async throws -> InputSession
     func startRecording(sessionID: UUID, clientID: String) async throws
+    func processAudioFile(sessionID: UUID, clientID: String, audioURL: URL) async throws -> InputSessionResult
     func beginProcessing(sessionID: UUID, clientID: String) async throws
     func completeSession(sessionID: UUID, clientID: String, finalText: String?) async throws
     func commitSession(sessionID: UUID, clientID: String, finalText: String?, record: () -> Void) throws

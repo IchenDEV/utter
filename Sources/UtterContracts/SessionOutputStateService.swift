@@ -25,7 +25,7 @@ package protocol SessionOutputStateService: AnyObject {
     var recent: RecentSessionOutput? { get }
     var pendingAnchor: (any OutputAnchor)? { get }
     func remember(_ completion: SessionCompletion, recordID: UUID)
-    @discardableResult func installPending(_ replacement: DeferredReplacement, anchor: any OutputAnchor) -> Bool
+    @discardableResult func installPending(_ replacement: DeferredReplacement, anchor: (any OutputAnchor)?) -> Bool
     @discardableResult func updatePending(_ id: UUID, mutation: (inout DeferredReplacement) -> Void) -> Bool
     func clearPending(_ id: UUID?)
     func observe(_ callback: @escaping (SessionOutputSnapshot) -> Void) -> UUID

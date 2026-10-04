@@ -4,6 +4,15 @@ import UtterRuntime
 @MainActor
 package protocol ModeRecipeService: AnyObject {
     func process(_ request: ProcessingRequest) async throws -> ProcessingResult
+    func resolveEditCommand(_ request: ProcessingRequest, context: SpokenEditCommandResolutionContext) async throws -> SpokenEditCommandLLMResolution?
+    func cleanReplacement(_ text: String, language: InputLanguage) throws -> String
+}
+
+extension ModeRecipeService {
+    package func resolveEditCommand(_ request: ProcessingRequest, context: SpokenEditCommandResolutionContext) async throws -> SpokenEditCommandLLMResolution? { nil }
+    package func cleanReplacement(_ text: String, language: InputLanguage) throws -> String {
+        SpokenEditCommandPayloadCleaner.cleanReplacement(text)
+    }
 }
 
 package enum ModeServices {

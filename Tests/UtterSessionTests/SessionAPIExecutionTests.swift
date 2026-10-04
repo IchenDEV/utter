@@ -7,6 +7,43 @@ import UtterRuntime
 
 @MainActor
 final class SessionAPIExecutionTests: XCTestCase {
+    func testCreatedReservationBindsOneSourceWithoutAnotherFactoryCall() async throws {
+        let fixture = try APIExecutionFixture()
+        defer { fixture.remove() }
+        try await fixture.start()
+        let api = try fixture.runtime.service(SessionServices.api)
+        let driver = try fixture.runtime.service(SessionServices.execution)
+        let row = try await api.createSession(InputSessionRequest(), clientID: fixture.client.id)
+        XCTAssertEqual(fixture.factory.intents.map(\.input), [.unselected])
+        let file = URL(fileURLWithPath: "/later-upload.wav")
+        try driver.activate(row.id, input: .file(file))
+        XCTAssertEqual(fixture.job.boundInput, .file(file))
+        XCTAssertThrowsError(try driver.activate(row.id, input: .local))
+        while !fixture.job.entered { await Task.yield() }
+        fixture.job.release()
+        while !fixture.job.closing { await Task.yield() }
+        fixture.job.finishClose()
+        let result = try await driver.waitForCompletion(row.id)
+        XCTAssertEqual(result.text, "final")
+        XCTAssertEqual(fixture.factory.intents.count, 1)
+        try await fixture.runtime.stop()
+    }
+
+    func testPresetFileReservationRejectsSwitchingToMicrophone() async throws {
+        let fixture = try APIExecutionFixture()
+        defer { fixture.remove() }
+        try await fixture.start()
+        let driver = try fixture.runtime.service(SessionServices.execution)
+        try driver.reserve(SessionIntent(input: .file(URL(fileURLWithPath: "/preset.wav"))))
+        XCTAssertThrowsError(try driver.activate(try XCTUnwrap(driver.snapshot.id), input: .local))
+        XCTAssertFalse(fixture.job.entered)
+        driver.cancel()
+        while !fixture.job.closing { await Task.yield() }
+        fixture.job.finishClose()
+        await driver.stop()
+        try await fixture.runtime.stop()
+    }
+
     func testFileReservationBlocksDesktopAndCommitsAcceptedDeliveryAfterRevocation() async throws {
         let fixture = try APIExecutionFixture()
         defer { fixture.remove() }
@@ -122,10 +159,12 @@ private final class APIWorkflowFactory: SessionWorkflowFactory {
 
 @MainActor
 private final class APIHeldDeliveryJob: SessionJob {
+    var boundInput: SessionInput?
     var entered = false
     var closing = false
     private var work: CheckedContinuation<Void, Never>?
     private var cleanup: CheckedContinuation<Void, Never>?
+    func bind(input: SessionInput) throws { boundInput = input }
     func run(control: any SessionJobControl) async throws -> SessionCompletion {
         entered = true
         control.update(phase: .recording, transcript: "raw")
