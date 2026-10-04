@@ -12,6 +12,7 @@ package struct TextProcessingOptions {
         case boundedCustomTransformation
     }
 
+    package var modelLocations = FrozenGenerationLocations.unresolved
     package var inputLanguage: InputLanguage
     package var languageStyle: LanguageStyle
     package var customStylePrompt: String

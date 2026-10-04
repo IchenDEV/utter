@@ -34,6 +34,7 @@ extension TextProcessor {
         inputContext: InputContext? = nil,
         dictionarySnapshot requestedDictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
+        let options = await effectiveProviderOptions(options)
         let dictionarySnapshot = requestedDictionarySnapshot ?? snapshotDictionary()
         let useScreenImage = shouldUseScreenImage(options: options, image: screenImage)
         let baseUserPrompt = PromptBuilder.buildCommandUserPrompt(
@@ -62,7 +63,7 @@ extension TextProcessor {
                             model: options.llmModel,
                             image: screenImage,
                             maxTokens: 4096,
-                            temperature: 0.3, providerID: options.imageProviderID
+                            temperature: 0.3, providerID: options.imageProviderID, modelLocations: options.modelLocations
                         )
                     } catch {
                         try Task.checkCancellation()

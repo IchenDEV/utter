@@ -11,6 +11,7 @@ extension TextProcessor {
         inputContext: InputContext? = nil,
         dictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
+        let options = await effectiveProviderOptions(options)
         let trimmedSelection = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedSelection.isEmpty else { return "" }
         let generationOptions = selectionEditOptions(for: trimmedSelection, intent: intent)

@@ -58,6 +58,32 @@ final class ProcessingPluginTests: XCTestCase {
         }
     }
 
+    func testExplicitProviderAndFrozenPathOverrideLegacyFlagsAcrossAnAwait() async throws {
+        try await withFixture(holdsResponse: true) { runtime, backend, _ in
+            let service = try runtime.service(ProcessingServices.text)
+            var preferences = SettingsValues()
+            preferences.useRemoteLLM = true
+            preferences.localLLMBackend = .espresso
+            preferences.remoteModel = "legacy-remote"
+            var options = TextProcessingOptions(settings: preferences, inputLanguage: .english)
+            options.textProviderID = "fixture.processing"
+            options.llmModel = "admitted-model"
+            options.modelLocations = .frozen(bundle: nil, directory: URL(fileURLWithPath: "/admitted-model"))
+            let request = ProcessingRequest(mode: .formatting, text: "hello", options: options,
+                dictionary: PersonalDictionarySnapshot(entries: [], editRules: []))
+            let operation = Task { try await service.process(request) }
+            await backend.waitUntilStarted()
+            try runtime.service(DataServices.settings).update { $0.modelStoragePath = "/later-root" }
+            await backend.release()
+            _ = try await operation.value
+            let requests = await backend.requests
+            XCTAssertEqual(requests.count, 1)
+            XCTAssertEqual(requests.first?.modelID, "admitted-model")
+            XCTAssertEqual(requests.first?.modelURL?.path, "/admitted-model")
+            XCTAssertNil(requests.first?.remote)
+        }
+    }
+
     private func request(
         mode: TextProcessingMode = .formatting, text: String = "hello",
         dictionary: PersonalDictionarySnapshot = PersonalDictionarySnapshot(entries: [], editRules: [])

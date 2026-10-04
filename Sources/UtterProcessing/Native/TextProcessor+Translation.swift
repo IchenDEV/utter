@@ -8,6 +8,7 @@ extension TextProcessor {
         options: TextProcessingOptions,
         dictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
+        let options = await effectiveProviderOptions(options)
         let prepared = prepareForFormatting(text: text, inputLanguage: options.inputLanguage, dictionarySnapshot: dictionarySnapshot)
         guard !prepared.isEmpty else { return "" }
 

@@ -37,7 +37,7 @@ extension MLXPlugins {
             let log = Log(service: try context.require(IntegrationServices.diagnostics))
             let cache = MLXSpeechCache { make($0, files, access, log) }
             try context.scope.onDispose { await cache.close() }
-            let descriptor = ProviderDescriptor(id: id, legacyIDs: [alias.rawValue], displayName: title)
+            let descriptor = ProviderDescriptor(id: id, legacyIDs: [alias.rawValue], displayName: title, recognitionVocabulary: alias == .qwen3 ? .personal : .all)
             try registry.register(ProviderDefinition(descriptor: descriptor) { request in try await cache.engine(request.selection) }, scope: context.scope)
             try context.provide(key, value: descriptor)
         }

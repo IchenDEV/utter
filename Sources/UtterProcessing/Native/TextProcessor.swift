@@ -91,6 +91,7 @@ package final class TextProcessor {
         allowsPreparedFallback: Bool = TextProcessor.defaultAllowsPreparedFallback,
         dictionarySnapshot requestedDictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
+        let options = await effectiveProviderOptions(options)
         let prepareStarted = CFAbsoluteTimeGetCurrent()
         let dictionarySnapshot = requestedDictionarySnapshot ?? snapshotDictionary()
         let cleanedText = prepareForFormatting(
@@ -133,7 +134,7 @@ package final class TextProcessor {
                             model: options.llmModel,
                             image: screenImage,
                             maxTokens: generationOptions.maxTokens,
-                            temperature: generationOptions.temperature, providerID: options.imageProviderID
+                            temperature: generationOptions.temperature, providerID: options.imageProviderID, modelLocations: options.modelLocations
                         )
                     } catch {
                         try Task.checkCancellation()

@@ -12,7 +12,7 @@ package enum RemoteInferencePlugins {
             let providers = try context.require(GenerationServices.providers)
             let client = RemoteLLMClient(transport: URLSessionRemoteTransport(), log: Log(service: try context.require(IntegrationServices.diagnostics)))
             try context.scope.onDispose { await client.shutdown() }
-            let descriptor = ProviderDescriptor(id: "generation.remote", legacyIDs: ["remote"], displayName: L("model.family.remote"))
+            let descriptor = ProviderDescriptor(id: "generation.remote", legacyIDs: ["remote"], displayName: L("model.family.remote"), modelLocation: .remote)
             try providers.register(ProviderDefinition(descriptor: descriptor) { _ in client }, scope: context.scope)
             try context.provide(GenerationServices.remote, value: descriptor)
         }

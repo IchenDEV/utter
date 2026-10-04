@@ -4,14 +4,27 @@ import UtterContracts
 import UtterMediaContracts
 
 extension TextProcessor {
+    @MainActor
+    package func effectiveProviderOptions(_ options: TextProcessingOptions) -> TextProcessingOptions {
+        guard let id = options.textProviderID,
+              let descriptor = providers.descriptors.first(where: { $0.id == id || $0.legacyIDs.contains(id) }) else { return options }
+        return options.selecting(descriptor)
+    }
+
     package func generationRequest(
         prompt: String, systemPrompt: String?, options: TextProcessingOptions,
         maxTokens: Int, temperature: Double, usesANE: Bool = false
     ) -> TextGenerationRequest {
         let modelID = options.useRemoteLLM ? options.remoteModel : options.llmModel
-        let modelURL = usesANE
-            ? URL(fileURLWithPath: NSString(string: options.espressoModelPath).expandingTildeInPath)
-            : modelFiles.installedTextModelURL(modelID)
+        let modelURL: URL?
+        switch options.modelLocations {
+        case .unresolved:
+            modelURL = usesANE
+                ? URL(fileURLWithPath: NSString(string: options.espressoModelPath).expandingTildeInPath)
+                : modelFiles.installedTextModelURL(modelID)
+        case .frozen(let bundle, let directory):
+            modelURL = options.useRemoteLLM ? nil : (usesANE ? bundle : directory)
+        }
         let remote = options.useRemoteLLM
             ? RemoteGenerationConfiguration(baseURL: options.remoteBaseURL, apiKey: options.remoteAPIKey, provider: options.remoteProvider)
             : nil
@@ -24,6 +37,7 @@ extension TextProcessor {
     package func generateText(
         prompt: String, systemPrompt: String, options: TextProcessingOptions, maxTokens: Int, temperature: Double
     ) async throws -> String {
+        let options = await effectiveProviderOptions(options)
         let providerID = options.textProviderID ?? (options.useRemoteLLM ? "remote" : options.localLLMBackend.rawValue)
         let usesANE = !options.useRemoteLLM && options.localLLMBackend == .espresso
         let request = generationRequest(
@@ -76,10 +90,15 @@ extension TextProcessor {
 
     package func generateWithScreenImage(
         prompt: String, systemPrompt: String, model: String, image: CGImage,
-        maxTokens: Int, temperature: Double, providerID: String = "generation.mlx-image"
+        maxTokens: Int, temperature: Double, providerID: String = "generation.mlx-image", modelLocations: FrozenGenerationLocations = .unresolved
     ) async throws -> String {
+        let modelURL: URL?
+        switch modelLocations {
+        case .unresolved: modelURL = modelFiles.installedTextModelURL(model)
+        case .frozen(_, let directory): modelURL = directory
+        }
         let request = TextGenerationRequest(
-            prompt: prompt, systemPrompt: systemPrompt, modelID: model, modelURL: modelFiles.installedTextModelURL(model),
+            prompt: prompt, systemPrompt: systemPrompt, modelID: model, modelURL: modelURL,
             maxTokens: maxTokens, temperature: temperature
         )
         guard let imageProviders else { throw GenerationServiceError.unsupportedOperation }

@@ -7,13 +7,17 @@ package struct ProviderDescriptor: Equatable, Sendable {
     package let displayName: String
     package let modelIDs: [String]
     package let artifacts: [ModelArtifact]
+    package let modelLocation: GenerationModelLocation
+    package let recognitionVocabulary: RecognitionVocabulary
 
-    package init(id: String, legacyIDs: [String] = [], displayName: String, modelIDs: [String] = [], artifacts: [ModelArtifact] = []) {
+    package init(id: String, legacyIDs: [String] = [], displayName: String, modelIDs: [String] = [], artifacts: [ModelArtifact] = [], modelLocation: GenerationModelLocation = .directory, recognitionVocabulary: RecognitionVocabulary = .all) {
         self.id = id
         self.legacyIDs = legacyIDs
         self.displayName = displayName
         self.modelIDs = modelIDs.isEmpty ? artifacts.map(\.id) : modelIDs
         self.artifacts = artifacts
+        self.modelLocation = modelLocation
+        self.recognitionVocabulary = recognitionVocabulary
     }
 }
 

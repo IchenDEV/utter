@@ -14,7 +14,7 @@ extension ModelCatalog {
         }
     }
 
-    nonisolated static func asrRequiredFiles(for id: String) -> [String] {
+    package nonisolated static func asrRequiredFiles(for id: String) -> [String] {
         switch id {
         case QwenASRModel.defaultID, QwenASRModel.confuciusR2T2ID:
             var required = [
