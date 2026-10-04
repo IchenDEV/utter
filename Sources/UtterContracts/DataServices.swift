@@ -20,6 +20,7 @@ package protocol ConfigurationService: AnyObject {
 }
 
 package enum DataServices {
+    package static let notifications = ServiceKey<StateNotifications>("data.notifications")
     package static let settings = ServiceKey<any SettingsService>("data.settings")
     package static let credentials = ServiceKey<any CredentialsService>("data.credentials")
     package static let history = ServiceKey<any HistoryService>("data.history")

@@ -1,6 +1,6 @@
 import Foundation
 
-package struct InputSessionRequest: Codable, Equatable {
+package struct InputSessionRequest: Codable, Equatable, Sendable {
     package var mode: OutputMode?
     package var language: InputLanguage?
     package var useScreenContext: Bool?

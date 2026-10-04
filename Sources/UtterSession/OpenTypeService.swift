@@ -2,7 +2,8 @@ import UtterContracts
 import Foundation
 
 @MainActor
-package final class OpenTypeService {
+package final class OpenTypeService: InputSessionService {
+    private var closed = false
     private typealias EventSubscriber = @MainActor (InputSessionEvent) -> Void
 
     private var sessions: [UUID: InputSession]
@@ -12,16 +13,18 @@ package final class OpenTypeService {
     private var eventSubscribers: [UUID: [UUID: EventSubscriber]]
     private let settingsProvider: @MainActor () -> IntegrationServiceSettings
     private let registry: any IntegrationClientStore
-    private let notifications = SessionNotifications()
+    private let notifications: StateNotifications
 
-    package convenience init(settings: IntegrationServiceSettings, registry: any IntegrationClientStore) {
-        self.init(settingsProvider: { settings }, registry: registry)
+    package convenience init(settings: IntegrationServiceSettings, registry: any IntegrationClientStore, notifications: StateNotifications? = nil) {
+        self.init(settingsProvider: { settings }, registry: registry, notifications: notifications)
     }
 
     package init(
         settingsProvider: @escaping @MainActor () -> IntegrationServiceSettings,
-        registry: any IntegrationClientStore
+        registry: any IntegrationClientStore,
+        notifications: StateNotifications? = nil
     ) {
+        self.notifications = notifications ?? StateNotifications()
         self.sessions = [:]
         self.sessionOwners = [:]
         self.eventsBySession = [:]
@@ -177,7 +180,8 @@ package final class OpenTypeService {
     }
 
     package func integrationClient(id clientID: String) -> IntegrationClient? {
-        registry.client(id: clientID)
+        guard !closed else { return nil }
+        return registry.client(id: clientID)
     }
 
     package func snapshotEvents(sessionID: UUID, clientID: String) throws -> [InputSessionEvent] {
@@ -220,7 +224,13 @@ package final class OpenTypeService {
         }
     }
 
+    package func close() {
+        closed = true
+        eventSubscribers.removeAll()
+    }
+
     private func requireAuthorized(clientID: String, capability: IntegrationClient.Capability) throws {
+        guard !closed else { throw IntegrationError.developerInterfaceDisabled }
         let settings = settingsProvider()
         guard settings.developerInterfaceEnabled else {
             throw IntegrationError.developerInterfaceDisabled

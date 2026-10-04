@@ -1,19 +1,21 @@
 import Foundation
 
 @MainActor
-final class SessionNotifications {
+package final class StateNotifications {
     private var pending: [() -> Void] = []
     private var transactionDepth = 0
     private var isDelivering = false
 
-    func settle(_ operation: () -> Void) {
+    package init() {}
+
+    package func settle(_ operation: () -> Void) {
         transactionDepth += 1
         operation()
         transactionDepth -= 1
         deliver()
     }
 
-    func enqueue(_ notification: @escaping () -> Void) {
+    package func enqueue(_ notification: @escaping () -> Void) {
         pending.append(notification)
         deliver()
     }

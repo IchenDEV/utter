@@ -9,10 +9,12 @@ package final class HistoryStore: HistoryService {
     private let fileURL: URL
     private let retention: @MainActor () -> HistoryRetention
     private let reportError: (String) -> Void
+    private let notifications: StateNotifications
     private var acceptedIDs: Set<UUID> = []
     private var observers: [UUID: @MainActor () -> Void] = [:]
 
-    package init(directoryURL: URL, retention: @escaping @MainActor () -> HistoryRetention, reportError: @escaping (String) -> Void) {
+    package init(directoryURL: URL, retention: @escaping @MainActor () -> HistoryRetention, reportError: @escaping (String) -> Void, notifications: StateNotifications? = nil) {
+        self.notifications = notifications ?? StateNotifications()
         self.retention = retention
         self.reportError = reportError
         fileURL = directoryURL.appendingPathComponent("input_history.json")
@@ -127,7 +129,9 @@ package final class HistoryStore: HistoryService {
         } else {
             reportError("Stored history is unavailable; its original file was preserved")
         }
-        for id in observers.keys.sorted(by: { $0.uuidString < $1.uuidString }) { observers[id]?() }
+        for id in observers.keys.sorted(by: { $0.uuidString < $1.uuidString }) {
+            notifications.enqueue { [weak self] in self?.observers[id]?() }
+        }
     }
 
     private func load() {

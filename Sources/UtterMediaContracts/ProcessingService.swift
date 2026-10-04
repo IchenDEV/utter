@@ -3,14 +3,6 @@ import CoreGraphics
 import UtterContracts
 import UtterRuntime
 
-package enum TextProcessingMode: Equatable, Sendable {
-    case direct
-    case formatting
-    case command
-    case translation(TranslationLanguage)
-    case selectionEdit(SelectionRewriteIntent, spokenCommand: String)
-}
-
 package struct ProcessingRequest {
     package let mode: TextProcessingMode
     package let text: String

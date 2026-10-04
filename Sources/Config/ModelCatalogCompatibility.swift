@@ -12,7 +12,7 @@ extension ModelCatalog {
 
     convenience init(
         startupStorageRoot: URL = ModelStorage.huggingFaceBase,
-        startupCleanup: StartupCleanupFactory = { ModelStorage.cleanupOrphanedGenerationStagingInBackground(storageRoot: $0) }
+        startupCleanup: @escaping StartupCleanupFactory = { ModelStorage.cleanupOrphanedGenerationStagingInBackground(storageRoot: $0) }
     ) {
         self.init(
             settings: .shared, log: UtterContracts.Log(service: Log.service), access: LocalModelAccessGate(),

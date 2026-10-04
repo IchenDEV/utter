@@ -4,6 +4,23 @@ import UtterRuntime
 
 @MainActor
 package enum DataPlugins {
+    package static func integrationClients(defaults: UserDefaults) -> PluginRegistration {
+        PluginRegistration(descriptor: PluginDescriptor(
+            id: "data.integration-clients", requires: [IntegrationServices.diagnostics.optional],
+            provides: [IntegrationServices.clients.reference]
+        )) { context, _ in
+            let diagnostics = try context.optional(IntegrationServices.diagnostics)
+            let registry = IntegrationClientRegistry(defaults: defaults, reportError: { diagnostics?.error($0) })
+            try context.provide(IntegrationServices.clients, value: registry)
+        }
+    }
+
+    package static func notifications() -> PluginRegistration {
+        PluginRegistration(descriptor: PluginDescriptor(id: "data.notifications", provides: [DataServices.notifications.reference])) { context, _ in
+            try context.provide(DataServices.notifications, value: StateNotifications())
+        }
+    }
+
     package static func correctionClassification() -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(
             id: "data.correction-classification", provides: [DataServices.correctionClassification.reference]
@@ -44,9 +61,9 @@ package enum DataPlugins {
     }
 
     package static func history(directoryURL: URL, reportError: @escaping (String) -> Void) -> PluginRegistration {
-        PluginRegistration(descriptor: PluginDescriptor(id: "data.history", requires: [DataServices.settings.required], provides: [DataServices.history.reference])) { context, _ in
+        PluginRegistration(descriptor: PluginDescriptor(id: "data.history", requires: [DataServices.settings.required, DataServices.notifications.required], provides: [DataServices.history.reference])) { context, _ in
             let settings = try context.require(DataServices.settings)
-            let store = HistoryStore(directoryURL: directoryURL, retention: { settings.values.historyRetention }, reportError: reportError)
+            let store = HistoryStore(directoryURL: directoryURL, retention: { settings.values.historyRetention }, reportError: reportError, notifications: try context.require(DataServices.notifications))
             try context.provide(DataServices.history, value: store)
         }
     }

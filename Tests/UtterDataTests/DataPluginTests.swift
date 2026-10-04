@@ -18,8 +18,8 @@ final class DataPluginTests: XCTestCase {
         let replacement = PluginRegistration(descriptor: DataPlugins.history(directoryURL: directory, reportError: { _ in }).descriptor) { context, _ in
             try context.provide(DataServices.history, value: history)
         }
-        let runtime = PluginRuntime(catalog: try PluginCatalog([DataPlugins.settings(defaults: defaults), replacement, DataPlugins.memory()]))
-        try await runtime.start([PluginSelection("data.memory"), PluginSelection("data.history"), PluginSelection("data.settings")])
+        let runtime = PluginRuntime(catalog: try PluginCatalog([DataPlugins.settings(defaults: defaults), DataPlugins.notifications(), replacement, DataPlugins.memory()]))
+        try await runtime.start([PluginSelection("data.memory"), PluginSelection("data.history"), PluginSelection("data.settings"), PluginSelection("data.notifications")])
         let selected = try runtime.service(DataServices.history)
         let memory = try runtime.service(DataServices.memory)
         XCTAssertTrue(memory.recentContext(limit: 5, windowMinutes: 30, currentContext: nil).isEmpty)

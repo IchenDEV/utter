@@ -5,6 +5,21 @@ import UtterContracts
 
 @MainActor
 final class HistoryStoreTests: XCTestCase {
+    func testRemovedObserverDoesNotReceiveAnAlreadyQueuedCommit() async throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let notifications = StateNotifications()
+        let store = HistoryStore(directoryURL: directory, retention: { .forever }, reportError: { _ in }, notifications: notifications)
+        var calls = 0
+        let id = store.observe { calls += 1 }
+        notifications.settle {
+            store.addRecord(InputRecord(rawText: "raw", processedText: "final", wasProcessed: true))
+            store.removeObserver(id)
+        }
+        XCTAssertEqual(calls, 0)
+        XCTAssertEqual(store.records.count, 1)
+    }
+
     func testReplacementUpdatesItsRecordWhenAnotherSessionHasCommitted() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }

@@ -43,7 +43,7 @@ package final class ModelCatalog: ObservableObject, ModelCatalogService {
     package init(
         settings: AppSettings, log: Log, access: any ModelResourceAccess, textDownloads: TextModelDownloadOperations,
         startupStorageRoot: URL? = nil,
-        startupCleanup: StartupCleanupFactory = { storageRoot in
+        startupCleanup: @escaping StartupCleanupFactory = { storageRoot in
             ModelStorage.cleanupOrphanedGenerationStagingInBackground(storageRoot: storageRoot)
         }
     ) {
