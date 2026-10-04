@@ -92,6 +92,14 @@ package final class TextProcessor {
         dictionarySnapshot requestedDictionarySnapshot: PersonalDictionarySnapshot? = nil
     ) async -> String {
         let options = await effectiveProviderOptions(options)
+        if ProcessingObservations.current == nil {
+            return await ProcessingObservations.$current.withValue(ProcessingObservation()) {
+                await self.process(text: text, options: options, screenContext: screenContext,
+                    screenImage: screenImage, memoryContext: memoryContext, inputContext: inputContext,
+                    formatKind: formatKind, allowsPreparedFallback: allowsPreparedFallback,
+                    dictionarySnapshot: requestedDictionarySnapshot)
+            }
+        }
         let prepareStarted = CFAbsoluteTimeGetCurrent()
         let dictionarySnapshot = requestedDictionarySnapshot ?? snapshotDictionary()
         let cleanedText = prepareForFormatting(
@@ -177,14 +185,12 @@ package final class TextProcessor {
                 inputLanguage: options.inputLanguage,
                 fallback: fallback
             )
-            return validatedOutput(
-                output, source: cleanedText,
-                protectedTerms: dictionarySnapshot.protectedTerms,
-                inputLanguage: options.inputLanguage,
-                enforceSemanticFidelity: options.fidelityPolicy == .faithfulCorrection
-            )
+            return try await validateTransformation(output, source: cleanedText,
+                terms: dictionarySnapshot.protectedTerms, options: options)
         } catch {
             if Task.isCancelled { return "" }
+            ProcessingObservations.current?.record(source: cleanedText, candidate: "",
+                decision: ProcessingDecision(allowsPreparedFallback ? .fallback : .failed, reason: "generation_failed"))
             if allowsPreparedFallback {
                 log.error("[TextProcessor] LLM failed, falling back to prepared raw text: \(error.localizedDescription)")
                 return cleanedText

@@ -60,17 +60,17 @@ private extension TextFormatClassifier {
 
     static func hasExplicitSequence(_ text: String) -> Bool {
         let groups = [
-            ["第一", "首先", "第一步", "一是"],
-            ["第二", "其次", "第二步", "二是"],
+            [#"第一(?!次|天|年|月|周|週|名|人|个|個|件|条|條|项|項)"#, "首先", "第一步", "一是"],
+            [#"第二(?!次|天|年|月|周|週|名|人|个|個|件|条|條|项|項)"#, "其次", "第二步", "二是"],
             ["first", "firstly", "first step", "step one"],
             ["second", "secondly", "second step", "step two"],
-            ["まず", "第一", "ステップ1"],
-            ["次に", "第二", "ステップ2"],
+            ["まず", "ステップ1"],
+            ["次に", "ステップ2"],
             ["첫째", "먼저", "1단계"],
             ["둘째", "다음", "2단계"],
         ]
-        let chineseOrEnglish = groups[0].contains(where: text.contains)
-            && groups[1].contains(where: text.contains)
+        let chineseOrEnglish = groups[0].contains(where: { text.range(of: $0, options: .regularExpression) != nil })
+            && groups[1].contains(where: { text.range(of: $0, options: .regularExpression) != nil })
             || groups[2].contains(where: { containsWord($0, in: text) })
             && groups[3].contains(where: { containsWord($0, in: text) })
         let japanese = groups[4].contains(where: text.contains) && groups[5].contains(where: text.contains)

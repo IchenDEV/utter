@@ -37,7 +37,8 @@ extension TextProcessor {
         }
         return TextGenerationRequest(
             prompt: prompt, systemPrompt: systemPrompt, modelID: modelID, modelURL: modelURL,
-            maxTokens: maxTokens, temperature: temperature, remote: remote,
+            maxTokens: min(maxTokens, max(1, options.generationTokenLimit ?? maxTokens)),
+            temperature: temperature, remote: remote,
             frozenModel: frozenModel
         )
     }
@@ -60,7 +61,9 @@ extension TextProcessor {
         try Task.checkCancellation()
         guard usesANE else {
             await Self.clearEspressoOutcome()
-            let result = try await primary.generate(request)
+            let result = try await observedGeneration(request, providerID: providerID) {
+                try await primary.generate(request)
+            }
             try Task.checkCancellation()
             return result
         }
@@ -68,12 +71,18 @@ extension TextProcessor {
             do {
                 let result = try await GenerationFallback.run(
                     fallbackEnabled: options.fallbackToMLXOnEspressoFailure,
-                    espresso: { try await primary.generate(request) },
+                    espresso: {
+                        try await self.observedGeneration(request, providerID: providerID) {
+                            try await primary.generate(request)
+                        }
+                    },
                     prepareForMLXFallback: { await primary.unload() },
                     mlx: {
                         let fallback = try await self.providers.create(id: options.fallbackProviderID, request: .inference)
                         try Task.checkCancellation()
-                        return try await fallback.generate(fallbackRequest)
+                        return try await self.observedGeneration(fallbackRequest, providerID: options.fallbackProviderID) {
+                            try await fallback.generate(fallbackRequest)
+                        }
                     }
                 )
                 if result.usedMLX {
@@ -116,7 +125,9 @@ extension TextProcessor {
         guard let imageProviders else { throw GenerationServiceError.unsupportedOperation }
         let provider = try await imageProviders.create(id: providerID, request: .inference)
         try Task.checkCancellation()
-        let result = try await provider.generate(ImageGenerationRequest(text: request, image: image))
+        let result = try await observedGeneration(request, providerID: providerID) {
+            try await provider.generate(ImageGenerationRequest(text: request, image: image))
+        }
         try Task.checkCancellation()
         return result
     }

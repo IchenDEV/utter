@@ -21,14 +21,20 @@ final class ScopedProcessingService: ProcessingService {
 
     func process(_ request: ProcessingRequest) async throws -> ProcessingResult {
         try await run {
-            try await TextProcessor.withEspressoOutcomeTracking {
+            let observation = ProcessingObservation(collectsBody: request.collectsDiagnostics)
+            return try await ProcessingObservations.$current.withValue(observation) {
+              try await TextProcessor.withEspressoOutcomeTracking {
                 let text = await self.output(request)
                 try Task.checkCancellation()
                 let outcome = await self.processor.consumeEspressoOutcome()
                 guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                     throw ProcessingError.emptyResult(outcome)
                 }
-                return ProcessingResult(text: text, generationOutcome: outcome)
+                observation.complete(source: request.text, candidate: text)
+                let snapshot = observation.snapshot()
+                return ProcessingResult(text: text, generationOutcome: outcome,
+                    decision: snapshot.decision, trace: snapshot.trace)
+              }
             }
         }
     }
@@ -86,10 +92,13 @@ final class ScopedProcessingService: ProcessingService {
     private func output(_ request: ProcessingRequest) async -> String {
         switch request.mode {
         case .direct:
-            return processor.basicClean(
+            let text = processor.basicClean(
                 text: request.text, inputLanguage: request.options.inputLanguage,
                 dictionarySnapshot: request.dictionary
             )
+            ProcessingObservations.current?.record(source: request.text, candidate: text,
+                decision: ProcessingDecision(.direct))
+            return text
         case .formatting:
             return await processor.process(
                 text: request.text, options: request.options, screenContext: request.screenContext,

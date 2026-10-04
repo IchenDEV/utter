@@ -141,25 +141,22 @@ extension TranscriptFidelityGuard {
     ) -> Bool {
         let candidateSequence = protectedSemanticSequence(in: candidate)
         if protectedSemanticSequence(in: source) == candidateSequence {
-            return true
+            return numberBindingsAreFaithful(source: source, candidate: candidate)
         }
         let correctedSource = removingCorrectedNumberEvidence(from: source)
         return correctedSource != source
             && protectedSemanticSequence(in: correctedSource) == candidateSequence
+            && numberBindingsAreFaithful(source: correctedSource, candidate: candidate)
     }
 
     static func protectedTokensAreBoundedTransformation(
         source: String,
         candidate: String
     ) -> Bool {
-        var sourceSequence = protectedSemanticSequence(in: source)[...]
-        for token in protectedSemanticSequence(in: candidate) {
-            guard let match = sourceSequence.firstIndex(of: token) else {
-                return false
-            }
-            sourceSequence = sourceSequence[sourceSequence.index(after: match)...]
+        let sourceFacts = protectedFactCounts(in: source)
+        return protectedFactCounts(in: candidate).allSatisfy {
+            sourceFacts[$0.key, default: 0] >= $0.value
         }
-        return true
     }
 
     static func removingCorrectedNumberEvidence(from text: String) -> String {

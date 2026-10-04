@@ -9,6 +9,69 @@ import UtterRuntime
 
 @MainActor
 final class ProcessingPluginTests: XCTestCase {
+    func testCustomTransformationAllowsDeletionAndRequiresFactSupport() async throws {
+        let source = "Alice has 2 tasks. Review is complete. No refund was promised."
+        let cases: [(String, String, ProcessingDecision.Disposition)] = [
+            ("Review complete.", #"{"decision":"supported","added_facts":[]}"#, .accepted),
+            ("I promise a refund.", #"{"decision":"unsupported","added_facts":["refund promise"]}"#, .fallback),
+            ("Review complete.", "unparseable", .fallback),
+        ]
+        for (candidate, verdict, expected) in cases {
+            try await withFixture(outputs: [candidate, verdict]) { runtime, backend, _ in
+                let base = self.request(text: source)
+                var options = base.options
+                options.languageStyle = .custom
+                options.customStylePrompt = "Summarize freely without adding facts."
+                let result = try await runtime.service(ProcessingServices.text).process(ProcessingRequest(
+                    mode: .formatting, text: source, options: options, dictionary: base.dictionary,
+                    collectsDiagnostics: true))
+                XCTAssertEqual(result.decision.disposition, expected)
+                XCTAssertEqual(result.text, expected == .accepted ? candidate : source)
+                XCTAssertEqual(result.trace?.candidate, candidate)
+                let calls = await backend.requests
+                XCTAssertEqual(calls.count, 2)
+                XCTAssertTrue(calls[1].systemPrompt?.contains("Deleting") == true)
+                XCTAssertEqual(calls[0].modelID, calls[1].modelID)
+                XCTAssertEqual(calls[0].modelURL, calls[1].modelURL)
+            }
+        }
+    }
+
+    func testCancellationDuringFactSupportCannotPublishTheCandidate() async throws {
+        try await withFixture(outputs: ["Review complete.", #"{"decision":"supported","added_facts":[]}"#],
+                              holdAtCall: 2) { runtime, backend, _ in
+            let base = self.request(text: "Review is complete after checking all the tasks.")
+            var options = base.options
+            options.languageStyle = .custom
+            options.customStylePrompt = "Keep the conclusion."
+            let operation = Task {
+                try await runtime.service(ProcessingServices.text).process(ProcessingRequest(mode: .formatting,
+                    text: base.text, options: options, dictionary: base.dictionary))
+            }
+            await backend.waitUntilStarted()
+            operation.cancel()
+            await backend.release()
+            do { _ = try await operation.value; XCTFail("Cancelled verifier published output") }
+            catch is CancellationError { }
+        }
+    }
+
+    func testProductionDiagnosticsExposeNumericAcceptanceAndSilentFallback() async throws {
+        for (output, disposition) in [("周五下午 3 点", ProcessingDecision.Disposition.accepted),
+                                      ("周五下午 4 点", .fallback)] {
+            try await withFixture(output: output) { runtime, _, _ in
+                let base = self.request(text: "周五下午三点")
+                let request = ProcessingRequest(mode: .formatting, text: base.text,
+                    options: base.options, dictionary: base.dictionary, collectsDiagnostics: true)
+                let result = try await runtime.service(ProcessingServices.text).process(request)
+                XCTAssertEqual(result.decision.disposition, disposition)
+                XCTAssertEqual(result.trace?.candidate, output)
+                XCTAssertEqual(result.trace?.generations.first?.output, output)
+                XCTAssertEqual(result.text, disposition == .accepted ? output : base.text)
+            }
+        }
+    }
+
     func testDirectModeUsesFrozenDictionaryWithoutCallingGeneration() async throws {
         try await withFixture { runtime, backend, _ in
             let service = try runtime.service(ProcessingServices.text)
@@ -95,7 +158,7 @@ final class ProcessingPluginTests: XCTestCase {
     }
 
     private func withFixture(
-        holdsResponse: Bool = false,
+        holdsResponse: Bool = false, output: String = "hello", outputs: [String]? = nil, holdAtCall: Int? = nil,
         _ operation: (PluginRuntime, ProcessingFixtureBackend, ProviderLifetime) async throws -> Void
     ) async throws {
         let name = "ProcessingPlugin-\(UUID().uuidString)"
@@ -105,7 +168,8 @@ final class ProcessingPluginTests: XCTestCase {
             defaults.removePersistentDomain(forName: name)
             try? FileManager.default.removeItem(at: directory)
         }
-        let backend = ProcessingFixtureBackend(holdsResponse: holdsResponse)
+        let backend = ProcessingFixtureBackend(holdsResponse: holdsResponse,
+            outputs: outputs ?? [output], holdAtCall: holdAtCall)
         let lifetime = ProviderLifetime()
         let provider = PluginRegistration(descriptor: PluginDescriptor(
             id: "fixture.processing", requires: [GenerationServices.providers.required],
@@ -136,20 +200,24 @@ private final class ProviderLifetime { var disposed = false }
 
 private actor ProcessingFixtureBackend: TextGenerationService {
     private let holdsResponse: Bool
+    private let outputs: [String]
+    private let holdAtCall: Int?
     private var held: CheckedContinuation<Void, Never>?
     private var waiters: [CheckedContinuation<Void, Never>] = []
     private(set) var requests: [TextGenerationRequest] = []
-    init(holdsResponse: Bool) { self.holdsResponse = holdsResponse }
+    init(holdsResponse: Bool, outputs: [String], holdAtCall: Int?) {
+        self.holdsResponse = holdsResponse; self.outputs = outputs; self.holdAtCall = holdAtCall
+    }
     func generate(_ request: TextGenerationRequest) async throws -> String {
         requests.append(request)
-        if holdsResponse {
+        if holdsResponse || requests.count == holdAtCall {
             await withCheckedContinuation { continuation in
                 held = continuation
                 let pending = waiters; waiters.removeAll()
                 for waiter in pending { waiter.resume() }
             }
         }
-        return "hello"
+        return outputs[min(requests.count - 1, outputs.count - 1)]
     }
     func waitUntilStarted() async {
         guard held == nil else { return }

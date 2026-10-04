@@ -51,6 +51,8 @@ let remoteExclusions = ["GzipCompression.swift", "VolcSpeechEngine+Audio.swift",
 #endif
 
 let portableTargets: [Target] = [
+    .target(name: "UtterEvaluation", dependencies: ["UtterContracts"], swiftSettings: [.swiftLanguageMode(.v5)]),
+    .testTarget(name: "UtterEvaluationTests", dependencies: ["UtterEvaluation"], swiftSettings: [.swiftLanguageMode(.v5)]),
     .target(name: "UtterRuntime", swiftSettings: [.swiftLanguageMode(.v5)]),
     .target(
         name: "UtterContracts",
@@ -168,9 +170,14 @@ let package = Package(
     products: [
         .executable(name: "OpenType", targets: ["OpenType"]),
         .executable(name: "OpenTypeCLI", targets: ["OpenTypeCLI"]),
+        .executable(name: "UtterVoiceEval", targets: ["UtterVoiceEval"]),
     ],
     dependencies: dependencies,
     targets: [
+        .executableTarget(name: "UtterVoiceEval",
+            dependencies: ["UtterEvaluation", "UtterRuntime", "UtterContracts", "UtterData", "UtterModels",
+                           "UtterMediaContracts", "UtterProcessing", "UtterMLX"],
+            path: "scripts/evaluate-voice", swiftSettings: [.swiftLanguageMode(.v5)]),
         .target(
             name: "UtterWhisper",
             dependencies: [
@@ -247,7 +254,7 @@ let package = Package(
                 .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
             ],
             path: "Sources",
-            exclude: ["UtterMacServices", "UtterRemoteMic", "UtterAudio", "UtterProcessing", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterAppleSpeech", "UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
+            exclude: ["UtterEvaluation", "UtterMacServices", "UtterRemoteMic", "UtterAudio", "UtterProcessing", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterAppleSpeech", "UtterModels", "UtterRuntime", "UtterContracts", "UtterData", "UtterSession", "UtterMediaContracts", "UtterPresentationContracts"],
             resources: [
                 .copy("Resources/AppIcon.png"),
                 .copy("Resources/AppIcon.icon"),

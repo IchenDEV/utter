@@ -27,7 +27,7 @@ private extension PromptCatalog {
         case .unorderedList:
             rule = "输出无序清单；每项独立一行并使用“- ”。只有原文明说标题时才保留标题，绝对不要改成编号步骤。"
         case .orderedSteps:
-            rule = "输出有序步骤；每一步独立一行并使用“1. 2. 3.”。保持原文顺序，不新增步骤。"
+            rule = "保留原文明说的总述句，再输出有序步骤；每一步独立一行并使用“1. 2. 3.”。保持原文顺序，不新增步骤。"
         case .email:
             rule = "按邮件排版：称呼、正文自然段、结束语、署名之间换行；原文没说的称呼、结束语或署名不得补写。"
         case .chat:
@@ -50,7 +50,7 @@ private extension PromptCatalog {
         case .unorderedList:
             rule = "Use an unordered list with one '- ' item per line. Keep a heading only if it was dictated. Never turn the items into numbered steps."
         case .orderedSteps:
-            rule = "Use ordered steps with one '1. 2. 3.' item per line. Preserve the dictated order and add no steps."
+            rule = "Keep any dictated introductory statement, then use ordered steps with one '1. 2. 3.' item per line. Preserve the dictated order and add no steps."
         case .email:
             rule = "Use email layout with separate greeting, body paragraphs, closing, and signature. Never invent a missing greeting, closing, or signature."
         case .chat:

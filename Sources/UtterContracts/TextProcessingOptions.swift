@@ -21,6 +21,7 @@ package struct TextProcessingOptions {
     package var textProviderID: String?
     package var fallbackProviderID = "generation.mlx"
     package var imageProviderID = "generation.mlx-image"
+    package var generationTokenLimit: Int?
     package var useRemoteLLM: Bool
     package var localLLMBackend: LocalLLMBackend
     package var espressoModelPath: String
@@ -36,7 +37,9 @@ package struct TextProcessingOptions {
     package var fidelityPolicy: FidelityPolicy {
         let hasCustomSystemPrompt = useCustomSystemPrompt
             && !customSystemPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        return hasCustomSystemPrompt
+        let hasCustomStyle = languageStyle == .custom
+            && !customStylePrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return hasCustomSystemPrompt || hasCustomStyle
             ? .boundedCustomTransformation
             : .faithfulCorrection
     }

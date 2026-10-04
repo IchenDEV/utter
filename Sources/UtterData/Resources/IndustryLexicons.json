@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "2026.09.24-v2",
-  "updatedAt": "2026-09-24",
+  "version": "2026.10.04-v3",
+  "updatedAt": "2026-10-04",
   "rights": "Utter-curated seed terms plus THUOCL common terms, Copyright (c) 2018 THUNLP, MIT License. See THUOCL-LICENSE.txt. Imported terms have no automatic correction mappings.",
   "sources": [
     {
@@ -6276,7 +6276,7 @@
     },
     {
       "id": "technology",
-      "version": "2026.09.24-v2",
+      "version": "2026.10.04-v3",
       "locale": "zh-CN",
       "reviewStatus": "curated-and-imported-needs-domain-review",
       "sourceIDs": [
@@ -6287,6 +6287,8 @@
       ],
       "terms": [
         {"id": "technology-cloud-native", "term": "云原生", "aliases": [], "corrections": ["云原声"], "category": "cloud"},
+        {"id": "technology-kubernetes", "term": "Kubernetes", "aliases": [], "corrections": ["库伯内提斯"], "category": "cloud"},
+        {"id": "technology-redis", "term": "Redis", "aliases": [], "corrections": [], "category": "database"},
         {"id": "technology-orchestration", "term": "容器编排", "aliases": [], "corrections": [], "category": "cloud"},
         {"id": "technology-microservices", "term": "微服务", "aliases": [], "corrections": [], "category": "architecture"},
         {"id": "technology-service-mesh", "term": "服务网格", "aliases": [], "corrections": ["服务网各"], "category": "cloud"},

@@ -5,6 +5,13 @@ extension TranscriptFidelityGuard {
     struct NumberEvent {
         let range: NSRange
         let values: [String]
+        let units: [String]?
+
+        init(range: NSRange, values: [String], units: [String]? = nil) {
+            self.range = range
+            self.values = values
+            self.units = units
+        }
     }
 
     static let chineseSpokenNumber = try! NSRegularExpression(
@@ -55,10 +62,13 @@ extension TranscriptFidelityGuard {
         in text: String,
         protectedTokens: [ProtectedToken]
     ) -> [NumberEvent] {
-        var events = protectedTokens
+        var events = clockEvents(in: text, protectedTokens: protectedTokens)
+        let clockRanges = events.map(\.range)
+        events += protectedTokens
             .filter { $0.category == "number" }
             .compactMap { token -> NumberEvent? in
-                guard let range = Range(token.range, in: text) else { return nil }
+                guard !overlaps(token.range, clockRanges),
+                      let range = Range(token.range, in: text) else { return nil }
                 let raw = String(text[range])
                 let previousCharacter = range.lowerBound > text.startIndex
                     ? text[text.index(before: range.lowerBound)] : nil
@@ -71,7 +81,7 @@ extension TranscriptFidelityGuard {
                     values: values
                 )
             }
-        let occupied = protectedTokens.map(\.range)
+        let occupied = protectedTokens.map(\.range) + clockRanges
         let fullRange = NSRange(text.startIndex..., in: text)
 
         for match in chineseSpokenNumber.matches(in: text, range: fullRange) {
@@ -145,6 +155,11 @@ extension TranscriptFidelityGuard {
         range: Range<String.Index>,
         text: String
     ) -> Bool {
+        let suffix = String(text[range.upperBound...].prefix(8))
+        if raw == "一", suffix.range(
+            of: #"^点(?:意见|建议|想法|帮助|问题|也|都)"#,
+            options: .regularExpression
+        ) != nil { return false }
         if raw.hasPrefix("第") || raw.hasPrefix("百分之")
             || raw.contains("点") || raw.contains("點") {
             return true
@@ -158,9 +173,8 @@ extension TranscriptFidelityGuard {
         ) != nil {
             return true
         }
-        let suffix = String(text[range.upperBound...].prefix(6))
         return suffix.range(
-            of: #"^(?:个|個|天|日|月|年|秒(?:钟|鐘)?|分钟|分鐘|小时|小時|步|页|頁|次|元|块|塊|米|度|岁|歲|歳)"#,
+            of: #"^(?:个|個|件|项|項|条|條|号|號|点|點|天|日|月|年|秒(?:钟|鐘)?|分钟|分鐘|小时|小時|步|页|頁|次|元|块|塊|米|度|岁|歲|歳)"#,
             options: .regularExpression
         ) != nil
             || prefix.hasSuffix("到")

@@ -9,7 +9,7 @@ extension ProcessingPlugins {
             id: "processing.text",
             requires: [
                 DataServices.settings.required, DataServices.credentials.optional,
-                DataServices.dictionary.required, DataServices.lexicons.required,
+                DataServices.dictionarySnapshot.required, DataServices.lexicons.required,
                 GenerationServices.providers.required, ImageGenerationServices.providers.optional,
                 ModelServices.resourceAccess.required, ModelServices.files.required,
                 IntegrationServices.diagnostics.required,
@@ -20,7 +20,7 @@ extension ProcessingPlugins {
         )) { context, _ in
             let settings = try context.require(DataServices.settings)
             let credentials = try context.optional(DataServices.credentials)
-            let dictionary = try context.require(DataServices.dictionary)
+            let dictionary = try context.require(DataServices.dictionarySnapshot)
             let lexicons = try context.require(DataServices.lexicons)
             let snapshot = { credentials?.snapshot.applying(to: settings.values) ?? settings.values }
             let processor = TextProcessor(

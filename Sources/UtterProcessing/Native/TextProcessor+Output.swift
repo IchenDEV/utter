@@ -100,10 +100,13 @@ extension TextProcessor {
         inputLanguage: InputLanguage,
         enforceSemanticFidelity: Bool = true
     ) -> String {
-        guard let violation = TranscriptFidelityGuard.violation(
+        let violation = TranscriptFidelityGuard.violation(
             source: source, candidate: candidate, protectedTerms: protectedTerms,
             inputLanguage: inputLanguage, enforceSemanticFidelity: enforceSemanticFidelity
-        ) else { return candidate }
+        )
+        ProcessingObservations.current?.record(source: source, candidate: candidate,
+            decision: ProcessingDecision(violation == nil ? .accepted : .fallback, reason: violation))
+        guard let violation else { return candidate }
         log.error("[TextProcessor] rejected formatting output: \(violation); keeping source transcript")
         return source
     }

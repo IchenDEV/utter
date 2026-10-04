@@ -14,12 +14,14 @@ package struct ProcessingRequest {
     package let inputContext: InputContext?
     package let formatKind: TextFormatKind?
     package let allowsPreparedFallback: Bool
+    package let collectsDiagnostics: Bool
 
     package init(
         mode: TextProcessingMode, text: String, options: TextProcessingOptions,
         dictionary: PersonalDictionarySnapshot, screenContext: String = "",
         screenImage: CGImage? = nil, memoryContext: String = "", inputContext: InputContext? = nil,
-        formatKind: TextFormatKind? = nil, allowsPreparedFallback: Bool = false
+        formatKind: TextFormatKind? = nil, allowsPreparedFallback: Bool = false,
+        collectsDiagnostics: Bool = false
     ) {
         self.mode = mode
         self.text = text
@@ -31,22 +33,29 @@ package struct ProcessingRequest {
         self.inputContext = inputContext
         self.formatKind = formatKind
         self.allowsPreparedFallback = allowsPreparedFallback
+        self.collectsDiagnostics = collectsDiagnostics
     }
 
     package func withMode(_ mode: TextProcessingMode) -> ProcessingRequest {
         ProcessingRequest(mode: mode, text: text, options: options, dictionary: dictionary,
             screenContext: screenContext, screenImage: screenImage, memoryContext: memoryContext,
-            inputContext: inputContext, formatKind: formatKind, allowsPreparedFallback: allowsPreparedFallback)
+            inputContext: inputContext, formatKind: formatKind, allowsPreparedFallback: allowsPreparedFallback,
+            collectsDiagnostics: collectsDiagnostics)
     }
 }
 
 package struct ProcessingResult: Sendable {
     package let text: String
     package let generationOutcome: EspressoGenerationOutcome?
+    package let decision: ProcessingDecision
+    package let trace: ProcessingTrace?
 
-    package init(text: String, generationOutcome: EspressoGenerationOutcome? = nil) {
+    package init(text: String, generationOutcome: EspressoGenerationOutcome? = nil,
+                 decision: ProcessingDecision = ProcessingDecision(.accepted), trace: ProcessingTrace? = nil) {
         self.text = text
         self.generationOutcome = generationOutcome
+        self.decision = decision
+        self.trace = trace
     }
 }
 

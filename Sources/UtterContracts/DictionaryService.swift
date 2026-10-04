@@ -1,10 +1,13 @@
 import Foundation
 
-package protocol DictionaryService: AnyObject {
+package protocol DictionarySnapshotService: AnyObject {
+    func snapshot(industryLexicon: IndustryLexiconSnapshot, bundleIdentifier: String?, languageCode: String?) -> PersonalDictionarySnapshot
+}
+
+package protocol DictionaryService: DictionarySnapshotService {
     var storageAvailable: Bool { get }
     var entries: [DictionaryEntry] { get set }
     var editRules: [EditRule] { get set }
-    func snapshot(industryLexicon: IndustryLexiconSnapshot, bundleIdentifier: String?, languageCode: String?) -> PersonalDictionarySnapshot
     @discardableResult func addEntry(original: String, replacement: String) -> UUID?
     func removeEntry(at offsets: IndexSet)
     func removeEntry(id: UUID)

@@ -32,6 +32,11 @@ extension TranscriptFidelityGuard {
         guard let range = Range(event.range, in: text) else {
             return event.values.map { "number:\($0)" }
         }
+        if let units = event.units {
+            return zip(event.values, units).flatMap { value, unit in
+                numberKeys(value: value, unit: unit, range: range, in: text)
+            }
+        }
         let raw = String(text[range])
         if event.values.count == 3,
            raw.contains("-") || raw.contains("/") {
@@ -50,12 +55,14 @@ extension TranscriptFidelityGuard {
             after: range.upperBound,
             in: text
         ) {
-            keys.append("unit:\(unit)")
+            keys = event.values.flatMap {
+                numberKeys(value: $0, unit: unit, range: range, in: text)
+            }
         }
         return keys
     }
 
-    private static func measurementUnit(
+    static func measurementUnit(
         before startIndex: String.Index,
         after index: String.Index,
         in text: String
@@ -79,6 +86,11 @@ extension TranscriptFidelityGuard {
             (#"^\s*(?:个月|個月|月)"#, "month"),
             (#"^\s*(?:年)"#, "year"),
             (#"^\s*(?:个|個)"#, "count"),
+            (#"^\s*(?:件)"#, "piece"),
+            (#"^\s*(?:项|項)"#, "item"),
+            (#"^\s*(?:条|條)"#, "entry"),
+            (#"^\s*(?:号|號)"#, "day"),
+            (#"^\s*(?:点|點)"#, "clockHour"),
             (#"^\s*(?:页|頁)"#, "page"),
             (#"^\s*(?:次)"#, "times"),
             (#"^\s*(?:元|块|塊)"#, "currency"),
