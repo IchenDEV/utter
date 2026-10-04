@@ -35,7 +35,7 @@ final class VoiceEditingTests: XCTestCase {
         let history = try fixture.runtime.service(DataServices.history)
         let anchor = EditingAnchor(target: fixture.target, text: "Original text")
         outputs.remember(SessionCompletion(transcript: "original", text: anchor.text, acceptance: .delivery(
-            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor))), recordID: UUID())
+            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor, confirmation: .targetValue))), recordID: UUID())
         fixture.recipe.resolution = .command(.undoLastInsertion)
         let driver = try fixture.runtime.service(SessionServices.execution)
         try driver.start(SessionIntent(input: .text("Undo"), mode: .command))
@@ -53,7 +53,7 @@ final class VoiceEditingTests: XCTestCase {
         try await fixture.start()
         let anchor = EditingAnchor(target: fixture.target, text: "Original text")
         try fixture.runtime.service(SessionServices.outputs).remember(SessionCompletion(transcript: "original", text: anchor.text, acceptance: .delivery(
-            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor))), recordID: UUID())
+            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor, confirmation: .targetValue))), recordID: UUID())
         fixture.recipe.resolution = .command(.replaceLast("Replacement"))
         anchor.isCurrent = false
         let driver = try fixture.runtime.service(SessionServices.execution)

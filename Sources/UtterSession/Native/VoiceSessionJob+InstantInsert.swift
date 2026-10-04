@@ -17,7 +17,7 @@ extension VoiceSessionJob {
         let kind = dependencies.preparation.format(text: transcript, context: context).kind
         let record = InputRecord(id: intent.id, date: Date(), rawText: transcript, processedText: text,
             wasProcessed: false, context: context, formatKind: kind)
-        guard acceptance.isAccepted else { return SessionCompletion(transcript: transcript, text: text, acceptance: acceptance) }
+        guard acceptance.isAccepted else { return SessionCompletion(transcript: transcript, text: text, acceptance: acceptance, record: record) }
         let work = DeferredFormatWork(request: ProcessingRequest(mode: .formatting, text: transcript, options: options,
             dictionary: settings.dictionary, memoryContext: memoryContext, inputContext: context, formatKind: kind),
             recipeID: recipeID, outputs: outputs, recipes: dependencies.recipes, access: dependencies.access,

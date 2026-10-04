@@ -178,10 +178,12 @@ package final class SessionDriver: SessionExecutionService {
             switch result {
             case .success(let completion) where completion.accepted:
                 snapshot = SessionExecutionSnapshot(id: intent.id, phase: .completed,
-                    transcript: completion.transcript, text: completion.text)
+                    transcript: completion.transcript, text: completion.text, deliveryStatus: completion.acceptance.deliveryStatus)
             case .success(let completion):
                 snapshot = SessionExecutionSnapshot(id: intent.id, phase: .failed,
-                    transcript: completion.transcript, text: completion.text)
+                    transcript: completion.transcript, text: completion.text,
+                    error: completion.acceptance.deliveryReason,
+                    deliveryStatus: completion.acceptance.deliveryStatus)
             case .failure(let error):
                 terminalFailures[intent.id] = error
                 snapshot = SessionExecutionSnapshot(id: intent.id,
@@ -189,14 +191,15 @@ package final class SessionDriver: SessionExecutionService {
             }
             terminalSnapshots[intent.id] = snapshot
             for (id, callback) in Array(settlementObservers) where settlementObservers[id] != nil { callback(intent, result) }
-            if case .success(let completion) = result, completion.accepted {
-                if let replacement = completion.historyReplacement {
+            if case .success(let completion) = result {
+                if completion.acceptance.deliveryStatus == .inserted, let replacement = completion.historyReplacement {
                     history.replaceRecord(recordID: replacement.recordID, processedText: completion.text,
                         context: replacement.context, formatKind: replacement.formatKind)
                 } else if let record = completion.record {
                     history.addRecord(InputRecord(id: intent.id, date: record.date, rawText: record.rawText,
                         processedText: record.processedText, wasProcessed: record.wasProcessed,
-                        context: record.context, userFinalText: record.userFinalText, formatKind: record.formatKind))
+                        context: record.context, userFinalText: record.userFinalText, formatKind: record.formatKind,
+                        deliveryStatus: completion.acceptance.deliveryStatus))
                 }
             }
             workflows.settle(intent, result: result)

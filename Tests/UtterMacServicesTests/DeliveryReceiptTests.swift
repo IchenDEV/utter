@@ -11,7 +11,7 @@ final class DeliveryReceiptTests: XCTestCase {
         let service = ScopedOutputService(isCurrent: { true }) { _, _, mark in
             calls += 1
             XCTAssertTrue(mark(.clipboard))
-            return DeliveryCompletion(disposition: .accepted)
+            return DeliveryCompletion(disposition: .accepted, confirmation: .clipboardValue)
         }
         let delivery = try service.prepare(request(), isSessionCurrent: { true })
         await delivery.close()
@@ -26,7 +26,7 @@ final class DeliveryReceiptTests: XCTestCase {
         var effects = 0
         let service = ScopedOutputService(isCurrent: { true }) { _, _, mark in
             if mark(.clipboard) { effects += 1 }
-            return DeliveryCompletion(disposition: .accepted)
+            return DeliveryCompletion(disposition: .accepted, confirmation: .clipboardValue)
         }
         let input = request()
         let first = try service.prepare(input, isSessionCurrent: { true })
@@ -50,7 +50,7 @@ final class DeliveryReceiptTests: XCTestCase {
             XCTAssertTrue(mark(.paste))
             committed.send()
             await restoration.wait()
-            return DeliveryCompletion(disposition: .accepted)
+            return DeliveryCompletion(disposition: .accepted, confirmation: .targetValue)
         }
         let delivery = try service.prepare(request(), isSessionCurrent: { true })
         let commit = Task { await delivery.commit() }
@@ -101,7 +101,7 @@ final class DeliveryReceiptTests: XCTestCase {
             await resume.wait()
             XCTAssertFalse(canCommit())
             if mark(.paste) { effects += 1 }
-            return DeliveryCompletion(disposition: .accepted)
+            return DeliveryCompletion(disposition: .accepted, confirmation: .clipboardValue)
         }
         let delivery = try service.prepare(request(), isSessionCurrent: { current })
         let commit = Task { await delivery.commit() }

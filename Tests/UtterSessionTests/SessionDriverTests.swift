@@ -126,7 +126,7 @@ final class SessionDriverTests: XCTestCase {
         XCTAssertEqual(fixture.history.records.count, 1)
     }
 
-    func testUncertainDeliveryKeepsExplicitCopyTextWithoutHistoryOrAutomaticReplay() async throws {
+    func testUncertainDeliveryRetainsTextAndHistoryStatusWithoutSuccessfulInsertionOrReplay() async throws {
         let fixture = try DriverFixture()
         defer { fixture.remove() }
         let job = HeldSessionJob()
@@ -143,7 +143,9 @@ final class SessionDriverTests: XCTestCase {
         while driver.snapshot.isBusy { await Task.yield() }
         XCTAssertEqual(driver.snapshot.phase, .failed)
         XCTAssertEqual(driver.snapshot.text, "accepted")
-        XCTAssertTrue(fixture.history.records.isEmpty)
+        XCTAssertEqual(driver.snapshot.deliveryStatus, .uncertain)
+        XCTAssertEqual(fixture.history.records.map(\.deliveryStatus), [.uncertain])
+        XCTAssertEqual(fixture.history.stats.totalInputs, 0)
         XCTAssertEqual(factory.constructed, 1)
         XCTAssertThrowsError(try driver.start(intent))
         await driver.close()
@@ -266,7 +268,7 @@ private final class HeldSessionJob: SessionJob {
         await withCheckedContinuation { waiter = $0 }
         if !accepted { throw CancellationError() }
         return SessionCompletion(transcript: "raw", text: "accepted", acceptance: .delivery(
-            DeliveryReceipt(operationID: UUID(), disposition: disposition, effect: .paste)
+            DeliveryReceipt(operationID: UUID(), disposition: disposition, effect: .paste, confirmation: .targetValue)
         ), record: InputRecord(rawText: "raw", processedText: "accepted", wasProcessed: true))
     }
     func revoke() {}

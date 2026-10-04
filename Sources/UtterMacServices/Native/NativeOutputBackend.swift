@@ -24,75 +24,40 @@ extension MacPlugins {
 final class NativeOutputBackend {
     private let log: Log
     private let isCurrent: () -> Bool
-    private let pasteboard: NSPasteboard
+    private let pasteboard: NativeDeliveryPasteboard
 
     init(log: Log, isCurrent: @escaping () -> Bool, pasteboard: NSPasteboard = .general) {
         self.log = log
         self.isCurrent = isCurrent
-        self.pasteboard = pasteboard
+        self.pasteboard = NativeDeliveryPasteboard(pasteboard)
     }
 
     func deliver(_ request: DeliveryRequest, canCommit: @escaping () -> Bool,
                  markCommitted: @escaping (DeliveryEffect) -> Bool) async -> DeliveryCompletion {
-        if case let .clipboard(text) = request.command {
-            guard canCommit(), markCommitted(.clipboard) else { return DeliveryCompletion(disposition: .notCommitted) }
-            pasteboard.clearContents()
-            let copied = pasteboard.setString(text, forType: .string)
-            return DeliveryCompletion(disposition: copied ? .accepted : .uncertain)
-        }
+        let text: String
         let target: (any OutputTargetLease)?
-        let replacement: (any OutputAnchor)?
+        let anchor: (any OutputAnchor)?
+        let requiresSelection: Bool
         switch request.command {
-        case let .replaceAnchor(_, anchor), let .undoAnchor(anchor): target = anchor.target; replacement = anchor
-        default: target = request.target; replacement = nil
+        case .clipboard(let value):
+            return ClipboardPasteTransaction.copy(value, pasteboard: pasteboard, canCommit: canCommit, mark: markCommitted)
+        case .insert(let value): text = value; target = request.target; anchor = nil; requiresSelection = false
+        case .replaceSelection(let value): text = value; target = request.target; anchor = nil; requiresSelection = true
+        case .deleteSelection: text = ""; target = request.target; anchor = nil; requiresSelection = true
+        case .replaceAnchor(let value, let previous): text = value; target = previous.target; anchor = previous; requiresSelection = false
+        case .undoAnchor(let previous): text = ""; target = previous.target; anchor = previous; requiresSelection = false
         }
-        guard canCommit(), let target, target.isCurrent,
-              let app = NSRunningApplication(processIdentifier: target.processIdentifier), !app.isTerminated,
-              replacement?.isCurrent ?? true else { return DeliveryCompletion(disposition: .notCommitted, reason: L("pipeline.replacement_reason_text_changed")) }
-        let initialState = AXTargetState.capture()
-        var preparedSelection: NSRange?
-        var effectWasCommitted = false
-        let worker = TextInserter(log: log)
-        worker.canCommit = {
-            guard canCommit(), target.isValid else { return false }
-            guard let preparedSelection else { return target.isCurrent }
-            guard let initialState, let current = AXTargetState.capture(),
-                  initialState.matches(current, selection: preparedSelection),
-                  let replacement, let document = AXTargetState.value(of: current.element) else { return false }
-            let value = document as NSString
-            return NSMaxRange(preparedSelection) <= value.length && value.substring(with: preparedSelection) == replacement.text
+        guard canCommit(), let target,
+              let destination = NativeDeliveryTarget(lease: target, anchor: anchor, requiresSelection: requiresSelection) else {
+            return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.target_changed"))
         }
-        worker.commitEffect = { effect in
-            guard markCommitted(effect) else { return false }
-            effectWasCommitted = true
-            return true
+        var result = await TextDeliveryTransaction.deliver(text, target: destination, pasteboard: pasteboard,
+            allowsClipboardPaste: request.allowsClipboardPaste, isSecureInput: { NativeDeliveryKeys.isSecureInput },
+            prepareKeys: NativeDeliveryKeys.prepare, canCommit: canCommit, mark: markCommitted)
+        if result.disposition == .accepted, result.confirmation == .targetValue {
+            result.anchor = destination.insertionAnchor(text, isCurrent: isCurrent)
         }
-        worker.selectionPrepared = { preparedSelection = replacement?.range }
-        if let replacement, let initialState {
-            worker.recentInsertionAnchor = RecentInsertionAnchor(processIdentifier: target.processIdentifier,
-                element: initialState.element, range: replacement.range, text: replacement.text)
-        }
-        defer {
-            if !effectWasCommitted, let preparedSelection, let initialState, let current = AXTargetState.capture(),
-               initialState.matches(current, selection: preparedSelection) { initialState.restoreSelection() }
-        }
-        let result: InsertResult
-        switch request.command {
-        case let .insert(text): result = await worker.insert(text: text, targetApp: app)
-        case let .replaceSelection(text): result = await worker.replaceSelectedText(text: text, targetApp: app)
-        case .deleteSelection: result = await worker.deleteSelectedText(targetApp: app)
-        case let .replaceAnchor(text, anchor): result = await worker.replaceRecentInsertion(text: text, previouslyInserted: anchor.text, targetApp: app)
-        case let .undoAnchor(anchor): result = await worker.undoRecentInsertion(previouslyInserted: anchor.text, targetApp: app)
-        case .clipboard: return DeliveryCompletion(disposition: .notCommitted)
-        }
-        switch result {
-        case .success:
-            var anchor: (any OutputAnchor)?
-            if let insertion = worker.recentInsertionAnchor, let state = AXTargetState.capture() {
-                anchor = NativeOutputAnchor(target: target, anchor: insertion, state: state, isCurrent: isCurrent)
-            }
-            return DeliveryCompletion(disposition: .accepted, anchor: anchor)
-        case let .probablyFailed(reason): return DeliveryCompletion(disposition: .notCommitted, reason: reason)
-        }
+        log.info("Delivery completed: \(result.disposition), confirmation: \(result.confirmation.rawValue)")
+        return result
     }
 }

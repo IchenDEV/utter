@@ -11,11 +11,13 @@ package final class DeferredReplacementJob: SessionJob {
     private let access: any ModelResourceAccess
     private let authorize: () throws -> Void
     private let operationID: UUID
+    private let allowsClipboardPaste: Bool
     private var delivery: (any PreparedDelivery)?
     private var revoked = false
 
     package init(id: UUID, outputs: any SessionOutputStateService, output: any OutputService,
                  access: any ModelResourceAccess, target: (any OutputTargetLease)?, operationID: UUID = UUID(),
+                 allowsClipboardPaste: Bool = true,
                  authorize: @escaping () throws -> Void) throws {
         guard let replacement = outputs.snapshot.pending, replacement.id == id, replacement.hasFormattedText else {
             throw IntegrationError.invalidSessionState
@@ -23,6 +25,7 @@ package final class DeferredReplacementJob: SessionJob {
         self.replacement = replacement; self.outputs = outputs; self.output = output
         self.access = access; self.target = target; self.authorize = authorize
         self.operationID = operationID
+        self.allowsClipboardPaste = allowsClipboardPaste
         anchor = outputs.pendingAnchor
     }
 
@@ -46,7 +49,8 @@ package final class DeferredReplacementJob: SessionJob {
                 mutation = .copiedPending(replacement.id, message: copyMessage(decision))
             }
             control.update(phase: .delivering, transcript: replacement.rawText)
-            let prepared = try output.prepare(DeliveryRequest(id: operationID, command: command, target: target),
+            let prepared = try output.prepare(DeliveryRequest(id: operationID, command: command, target: target,
+                allowsClipboardPaste: allowsClipboardPaste),
                 isSessionCurrent: { [weak self, weak control] in
                     guard let self, let control else { return false }
                     return (try? self.check(control)) != nil
@@ -56,6 +60,8 @@ package final class DeferredReplacementJob: SessionJob {
             await prepared.close()
             delivery = nil
             return SessionCompletion(transcript: replacement.rawText, text: text, acceptance: .delivery(receipt),
+                record: receipt.disposition == .uncertain ? InputRecord(rawText: replacement.rawText, processedText: text,
+                    wasProcessed: true, context: replacement.context, formatKind: replacement.formatKind) : nil,
                 historyReplacement: history, outputMutation: mutation)
         }
     }

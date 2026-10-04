@@ -7,6 +7,7 @@ package struct VoiceInputSettings {
     package let dictionary: PersonalDictionarySnapshot
     package let outputMode: OutputMode
     package let enableInstantInsert: Bool
+    package let allowClipboardPaste: Bool
     package let enableMemory: Bool
     package let memoryWindowMinutes: Int
     package let useScreenContext: Bool
@@ -25,6 +26,7 @@ package struct VoiceInputSettings {
         self.dictionary = dictionary
         outputMode = settings.outputMode
         enableInstantInsert = settings.enableInstantInsert
+        allowClipboardPaste = settings.allowClipboardPaste
         enableMemory = settings.enableMemory
         memoryWindowMinutes = settings.memoryWindowMinutes
         useScreenContext = settings.useScreenContext

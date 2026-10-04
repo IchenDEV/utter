@@ -70,7 +70,7 @@ final class SessionOutputStateTests: XCTestCase {
     private func completion(_ text: String, anchor: (any OutputAnchor)? = nil,
                             disposition: DeliveryDisposition = .accepted) -> SessionCompletion {
         SessionCompletion(transcript: text, text: text, acceptance: .delivery(
-            DeliveryReceipt(operationID: UUID(), disposition: disposition, effect: .paste, anchor: anchor)))
+            DeliveryReceipt(operationID: UUID(), disposition: disposition, effect: .paste, anchor: anchor, confirmation: .targetValue)))
     }
 }
 

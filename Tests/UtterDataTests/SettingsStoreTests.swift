@@ -15,13 +15,16 @@ final class SettingsStoreTests: XCTestCase {
             values.remoteAPIKey = "synthetic-secret"
             values.modelStoragePath = "/tmp/synthetic-models"
             values.localWhisperModelPaths = ["local/test": "/tmp/whisper"]
+            values.allowClipboardPaste = false
         }
         XCTAssertEqual(frozen.speechEngine, .apple)
         XCTAssertEqual(frozen.remoteAPIKey, "")
+        XCTAssertTrue(frozen.allowClipboardPaste)
         let reopened = SettingsStore(defaults: fixture.defaults)
         XCTAssertEqual(reopened.values, store.values)
         XCTAssertEqual(fixture.defaults.string(forKey: "speechEngine"), "whisper")
         XCTAssertEqual(fixture.defaults.string(forKey: "remoteAPIKey"), "synthetic-secret")
+        XCTAssertFalse(reopened.values.allowClipboardPaste)
     }
 
     func testCompoundUpdateNotifiesOnceAfterPersistenceAndHotkeyNormalization() {

@@ -52,10 +52,12 @@ package struct SessionExecutionSnapshot: Equatable, Sendable {
     package let text: String
     package let error: String?
     package let isBusy: Bool
+    package let deliveryStatus: DeliveryStatus?
     package init(id: UUID? = nil, phase: SessionExecutionPhase? = nil, transcript: String = "",
-                 text: String = "", error: String? = nil, isBusy: Bool = false) {
+                 text: String = "", error: String? = nil, isBusy: Bool = false, deliveryStatus: DeliveryStatus? = nil) {
         self.id = id; self.phase = phase; self.transcript = transcript
         self.text = text; self.error = error; self.isBusy = isBusy
+        self.deliveryStatus = deliveryStatus
     }
 }
 
@@ -67,6 +69,16 @@ package enum SessionAcceptance {
         case .returnedText: return true
         case .delivery(let receipt): return receipt.disposition == .accepted
         }
+    }
+    package var deliveryStatus: DeliveryStatus? {
+        switch self {
+        case .returnedText: return nil
+        case .delivery(let receipt): return receipt.status
+        }
+    }
+    package var deliveryReason: String? {
+        if case .delivery(let receipt) = self { return receipt.reason }
+        return nil
     }
 }
 

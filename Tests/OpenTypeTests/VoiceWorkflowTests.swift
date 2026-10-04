@@ -8,6 +8,24 @@ import UtterSession
 
 @MainActor
 final class VoiceWorkflowTests: XCTestCase {
+    func testDesktopDeliveryReceivesFrozenClipboardPolicyThroughReplacementProvider() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        try await fixture.start()
+        let settings = try fixture.runtime.service(DataServices.settings)
+        settings.update { $0.allowClipboardPaste = false }
+        let driver = try fixture.runtime.service(SessionServices.execution)
+        let intent = SessionIntent(input: .text("Synthetic dictation"))
+        try driver.reserve(intent)
+        settings.update { $0.allowClipboardPaste = true }
+        try driver.activate(intent.id)
+        _ = try await driver.waitForCompletion(intent.id)
+        XCTAssertEqual(fixture.output.requests.count, 1)
+        XCTAssertFalse(try XCTUnwrap(fixture.output.requests.first).allowsClipboardPaste)
+        XCTAssertEqual(driver.snapshot.deliveryStatus, .inserted)
+        try await fixture.runtime.stop()
+    }
+
     func testCancelledPreparationDrainsBeforeModelMaintenanceOrAnotherSource() async throws {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }

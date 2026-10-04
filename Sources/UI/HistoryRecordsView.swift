@@ -119,6 +119,11 @@ struct HistoryRecordsView: View {
             }
 
             HStack(spacing: 8) {
+                if let status = record.deliveryStatus {
+                    Text(L("delivery.\(status.rawValue)"))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
                 Label(metadataText(for: record), systemImage: "app")
                     .font(.caption2)
                     .foregroundStyle(.secondary)

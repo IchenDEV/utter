@@ -59,7 +59,7 @@ extension VoiceSessionJob {
         control.update(phase: .delivering, transcript: request.text)
         let acceptance = try await deliver(outputCommand, target: outputTarget, control: control)
         return SessionCompletion(transcript: request.text, text: text, acceptance: acceptance,
-            record: recordsHistory ? InputRecord(id: intent.id, date: Date(), rawText: request.text,
+            record: recordsHistory || !acceptance.isAccepted ? InputRecord(id: intent.id, date: Date(), rawText: request.text,
                 processedText: text, wasProcessed: true, context: request.inputContext) : nil)
     }
 

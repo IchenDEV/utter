@@ -68,6 +68,7 @@ final class MacServiceLifetimeTests: XCTestCase {
         let receipt = await delivery.commit()
         XCTAssertEqual(receipt.disposition, .accepted)
         XCTAssertEqual(receipt.effect, .clipboard)
+        XCTAssertEqual(receipt.status, .copied)
         XCTAssertEqual(pasteboard.string(forType: .string), "output")
         await delivery.close()
         pasteboard.clearContents()
@@ -82,22 +83,33 @@ final class MacServiceLifetimeTests: XCTestCase {
         let pasteboard = NSPasteboard.withUniqueName()
         defer { pasteboard.releaseGlobally() }
         pasteboard.setString("previous", forType: .string)
-        let worker = TextInserter(log: Log(service: MacTestDiagnostics()))
         var current = true
         var pastes = 0
-        worker.canCommit = { current }
-        let task = Task {
-            await worker.insertViaClipboard(text: "prepared", pasteboard: pasteboard) {
-                pastes += 1
-                return true
-            }
-        }
-        while pasteboard.string(forType: .string) != "prepared" { await Task.yield() }
-        current = false
-        let result = await task.value
-        XCTAssertFalse(result)
+        let result = await ClipboardPasteTransaction.paste("prepared", pasteboard: NativeDeliveryPasteboard(pasteboard),
+            canCommit: { current }, mark: { _ in true }, postPaste: { pastes += 1; return true },
+            confirm: { false }, beforePaste: { current = false })
+        XCTAssertEqual(result.disposition, .uncertain)
         XCTAssertEqual(pastes, 0)
         XCTAssertEqual(pasteboard.string(forType: .string), "previous")
+    }
+
+    func testNativePasteboardRestoresAllRepresentationsAfterConfirmedConsumption() async {
+        let pasteboard = NSPasteboard.withUniqueName()
+        defer { pasteboard.releaseGlobally() }
+        let item = NSPasteboardItem()
+        let customType = NSPasteboard.PasteboardType("utter.synthetic.bytes")
+        item.setString("previous", forType: .string)
+        item.setData(Data([0, 1, 255]), forType: customType)
+        pasteboard.writeObjects([item])
+        let adapter = NativeDeliveryPasteboard(pasteboard)
+        let original = adapter.snapshot()
+        let result = await ClipboardPasteTransaction.paste("prepared", pasteboard: adapter,
+            canCommit: { true }, mark: { _ in true }, postPaste: { true }, confirm: {
+                XCTAssertEqual(adapter.text, "prepared")
+                return true
+            })
+        XCTAssertEqual(result.confirmation, .targetValue)
+        XCTAssertEqual(adapter.snapshot(), original)
     }
 }
 

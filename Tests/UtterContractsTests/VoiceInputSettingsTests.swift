@@ -8,6 +8,7 @@ final class VoiceInputSettingsTests: XCTestCase {
         preferences.inputLanguage = .english
         preferences.llmModel = "admitted-model"
         preferences.microphoneID = "admitted-microphone"
+        preferences.allowClipboardPaste = false
         let speech = SpeechSelection(providerID: "replacement.speech", type: .whisper, model: "replacement-model")
         let dictionary = PersonalDictionarySnapshot(entries: [DictionaryEntry(original: "helo", replacement: "hello")], editRules: [])
         let snapshot = VoiceInputSettings(settings: preferences, speech: speech, dictionary: dictionary)
@@ -15,10 +16,12 @@ final class VoiceInputSettingsTests: XCTestCase {
         preferences.inputLanguage = .chinese
         preferences.llmModel = "later-model"
         preferences.microphoneID = "later-microphone"
+        preferences.allowClipboardPaste = true
         XCTAssertEqual(snapshot.processing.remoteAPIKey, "admitted-secret")
         XCTAssertEqual(snapshot.inputLanguage, .english)
         XCTAssertEqual(snapshot.llmModel, "admitted-model")
         XCTAssertEqual(snapshot.microphoneID, "admitted-microphone")
+        XCTAssertFalse(snapshot.allowClipboardPaste)
         XCTAssertEqual(snapshot.speech.providerID, "replacement.speech")
         XCTAssertEqual(snapshot.speech.model, "replacement-model")
         XCTAssertEqual(snapshot.dictionary.applyReplacements(to: "helo"), "hello")

@@ -8,6 +8,7 @@ extension SettingsStore {
         case microphoneID, remoteMicEnabled, remoteMicGainDB, outputMode, languageStyle, customStylePrompt, playSounds
         case audioGateSensitivity, audioWeakSpeechSensitivity
         case enableStreamingRecognitionBeta
+        case allowClipboardPaste
         case inputLanguage, translationTargetLanguage
         case useScreenContext, screenContextMode, enableInstantInsert, hasCompletedOnboarding, uiLanguage, historyRetention
         case enableMemory, memoryWindowMinutes, enableCorrectionLearning, industryLexicon
@@ -82,6 +83,7 @@ extension SettingsStore {
             values.customStylePrompt = LanguageStyle.custom.defaultPrompt
         }
         values.playSounds = ud.object(forKey: Key.playSounds.rawValue) as? Bool ?? true
+        values.allowClipboardPaste = ud.object(forKey: Key.allowClipboardPaste.rawValue) as? Bool ?? true
         values.enableStreamingRecognitionBeta = ud.object(forKey: Key.enableStreamingRecognitionBeta.rawValue) as? Bool ?? true
         values.inputLanguage = InputLanguage(rawValue: ud.string(forKey: Key.inputLanguage.rawValue) ?? "") ?? .chinese
         values.translationTargetLanguage = TranslationLanguage(

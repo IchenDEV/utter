@@ -47,7 +47,7 @@ package final class HistoryStore: HistoryService {
             id: previous.id, date: previous.date, rawText: previous.rawText,
             processedText: processedText, wasProcessed: true,
             context: context ?? previous.context, userFinalText: previous.userFinalText,
-            formatKind: formatKind ?? previous.formatKind
+            formatKind: formatKind ?? previous.formatKind, deliveryStatus: previous.deliveryStatus
         )
         save()
         return previous.id
@@ -66,7 +66,7 @@ package final class HistoryStore: HistoryService {
             wasProcessed: record.wasProcessed,
             context: record.context,
             userFinalText: finalText,
-            formatKind: record.formatKind
+            formatKind: record.formatKind, deliveryStatus: record.deliveryStatus
         )
         save()
     }
@@ -82,6 +82,7 @@ package final class HistoryStore: HistoryService {
     }
 
     package var stats: InputStats {
+        let records = records.filter { $0.deliveryStatus == nil || $0.deliveryStatus == .inserted }
         let calendar = Calendar.current
         let todayStart = calendar.startOfDay(for: Date())
 

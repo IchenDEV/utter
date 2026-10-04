@@ -11,6 +11,7 @@ package struct InputRecord: Codable, Identifiable {
     package let context: InputContext?
     package let userFinalText: String?
     package let formatKind: TextFormatKind?
+    package let deliveryStatus: DeliveryStatus?
 
     package var displayText: String {
         userFinalText ?? processedText
@@ -22,7 +23,8 @@ package struct InputRecord: Codable, Identifiable {
         wasProcessed: Bool,
         context: InputContext? = nil,
         userFinalText: String? = nil,
-        formatKind: TextFormatKind? = nil
+        formatKind: TextFormatKind? = nil,
+        deliveryStatus: DeliveryStatus? = nil
     ) {
         self.init(
             id: UUID(),
@@ -32,7 +34,8 @@ package struct InputRecord: Codable, Identifiable {
             wasProcessed: wasProcessed,
             context: context,
             userFinalText: userFinalText,
-            formatKind: formatKind
+            formatKind: formatKind,
+            deliveryStatus: deliveryStatus
         )
     }
 
@@ -44,7 +47,8 @@ package struct InputRecord: Codable, Identifiable {
         wasProcessed: Bool,
         context: InputContext? = nil,
         userFinalText: String? = nil,
-        formatKind: TextFormatKind? = nil
+        formatKind: TextFormatKind? = nil,
+        deliveryStatus: DeliveryStatus? = nil
     ) {
         self.id = id
         self.date = date
@@ -56,11 +60,12 @@ package struct InputRecord: Codable, Identifiable {
         self.context = context
         self.userFinalText = userFinalText
         self.formatKind = formatKind
+        self.deliveryStatus = deliveryStatus
     }
 
     package enum CodingKeys: String, CodingKey {
         case id, date, rawText, processedText, rawCharCount, processedCharCount, wasProcessed, context
-        case userFinalText, formatKind
+        case userFinalText, formatKind, deliveryStatus
     }
 
     package init(from decoder: Decoder) throws {
@@ -75,6 +80,7 @@ package struct InputRecord: Codable, Identifiable {
         context = try container.decodeIfPresent(InputContext.self, forKey: .context)
         userFinalText = try container.decodeIfPresent(String.self, forKey: .userFinalText)
         formatKind = try container.decodeIfPresent(TextFormatKind.self, forKey: .formatKind)
+        deliveryStatus = try container.decodeIfPresent(DeliveryStatus.self, forKey: .deliveryStatus)
     }
 
     package func matchesSearch(_ query: String) -> Bool {
@@ -119,4 +125,3 @@ package struct InputStats {
         self.streakDays = streakDays
     }
 }
-

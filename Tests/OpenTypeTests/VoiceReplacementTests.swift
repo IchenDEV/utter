@@ -57,7 +57,7 @@ final class VoiceReplacementTests: XCTestCase {
         let outputs = try fixture.runtime.service(SessionServices.outputs)
         let anchor = EditingAnchor(target: fixture.target, text: "Quick text")
         outputs.remember(SessionCompletion(transcript: "Raw", text: anchor.text, acceptance: .delivery(
-            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor))), recordID: record.id)
+            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor, confirmation: .targetValue))), recordID: record.id)
         var pending = DeferredReplacement(historyRecordID: record.id, rawText: "Raw", insertedText: anchor.text,
             targetPID: fixture.target.processIdentifier, targetBundleIdentifier: fixture.target.context.bundleIdentifier,
             message: "Ready", createdAt: createdAt)

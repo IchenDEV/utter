@@ -148,7 +148,7 @@ final class WorkflowDelivery: PreparedDelivery {
     func commit() async -> DeliveryReceipt {
         committing = true
         if heldCommit { await withCheckedContinuation { commitWaiter = $0 } }
-        let value = DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor)
+        let value = DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor, confirmation: .targetValue)
         receipt = value
         return value
     }

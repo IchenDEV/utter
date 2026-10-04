@@ -77,7 +77,7 @@ private final class ReplacementFixture: SessionWorkflowFactory {
         history = HistoryStore(directoryURL: directory, retention: { .forever }, reportError: { _ in }, notifications: notifications)
         let anchor = ReplacementAnchor(target: target)
         outputs.remember(SessionCompletion(transcript: "Raw", text: "Quick", acceptance: .delivery(
-            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor))), recordID: recordID)
+            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor, confirmation: .targetValue))), recordID: recordID)
         var row = DeferredReplacement(historyRecordID: recordID, rawText: "Raw", insertedText: "Quick",
             targetPID: target.processIdentifier, targetBundleIdentifier: target.context.bundleIdentifier,
             message: "Ready", createdAt: Date().addingTimeInterval(expired ? -20 : 0))
@@ -106,7 +106,11 @@ private final class ReplacementOutput: OutputService, PreparedDelivery {
         requests.append(request); return self
     }
     func commit() async -> DeliveryReceipt {
-        let result = DeliveryReceipt(operationID: requests.last!.id, disposition: .accepted, effect: .paste)
+        let request = requests.last!
+        let copied: Bool
+        if case .clipboard = request.command { copied = true } else { copied = false }
+        let result = DeliveryReceipt(operationID: request.id, disposition: .accepted,
+            effect: copied ? .clipboard : .paste, confirmation: copied ? .clipboardValue : .targetValue)
         receipt = result; return result
     }
     func close() async {}

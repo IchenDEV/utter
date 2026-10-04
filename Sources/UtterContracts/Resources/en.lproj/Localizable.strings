@@ -547,3 +547,12 @@
 "device.badge_marginal" = "May Be Slow";
 "device.badge_incompatible" = "Too Large";
 "mode.selection_edit" = "Edit selection";
+"settings.allow_clipboard_paste" = "Allow clipboard paste";
+"settings.allow_clipboard_paste_help" = "Use clipboard paste when direct text insertion is unavailable. Clipboard managers may record dictated text. When disabled, Utter offers an explicit copy instead.";
+"delivery.target_changed" = "The insertion target changed. Copy the text or start again.";
+"delivery.unconfirmed" = "Insertion could not be confirmed. The text is available to copy; it will not be inserted again automatically.";
+"delivery.unavailable" = "This field does not support direct editing.";
+"delivery.inserted" = "Inserted";
+"delivery.copied" = "Copied";
+"delivery.uncertain" = "Insertion unconfirmed";
+"delivery.notDelivered" = "Not inserted";

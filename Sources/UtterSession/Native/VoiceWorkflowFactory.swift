@@ -21,7 +21,8 @@ final class VoiceWorkflowFactory: SessionWorkflowFactory {
             let target = try? dependencies.targets.capture(TargetCaptureRequest(outputMode: values.outputMode,
                 inputLanguage: values.inputLanguage, source: .menuBar))
             return try DeferredReplacementJob(id: id, outputs: outputs, output: dependencies.output,
-                access: dependencies.access, target: target, operationID: intent.id, authorize: { [self] in try authorize(intent) })
+                access: dependencies.access, target: target, operationID: intent.id,
+                allowsClipboardPaste: values.allowClipboardPaste, authorize: { [self] in try authorize(intent) })
         }
         var values = dependencies.credentials.snapshot.applying(to: dependencies.settings.values)
         if let language = intent.request.language { values.inputLanguage = language }

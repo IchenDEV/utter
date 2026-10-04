@@ -20,6 +20,7 @@ extension SettingsStore {
         defaults.set(values.languageStyle.rawValue, forKey: Key.languageStyle.rawValue)
         defaults.set(values.customStylePrompt, forKey: Key.customStylePrompt.rawValue)
         defaults.set(values.playSounds, forKey: Key.playSounds.rawValue)
+        defaults.set(values.allowClipboardPaste, forKey: Key.allowClipboardPaste.rawValue)
         defaults.set(values.enableStreamingRecognitionBeta, forKey: Key.enableStreamingRecognitionBeta.rawValue)
         defaults.set(values.inputLanguage.rawValue, forKey: Key.inputLanguage.rawValue)
         defaults.set(values.translationTargetLanguage.rawValue, forKey: Key.translationTargetLanguage.rawValue)

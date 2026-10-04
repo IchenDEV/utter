@@ -5,6 +5,7 @@ struct DeliveryCompletion {
     let disposition: DeliveryDisposition
     var reason: String? = nil
     var anchor: (any OutputAnchor)? = nil
+    var confirmation: DeliveryConfirmation = .none
 }
 
 @MainActor
@@ -38,7 +39,8 @@ final class ScopedOutputService: OutputService {
                 // Idempotence retains no target, field, text, or observation source.
                 self?.receipts[receipt.operationID] = DeliveryReceipt(
                     operationID: receipt.operationID, disposition: receipt.disposition,
-                    effect: receipt.effect, reason: receipt.reason
+                    effect: receipt.effect, reason: receipt.reason,
+                    effects: receipt.effects, confirmation: receipt.confirmation
                 )
             },
             release: { [weak self] in self?.active = nil }
@@ -68,7 +70,7 @@ private final class OwnedDelivery: PreparedDelivery {
     private let isCurrent: () -> Bool
     private let settle: (DeliveryReceipt) -> Void
     private let release: () -> Void
-    private var committedEffect: DeliveryEffect = .none
+    private var committedEffects: Set<DeliveryEffect> = []
     private var revoked = false
     private var task: Task<DeliveryReceipt, Never>?
     private var closeTask: Task<Void, Never>?
@@ -96,14 +98,16 @@ private final class OwnedDelivery: PreparedDelivery {
                     completion = DeliveryCompletion(disposition: .notCommitted)
                 }
                 let disposition: DeliveryDisposition
-                if committedEffect == .none {
+                if committedEffects.isEmpty {
                     disposition = .notCommitted
                 } else {
                     disposition = completion.disposition == .accepted ? .accepted : .uncertain
                 }
                 let result = DeliveryReceipt(
-                    operationID: id, disposition: disposition, effect: committedEffect,
-                    reason: completion.reason, anchor: disposition == .accepted ? completion.anchor : nil
+                    operationID: id, disposition: disposition, effect: .none,
+                    reason: completion.reason,
+                    anchor: completion.anchor,
+                    effects: committedEffects, confirmation: completion.confirmation
                 )
                 receipt = result
                 settle(result)
@@ -121,8 +125,8 @@ private final class OwnedDelivery: PreparedDelivery {
     private var canCommit: Bool { !revoked && !Task.isCancelled && isCurrent() }
 
     private func markCommitted(_ effect: DeliveryEffect) -> Bool {
-        guard effect != .none, committedEffect == .none, canCommit else { return false }
-        committedEffect = effect
+        guard effect != .none, !committedEffects.contains(effect), canCommit else { return false }
+        committedEffects.insert(effect)
         return true
     }
 

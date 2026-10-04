@@ -172,7 +172,7 @@ private final class APIHeldDeliveryJob: SessionJob {
         control.update(phase: .processing, transcript: "raw")
         await withCheckedContinuation { work = $0 }
         return SessionCompletion(transcript: "raw", text: "final", acceptance: .delivery(
-            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste)
+            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, confirmation: .targetValue)
         ), record: InputRecord(rawText: "raw", processedText: "final", wasProcessed: true))
     }
     func revoke() {}

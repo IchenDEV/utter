@@ -547,3 +547,12 @@
 "device.badge_marginal" = "可能较慢";
 "device.badge_incompatible" = "超出配置";
 "mode.selection_edit" = "编辑选中文本";
+"settings.allow_clipboard_paste" = "允许剪贴板粘贴";
+"settings.allow_clipboard_paste_help" = "无法直接写入时使用剪贴板粘贴。剪贴板管理器可能记录口述内容。关闭后，Utter 提供显式复制。";
+"delivery.target_changed" = "写入目标已变化。可以复制文本，或重新开始。";
+"delivery.unconfirmed" = "无法确认是否已写入。可以复制文本，Utter 不会自动再次写入。";
+"delivery.unavailable" = "此输入框不支持直接编辑。";
+"delivery.inserted" = "已写入";
+"delivery.copied" = "已复制";
+"delivery.uncertain" = "无法确认写入";
+"delivery.notDelivered" = "未写入";

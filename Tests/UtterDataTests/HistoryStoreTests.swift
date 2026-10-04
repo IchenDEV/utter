@@ -5,6 +5,28 @@ import UtterContracts
 
 @MainActor
 final class HistoryStoreTests: XCTestCase {
+    func testDeliveryEvidenceSurvivesReloadCorrectionAndReplacement() throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = HistoryStore(directoryURL: directory, retention: { .forever }, reportError: { _ in })
+        for status in [DeliveryStatus.inserted, .copied, .uncertain, .notDelivered] {
+            let record = InputRecord(rawText: "raw", processedText: "text", wasProcessed: false, deliveryStatus: status)
+            store.addRecord(record)
+            store.updateUserFinalText(recordID: record.id, text: "edited")
+            store.replaceRecord(recordID: record.id, processedText: "formatted", context: nil, formatKind: nil)
+        }
+        let reopened = HistoryStore(directoryURL: directory, retention: { .forever }, reportError: { _ in })
+        XCTAssertEqual(reopened.records.map(\.deliveryStatus), [.notDelivered, .uncertain, .copied, .inserted])
+        XCTAssertEqual(reopened.stats.totalInputs, 1)
+    }
+
+    func testLegacyRecordDecodesWithoutInventingDeliveryProof() throws {
+        let record = InputRecord(rawText: "raw", processedText: "text", wasProcessed: false)
+        let encoded = try JSONEncoder().encode(record)
+        let old = try JSONDecoder().decode(InputRecord.self, from: encoded)
+        XCTAssertNil(old.deliveryStatus)
+    }
+
     func testRemovedObserverDoesNotReceiveAnAlreadyQueuedCommit() async throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
