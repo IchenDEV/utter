@@ -1,4 +1,3 @@
-import UtterModels
 import UtterContracts
 import Foundation
 
@@ -7,14 +6,14 @@ extension ModelCatalog {
     /// Cancels a running download and marks it resumable. Its generation root
     /// remains owned by the still-running operation; a later Resume gets a
     /// fresh root immediately.
-    func cancelDownload(_ id: String, kind: ModelDownloadKind) {
+    package func cancelDownload(_ id: String, kind: ModelDownloadKind) {
         guard stopDownload(id, kind: kind) else { return }
         markDownloadPaused(id, kind: kind)
     }
 
     /// Cancels a transfer whose progress watchdog has expired.
     @discardableResult
-    func cancelStalledDownload(_ id: String, kind: ModelDownloadKind) -> Bool {
+    package func cancelStalledDownload(_ id: String, kind: ModelDownloadKind) -> Bool {
         stopDownload(id, kind: kind)
     }
 

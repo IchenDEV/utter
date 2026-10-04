@@ -1,3 +1,4 @@
+import UtterModels
 import UtterContracts
 import XCTest
 @testable import OpenType

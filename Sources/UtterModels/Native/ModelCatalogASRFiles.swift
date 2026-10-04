@@ -2,7 +2,7 @@ import UtterContracts
 import Foundation
 
 extension ModelCatalog {
-    static func asrRepoContainsRequiredFiles(_ id: String, at dir: URL?) -> Bool {
+    package static func asrRepoContainsRequiredFiles(_ id: String, at dir: URL?) -> Bool {
         guard let dir else { return false }
         return asrRequiredFiles(for: id).allSatisfy { relativePath in
             let file = dir.appendingPathComponent(relativePath)

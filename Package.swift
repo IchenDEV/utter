@@ -14,7 +14,11 @@ let dependencies: [Package.Dependency] = [
 
 #if os(macOS)
 let dataExclusions: [String] = []
-let modelDependencies: [Target.Dependency] = ["UtterMediaContracts"]
+let modelDependencies: [Target.Dependency] = [
+    "UtterMediaContracts", "UtterPresentationContracts",
+    .product(name: "WhisperKit", package: "argmax-oss-swift"),
+    .product(name: "Hub", package: "swift-transformers"),
+]
 let modelExclusions: [String] = []
 let remoteDependencies: [Target.Dependency] = ["UtterMediaContracts"]
 let remoteExclusions: [String] = []
@@ -29,7 +33,7 @@ let macServiceExclusions: [String] = []
 #else
 let dataExclusions = ["SystemDiagnostics.swift"]
 let modelDependencies: [Target.Dependency] = []
-let modelExclusions = ["SpeechRegistry.swift", "ImageRegistry.swift"]
+let modelExclusions = ["SpeechRegistry.swift", "ImageRegistry.swift", "Native"]
 let processingDependencies: [Target.Dependency] = []
 let processingExclusions = ["Native"]
 let audioDependencies: [Target.Dependency] = []

@@ -3,23 +3,23 @@ import Foundation
 
 @MainActor
 extension ModelCatalog {
-    func estimatedLLMDownloadBytes(_ id: String) -> Int64? {
+    package func estimatedLLMDownloadBytes(_ id: String) -> Int64? {
         if let bytes = Self.defaultDownloadEstimateBytes(for: id) { return bytes }
         guard let model = llmModels.first(where: { $0.id == id }) else { return nil }
         return Self.estimatedDownloadBytes(from: model.hint)
     }
 
-    func estimatedASRDownloadBytes(_ id: String) -> Int64? {
+    package func estimatedASRDownloadBytes(_ id: String) -> Int64? {
         if let bytes = Self.defaultDownloadEstimateBytes(for: id) { return bytes }
         guard let model = asrModels.first(where: { $0.id == id }) else { return nil }
         return Self.estimatedDownloadBytes(from: model.hint)
     }
 
-    static func defaultDownloadEstimateBytes(for id: String) -> Int64? {
+    package static func defaultDownloadEstimateBytes(for id: String) -> Int64? {
         defaultDownloadEstimateBytes[id]
     }
 
-    static func estimatedDownloadBytes(from text: String) -> Int64? {
+    package static func estimatedDownloadBytes(from text: String) -> Int64? {
         let range = NSRange(text.startIndex..<text.endIndex, in: text)
         guard let match = downloadEstimateRegex.matches(in: text, range: range).last,
               match.numberOfRanges == 3,

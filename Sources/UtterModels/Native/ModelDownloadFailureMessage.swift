@@ -1,8 +1,8 @@
 import UtterContracts
 import Foundation
 
-enum ModelDownloadFailureMessage {
-    static func userFacing(_ error: Error) -> String {
+package enum ModelDownloadFailureMessage {
+    package static func userFacing(_ error: Error) -> String {
         let errors = errorChain(from: error)
 
         if errors.contains(where: { isTimeout($0) }) {

@@ -1,13 +1,11 @@
-import UtterModels
 import UtterPresentationContracts
 import UtterContracts
 import Foundation
 import Hub
 
 extension ModelCatalog {
-    static var asrDownloadBase: URL { whisperDownloadBase }
 
-    static var defaultASRModels: [(id: String, displayName: String, hint: String)] {
+    package static var defaultASRModels: [(id: String, displayName: String, hint: String)] {
         [
             (
                 QwenASRModel.defaultID,
@@ -33,12 +31,12 @@ extension ModelCatalog {
     }
 
     /// All ASR model IDs that use the generic MLX STT engine.
-    static let mlxSTTModelIDs: Set<String> = [
+    package static let mlxSTTModelIDs: Set<String> = [
         "mlx-community/FireRedASR2-AED-mlx",
         "mlx-community/Mega-ASR-6bit",
     ]
 
-    func asrModels(for engine: SpeechEngineType) -> [ModelEntry] {
+    package func asrModels(for engine: SpeechEngineType) -> [ModelEntry] {
         switch engine {
         case .qwen3:
             return asrModels.filter {
@@ -53,11 +51,12 @@ extension ModelCatalog {
         }
     }
 
-    func asrModelPath(for id: String) -> String {
-        asrRepoIsComplete(id) ? ModelStorage.asrRepoDir(id)?.path ?? "" : ""
+    package func asrModelPath(for id: String) -> String {
+        asrRepoIsComplete(id) ? storage.asrRepoDir(id)?.path ?? "" : ""
     }
 
-    func refreshASRStatus(recheckingErrors: Bool = false) {
+    package func refreshASRStatus(recheckingErrors: Bool = false) {
+        guard !closed else { return }
         for i in asrModels.indices where !asrModels[i].status.isBusy {
             let id = asrModels[i].id
             let size = asrRepoSize(id)
@@ -70,8 +69,9 @@ extension ModelCatalog {
         }
     }
 
-    func downloadASR(_ id: String, onProgress: ((DownloadProgressInfo) -> Void)? = nil) async {
+    package func downloadASR(_ id: String, onProgress: ((DownloadProgressInfo) -> Void)? = nil) async {
         await awaitStartupCleanup()
+        guard !closed, !Task.isCancelled else { return }
         await downloadTasks.run(key: ModelDownloadKey(kind: .asr, modelID: id)) { [weak self] token in
             await self?.performASRDownload(id, token: token, onProgress: onProgress)
         }
@@ -102,7 +102,7 @@ extension ModelCatalog {
 
         let watchdog = makeStallWatchdog(key: key, token: token, kind: .asr, modelID: id)
         let signal = DownloadProgressSignal()
-        let staging = ModelStorage.generationStaging(for: token)
+        let staging = storage.generationStaging(for: token)
         defer { ModelStorage.removeGenerationStaging(staging) }
 
         do {
@@ -116,8 +116,8 @@ extension ModelCatalog {
             for (repositoryIndex, repositoryID) in repositories.enumerated() {
                 if repositoryID == QwenASRModel.confuciusR2T2ID {
                     let directory = ModelStorage.asrRepoDir(repositoryID, downloadBase: staging.downloadBase)
-                    try await ConfuciusModelDownloader.downloadRepository(to: directory) { [weak self] bytes in
-                        Task { @MainActor in
+                    try await ConfuciusModelDownloader.downloadRepository(to: directory) { [weak self, progressTasks] bytes in
+                        progressTasks.enqueue {
                             guard let self,
                                   self.downloadTasks.isCurrent(key, token: token),
                                   let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
@@ -135,8 +135,8 @@ extension ModelCatalog {
                     }
                 } else {
                     let api = HubApi(downloadBase: staging.downloadBase, cache: staging.hubCache)
-                    _ = try await api.snapshot(from: ModelStorage.hubModelRepo(repositoryID)) { [weak self] progress in
-                        Task { @MainActor in
+                    _ = try await api.snapshot(from: ModelStorage.hubModelRepo(repositoryID)) { [weak self, progressTasks] progress in
+                        progressTasks.enqueue {
                             guard let self,
                                   self.downloadTasks.isCurrent(key, token: token),
                                   let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
@@ -188,11 +188,7 @@ extension ModelCatalog {
             }
             let published: Bool
             do {
-                published = try downloadTasks.publishIfCurrent(key, token: token) {
-                    for prepared in preparedGenerations {
-                        try ModelStorage.publishPreparedGeneration(prepared)
-                    }
-                }
+                published = try await publish(preparedGenerations, key: key, token: token)
             } catch {
                 await ModelStorage.discardPreparedGenerationsOffMainActor(preparedGenerations)
                 throw error
@@ -218,7 +214,7 @@ extension ModelCatalog {
             watchdog.stop()
             guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = asrModels.firstIndex(where: { $0.id == id }) {
-                Log.error("[ModelCatalog] ASR download failed: \(error.localizedDescription)")
+                log.error("[ModelCatalog] ASR download failed: \(error.localizedDescription)")
                 asrModels[i].status = .error(ModelDownloadFailureMessage.userFacing(error))
                 asrModels[i].cacheSize = asrRepoSize(id)
                 asrModels[i].downloadDetail = ""
@@ -227,25 +223,29 @@ extension ModelCatalog {
     }
 
     /// Removes a local ASR model. Serialized against any download for it.
-    func deleteASR(_ id: String) async {
+    package func deleteASR(_ id: String) async {
+        guard !closed else { return }
+        let requested = settings.snapshot
+        let storage = ConfiguredModelStorage(settings: { requested })
         guard asrModels.contains(where: { $0.id == id }) else { return }
         await downloadTasks.runExclusive(key: ModelDownloadKey(kind: .asr, modelID: id)) { [weak self] _ in
             guard let self else { return }
-            self.removeASRFiles(id)
+            await self.removeFiles { self.removeASRFiles(id, storage: storage, requested: requested) }
         }
     }
 
-    private func removeASRFiles(_ id: String) {
+    private func removeASRFiles(_ id: String, storage: ConfiguredModelStorage, requested: SettingsValues) {
         guard let idx = asrModels.firstIndex(where: { $0.id == id }) else { return }
         for repositoryID in asrRequiredRepoIDs(for: id) {
-            try? FileManager.default.removeItem(at: ModelStorage.hubModelRepoDir(repositoryID))
+            try? FileManager.default.removeItem(at: storage.hubModelRepoDir(repositoryID))
         }
-        ModelDownloadRecovery.purgePartialArtifacts(kind: .asr, modelID: id)
+        ModelDownloadRecovery.purgePartialArtifacts(kind: .asr, modelID: id, storageRoot: storage.root)
         asrModels[idx].cacheSize = 0
         asrModels[idx].status = .notDownloaded
         asrModels[idx].downloadDetail = ""
 
-        let settings = AppSettings.shared
+        refreshASRStatus()
+        let settings = self.settings
         if id == QwenASRModel.defaultID, settings.qwenASRModel == id {
             settings.qwenASRModel = QwenASRModel.defaultID
         }
@@ -259,12 +259,12 @@ extension ModelCatalog {
         asrRequiredRepoIDs(for: id).allSatisfy { repositoryID in
             let directory = downloadBase.map { base in
                 ModelStorage.asrRepoDir(repositoryID, downloadBase: base)
-            } ?? ModelStorage.asrRepoDir(repositoryID)
+            } ?? storage.asrRepoDir(repositoryID)
             return Self.asrRepoContainsRequiredFiles(repositoryID, at: directory)
         }
     }
 
-    func asrRequiredRepoIDs(for id: String) -> [String] {
+    package func asrRequiredRepoIDs(for id: String) -> [String] {
         [id]
     }
 }

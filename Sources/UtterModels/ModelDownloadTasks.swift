@@ -96,11 +96,16 @@ package final class ModelDownloadTasks {
         await start(key: key, operation: operation)
     }
 
-    package func close() async {
+    package func revoke() {
         isClosed = true
         for key in Array(entries.keys) { cancel(key) }
         let writers = retiredEntries.values.flatMap { $0 }.map(\.task)
         for writer in writers { writer.cancel() }
+    }
+
+    package func close() async {
+        revoke()
+        let writers = retiredEntries.values.flatMap { $0 }.map(\.task)
         for writer in writers { await writer.value }
     }
 

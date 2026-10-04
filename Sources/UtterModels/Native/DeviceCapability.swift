@@ -2,17 +2,17 @@ import UtterContracts
 import Foundation
 import IOKit
 
-enum DeviceCapability {
-    struct Info: Sendable {
-        let chipName: String
-        let totalRAMGB: Double
-        let gpuCoreCount: Int
-        let neuralEngineCoreCount: Int
-        let availableDiskGB: Double
-        let totalDiskGB: Double
+package enum DeviceCapability {
+    package struct Info: Sendable {
+        package let chipName: String
+        package let totalRAMGB: Double
+        package let gpuCoreCount: Int
+        package let neuralEngineCoreCount: Int
+        package let availableDiskGB: Double
+        package let totalDiskGB: Double
     }
 
-    static let current: Info = {
+    package static let current: Info = {
         let ram = Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824
         let (chipName, gpuCores, neCores) = readAppleSiliconInfo()
         let (availDisk, totalDisk) = diskSpace()
@@ -28,19 +28,15 @@ enum DeviceCapability {
 
     // MARK: - Model Compatibility
 
-    enum Compatibility: Sendable {
-        case compatible
-        case marginal(String)
-        case incompatible(String)
+    package typealias Compatibility = ModelCompatibility
+
+    package struct ModelRequirements: Sendable {
+        package let minRAMGB: Double
+        package let recommendedRAMGB: Double
+        package let diskGB: Double
     }
 
-    struct ModelRequirements: Sendable {
-        let minRAMGB: Double
-        let recommendedRAMGB: Double
-        let diskGB: Double
-    }
-
-    static func requirements(for modelID: String, downloadSizeBytes: Int64?) -> ModelRequirements {
+    package static func requirements(for modelID: String, downloadSizeBytes: Int64?) -> ModelRequirements {
         if let known = knownRequirements[modelID] { return known }
         let diskGB = downloadSizeBytes.map { Double($0) / 1_073_741_824 } ?? 0
         let ramNeeded = max(diskGB * 1.2, 1)
@@ -51,7 +47,7 @@ enum DeviceCapability {
         )
     }
 
-    static func check(
+    package static func check(
         modelID: String,
         downloadSizeBytes: Int64?
     ) -> Compatibility {
@@ -70,7 +66,7 @@ enum DeviceCapability {
         return .compatible
     }
 
-    static func recommendedModelID(from candidates: [String]) -> String? {
+    package static func recommendedModelID(from candidates: [String]) -> String? {
         let ram = current.totalRAMGB
         for id in candidates.reversed() {
             if let reqs = knownRequirements[id], ram >= reqs.recommendedRAMGB {
@@ -190,32 +186,9 @@ enum DeviceCapability {
 }
 
 extension DeviceCapability.Info {
-    var chipDisplayName: String { chipName }
-    var ramDisplayText: String { String(format: "%.0f GB", totalRAMGB) }
-    var gpuDisplayText: String { "\(gpuCoreCount)-core GPU" }
-    var diskAvailableText: String { String(format: "%.1f GB", availableDiskGB) }
+    package var chipDisplayName: String { chipName }
+    package var ramDisplayText: String { String(format: "%.0f GB", totalRAMGB) }
+    package var gpuDisplayText: String { "\(gpuCoreCount)-core GPU" }
+    package var diskAvailableText: String { String(format: "%.1f GB", availableDiskGB) }
 }
 
-extension DeviceCapability.Compatibility {
-    var isCompatible: Bool {
-        if case .compatible = self { return true }
-        return false
-    }
-
-    var isMarginal: Bool {
-        if case .marginal = self { return true }
-        return false
-    }
-
-    var isIncompatible: Bool {
-        if case .incompatible = self { return true }
-        return false
-    }
-
-    var message: String? {
-        switch self {
-        case .compatible: return nil
-        case .marginal(let msg), .incompatible(let msg): return msg
-        }
-    }
-}

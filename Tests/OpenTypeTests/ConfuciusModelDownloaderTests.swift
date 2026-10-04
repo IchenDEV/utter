@@ -1,3 +1,4 @@
+@testable import UtterModels
 import UtterContracts
 import CryptoKit
 import Foundation

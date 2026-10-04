@@ -1,4 +1,4 @@
-import UtterModels
+@testable import UtterModels
 import UtterRemoteInference
 import UtterContracts
 import Foundation

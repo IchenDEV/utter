@@ -1,3 +1,4 @@
+import UtterModels
 import UtterMLX
 import UtterContracts
 import XCTest

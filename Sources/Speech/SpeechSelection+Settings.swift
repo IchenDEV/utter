@@ -1,3 +1,4 @@
+import UtterModels
 import Foundation
 import UtterContracts
 import UtterPresentationContracts

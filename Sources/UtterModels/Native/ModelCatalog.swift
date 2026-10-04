@@ -1,90 +1,35 @@
-import UtterModels
 import UtterPresentationContracts
 import UtterContracts
+import UtterRuntime
+import Combine
 import Foundation
 import WhisperKit
 
 @MainActor
-final class ModelCatalog: ObservableObject {
-    static let shared = ModelCatalog()
+package final class ModelCatalog: ObservableObject, ModelCatalogService {
 
-    @Published var whisperModels: [ModelEntry] = []
-    @Published var llmModels: [ModelEntry] = []
-    @Published var asrModels: [ModelEntry] = []
+    @Published package var whisperModels: [ModelEntry] = [] { didSet { notifyObservers() } }
+    @Published package var llmModels: [ModelEntry] = [] { didSet { notifyObservers() } }
+    @Published package var asrModels: [ModelEntry] = [] { didSet { notifyObservers() } }
 
-    let settings = AppSettings.shared
-    let downloadTasks = ModelDownloadTasks()
-    private let startupCleanupTask: Task<Int, Never>
+    package let settings: AppSettings
+    let storage: ConfiguredModelStorage
+    let log: Log
+    let access: any ModelResourceAccess
+    let textDownloads: TextModelDownloadOperations
+    package let downloadTasks = ModelDownloadTasks()
+    private var startupCleanupTask: Task<Int, Never>?
+    private let startupStorageRoot: URL
+    private let startupCleanup: StartupCleanupFactory
+    private(set) var closed = false
+    let progressTasks = CallbackTasks()
+    var observers: [UUID: (ModelCatalogSnapshot) -> Void] = [:]
+    var watchdogs: [DownloadStallWatchdog] = []
 
-    /// LLM model family categories
-    enum ModelFamily: String, CaseIterable {
-        case qwen = "Qwen"
-        case gemma = "Gemma"
-        case llama = "Llama"
-
-        var icon: String {
-            switch self {
-            case .qwen: return "q.circle.fill"
-            case .gemma: return "g.circle.fill"
-            case .llama: return "l.circle.fill"
-            }
-        }
-
-        var description: String {
-            switch self {
-            case .qwen: return L("model.family.qwen")
-            case .gemma: return L("model.family.gemma")
-            case .llama: return L("model.family.llama")
-            }
-        }
-    }
-
-    /// Curated tier used to surface the best models and fold outdated ones.
-    enum ModelTier: Int, CaseIterable {
-        case recommended = 0
-        case standard = 1
-        case legacy = 2
-    }
-
-    struct ModelEntry: Identifiable, Equatable {
-        let id: String
-        let displayName: String
-        let hint: String
-        let family: ModelFamily?
-        var tier: ModelTier = .standard
-        var status: ModelStatus = .notDownloaded
-        var cacheSize: Int64 = 0
-        var downloadProgress: Double = 0
-        var downloadDetail: String = ""
-        var benchmarkTPS: Double?
-        var isBenchmarking: Bool = false
-        var compatibility: DeviceCapability.Compatibility = .compatible
-
-        static func == (lhs: Self, rhs: Self) -> Bool {
-            lhs.id == rhs.id && lhs.status == rhs.status &&
-            lhs.cacheSize == rhs.cacheSize && lhs.downloadProgress == rhs.downloadProgress &&
-            lhs.downloadDetail == rhs.downloadDetail &&
-            lhs.benchmarkTPS == rhs.benchmarkTPS && lhs.isBenchmarking == rhs.isBenchmarking
-        }
-    }
-
-    enum ModelStatus: Equatable {
-        case notDownloaded, downloading, compiling, loading, downloaded, ready
-        case unavailable(String)
-        case error(String)
-
-        var isDownloading: Bool { if case .downloading = self { return true }; return false }
-        var isError: Bool { if case .error = self { return true }; return false }
-        var isBusy: Bool {
-            switch self { case .downloading, .compiling, .loading: return true; default: return false }
-        }
-        var canDelete: Bool {
-            switch self {
-            case .downloaded, .ready, .unavailable, .error: return true
-            default: return false
-            }
-        }
-    }
+    package typealias ModelFamily = CatalogModelFamily
+    package typealias ModelTier = CatalogModelTier
+    package typealias ModelEntry = CatalogModelEntry
+    package typealias ModelStatus = CatalogModelStatus
 
     private static let curatedWhisperVariants = [
         "large-v3-turbo", "large-v3", "large-v2", "medium", "small", "base", "tiny",
@@ -93,10 +38,11 @@ final class ModelCatalog: ObservableObject {
     /// Internal construction seam used to exercise the real startup wiring
     /// against a path-scoped cleanup task. Production callers use the
     /// detached ModelStorage default below.
-    typealias StartupCleanupFactory = (URL) -> Task<Int, Never>
+    package typealias StartupCleanupFactory = (URL) -> Task<Int, Never>
 
-    init(
-        startupStorageRoot: URL = ModelStorage.huggingFaceBase,
+    package init(
+        settings: AppSettings, log: Log, access: any ModelResourceAccess, textDownloads: TextModelDownloadOperations,
+        startupStorageRoot: URL? = nil,
         startupCleanup: StartupCleanupFactory = { storageRoot in
             ModelStorage.cleanupOrphanedGenerationStagingInBackground(storageRoot: storageRoot)
         }
@@ -104,7 +50,13 @@ final class ModelCatalog: ObservableObject {
         // A previous process may have exited before a cancelled writer could
         // run its cleanup. Reclaim those roots away from the MainActor and
         // gate fresh download entry points on this task below.
-        startupCleanupTask = startupCleanup(startupStorageRoot)
+        self.settings = settings
+        storage = ConfiguredModelStorage(settings: { settings.snapshot })
+        self.log = log
+        self.access = access
+        self.textDownloads = textDownloads
+        self.startupStorageRoot = startupStorageRoot ?? storage.root
+        self.startupCleanup = startupCleanup
         let rec = WhisperKit.recommendedModels()
         let defaultID = rec.default
         let supported = Set(rec.supported)
@@ -125,30 +77,12 @@ final class ModelCatalog: ObservableObject {
         }
 
         appendLocalWhisperModels()
-        let resolvedWhisperModel = WhisperModelSelection.resolve(
-            requested: settings.whisperModel,
-            available: whisperModels.map(\.id),
-            fallback: defaultID
-        )
-        if settings.whisperModel != resolvedWhisperModel {
-            settings.whisperModel = resolvedWhisperModel
-        }
-
         llmModels = Self.defaultLLMModels.map {
             ModelEntry(id: $0.0, displayName: $0.1, hint: $0.2, family: $0.3, tier: $0.4)
         }
         appendLocalLLMModels()
-        if !llmModels.contains(where: { $0.id == settings.llmModel }) {
-            settings.llmModel = llmModels.first(where: {
-                $0.id == AppSettings.defaultLLMModelID
-            })?.id ?? llmModels.first?.id ?? ""
-        }
-
         asrModels = Self.defaultASRModels.map {
             ModelEntry(id: $0.id, displayName: $0.displayName, hint: $0.hint, family: nil)
-        }
-        if !asrModels.contains(where: { $0.id == settings.qwenASRModel }) {
-            settings.qwenASRModel = QwenASRModel.defaultID
         }
         refreshStatus()
     }
@@ -156,41 +90,37 @@ final class ModelCatalog: ObservableObject {
     /// Startup cleanup may remove model-sized trees. Download entry points
     /// await its detached task before admitting a new writer, while the
     /// MainActor remains available for UI and Cancel/Delete arbitration.
-    func awaitStartupCleanup() async {
-        _ = await startupCleanupTask.value
+    package func start() {
+        guard !closed, startupCleanupTask == nil else { return }
+        startupCleanupTask = startupCleanup(startupStorageRoot)
     }
 
-    static var defaultLLMModels: [(String, String, String, ModelFamily?, ModelTier)] {
-        [
-            // Qwen Family
-            ("mlx-community/Qwen3.5-0.8B-MLX-4bit", "Qwen3.5 0.8B", L("model.qwen35_tiny"), .qwen, .recommended),
-            ("mlx-community/Qwen3.5-2B-4bit", "Qwen3.5 2B", L("model.qwen35_fast"), .qwen, .recommended),
-            ("mlx-community/Qwen3.5-9B-5bit", "Qwen3.5 9B", L("model.qwen35_quality"), .qwen, .recommended),
-            ("mlx-community/Qwen3-30B-A3B-4bit", "Qwen3 30B-A3B", L("model.qwen3_moe"), .qwen, .recommended),
-            ("mlx-community/Qwen3.5-35B-A3B-4bit", "Qwen3.5 35B-A3B", L("model.qwen35_moe"), .qwen, .standard),
-            ("mlx-community/Qwen2.5-0.5B-Instruct-4bit", "Qwen2.5 0.5B", L("model.smallest"), .qwen, .legacy),
-            ("mlx-community/Qwen2.5-1.5B-Instruct-4bit", "Qwen2.5 1.5B", L("model.balanced"), .qwen, .legacy),
-            ("mlx-community/Qwen2.5-3B-Instruct-4bit", "Qwen2.5 3B", L("model.best_quality"), .qwen, .legacy),
-            ("mlx-community/Qwen3-0.6B-4bit", "Qwen3 0.6B", L("model.qwen3_fast"), .qwen, .legacy),
-            ("mlx-community/Qwen3-1.7B-4bit", "Qwen3 1.7B", L("model.qwen3_balanced"), .qwen, .legacy),
-            ("mlx-community/Qwen3-4B-4bit", "Qwen3 4B", L("model.qwen3_quality"), .qwen, .legacy),
-
-            // Gemma Family (Google)
-            ("mlx-community/gemma-4-e2b-it-4bit", "Gemma 4 E2B", L("model.gemma4_edge"), .gemma, .recommended),
-            ("mlx-community/gemma-4-e4b-it-4bit", "Gemma 4 E4B", L("model.gemma4_edge_quality"), .gemma, .standard),
-            ("mlx-community/gemma-3-1b-it-4bit", "Gemma 3 1B", L("model.gemma_fast"), .gemma, .legacy),
-            ("mlx-community/gemma-3-4b-it-4bit", "Gemma 3 4B", L("model.gemma_balanced"), .gemma, .legacy),
-            ("mlx-community/gemma-3-12b-it-4bit", "Gemma 3 12B", L("model.gemma_quality"), .gemma, .legacy),
-
-            // Llama Family (Meta)
-            ("mlx-community/Llama-4-Scout-17B-16E-Instruct-4bit", "Llama 4 Scout", L("model.llama_balanced"), .llama, .recommended),
-            ("mlx-community/Llama-4-Maverick-17B-128E-Instruct-4bit", "Llama 4 Maverick", L("model.llama_quality"), .llama, .standard),
-        ]
+    package func revoke() {
+        guard !closed else { return }
+        closed = true
+        observers.removeAll()
+        startupCleanupTask?.cancel()
+        progressTasks.revoke()
+        downloadTasks.revoke()
+        for watchdog in watchdogs { watchdog.stop() }
     }
 
-    // MARK: - Display Name
+    package func close() async {
+        revoke()
+        await downloadTasks.close()
+        await progressTasks.close()
+        for watchdog in watchdogs { await watchdog.close() }
+        watchdogs.removeAll()
+        _ = await startupCleanupTask?.value
+    }
 
-    static func shortenWhisperName(_ name: String) -> String {
+    package func awaitStartupCleanup() async {
+        guard !closed else { return }
+        start()
+        _ = await startupCleanupTask?.value
+    }
+
+    package static func shortenWhisperName(_ name: String) -> String {
         var s = name
         s = s.replacingOccurrences(of: "openai_whisper-", with: "")
         s = s.replacingOccurrences(of: "distil-whisper_distil-", with: "distil-")
@@ -206,14 +136,15 @@ final class ModelCatalog: ObservableObject {
 
     // MARK: - Status
 
-    func refreshStatus(recheckingErrors: Bool = false) {
+    package func refreshStatus(recheckingErrors: Bool = false) {
+        guard !closed else { return }
         for i in whisperModels.indices where !whisperModels[i].status.isBusy {
             let id = whisperModels[i].id
             let size = whisperVariantSize(id)
             whisperModels[i].cacheSize = size
             if recheckingErrors || (whisperModels[i].status != .ready && !whisperModels[i].status.isError) {
                 let isComplete = isWhisperDownloaded(id)
-                if ModelStorage.localWhisperURL(id) != nil, !isComplete {
+                if storage.localWhisperURL(id) != nil, !isComplete {
                     whisperModels[i].status = .error(L("model.local_missing"))
                 } else {
                     whisperModels[i].status = isComplete
@@ -228,7 +159,7 @@ final class ModelCatalog: ObservableObject {
             llmModels[i].cacheSize = size
             if recheckingErrors || (llmModels[i].status != .ready && !llmModels[i].status.isError) {
                 let isComplete = llmRepoIsComplete(id)
-                if ModelStorage.localLLMURL(id) != nil, !isComplete {
+                if storage.localLLMURL(id) != nil, !isComplete {
                     llmModels[i].status = .error(L("model.local_missing"))
                 } else {
                     llmModels[i].status = isComplete
@@ -244,14 +175,16 @@ final class ModelCatalog: ObservableObject {
         refreshASRStatus(recheckingErrors: recheckingErrors)
     }
 
-    func addCustomLLM(_ modelID: String) {
+    package func addCustomLLM(_ modelID: String) {
+        guard !closed else { return }
         guard !modelID.isEmpty, !llmModels.contains(where: { $0.id == modelID }) else { return }
         let name = modelID.components(separatedBy: "/").last ?? modelID
         llmModels.append(ModelEntry(id: modelID, displayName: name, hint: L("common.custom"), family: nil))
         refreshStatus()
     }
 
-    func addLocalWhisper(_ url: URL) {
+    package func addLocalWhisper(_ url: URL) {
+        guard !closed else { return }
         let existing = Set(whisperModels.map(\.id))
         let id = ModelStorage.makeLocalID(prefix: "whisper", folderName: url.lastPathComponent, existing: existing)
         var paths = settings.localWhisperModelPaths
@@ -262,7 +195,8 @@ final class ModelCatalog: ObservableObject {
         refreshStatus()
     }
 
-    func addLocalLLM(_ url: URL) {
+    package func addLocalLLM(_ url: URL) {
+        guard !closed else { return }
         let existing = Set(llmModels.map(\.id))
         let id = ModelStorage.makeLocalID(prefix: "llm", folderName: url.lastPathComponent, existing: existing)
         var paths = settings.localLLMModelPaths
@@ -275,7 +209,8 @@ final class ModelCatalog: ObservableObject {
 
     // MARK: - External Status Updates (called by VoicePipeline)
 
-    func updateWhisperStatus(_ id: String, status: ModelStatus, detail: String = "") {
+    package func updateWhisperStatus(_ id: String, status: ModelStatus, detail: String = "") {
+        guard !closed else { return }
         guard let i = whisperModels.firstIndex(where: { $0.id == id }) else { return }
         whisperModels[i].status = status
         whisperModels[i].downloadDetail = detail
@@ -284,7 +219,8 @@ final class ModelCatalog: ObservableObject {
         }
     }
 
-    func updateLLMStatus(_ id: String, status: ModelStatus, detail: String = "") {
+    package func updateLLMStatus(_ id: String, status: ModelStatus, detail: String = "") {
+        guard !closed else { return }
         guard let i = llmModels.firstIndex(where: { $0.id == id }) else { return }
         llmModels[i].status = status
         llmModels[i].downloadDetail = detail
@@ -295,7 +231,7 @@ final class ModelCatalog: ObservableObject {
 
     // MARK: - Cache Utilities
 
-    static func formatBytes(_ bytes: Int64) -> String {
+    package static func formatBytes(_ bytes: Int64) -> String {
         if bytes >= 1_000_000_000 { return String(format: "%.1f GB", Double(bytes) / 1e9) }
         if bytes >= 1_000_000 { return String(format: "%.1f MB", Double(bytes) / 1e6) }
         if bytes >= 1_000 { return String(format: "%.0f KB", Double(bytes) / 1e3) }

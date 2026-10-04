@@ -1,3 +1,4 @@
+import UtterModels
 import UtterRemoteInference
 import UtterMLX
 import UtterWhisper

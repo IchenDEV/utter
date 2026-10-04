@@ -2,8 +2,8 @@ import UtterContracts
 import CryptoKit
 import Foundation
 
-enum ConfuciusModelDownloader {
-    enum Failure: Error {
+package enum ConfuciusModelDownloader {
+    package enum Failure: Error {
         case invalidRangeResponse
         case checksumMismatch
     }
@@ -33,7 +33,7 @@ enum ConfuciusModelDownloader {
         .init(name: "vocab.json", size: 2_776_833, sha256: "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"),
     ]
 
-    static func downloadRepository(to directory: URL, onProgress: @escaping @Sendable (Int64) -> Void) async throws {
+    package static func downloadRepository(to directory: URL, onProgress: @escaping @Sendable (Int64) -> Void) async throws {
         let base = "https://huggingface.co/\(QwenASRModel.confuciusR2T2ID)/resolve/\(QwenASRModel.confuciusRevision)"
         var completedBytes: Int64 = 0
         for file in smallFiles {
@@ -52,7 +52,7 @@ enum ConfuciusModelDownloader {
         }
     }
 
-    static func download(
+    package static func download(
         to destination: URL,
         session: URLSession? = nil,
         source: URL = URL(string: "https://huggingface.co/\(QwenASRModel.confuciusR2T2ID)/resolve/\(QwenASRModel.confuciusRevision)/model.safetensors")!,
@@ -163,20 +163,20 @@ private actor WeightWriter {
     private let file: FileHandle
     private var completedBytes: Int64 = 0
 
-    init(destination: URL, size: Int64) throws {
+    package init(destination: URL, size: Int64) throws {
         FileManager.default.createFile(atPath: destination.path, contents: nil)
         file = try FileHandle(forWritingTo: destination)
         try file.truncate(atOffset: UInt64(size))
     }
 
-    func write(_ data: Data, at offset: Int64) throws -> Int64 {
+    package func write(_ data: Data, at offset: Int64) throws -> Int64 {
         try file.seek(toOffset: UInt64(offset))
         try file.write(contentsOf: data)
         completedBytes += Int64(data.count)
         return completedBytes
     }
 
-    func close() throws {
+    package func close() throws {
         try file.synchronize()
         try file.close()
     }

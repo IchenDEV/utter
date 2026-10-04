@@ -1,20 +1,20 @@
 import Foundation
 import UtterContracts
 
-final class DownloadProgressTracker: @unchecked Sendable {
+package final class DownloadProgressTracker: @unchecked Sendable {
     private let lock = NSLock()
     private let startDate: Date
     private var lastTime: Date
     private var lastBytes: Int64
     private var lastSpeedBytesPerSecond: Double = 0
 
-    init(startDate: Date = Date(), initialBytes: Int64 = 0) {
+    package init(startDate: Date = Date(), initialBytes: Int64 = 0) {
         self.startDate = startDate
         lastTime = startDate
         lastBytes = max(initialBytes, 0)
     }
 
-    func update(progress: Progress, fraction: Double? = nil) -> DownloadProgressInfo {
+    package func update(progress: Progress, fraction: Double? = nil) -> DownloadProgressInfo {
         update(
             completedBytes: progress.completedUnitCount,
             totalBytes: progress.totalUnitCount,
@@ -22,11 +22,11 @@ final class DownloadProgressTracker: @unchecked Sendable {
         )
     }
 
-    func update(completedBytes rawCompleted: Int64, totalBytes rawTotal: Int64, fraction: Double? = nil) -> DownloadProgressInfo {
+    package func update(completedBytes rawCompleted: Int64, totalBytes rawTotal: Int64, fraction: Double? = nil) -> DownloadProgressInfo {
         update(completedBytes: rawCompleted, totalBytes: rawTotal, fraction: fraction, at: Date())
     }
 
-    func update(
+    package func update(
         completedBytes rawCompleted: Int64,
         totalBytes rawTotal: Int64,
         fraction: Double? = nil,
