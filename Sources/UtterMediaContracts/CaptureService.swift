@@ -46,6 +46,8 @@ package struct CapturedAudio: Sendable {
 @MainActor
 package protocol OwnedRecording: AnyObject {
     func finish() async throws -> CapturedAudio
+    func revoke()
+    func stopCapture() async
     func close() async
 }
 
@@ -54,10 +56,18 @@ package protocol CaptureService: AnyObject {
     func begin(_ request: CaptureRequest, callbacks: CaptureCallbacks) async throws -> any OwnedRecording
 }
 
-package enum CaptureError: Error, Equatable {
+package enum CaptureError: Error, Equatable, LocalizedError {
     case busy
     case remoteUnavailable
     case startFailed(AudioCaptureStartFailure)
+
+    package var errorDescription: String? {
+        switch self {
+        case .busy: return IntegrationError.busy.localizedDescription
+        case .remoteUnavailable: return L("capture.remote_unavailable")
+        case .startFailed(let reason): return reason.localizedDescription
+        }
+    }
 }
 
 package enum AudioServices {

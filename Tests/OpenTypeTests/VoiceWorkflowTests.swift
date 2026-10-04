@@ -8,6 +8,76 @@ import UtterSession
 
 @MainActor
 final class VoiceWorkflowTests: XCTestCase {
+    func testUnavailableMicrophoneSettlesAsFailureAfterCaptureAndRecognitionDrain() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        try await fixture.start()
+        let driver = try fixture.runtime.service(SessionServices.execution)
+        try driver.start(SessionIntent(input: .local))
+        while driver.snapshot.phase != .recording { await Task.yield() }
+        fixture.capture.callbacks?.inputUnavailable()
+        while driver.snapshot.isBusy { await Task.yield() }
+        XCTAssertEqual(driver.snapshot.phase, .failed)
+        XCTAssertEqual(driver.snapshot.error, AudioCaptureStartFailure.noUsableInput.localizedDescription)
+        XCTAssertTrue(fixture.capture.recording.stopped)
+        XCTAssertTrue(fixture.capture.recording.closed)
+        XCTAssertTrue(fixture.output.requests.isEmpty)
+        try await fixture.runtime.stop()
+    }
+
+    func testMicrophonePermissionFailureSkipsModelPreparationAndOutput() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        fixture.capture.error = CaptureError.startFailed(.permissionDenied)
+        try await fixture.start()
+        let driver = try fixture.runtime.service(SessionServices.execution)
+        let intent = SessionIntent(input: .local)
+        try driver.start(intent)
+        do { _ = try await driver.waitForCompletion(intent.id); XCTFail("Denied microphone reported readiness") }
+        catch { XCTAssertEqual(error as? CaptureError, .startFailed(.permissionDenied)) }
+        XCTAssertEqual(driver.snapshot.error, AudioCaptureStartFailure.permissionDenied.localizedDescription)
+        XCTAssertFalse(fixture.engine.preparing)
+        XCTAssertTrue(fixture.output.requests.isEmpty)
+        try await fixture.runtime.stop()
+    }
+
+    func testCaptureFinishesDuringColdPreparationAndPromotesOneJobWithFrozenChoices() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        fixture.engine.holdPreparation = true
+        fixture.engine.isReady = false
+        try await fixture.start()
+        let settings = try fixture.runtime.service(DataServices.settings)
+        settings.update { $0.outputMode = .direct; $0.translationTargetLanguage = .english; $0.inputLanguage = .english }
+        let frozenModel = settings.values.llmModel
+        let driver = try fixture.runtime.service(SessionServices.execution)
+        let intent = SessionIntent(input: .local)
+        try driver.start(intent)
+        while !fixture.engine.preparing { await Task.yield() }
+        XCTAssertEqual(driver.snapshot.phase, .recording)
+        XCTAssertEqual(fixture.capture.requests.count, 1)
+        settings.update { $0.translationTargetLanguage = .japanese; $0.llmModel = "later-model"; $0.inputLanguage = .chinese }
+        XCTAssertTrue(driver.promoteToTranslation(intent.id, reason: .recording))
+        let stop = Task { await driver.stop() }
+        while !fixture.capture.recording.finished { await Task.yield() }
+        XCTAssertFalse(driver.promoteToTranslation(intent.id, reason: .recording))
+        XCTAssertFalse(fixture.capture.recording.closed)
+        XCTAssertTrue(fixture.engine.transcribed.isEmpty)
+        fixture.engine.isReady = true
+        fixture.engine.release()
+        await stop.value
+        XCTAssertEqual(driver.snapshot.id, intent.id)
+        XCTAssertEqual(driver.snapshot.phase, .completed)
+        XCTAssertEqual(fixture.speechRequests.count, 1)
+        XCTAssertEqual(fixture.capture.requests.count, 1)
+        XCTAssertEqual(fixture.engine.transcribed, [URL(fileURLWithPath: "/captured.wav")])
+        XCTAssertEqual(fixture.recipe.requests.last?.mode, .translation(.english))
+        XCTAssertEqual(fixture.recipe.requests.last?.options.llmModel, frozenModel)
+        XCTAssertEqual(fixture.recipe.requests.last?.options.inputLanguage, .english)
+        XCTAssertTrue(fixture.capture.recording.closed)
+        try await fixture.runtime.stop()
+    }
+
     func testDesktopDeliveryReceivesFrozenClipboardPolicyThroughReplacementProvider() async throws {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }
@@ -37,6 +107,7 @@ final class VoiceWorkflowTests: XCTestCase {
         while !fixture.engine.preparing { await Task.yield() }
         var maintained = false
         let maintenance = Task { try await access.withAccess { maintained = true } }
+        driver.cancel()
         let stop = Task { await driver.stop() }
         for _ in 0..<20 { await Task.yield() }
         XCTAssertFalse(maintained)
@@ -46,13 +117,14 @@ final class VoiceWorkflowTests: XCTestCase {
         await stop.value
         try await maintenance.value
         XCTAssertTrue(maintained)
-        XCTAssertTrue(fixture.capture.requests.isEmpty)
+        XCTAssertEqual(fixture.capture.requests.count, 1)
+        XCTAssertTrue(fixture.capture.recording.closed)
         XCTAssertTrue(fixture.output.requests.isEmpty)
         XCTAssertEqual(driver.snapshot.phase, .cancelled)
         try await fixture.runtime.stop()
     }
 
-    func testCancelledAPIStartWaitDrainsPreparationBeforeReturning() async throws {
+    func testAPIStartReportsActualCaptureWhilePreparationContinuesAndCancellationStillDrains() async throws {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }
         fixture.engine.holdPreparation = true
@@ -69,16 +141,18 @@ final class VoiceWorkflowTests: XCTestCase {
             catch { return .failure(error) }
         }
         while !fixture.engine.preparing { await Task.yield() }
-        start.cancel()
+        switch await start.value {
+        case .success: break
+        case .failure(let error): XCTFail("Capture should already be running: \(error)")
+        }
+        driver.cancel()
         for _ in 0..<20 { await Task.yield() }
         XCTAssertTrue(driver.snapshot.isBusy)
         fixture.engine.release()
-        switch await start.value {
-        case .success: XCTFail("Cancelled start reported readiness")
-        case .failure(let error): XCTAssertTrue(error is CancellationError)
-        }
+        await driver.stop()
         XCTAssertEqual(driver.snapshot.phase, .cancelled)
-        XCTAssertTrue(fixture.capture.requests.isEmpty)
+        XCTAssertEqual(fixture.capture.requests.count, 1)
+        XCTAssertTrue(fixture.capture.recording.closed)
         XCTAssertEqual(try api.session(row.id, clientID: client.id)?.state, .cancelled)
         try await fixture.runtime.stop()
     }

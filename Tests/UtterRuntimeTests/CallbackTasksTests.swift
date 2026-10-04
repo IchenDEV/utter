@@ -4,6 +4,31 @@ import XCTest
 
 final class CallbackTasksTests: XCTestCase {
     @MainActor
+    func testDrainFinishesAcceptedCallbacksWithoutCancellationAndKeepsTheGateOpen() async {
+        let owner = CallbackTasks()
+        let gate = CallbackGate()
+        var calls = 0
+        owner.enqueue {
+            await gate.wait()
+            XCTAssertFalse(Task.isCancelled)
+            calls += 1
+        }
+        while !(await gate.isWaiting) { await Task.yield() }
+        var drained = false
+        let drain = Task { await owner.drain(); drained = true }
+        owner.enqueue { calls += 1 }
+        for _ in 0..<10 { await Task.yield() }
+        XCTAssertFalse(drained)
+        await gate.release()
+        await drain.value
+        XCTAssertEqual(calls, 2)
+        owner.enqueue { calls += 1 }
+        await owner.drain()
+        XCTAssertEqual(calls, 3)
+        await owner.close()
+    }
+
+    @MainActor
     func testCloseDrainsAnAlreadyAdmittedNonCooperativeCallbackAndRejectsLaterOnes() async {
         let owner = CallbackTasks()
         let gate = CallbackGate()

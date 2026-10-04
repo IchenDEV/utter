@@ -12,34 +12,30 @@ package final class HotkeyManager {
     var isStarted = false
     var ownedTasks: [UUID: Task<Void, Never>] = [:]
     var retryTask: Task<Void, Never>?
-    let activationController: HotkeyActivationController
+    let gestures: HotkeyGestureController
     var eventTap: CFMachPort?
     var runLoopSource: CFRunLoopSource?
     var globalMonitor: Any?
 
-    var activeGestureAction: HotkeyAction?
-    var previousPrimaryPressed = false
-    var previousTranslationModifierPressed = false
-    var suppressUntilPrimaryRelease = false
-    var pendingPrimaryStart: Task<Void, Never>?
     var retryCount = 0
     let maxRetries = 20
-    let translationChordGraceNanoseconds: UInt64 = 100_000_000
 
     package init(
         settings: @escaping () -> SettingsValues,
         onStart: @escaping (HotkeyAction) -> Void,
         onStop: @escaping (HotkeyAction) -> Void,
+        onPromote: @escaping (HotkeyPromotion) -> Bool = { _ in false },
+        onCancel: @escaping () -> Void = {},
         log: UtterContracts.Log,
         markAccessibilityPrompted: @escaping () -> Void
     ) {
         self.markAccessibilityPrompted = markAccessibilityPrompted
         self.log = log
         self.settings = settings
-        activationController = HotkeyActivationController(
+        gestures = HotkeyGestureController(
             settings: settings,
             onStart: onStart,
-            onStop: onStop
+            onStop: onStop, onPromote: onPromote, onCancel: onCancel
         )
     }
 
@@ -80,7 +76,7 @@ package final class HotkeyManager {
     func createEventTap() {
         guard eventTap == nil else { return }
 
-        let eventMask = (1 << CGEventType.flagsChanged.rawValue)
+        let eventMask = (1 << CGEventType.flagsChanged.rawValue) | (1 << CGEventType.keyDown.rawValue)
         let refcon = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -102,7 +98,7 @@ package final class HotkeyManager {
 
     func setupGlobalMonitor() {
         guard globalMonitor == nil else { return }
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.flagsChanged, .keyDown]) { [weak self] event in
             MainActor.assumeIsolated { self?.handleNSEventFlags(event) }
         }
     }
@@ -124,28 +120,31 @@ package final class HotkeyManager {
         eventTap = nil
         runLoopSource = nil
         globalMonitor = nil
-        pendingPrimaryStart?.cancel()
-        pendingPrimaryStart = nil
         retryTask = nil
-        activationController.reset()
-        activeGestureAction = nil
-        previousPrimaryPressed = false
-        previousTranslationModifierPressed = false
-        suppressUntilPrimaryRelease = false
+        gestures.reset()
     }
 
     func handleFlagsChanged(_ event: CGEvent) {
+        if event.type == .keyDown {
+            handleNavigationKey(UInt16(event.getIntegerValueField(.keyboardEventKeycode)))
+            return
+        }
+        let values = gestures.keySettings
         processPhysicalKeyState(
-            primaryPressed: isKeyPressed(settings().hotkeyType, flags: event.flags),
-            translationModifierPressed: isKeyPressed(settings().translationHotkeyModifier, flags: event.flags)
+            primaryPressed: isKeyPressed(values.hotkeyType, flags: event.flags),
+            translationModifierPressed: isKeyPressed(values.translationHotkeyModifier, flags: event.flags),
+            systemCombination: hasOtherModifiers(event.flags)
         )
     }
 
     func handleNSEventFlags(_ event: NSEvent) {
         guard eventTap == nil else { return }
+        if event.type == .keyDown { handleNavigationKey(event.keyCode); return }
+        let values = gestures.keySettings
         processPhysicalKeyState(
-            primaryPressed: isKeyPressed(settings().hotkeyType, flags: event.modifierFlags),
-            translationModifierPressed: isKeyPressed(settings().translationHotkeyModifier, flags: event.modifierFlags)
+            primaryPressed: isKeyPressed(values.hotkeyType, flags: event.modifierFlags),
+            translationModifierPressed: isKeyPressed(values.translationHotkeyModifier, flags: event.modifierFlags),
+            systemCombination: hasOtherModifiers(CGEventFlags(rawValue: UInt64(event.modifierFlags.rawValue)))
         )
     }
 

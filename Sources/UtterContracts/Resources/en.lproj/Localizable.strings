@@ -556,3 +556,5 @@
 "delivery.copied" = "Copied";
 "delivery.uncertain" = "Insertion unconfirmed";
 "delivery.notDelivered" = "Not inserted";
+"pipeline.mic_engine_failed" = "The microphone could not start. Check the selected input device.";
+"capture.remote_unavailable" = "The remote microphone is unavailable.";

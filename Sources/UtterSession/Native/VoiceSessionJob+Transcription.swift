@@ -17,13 +17,22 @@ extension VoiceSessionJob {
         try check(control)
         try await selected.requestPermission()
         try check(control)
-        await selected.prepare()
-        try check(control)
-        guard selected.isReady else { throw IntegrationError.modelNotReady }
         selected.configureRecognition(context: SpeechRecognitionContext(phrases: speechDescriptor.recognitionVocabulary == .personal
             ? settings.dictionary.personalRecognitionPhrases : settings.dictionary.recognitionPhrases))
         startScreenCapture()
-        let audio = try await capture(using: selected, control: control)
+        let (starts, continuation) = AsyncStream<Result<Void, Error>>.makeStream(bufferingPolicy: .bufferingNewest(2))
+        let task = Task {
+            defer { continuation.finish() }
+            do { return try await self.capture(using: selected, control: control, onStarted: { continuation.yield(.success(())) }) }
+            catch { continuation.yield(.failure(error)); throw error }
+        }
+        captureTask = task
+        for await started in starts { try started.get(); break }
+        try check(control)
+        await selected.prepare()
+        try check(control)
+        guard selected.isReady else { throw IntegrationError.modelNotReady }
+        let audio = try await task.value
         try check(control)
         control.update(phase: .transcribing, transcript: "")
         if let activity = audio.activity, !activity.hasMeaningfulAudio { throw IntegrationError.noSpeechDetected }

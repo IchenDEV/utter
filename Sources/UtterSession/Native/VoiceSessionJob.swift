@@ -9,8 +9,9 @@ final class VoiceSessionJob: SessionJob {
     var input: SessionInput
     let settings: VoiceInputSettings
     let options: TextProcessingOptions
-    let mode: TextProcessingMode
-    let recipeID: String
+    var mode: TextProcessingMode
+    var recipeID: String
+    let translationRecipeID: String
     let directRecipeID: String
     let editRecipeID: String
     let speechDescriptor: ProviderDescriptor?
@@ -24,17 +25,20 @@ final class VoiceSessionJob: SessionJob {
     let callbacks = CallbackTasks()
     var engine: (any SpeechEngine)?
     var recording: (any OwnedRecording)?
+    var captureTask: Task<Audio, Error>?
     var delivery: (any PreparedDelivery)?
     var screenTask: Task<ScreenContextSnapshot, Never>?
     var revoked = false
     var capturing = false
+    var finishingCapture = false
+    var captureFailure: Error?
     private var closed = false
     var settingsObservation: UUID?
     var credentialsObservation: UUID?
     var clientObservation: UUID?
 
     init(intent: SessionIntent, settings: VoiceInputSettings, options: TextProcessingOptions, mode: TextProcessingMode,
-         recipeID: String, directRecipeID: String, editRecipeID: String,
+         recipeID: String, directRecipeID: String, editRecipeID: String, translationRecipeID: String,
          speechDescriptor: ProviderDescriptor?, speechFiles: FrozenModelFiles?, context: InputContext,
          target: (any OutputTargetLease)?, recentOutput: RecentSessionOutput?, memoryContext: String,
          dependencies: VoiceWorkflowDependencies, authorize: @escaping () throws -> Void) {
@@ -44,6 +48,7 @@ final class VoiceSessionJob: SessionJob {
         self.options = options
         self.mode = mode
         self.recipeID = recipeID
+        self.translationRecipeID = translationRecipeID
         self.directRecipeID = directRecipeID
         self.editRecipeID = editRecipeID
         self.speechDescriptor = speechDescriptor
@@ -63,6 +68,15 @@ final class VoiceSessionJob: SessionJob {
         self.input = input
     }
 
+    func promoteToTranslation() -> TextProcessingMode? {
+        guard intent.clientID == nil, !revoked, !closed else { return nil }
+        if case .translation = mode { return nil }
+        mode = .translation(settings.translationTargetLanguage)
+        recipeID = translationRecipeID
+        screenTask?.cancel()
+        return mode
+    }
+
     func run(control: any SessionJobControl) async throws -> SessionCompletion {
         try await dependencies.access.withAccess {
             do {
@@ -70,8 +84,9 @@ final class VoiceSessionJob: SessionJob {
                 await close()
                 return completion
             } catch {
+                let failure = captureFailure ?? error
                 await close()
-                throw error
+                throw failure
             }
         }
     }
@@ -85,7 +100,11 @@ final class VoiceSessionJob: SessionJob {
            let outputs = dependencies.outputs {
             return try await insertThenFormat(transcript, outputs: outputs, control: control)
         }
-        let screen = await screenTask?.value ?? .empty
+        let screen: ScreenContextSnapshot
+        switch mode {
+        case .direct, .translation: screen = .empty
+        default: screen = await screenTask?.value ?? .empty
+        }
         try check(control)
         let inputContext = contextWithScreen(screen.text)
         let formatKind = mode == .formatting ? dependencies.preparation.format(text: transcript, context: inputContext).kind : nil
@@ -127,6 +146,8 @@ final class VoiceSessionJob: SessionJob {
         revoked = true
         callbacks.revoke()
         screenTask?.cancel()
+        captureTask?.cancel()
+        recording?.revoke()
         engine?.cancelListening()
     }
 
@@ -137,11 +158,14 @@ final class VoiceSessionJob: SessionJob {
         revoke()
         await callbacks.close()
         if let screenTask { _ = await screenTask.value }
+        if let captureTask { _ = await captureTask.result }
+        await recording?.stopCapture()
         await engine?.drainRecognition()
         await delivery?.close()
         await recording?.close()
         screenTask = nil
         recording = nil
+        captureTask = nil
         delivery = nil
         engine = nil
     }

@@ -22,6 +22,7 @@ extension AudioCaptureManager {
             defer { self.recordingLock.unlock() }
             guard self.audioFile != nil else { return }
             self.write(buffer)
+            self.lastBufferFrameCount = max(self.lastBufferFrameCount, Int(buffer.frameLength))
 
             let rms = Self.calculateRMS(buffer: buffer)
             self.localLastActivity.record(rms: rms, frameCount: Int(buffer.frameLength))

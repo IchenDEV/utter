@@ -45,16 +45,19 @@ final class MacServiceLifetimeTests: XCTestCase {
         XCTAssertEqual(calls, 0)
     }
 
-    func testHotkeyCloseCancelsThePendingChordAndRejectsLaterPhysicalEvents() async {
+    func testHotkeyCloseCancelsImmediateCaptureAndRejectsLaterPhysicalEvents() async {
         var events = 0
+        var cancelled = 0
         var settings = SettingsValues()
         settings.activationMode = .longPress
         let manager = HotkeyManager(settings: { settings }, onStart: { _ in events += 1 }, onStop: { _ in },
+            onCancel: { cancelled += 1 },
             log: Log(service: MacTestDiagnostics()), markAccessibilityPrompted: {})
         manager.processPhysicalKeyState(primaryPressed: true, translationModifierPressed: false)
         await manager.close()
         manager.processPhysicalKeyState(primaryPressed: true, translationModifierPressed: true)
-        XCTAssertEqual(events, 0)
+        XCTAssertEqual(events, 1)
+        XCTAssertEqual(cancelled, 1)
         XCTAssertTrue(manager.ownedTasks.isEmpty)
     }
 

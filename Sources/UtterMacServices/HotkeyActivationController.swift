@@ -5,9 +5,12 @@ package final class HotkeyActivationController {
     private let settings: () -> SettingsValues
     private let onStart: (HotkeyAction) -> Void
     private let onStop: (HotkeyAction) -> Void
+    private let onPromote: (HotkeyPromotion) -> Bool
+    private let onCancel: () -> Void
+    private let now: () -> Duration
 
     private var gestureMode: ActivationMode?
-    private var lastPressTime: Date = .distantPast
+    private var lastPressTime: Duration?
     private var lastTapAction: HotkeyAction?
     private var tapCount = 0
     private var activeCaptureAction: HotkeyAction?
@@ -15,11 +18,18 @@ package final class HotkeyActivationController {
     package init(
         settings: @escaping () -> SettingsValues,
         onStart: @escaping (HotkeyAction) -> Void,
-        onStop: @escaping (HotkeyAction) -> Void
+        onStop: @escaping (HotkeyAction) -> Void,
+        onPromote: @escaping (HotkeyPromotion) -> Bool = { _ in false },
+        onCancel: @escaping () -> Void = {},
+        now: (() -> Duration)? = nil
     ) {
         self.settings = settings
         self.onStart = onStart
         self.onStop = onStop
+        self.onPromote = onPromote
+        self.onCancel = onCancel
+        let origin = ContinuousClock.now
+        self.now = now ?? { origin.duration(to: ContinuousClock.now) }
     }
 
     package func beginGesture(_ action: HotkeyAction) {
@@ -36,27 +46,51 @@ package final class HotkeyActivationController {
     }
 
     package func endGesture(_ action: HotkeyAction) {
-        guard gestureMode == .longPress else { return }
+        guard gestureMode == .longPress, activeCaptureAction == action else { return }
         stopCapture(action)
+    }
+
+    package func promoteToTranslation(_ promotion: HotkeyPromotion) -> Bool {
+        if activeCaptureAction == .dictation {
+            guard onPromote(promotion) else { return false }
+            activeCaptureAction = .translation
+            return true
+        }
+        if promotion == .chordClassification, activeCaptureAction == nil,
+           gestureMode == .doubleTap, tapCount == 1, lastTapAction == .dictation {
+            lastTapAction = .translation
+            return true
+        }
+        return false
+    }
+
+    package func cancelGesture() {
+        if activeCaptureAction != nil { activeCaptureAction = nil; onCancel() }
+        clearGesture()
     }
 
     package func reset() {
         if let action = activeCaptureAction { stopCapture(action) }
+        clearGesture()
+    }
+
+    private func clearGesture() {
         gestureMode = nil
-        lastPressTime = .distantPast
+        lastPressTime = nil
         lastTapAction = nil
         tapCount = 0
     }
 
     private func registerDoubleTap(_ action: HotkeyAction) {
-        let now = Date()
-        if lastTapAction == action, now.timeIntervalSince(lastPressTime) < settings().tapInterval {
+        let time = now()
+        if lastTapAction == action, let lastPressTime, time >= lastPressTime,
+           time - lastPressTime < .seconds(settings().tapInterval) {
             tapCount += 1
         } else {
             tapCount = 1
         }
         lastTapAction = action
-        lastPressTime = now
+        lastPressTime = time
 
         if tapCount >= 2 {
             tapCount = 0

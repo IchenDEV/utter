@@ -556,3 +556,5 @@
 "delivery.copied" = "已复制";
 "delivery.uncertain" = "无法确认写入";
 "delivery.notDelivered" = "未写入";
+"pipeline.mic_engine_failed" = "麦克风无法启动，请检查所选输入设备。";
+"capture.remote_unavailable" = "远程麦克风不可用。";

@@ -119,6 +119,7 @@ package protocol SessionJobControl: AnyObject {
 
 @MainActor
 package protocol SessionJob: AnyObject {
+    func promoteToTranslation() -> TextProcessingMode?
     func bind(input: SessionInput) throws
     func attach(control: any SessionJobControl)
     func run(control: any SessionJobControl) async throws -> SessionCompletion
@@ -137,6 +138,7 @@ package protocol SessionWorkflowFactory: AnyObject {
 
 @MainActor
 package protocol SessionExecutionService: AnyObject {
+    func promoteToTranslation(_ id: UUID, reason: HotkeyPromotion) -> Bool
     var snapshot: SessionExecutionSnapshot { get }
     func reserve(_ intent: SessionIntent) throws
     func activate(_ id: UUID, input: SessionInput?) throws
@@ -144,7 +146,9 @@ package protocol SessionExecutionService: AnyObject {
     func waitForCompletion(_ id: UUID) async throws -> SessionExecutionSnapshot
     func start(_ intent: SessionIntent) throws
     func stop() async
+    func stop(_ id: UUID) async
     func cancel()
+    func cancel(_ id: UUID)
     func observe(_ callback: @escaping (SessionExecutionSnapshot) -> Void) -> UUID
     func removeObserver(_ id: UUID)
     func observeProgress(_ callback: @escaping (SessionIntent, SessionExecutionSnapshot) -> Void) -> UUID
@@ -159,6 +163,7 @@ extension SessionServices {
 }
 
 extension SessionJob {
+    package func promoteToTranslation() -> TextProcessingMode? { nil }
     package func bind(input: SessionInput) throws { throw IntegrationError.invalidSessionState }
     package func attach(control: any SessionJobControl) {}
 }

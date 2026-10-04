@@ -11,6 +11,7 @@ final class SessionControl: SessionJobControl {
     private var activated = false
     private var activationWaiter: CheckedContinuation<Void, Error>?
     private var waiter: CheckedContinuation<Void, Error>?
+    private var stopWaiterID: UUID?
 
     init(isCurrent: @escaping () -> Bool, cancel: @escaping () -> Void, update: @escaping (SessionExecutionPhase, String) -> Void) {
         current = isCurrent
@@ -18,6 +19,7 @@ final class SessionControl: SessionJobControl {
         updateSnapshot = update
     }
     var isCurrent: Bool { !cancelled && current() }
+    var isStopped: Bool { stopped }
     func update(phase: SessionExecutionPhase, transcript: String) {
         guard isCurrent else { return }
         updateSnapshot(phase, transcript)
@@ -35,14 +37,30 @@ final class SessionControl: SessionJobControl {
         try Task.checkCancellation()
         guard isCurrent else { throw CancellationError() }
         if stopped { return }
-        try await withCheckedThrowingContinuation { waiter = $0 }
+        guard waiter == nil else { throw IntegrationError.invalidSessionState }
+        let id = UUID()
+        defer { if stopWaiterID == id { waiter = nil; stopWaiterID = nil } }
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                if Task.isCancelled { continuation.resume(throwing: CancellationError()) }
+                else { waiter = continuation; stopWaiterID = id }
+            }
+        } onCancel: {
+            Task { @MainActor [weak self] in
+                guard let self, self.stopWaiterID == id else { return }
+                self.waiter?.resume(throwing: CancellationError())
+                self.waiter = nil
+                self.stopWaiterID = nil
+            }
+        }
         try Task.checkCancellation()
         guard isCurrent else { throw CancellationError() }
     }
-    func stop() { stopped = true; waiter?.resume(); waiter = nil }
+    func stop() { stopped = true; waiter?.resume(); waiter = nil; stopWaiterID = nil }
     func revoke() {
         cancelled = true
         waiter?.resume(throwing: CancellationError()); waiter = nil
+        stopWaiterID = nil
         activationWaiter?.resume(throwing: CancellationError()); activationWaiter = nil
     }
 }

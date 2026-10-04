@@ -15,6 +15,8 @@ final class VoiceRecognitionDrainTests: XCTestCase {
         while driver.snapshot.phase != .recording { await Task.yield() }
         driver.cancel()
         while !fixture.engine.draining { await Task.yield() }
+        XCTAssertTrue(fixture.capture.recording.stopped)
+        XCTAssertFalse(fixture.capture.recording.closed)
         var maintained = false
         let maintenance = Task { try await access.withAccess { maintained = true } }
         for _ in 0..<20 { await Task.yield() }

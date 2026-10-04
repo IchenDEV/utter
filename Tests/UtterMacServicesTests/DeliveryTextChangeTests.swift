@@ -14,7 +14,7 @@ final class DeliveryTextChangeTests: XCTestCase {
 
     func testInvalidOrSplitSurrogateRangesAreRejectedBeforeAnyEffect() {
         for range in [NSRange(location: NSNotFound, length: 1), NSRange(location: -1, length: 0),
-                      NSRange(location: 1, length: Int.max), NSRange(location: 1, length: 1)] {
+                      NSRange(location: 1, length: Int.max), NSRange(location: 1, length: 1), NSRange(location: 2, length: 1)] {
             XCTAssertNil(DeliveryTextChange(document: "前😀后", range: range, replacement: "new"))
         }
     }

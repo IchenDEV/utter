@@ -5,3 +5,4 @@ package enum HotkeyAction: Equatable {
     case translation
 }
 
+package enum HotkeyPromotion: Equatable { case chordClassification, recording }

@@ -7,6 +7,36 @@ import UtterRuntime
 
 @MainActor
 final class SessionDriverTests: XCTestCase {
+    func testPromotionUsesOneJobAndRejectsLateStoppedOrUnrelatedEvents() async throws {
+        let fixture = try DriverFixture()
+        defer { fixture.remove() }
+        let job = HeldSessionJob()
+        job.accepted = true
+        let factory = DriverFactory(job: job)
+        let driver = fixture.driver(factory)
+        let intent = SessionIntent(input: .local)
+        try driver.start(intent)
+        XCTAssertFalse(driver.promoteToTranslation(intent.id, reason: .recording))
+        while !job.entered { await Task.yield() }
+        XCTAssertFalse(driver.promoteToTranslation(UUID(), reason: .recording))
+        XCTAssertTrue(driver.promoteToTranslation(intent.id, reason: .recording))
+        XCTAssertFalse(driver.promoteToTranslation(intent.id, reason: .recording))
+        XCTAssertEqual(job.promotions, 1)
+        XCTAssertEqual(factory.constructed, 1)
+        let stop = Task { await driver.stop() }
+        let control = try XCTUnwrap(job.control as? SessionControl)
+        while !control.isStopped { await Task.yield() }
+        XCTAssertFalse(driver.promoteToTranslation(intent.id, reason: .chordClassification))
+        job.release()
+        while !job.closing { await Task.yield() }
+        job.finishClose()
+        await stop.value
+        XCTAssertEqual(driver.snapshot.id, intent.id)
+        XCTAssertEqual(driver.snapshot.phase, .completed)
+        XCTAssertFalse(driver.promoteToTranslation(intent.id, reason: .recording))
+        await driver.close()
+    }
+
     func testCreatedSessionReservesOneColdJobAndActivationReusesIt() async throws {
         let fixture = try DriverFixture()
         defer { fixture.remove() }
@@ -192,6 +222,7 @@ final class SessionDriverTests: XCTestCase {
         try driver.start(SessionIntent(input: .local))
         while !first.entered { await Task.yield() }
         let oldControl = try XCTUnwrap(first.control)
+        let oldID = try XCTUnwrap(driver.snapshot.id)
         first.release()
         while !first.closing { await Task.yield() }
         first.finishClose()
@@ -200,6 +231,9 @@ final class SessionDriverTests: XCTestCase {
         factory.job = next
         try driver.start(SessionIntent(input: .local))
         while !next.entered { await Task.yield() }
+        await driver.stop(oldID)
+        driver.cancel(oldID)
+        XCTAssertFalse((next.control as? SessionControl)?.isStopped == true)
         oldControl.cancel()
         XCTAssertTrue(next.control?.isCurrent == true)
         driver.cancel()
@@ -252,6 +286,12 @@ private final class DriverFactory: SessionWorkflowFactory {
 
 @MainActor
 private final class HeldSessionJob: SessionJob {
+    var promotions = 0
+    func promoteToTranslation() -> TextProcessingMode? {
+        guard promotions == 0 else { return nil }
+        promotions += 1
+        return .translation(.japanese)
+    }
     var entered = false
     var closing = false
     var accepted = false

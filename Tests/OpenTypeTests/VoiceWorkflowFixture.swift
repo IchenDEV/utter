@@ -116,7 +116,13 @@ final class WorkflowCapture: CaptureService {
 @MainActor
 final class WorkflowRecording: OwnedRecording {
     var closed = false
+    var finished = false
+    var stopped = false
+    var revoked = false
+    func revoke() { revoked = true }
+    func stopCapture() async { revoke(); stopped = true }
     func finish() async throws -> CapturedAudio {
+        finished = true
         var activity = AudioCaptureActivity()
         activity.record(rms: 0.1, frameCount: 1_600)
         return CapturedAudio(url: URL(fileURLWithPath: "/captured.wav"), activity: activity)

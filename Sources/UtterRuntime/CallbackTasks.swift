@@ -35,6 +35,14 @@ package final class CallbackTasks: @unchecked Sendable {
         for task in pending { await task.value }
     }
 
+    package func drain() async {
+        while true {
+            let pending = snapshot()
+            if pending.isEmpty { return }
+            for task in pending { await task.value }
+        }
+    }
+
     private var isActive: Bool {
         lock.lock()
         defer { lock.unlock() }

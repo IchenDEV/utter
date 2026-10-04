@@ -36,6 +36,17 @@ package final class SessionDriver: SessionExecutionService {
 
     package func start(_ intent: SessionIntent) throws { try admit(intent, activate: true) }
 
+    package func promoteToTranslation(_ id: UUID, reason: HotkeyPromotion) -> Bool {
+        guard var current = active, current.intent.id == id, current.control.isCurrent, !current.control.isStopped,
+              current.intent.clientID == nil,
+              snapshot.phase == .recording || (reason == .chordClassification && snapshot.phase == .preparing),
+              let mode = current.job.promoteToTranslation() else { return false }
+        current.intent = SessionIntent(id: id, clientID: nil, input: current.intent.input, request: current.intent.request,
+            mode: mode, operation: current.intent.operation)
+        active = current
+        return true
+    }
+
     package func activate(_ id: UUID, input: SessionInput?) throws {
         guard var active, active.intent.id == id, snapshot.phase == .created else { throw IntegrationError.invalidSessionState }
         guard !closed, isReady(), active.control.isCurrent else { throw CancellationError() }
@@ -119,11 +130,21 @@ package final class SessionDriver: SessionExecutionService {
 
     package func stop() async {
         guard let active else { return }
-        if snapshot.phase == .created || snapshot.phase == .preparing { cancel() }
+        if snapshot.phase == .created { cancel() }
         else { active.control.stop() }
         await withTaskCancellationHandler {
             await active.task.value
         } onCancel: { active.task.cancel() }
+    }
+
+    package func stop(_ id: UUID) async {
+        guard active?.intent.id == id else { return }
+        await stop()
+    }
+
+    package func cancel(_ id: UUID) {
+        guard active?.intent.id == id else { return }
+        cancel()
     }
 
     package func cancel() {

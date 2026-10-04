@@ -8,6 +8,26 @@ import UtterRuntime
 
 @MainActor
 final class CapturePluginTests: XCTestCase {
+    func testTailBuffersAreAcceptedUntilTheDriverFinishesStopping() async throws {
+        let driver = FixtureCaptureDriver()
+        let runtime = try await mount { _, _, _ in driver }
+        let service = try runtime.service(AudioServices.capture)
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 16_000, channels: 1))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 1))
+        buffer.frameLength = 1
+        var buffers = 0
+        let recording = try await service.begin(request, callbacks: CaptureCallbacks(buffer: { _ in buffers += 1 }))
+        driver.callbacks?.buffer?(buffer)
+        driver.onStop = { driver.callbacks?.buffer?(buffer) }
+        _ = try await recording.finish()
+        XCTAssertEqual(buffers, 2)
+        XCTAssertEqual(driver.flushes, [true])
+        driver.callbacks?.buffer?(buffer)
+        XCTAssertEqual(buffers, 2)
+        await recording.close()
+        try await runtime.stop()
+    }
+
     func testRegistrationIsColdAndRecordingOwnsFileUntilExplicitCleanup() async throws {
         let driver = FixtureCaptureDriver()
         var constructions = 0
@@ -97,7 +117,7 @@ final class CapturePluginTests: XCTestCase {
         let driver = RemoteCaptureDriver(source: source)
         do { try await driver.start(CaptureRequest(source: .remote(token: 4)), callbacks: CaptureCallbacks()); XCTFail("Old token admitted") }
         catch CaptureError.remoteUnavailable { }
-        _ = await driver.stop()
+        _ = await driver.stop(flushTail: false)
         await driver.cleanup()
         XCTAssertEqual(source.starts, 0)
         XCTAssertEqual(source.stops, 0)
@@ -129,6 +149,8 @@ private final class FixtureCaptureDriver: CaptureDriver {
     var callbacks: CaptureCallbacks?
     var stops = 0
     var cleanups = 0
+    var flushes: [Bool] = []
+    var onStop: (() -> Void)?
     init(startBarrier: CaptureFixtureBarrier? = nil, stopBarrier: CaptureFixtureBarrier? = nil) {
         self.startBarrier = startBarrier
         self.stopBarrier = stopBarrier
@@ -137,8 +159,10 @@ private final class FixtureCaptureDriver: CaptureDriver {
         self.callbacks = callbacks
         await startBarrier?.hold()
     }
-    func stop() async -> CapturedAudio {
+    func stop(flushTail: Bool) async -> CapturedAudio {
         stops += 1
+        flushes.append(flushTail)
+        onStop?()
         await stopBarrier?.hold()
         return CapturedAudio(url: URL(fileURLWithPath: "/owned-recording.wav"), activity: AudioCaptureActivity())
     }

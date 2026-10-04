@@ -8,6 +8,7 @@ package struct VoiceInputSettings {
     package let outputMode: OutputMode
     package let enableInstantInsert: Bool
     package let allowClipboardPaste: Bool
+    package let translationTargetLanguage: TranslationLanguage
     package let enableMemory: Bool
     package let memoryWindowMinutes: Int
     package let useScreenContext: Bool
@@ -27,6 +28,7 @@ package struct VoiceInputSettings {
         outputMode = settings.outputMode
         enableInstantInsert = settings.enableInstantInsert
         allowClipboardPaste = settings.allowClipboardPaste
+        translationTargetLanguage = settings.translationTargetLanguage
         enableMemory = settings.enableMemory
         memoryWindowMinutes = settings.memoryWindowMinutes
         useScreenContext = settings.useScreenContext

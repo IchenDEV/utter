@@ -44,8 +44,9 @@ final class VoiceWorkflowFactory: SessionWorkflowFactory {
         let recipe = try descriptor(bindings[Self.recipeID(for: mode)] ?? Self.recipeID(for: mode), in: dependencies.recipes.descriptors)
         let providerID = bindings["text"] ?? (values.useRemoteLLM ? "generation.remote" : values.localLLMBackend == .espresso ? "generation.ane" : "generation.mlx")
         let generation = mode == .direct ? nil : try descriptor(providerID, in: dependencies.generation.descriptors)
+        let translationGeneration = generation ?? dependencies.generation.descriptors.first { $0.id == providerID || $0.legacyIDs.contains(providerID) }
         var options = TextProcessingOptions(settings: values)
-        if let generation { options = options.selecting(generation) }
+        if let translationGeneration { options = options.selecting(translationGeneration) }
         options = options.freezingModelLocations(using: dependencies.files)
         options.fallbackProviderID = bindings["fallback"] ?? options.fallbackProviderID
         options.imageProviderID = bindings["image"] ?? options.imageProviderID
@@ -64,6 +65,7 @@ final class VoiceWorkflowFactory: SessionWorkflowFactory {
             ? dependencies.memory?.recentContext(limit: 5, windowMinutes: settings.memoryWindowMinutes, currentContext: context) ?? "" : ""
         return VoiceSessionJob(intent: intent, settings: settings, options: options, mode: mode, recipeID: recipe.id,
             directRecipeID: bindings["mode.direct"] ?? "mode.direct", editRecipeID: bindings["mode.edit"] ?? "mode.edit",
+            translationRecipeID: bindings["mode.translation"] ?? "mode.translation",
             speechDescriptor: speech, speechFiles: speechFiles, context: context, target: target,
             recentOutput: dependencies.outputs?.recent, memoryContext: memory,
             dependencies: dependencies, authorize: { [self] in try authorize(intent) })

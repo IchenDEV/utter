@@ -9,18 +9,22 @@ extension VoiceSessionJob {
         let streaming: Bool
     }
 
-    func capture(using engine: any SpeechEngine, control: any SessionJobControl) async throws -> Audio {
+    func capture(using engine: any SpeechEngine, control: any SessionJobControl, onStarted: () -> Void) async throws -> Audio {
         if case .file(let url) = input {
             _ = try dependencies.audioFiles.inspect(url)
+            onStarted()
             return Audio(url: url, activity: nil, streaming: false)
         }
-        let streaming = settings.streamingEnabled && engine.supportsStreaming
+        let streaming = settings.streamingEnabled && engine.supportsStreaming && engine.isReady
+        capturing = true
+        defer { capturing = false }
         if streaming {
             let callbacks = callbacks
             engine.startListening(language: settings.inputLanguage.whisperCode) { [weak self, weak control] text in
                 callbacks.enqueue {
                     guard let self, let control, self.capturing, (try? self.check(control)) != nil else { return }
-                    control.update(phase: .recording, transcript: self.dependencies.preparation.preview(text, language: self.settings.inputLanguage))
+                    control.update(phase: self.finishingCapture ? .transcribing : .recording,
+                        transcript: self.dependencies.preparation.preview(text, language: self.settings.inputLanguage))
                 }
             }
         }
@@ -39,20 +43,26 @@ extension VoiceSessionJob {
                     guard let self, let control, self.capturing, (try? self.check(control)) != nil else { return }
                     engine.appendAudioBuffer(buffer)
                 }
-            } : nil, inputUnavailable: { [weak control] in
-                callbackTasks.enqueue { control?.cancel() }
+            } : nil, inputUnavailable: { [weak self, weak control] in
+                callbackTasks.enqueue {
+                    guard let self, let control, (try? self.check(control)) != nil else { return }
+                    self.captureFailure = CaptureError.startFailed(.noUsableInput)
+                    control.cancel()
+                }
             }))
         try check(control)
-        capturing = true
         dependencies.sounds?.playStart()
         control.update(phase: .recording, transcript: "")
-        defer { capturing = false }
+        onStarted()
         try await control.waitForStop()
-        capturing = false
+        finishingCapture = true
         try check(control)
-        dependencies.sounds?.playStop()
+        control.update(phase: .transcribing, transcript: "")
         guard let recording else { throw IntegrationError.invalidSessionState }
         let audio = try await recording.finish()
+        await callbacks.drain()
+        capturing = false
+        dependencies.sounds?.playStop()
         return Audio(url: audio.url, activity: audio.activity, streaming: streaming)
     }
 

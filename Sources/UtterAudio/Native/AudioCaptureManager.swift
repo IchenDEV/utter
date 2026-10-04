@@ -35,6 +35,13 @@ package final class AudioCaptureManager {
     var recordingFormat: AVAudioFormat?
     var converter: AVAudioConverter?
     var converterSourceFormat: AVAudioFormat?
+    var lastBufferFrameCount = 4096
+
+    var tailDrainDuration: Duration {
+        recordingLock.lock()
+        defer { recordingLock.unlock() }
+        return AudioTailDrain.duration(frameCount: lastBufferFrameCount, sampleRate: recordingFormat?.sampleRate ?? 0)
+    }
 
     package init(log: Log, remoteEnabled: @escaping () -> Bool) {
         self.log = log
@@ -73,6 +80,7 @@ package final class AudioCaptureManager {
         cleanupLastRecording()
         usesRemoteMic = false
         localLastActivity = AudioCaptureActivity(thresholds: thresholds)
+        lastBufferFrameCount = 4096
         levelCallback = levelUpdate
         bufferCallback = bufferUpdate
 

@@ -5,7 +5,7 @@ import UtterMediaContracts
 @MainActor
 protocol CaptureDriver: AnyObject {
     func start(_ request: CaptureRequest, callbacks: CaptureCallbacks) async throws
-    func stop() async -> CapturedAudio
+    func stop(flushTail: Bool) async -> CapturedAudio
     func cleanup() async
 }
 
@@ -86,14 +86,14 @@ private final class CaptureRecording: OwnedRecording {
 
     func finish() async throws -> CapturedAudio {
         try checkCurrent()
-        callbacks.revoke()
         let task: Task<CapturedAudio, Never>
         if let finishTask { task = finishTask }
         else {
-            task = Task { @MainActor in await self.driver.stop() }
+            task = Task { @MainActor in await self.driver.stop(flushTail: true) }
             finishTask = task
         }
         let audio = await task.value
+        callbacks.revoke()
         try checkCurrent()
         return audio
     }
@@ -102,17 +102,26 @@ private final class CaptureRecording: OwnedRecording {
         closed = true
         callbacks.revoke()
         startTask?.cancel()
+        finishTask?.cancel()
+    }
+
+    func stopCapture() async {
+        revoke()
+        if let startTask { _ = await startTask.result }
+        let stop: Task<CapturedAudio, Never>
+        if let finishTask { stop = finishTask }
+        else {
+            stop = Task { @MainActor in await self.driver.stop(flushTail: false) }
+            finishTask = stop
+        }
+        _ = await stop.value
     }
 
     func close() async {
         if let closeTask { await closeTask.value; return }
         revoke()
-        let start = startTask
-        let finish = finishTask
         let task = Task { @MainActor in
-            if let start { _ = await start.result }
-            if let finish { _ = await finish.value }
-            else { _ = await self.driver.stop() }
+            await self.stopCapture()
             await self.driver.cleanup()
             self.onClose?()
             self.onClose = nil

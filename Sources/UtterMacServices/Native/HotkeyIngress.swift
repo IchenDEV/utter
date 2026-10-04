@@ -8,7 +8,10 @@ final class HotkeyIngress: HotkeyControlService {
     private var enabled = true
     private var start: ((HotkeyAction) -> Void)?
     private var stop: ((HotkeyAction) -> Void)?
+    private var promote: ((HotkeyPromotion) -> Bool)?
+    private var cancel: (() -> Void)?
     private var manager: HotkeyManager?
+    var captureID: UUID? { manager?.gestures.captureID }
 
     init(settings: any SettingsService, log: Log, isReady: @escaping () -> Bool) {
         self.isReady = isReady
@@ -22,14 +25,21 @@ final class HotkeyIngress: HotkeyControlService {
                 guard let self, !self.closed, self.isReady() else { return }
                 self.stop?(action)
             },
+            onPromote: { [weak self] promotion in
+                guard let self, !self.closed, self.enabled, self.isReady() else { return false }
+                return self.promote?(promotion) ?? false
+            }, onCancel: { [weak self] in self?.cancel?() },
             log: log, markAccessibilityPrompted: { settings.update { $0.hotkeyAccessibilityPrompted = true } }
         )
     }
 
-    func setCallbacks(start: ((HotkeyAction) -> Void)?, stop: ((HotkeyAction) -> Void)?) {
+    func setCallbacks(start: ((HotkeyAction) -> Void)?, stop: ((HotkeyAction) -> Void)?,
+                      promote: ((HotkeyPromotion) -> Bool)?, cancel: (() -> Void)?) {
         guard !closed else { return }
         self.start = start
         self.stop = stop
+        self.promote = promote
+        self.cancel = cancel
     }
 
     func setEnabled(_ enabled: Bool) {
@@ -46,6 +56,8 @@ final class HotkeyIngress: HotkeyControlService {
         closed = true
         start = nil
         stop = nil
+        promote = nil
+        cancel = nil
         manager?.stop()
     }
 

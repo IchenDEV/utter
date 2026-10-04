@@ -1,93 +1,34 @@
+import CoreGraphics
 import Foundation
 import UtterContracts
 
 @MainActor
 extension HotkeyManager {
-    package func processPhysicalKeyState(
-        primaryPressed: Bool,
-        translationModifierPressed: Bool
-    ) {
+    package func processPhysicalKeyState(primaryPressed: Bool, translationModifierPressed: Bool, systemCombination: Bool = false) {
         guard !isClosed else { return }
-        if primaryPressed, !previousPrimaryPressed {
-            handlePrimaryPressed(translationModifierPressed: translationModifierPressed)
-        } else if primaryPressed, previousPrimaryPressed {
-            handleModifierChangeWhilePrimaryPressed(
-                translationModifierPressed: translationModifierPressed
-            )
-        } else if !primaryPressed, previousPrimaryPressed {
-            handlePrimaryReleased()
-        }
-
-        previousPrimaryPressed = primaryPressed
-        previousTranslationModifierPressed = translationModifierPressed
+        gestures.process(primaryPressed: primaryPressed, translationModifierPressed: translationModifierPressed,
+            systemCombination: systemCombination)
     }
 
-    func handlePrimaryPressed(translationModifierPressed: Bool) {
-        suppressUntilPrimaryRelease = false
-        if translationModifierPressed {
-            beginGesture(.translation)
-            return
-        }
-
-        schedulePrimaryGesture()
+    func handleNavigationKey(_ keyCode: UInt16) {
+        guard !isClosed, gestures.isPrimaryHeld,
+              [115, 116, 117, 119, 121, 123, 124, 125, 126].contains(keyCode) else { return }
+        gestures.process(primaryPressed: true, translationModifierPressed: false, systemCombination: true)
     }
 
-    func handleModifierChangeWhilePrimaryPressed(
-        translationModifierPressed: Bool
-    ) {
-        guard !suppressUntilPrimaryRelease else { return }
+    func hasOtherModifiers(_ flags: CGEventFlags) -> Bool {
+        let values = gestures.keySettings
+        let allowed = flag(for: values.hotkeyType).union(flag(for: values.translationHotkeyModifier))
+        let modifiers: CGEventFlags = [.maskCommand, .maskControl, .maskAlternate, .maskShift, .maskSecondaryFn]
+        return !flags.intersection(modifiers).subtracting(allowed).isEmpty
+    }
 
-        if activeGestureAction == nil, translationModifierPressed {
-            pendingPrimaryStart?.cancel()
-            pendingPrimaryStart = nil
-            beginGesture(.translation)
-        } else if activeGestureAction == .translation,
-                  previousTranslationModifierPressed,
-                  !translationModifierPressed {
-            endGesture(.translation)
-            activeGestureAction = nil
-            suppressUntilPrimaryRelease = true
+    private func flag(for key: HotkeyType) -> CGEventFlags {
+        switch key {
+        case .ctrl: return .maskControl
+        case .shift: return .maskShift
+        case .option: return .maskAlternate
+        case .fn: return .maskSecondaryFn
         }
     }
-
-    func handlePrimaryReleased() {
-        if pendingPrimaryStart != nil {
-            pendingPrimaryStart?.cancel()
-            pendingPrimaryStart = nil
-            if settings().activationMode != .longPress {
-                beginGesture(.dictation)
-            }
-        }
-
-        if let action = activeGestureAction {
-            endGesture(action)
-        }
-        activeGestureAction = nil
-        suppressUntilPrimaryRelease = false
-    }
-
-    func schedulePrimaryGesture() {
-        pendingPrimaryStart?.cancel()
-        pendingPrimaryStart = ownedTask { [weak self] in
-            try? await Task.sleep(nanoseconds: self?.translationChordGraceNanoseconds ?? 0)
-            guard let self, !Task.isCancelled else { return }
-            self.pendingPrimaryStart = nil
-            guard self.previousPrimaryPressed,
-                  self.activeGestureAction == nil,
-                  !self.suppressUntilPrimaryRelease else {
-                return
-            }
-            self.beginGesture(.dictation)
-        }
-    }
-
-    func beginGesture(_ action: HotkeyAction) {
-        activeGestureAction = action
-        activationController.beginGesture(action)
-    }
-
-    func endGesture(_ action: HotkeyAction) {
-        activationController.endGesture(action)
-    }
-
 }

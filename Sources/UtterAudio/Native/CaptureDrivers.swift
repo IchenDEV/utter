@@ -17,7 +17,10 @@ final class LocalCaptureDriver: CaptureDriver {
             throw CaptureError.startFailed(error)
         }
     }
-    func stop() async -> CapturedAudio {
+    func stop(flushTail: Bool) async -> CapturedAudio {
+        if flushTail, capture.isRunning {
+            try? await Task.sleep(for: capture.tailDrainDuration)
+        }
         capture.stop()
         return CapturedAudio(url: capture.lastRecordingURL, activity: capture.lastActivity)
     }
@@ -44,7 +47,7 @@ final class RemoteCaptureDriver: CaptureDriver {
         }
         ownsCapture = true
     }
-    func stop() async -> CapturedAudio {
+    func stop(flushTail: Bool) async -> CapturedAudio {
         guard ownsCapture else { return CapturedAudio(url: nil, activity: AudioCaptureActivity()) }
         source.stop()
         return CapturedAudio(url: source.lastRecordingURL, activity: source.lastActivity)

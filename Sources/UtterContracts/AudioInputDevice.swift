@@ -12,8 +12,16 @@ package struct AudioInputDevice: Equatable, Sendable {
     }
 }
 
-package enum AudioCaptureStartFailure: Error, Equatable {
+package enum AudioCaptureStartFailure: Error, Equatable, LocalizedError {
     case permissionDenied
     case noUsableInput
     case engineFailed
+
+    package var errorDescription: String? {
+        switch self {
+        case .permissionDenied: return L("pipeline.mic_failed_permissions")
+        case .noUsableInput: return L("pipeline.mic_unavailable")
+        case .engineFailed: return L("pipeline.mic_engine_failed")
+        }
+    }
 }
