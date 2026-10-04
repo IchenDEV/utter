@@ -7,9 +7,10 @@ package enum MLXPlugins {
     package static func text() -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(
             id: "generation.mlx",
-            requires: [GenerationServices.providers.required, ModelServices.resourceAccess.required, ModelServices.files.required, IntegrationServices.diagnostics.required],
+            requires: [GenerationServices.providers.required, ModelServices.resourceAccess.required, ModelServices.files.required, IntegrationServices.diagnostics.required, ModelServices.artifacts.optional],
             provides: [GenerationServices.mlx.reference]
         )) { context, _ in
+            try context.optional(ModelServices.artifacts)?.register(MLXModelArtifacts.text, scope: context.scope)
             let registry = try context.require(GenerationServices.providers)
             let files = try context.require(ModelServices.files)
             let access = try context.require(ModelServices.resourceAccess)
@@ -20,7 +21,7 @@ package enum MLXPlugins {
                 await inference.close()
                 await benchmark.close()
             }
-            let descriptor = ProviderDescriptor(id: "generation.mlx", legacyIDs: [LocalLLMBackend.mlx.rawValue], displayName: "MLX")
+            let descriptor = ProviderDescriptor(id: "generation.mlx", legacyIDs: [LocalLLMBackend.mlx.rawValue], displayName: "MLX", artifacts: MLXModelArtifacts.text)
             try registry.register(ProviderDefinition(descriptor: descriptor) { purpose in
                 purpose == .benchmark ? benchmark : inference
             }, scope: context.scope)

@@ -5,50 +5,9 @@ import Hub
 
 extension ModelCatalog {
 
-    package static var defaultASRModels: [(id: String, displayName: String, hint: String)] {
-        [
-            (
-                QwenASRModel.defaultID,
-                "Qwen3-ASR 1.7B",
-                L("model.qwen3_asr_quality")
-            ),
-            (
-                QwenASRModel.confuciusR2T2ID,
-                "Confucius4-R2T2 8-bit",
-                L("model.confucius_r2t2")
-            ),
-            (
-                "mlx-community/FireRedASR2-AED-mlx",
-                "FireRedASR2-AED",
-                L("model.firered_asr")
-            ),
-            (
-                "mlx-community/Mega-ASR-6bit",
-                "Mega-ASR 6bit",
-                L("model.mega_asr")
-            ),
-        ]
-    }
-
-    /// All ASR model IDs that use the generic MLX STT engine.
-    package static let mlxSTTModelIDs: Set<String> = [
-        "mlx-community/FireRedASR2-AED-mlx",
-        "mlx-community/Mega-ASR-6bit",
-    ]
-
     package func asrModels(for engine: SpeechEngineType) -> [ModelEntry] {
-        switch engine {
-        case .qwen3:
-            return asrModels.filter {
-                $0.id == QwenASRModel.defaultID || $0.id == QwenASRModel.confuciusR2T2ID
-            }
-        case .firered:
-            return asrModels.filter { $0.id == "mlx-community/FireRedASR2-AED-mlx" }
-        case .megaASR:
-            return asrModels.filter { $0.id == "mlx-community/Mega-ASR-6bit" }
-        default:
-            return []
-        }
+        guard let descriptor = speechDescriptors().first(where: { $0.legacyIDs.contains(engine.rawValue) }) else { return [] }
+        return asrModels.filter { descriptor.modelIDs.contains($0.id) }
     }
 
     package func asrModelPath(for id: String) -> String {
@@ -260,11 +219,11 @@ extension ModelCatalog {
             let directory = downloadBase.map { base in
                 ModelStorage.asrRepoDir(repositoryID, downloadBase: base)
             } ?? storage.asrRepoDir(repositoryID)
-            return Self.asrRepoContainsRequiredFiles(repositoryID, at: directory)
+            return asrRepoContainsRequiredFiles(repositoryID, at: directory)
         }
     }
 
     package func asrRequiredRepoIDs(for id: String) -> [String] {
-        [id]
+        artifactsByID[id]?.repositories ?? [id]
     }
 }

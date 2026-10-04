@@ -1,6 +1,11 @@
 import Foundation
 
 package enum ModelAssets {
+    package static func speechModelIsComplete(at directory: URL?, requiredFiles: [String]) -> Bool {
+        guard let directory, !requiredFiles.isEmpty else { return false }
+        return requiredFiles.allSatisfy { fileExists(directory.appendingPathComponent($0)) }
+    }
+
     package static func whisperModelIsComplete(at dir: URL) -> Bool {
         ["MelSpectrogram", "AudioEncoder", "TextDecoder"].allSatisfy { name in
             resourceHasContent(dir.appendingPathComponent("\(name).mlmodelc")) ||

@@ -11,7 +11,7 @@ package final class ModelArtifactRegistry: ModelArtifactService, @unchecked Send
     package var artifacts: [ModelArtifact] {
         lock.lock()
         defer { lock.unlock() }
-        return rows.values.sorted { $0.id < $1.id }
+        return rows.values.sorted { ($0.rank, $0.id) < ($1.rank, $1.id) }
     }
     package func artifact(_ id: String) -> ModelArtifact? {
         lock.lock()

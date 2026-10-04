@@ -4,6 +4,7 @@ import UtterContracts
 import UtterData
 import UtterPresentationContracts
 @testable import UtterModels
+import UtterMLX
 
 @MainActor
 final class ModelCatalogLifetimeTests: XCTestCase {
@@ -108,7 +109,8 @@ private struct CatalogFixture {
                  cleanup: @escaping ModelCatalog.StartupCleanupFactory = { _ in Task { 0 } }) -> ModelCatalog {
         ModelCatalog(settings: settings, log: Log(service: CatalogDiagnostics()), access: access,
                      textDownloads: TextModelDownloadOperations(download: { _, _, _ in }, validate: { _ in }),
-                     startupStorageRoot: root, startupCleanup: cleanup)
+                     artifacts: MLXModelArtifacts.text + MLXModelArtifacts.speech,
+                     speechDescriptors: { MLXModelArtifacts.speechDescriptors }, startupStorageRoot: root, startupCleanup: cleanup)
     }
     func remove() {
         defaults.removePersistentDomain(forName: "model-catalog-\(root.lastPathComponent)")

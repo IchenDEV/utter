@@ -42,12 +42,15 @@ final class NativeBackendPluginTests: XCTestCase {
             try context.provide(IntegrationServices.diagnostics, value: QuietNativeDiagnostics())
         }
         let registrations = [
-            environment, ModelPlugins.resourceAccess(), ModelPlugins.textProviders(), ModelPlugins.imageProviders(), ModelPlugins.speechProviders(),
+            environment, ModelPlugins.artifacts(), ModelPlugins.resourceAccess(), ModelPlugins.textProviders(), ModelPlugins.imageProviders(), ModelPlugins.speechProviders(),
             MLXPlugins.text(), MLXPlugins.image(), ANEPlugins.text(), WhisperPlugins.speech(),
             MLXPlugins.qwenSpeech(), MLXPlugins.fireredSpeech(), MLXPlugins.megaSpeech(), RemoteInferencePlugins.speech(),
         ]
         let runtime = PluginRuntime(catalog: try PluginCatalog(registrations))
         try await runtime.start(registrations.map { PluginSelection($0.descriptor.id) })
+        let artifacts = try runtime.service(ModelServices.artifacts)
+        XCTAssertEqual(artifacts.artifacts.filter { $0.kind == .llm }, MLXModelArtifacts.text)
+        XCTAssertEqual(artifacts.artifacts.filter { $0.kind == .asr }, MLXModelArtifacts.speech)
         let providers = try runtime.service(GenerationServices.providers)
         XCTAssertEqual(providers.descriptors.map(\.id), ["generation.ane", "generation.mlx"])
         let mlx = try await providers.create(id: "mlx", request: .inference)
@@ -66,6 +69,7 @@ final class NativeBackendPluginTests: XCTestCase {
         XCTAssertFalse(qwen.isReady)
         try await runtime.stop()
         XCTAssertTrue(providers.descriptors.isEmpty)
+        XCTAssertTrue(artifacts.artifacts.isEmpty)
         for service in [mlx, ane] {
             do {
                 _ = try await service.generate(TextGenerationRequest(prompt: "fixture", modelID: "missing"))

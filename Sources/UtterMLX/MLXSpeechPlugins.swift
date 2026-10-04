@@ -5,32 +5,33 @@ import UtterRuntime
 @MainActor
 extension MLXPlugins {
     package static func qwenSpeech() -> PluginRegistration {
-        speech(id: "speech.qwen", alias: .qwen3, title: L("engine.qwen3_short"), key: SpeechServices.qwen) { selection, files, access, log in
+        speech(id: "speech.qwen", alias: .qwen3, title: L("engine.qwen3_short"), key: SpeechServices.qwen, artifacts: MLXModelArtifacts.qwen) { selection, files, access, log in
             QwenNativeASREngine(modelPath: selection.modelPath, modelID: selection.model, access: access, log: log)
         }
     }
 
     package static func fireredSpeech() -> PluginRegistration {
-        speech(id: "speech.firered", alias: .firered, title: L("engine.firered_short"), key: SpeechServices.firered) { selection, files, access, log in
+        speech(id: "speech.firered", alias: .firered, title: L("engine.firered_short"), key: SpeechServices.firered, artifacts: MLXModelArtifacts.firered) { selection, files, access, log in
             MLXSTTEngine(modelID: selection.model, files: files, access: access, log: log)
         }
     }
 
     package static func megaSpeech() -> PluginRegistration {
-        speech(id: "speech.mega", alias: .megaASR, title: L("engine.mega_short"), key: SpeechServices.mega) { selection, files, access, log in
+        speech(id: "speech.mega", alias: .megaASR, title: L("engine.mega_short"), key: SpeechServices.mega, artifacts: MLXModelArtifacts.mega) { selection, files, access, log in
             MLXSTTEngine(modelID: selection.model, files: files, access: access, log: log)
         }
     }
 
     private static func speech(
-        id: String, alias: SpeechEngineType, title: String, key: ServiceKey<ProviderDescriptor>,
+        id: String, alias: SpeechEngineType, title: String, key: ServiceKey<ProviderDescriptor>, artifacts: [ModelArtifact],
         make: @escaping (SpeechSelection, any ModelFilesService, any ModelResourceAccess, Log) -> any SpeechEngine
     ) -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(
             id: id,
-            requires: [SpeechServices.providers.required, ModelServices.files.required, ModelServices.resourceAccess.required, IntegrationServices.diagnostics.required],
+            requires: [SpeechServices.providers.required, ModelServices.files.required, ModelServices.resourceAccess.required, IntegrationServices.diagnostics.required, ModelServices.artifacts.optional],
             provides: [key.reference]
         )) { context, _ in
+            try context.optional(ModelServices.artifacts)?.register(artifacts, scope: context.scope)
             let registry = try context.require(SpeechServices.providers)
             let files = try context.require(ModelServices.files)
             let access = try context.require(ModelServices.resourceAccess)
@@ -39,7 +40,7 @@ extension MLXPlugins {
                 make(request.selection, request.modelFiles.map { $0 as any ModelFilesService } ?? files, access, log)
             }
             try context.scope.onDispose { await cache.close() }
-            let descriptor = ProviderDescriptor(id: id, legacyIDs: [alias.rawValue], displayName: title, recognitionVocabulary: alias == .qwen3 ? .personal : .all)
+            let descriptor = ProviderDescriptor(id: id, legacyIDs: [alias.rawValue], displayName: title, artifacts: artifacts, recognitionVocabulary: alias == .qwen3 ? .personal : .all)
             try registry.register(ProviderDefinition(descriptor: descriptor) { request in try await cache.engine(request) }, scope: context.scope)
             try context.provide(key, value: descriptor)
         }

@@ -30,6 +30,7 @@ package struct ConfiguredModelFiles: ModelFilesService {
     }
 
     package func installedSpeechModelURL(_ id: String) -> URL? {
+        guard !requirements(id).isEmpty else { return nil }
         let url = Self.repositoryDirectory(id, storageRoot: Self.storageRoot(settings: settings()))
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }

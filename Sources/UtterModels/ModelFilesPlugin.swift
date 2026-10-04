@@ -4,16 +4,17 @@ import UtterRuntime
 
 @MainActor
 extension ModelPlugins {
-    package static func files(speechRequirements: [String: [String]]) -> PluginRegistration {
+    package static func files() -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(
-            id: "models.files", requires: [DataServices.settings.required], provides: [ModelServices.files.reference]
+            id: "models.files", requires: [DataServices.settings.required, ModelServices.artifacts.required], provides: [ModelServices.files.reference]
         )) { context, _ in
+            let artifacts = try context.require(ModelServices.artifacts)
             let settings = try context.require(DataServices.settings)
             let values = ModelFileSettings(settings.values)
             let observation = settings.observe { values.update($0) }
             try context.scope.onDispose { settings.removeObserver(observation) }
             let files = ConfiguredModelFiles(
-                settings: { values.snapshot }, speechRequiredFiles: { speechRequirements[$0] ?? ["config.json"] }
+                settings: { values.snapshot }, speechRequiredFiles: { artifacts.artifact($0)?.requiredFiles ?? [] }
             )
             try context.provide(ModelServices.files, value: files)
         }

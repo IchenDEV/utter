@@ -17,6 +17,8 @@ package final class ModelCatalog: ObservableObject, ModelCatalogService {
     let log: Log
     let access: any ModelResourceAccess
     let textDownloads: TextModelDownloadOperations
+    var artifactsByID: [String: ModelArtifact] = [:]
+    let speechDescriptors: () -> [ProviderDescriptor]
     package let downloadTasks = ModelDownloadTasks()
     private var startupCleanupTask: Task<Int, Never>?
     private let startupStorageRoot: URL
@@ -42,6 +44,7 @@ package final class ModelCatalog: ObservableObject, ModelCatalogService {
 
     package init(
         settings: AppSettings, log: Log, access: any ModelResourceAccess, textDownloads: TextModelDownloadOperations,
+        artifacts: [ModelArtifact] = [], speechDescriptors: @escaping () -> [ProviderDescriptor] = { [] },
         startupStorageRoot: URL? = nil,
         startupCleanup: @escaping StartupCleanupFactory = { storageRoot in
             ModelStorage.cleanupOrphanedGenerationStagingInBackground(storageRoot: storageRoot)
@@ -55,6 +58,7 @@ package final class ModelCatalog: ObservableObject, ModelCatalogService {
         self.log = log
         self.access = access
         self.textDownloads = textDownloads
+        self.speechDescriptors = speechDescriptors
         self.startupStorageRoot = startupStorageRoot ?? storage.root
         self.startupCleanup = startupCleanup
         let rec = WhisperKit.recommendedModels()
@@ -77,14 +81,7 @@ package final class ModelCatalog: ObservableObject, ModelCatalogService {
         }
 
         appendLocalWhisperModels()
-        llmModels = Self.defaultLLMModels.map {
-            ModelEntry(id: $0.0, displayName: $0.1, hint: $0.2, family: $0.3, tier: $0.4)
-        }
-        appendLocalLLMModels()
-        asrModels = Self.defaultASRModels.map {
-            ModelEntry(id: $0.id, displayName: $0.displayName, hint: $0.hint, family: nil)
-        }
-        refreshStatus()
+        loadArtifacts(artifacts)
     }
 
     /// Startup cleanup may remove model-sized trees. Download entry points

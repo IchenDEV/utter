@@ -47,14 +47,18 @@ final class ModelFilesPluginTests: XCTestCase {
         let source = PluginRegistration(descriptor: PluginDescriptor(
             id: "fixture.settings", provides: [DataServices.settings.reference]
         )) { context, _ in try context.provide(DataServices.settings, value: settings) }
-        let plugins = [source, ModelPlugins.files(speechRequirements: ["custom": ["custom.weights"]])]
+        let metadata = PluginRegistration(descriptor: PluginDescriptor(id: "fixture.speech-metadata", requires: [ModelServices.artifacts.required])) { context, _ in
+            try context.require(ModelServices.artifacts).register(ModelArtifact(id: "custom", kind: .asr,
+                displayName: "Custom", requiredFiles: ["custom.weights"]), scope: context.scope)
+        }
+        let plugins = [source, ModelPlugins.artifacts(), metadata, ModelPlugins.files()]
         let runtime = PluginRuntime(catalog: try PluginCatalog(plugins))
         try await runtime.start(plugins.map { PluginSelection($0.descriptor.id) })
         return runtime
     }
 }
 
-private final class FileFixtureSettings: SettingsService {
+final class FileFixtureSettings: SettingsService {
     private(set) var values = SettingsValues()
     private(set) var observers: [UUID: (SettingsValues) -> Void] = [:]
     init(root: URL) { values.modelStoragePath = root.path }

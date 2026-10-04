@@ -8,11 +8,13 @@ package struct ModelArtifact: Equatable, Sendable {
     package let family: CatalogModelFamily?
     package let tier: CatalogModelTier
     package let requiredFiles: [String]
+    package let rank: Int
     package let repositories: [String]
 
     package init(id: String, kind: ModelDownloadKind, displayName: String, hint: String = "",
                  family: CatalogModelFamily? = nil, tier: CatalogModelTier = .standard,
-                 requiredFiles: [String] = [], repositories: [String]? = nil) {
+                 requiredFiles: [String] = [], repositories: [String]? = nil, rank: Int = 0) {
+        self.rank = rank
         self.id = id
         self.kind = kind
         self.displayName = displayName

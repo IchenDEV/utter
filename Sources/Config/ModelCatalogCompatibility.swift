@@ -7,6 +7,19 @@ import UtterPresentationContracts
 @MainActor
 extension ModelCatalog {
     static let shared = ModelCatalog()
+    static var defaultLLMModels: [(String, String, String, ModelFamily?, ModelTier)] {
+        MLXModelArtifacts.text.map { ($0.id, $0.displayName, $0.hint, $0.family, $0.tier) }
+    }
+    static var defaultASRModels: [(id: String, displayName: String, hint: String)] {
+        MLXModelArtifacts.speech.map { ($0.id, $0.displayName, $0.hint) }
+    }
+    static let mlxSTTModelIDs = Set((MLXModelArtifacts.firered + MLXModelArtifacts.mega).map(\.id))
+    nonisolated static func asrRequiredFiles(for id: String) -> [String] {
+        MLXModelArtifacts.speech.first(where: { $0.id == id })?.requiredFiles ?? ["config.json"]
+    }
+    nonisolated static func asrRepoContainsRequiredFiles(_ id: String, at directory: URL?) -> Bool {
+        ModelAssets.speechModelIsComplete(at: directory, requiredFiles: asrRequiredFiles(for: id))
+    }
     static var whisperDownloadBase: URL { ModelStorage.huggingFaceBase }
     static var asrDownloadBase: URL { whisperDownloadBase }
 
@@ -20,7 +33,8 @@ extension ModelCatalog {
                 download: { id, staging, progress in
                     try await MLXModelDownloads.download(id, downloadBase: staging.downloadBase, cache: staging.hubCache, progress: progress)
                 }, validate: { try await MLXModelDownloads.validate($0) }
-            ), startupStorageRoot: startupStorageRoot, startupCleanup: startupCleanup
+            ), artifacts: MLXModelArtifacts.text + MLXModelArtifacts.speech,
+            speechDescriptors: { MLXModelArtifacts.speechDescriptors }, startupStorageRoot: startupStorageRoot, startupCleanup: startupCleanup
         )
         repairSelectedModels()
         start()
