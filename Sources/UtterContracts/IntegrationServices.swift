@@ -2,6 +2,8 @@ import Foundation
 import UtterRuntime
 
 package protocol IntegrationClientStore: AnyObject {
+    func observeAuthorization(_ callback: @escaping () -> Void) -> UUID
+    func removeAuthorizationObserver(_ id: UUID)
     func approvedClients() -> [IntegrationClient]
     func client(id: String) -> IntegrationClient?
     func approve(_ client: IntegrationClient)

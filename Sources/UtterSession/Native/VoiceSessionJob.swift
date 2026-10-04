@@ -24,6 +24,9 @@ final class VoiceSessionJob: SessionJob {
     var revoked = false
     var capturing = false
     private var closed = false
+    var settingsObservation: UUID?
+    var credentialsObservation: UUID?
+    var clientObservation: UUID?
 
     init(intent: SessionIntent, settings: VoiceInputSettings, options: TextProcessingOptions, mode: TextProcessingMode,
          recipeID: String, speechDescriptor: ProviderDescriptor, speechFiles: FrozenModelFiles, context: InputContext,
@@ -135,6 +138,7 @@ final class VoiceSessionJob: SessionJob {
     func close() async {
         guard !closed else { return }
         closed = true
+        detachAuthorization()
         revoke()
         await callbacks.close()
         if let screenTask { _ = await screenTask.value }

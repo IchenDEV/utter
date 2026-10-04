@@ -86,6 +86,7 @@ package final class SessionDriver: SessionExecutionService {
         }
         admittedIDs.insert(intent.id)
         active = Active(intent: intent, job: job, control: control, task: task)
+        job.attach(control: control)
         if activate { control.activate() }
         publish(SessionExecutionSnapshot(id: intent.id, phase: activate ? .preparing : .created, isBusy: true))
     }

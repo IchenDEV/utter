@@ -180,6 +180,33 @@ final class SessionDriverTests: XCTestCase {
         XCTAssertThrowsError(try driver.start(SessionIntent(input: .local)))
     }
 
+    func testRetainedControlCannotCancelTheNextSession() async throws {
+        let fixture = try DriverFixture()
+        defer { fixture.remove() }
+        let first = HeldSessionJob()
+        first.accepted = true
+        let factory = DriverFactory(job: first)
+        let driver = fixture.driver(factory)
+        try driver.start(SessionIntent(input: .local))
+        while !first.entered { await Task.yield() }
+        let oldControl = try XCTUnwrap(first.control)
+        first.release()
+        while !first.closing { await Task.yield() }
+        first.finishClose()
+        while driver.snapshot.isBusy { await Task.yield() }
+        let next = HeldSessionJob()
+        factory.job = next
+        try driver.start(SessionIntent(input: .local))
+        while !next.entered { await Task.yield() }
+        oldControl.cancel()
+        XCTAssertTrue(next.control?.isCurrent == true)
+        driver.cancel()
+        next.release()
+        while !next.closing { await Task.yield() }
+        next.finishClose()
+        await driver.close()
+    }
+
     func testRegistrationReadinessAndRevocationPreventWorkConstruction() async throws {
         let fixture = try DriverFixture()
         defer { fixture.remove() }
@@ -213,7 +240,7 @@ private struct DriverFixture {
 
 @MainActor
 private final class DriverFactory: SessionWorkflowFactory {
-    let job: HeldSessionJob
+    var job: HeldSessionJob
     var constructed = 0
     var settled = false
     init(job: HeldSessionJob) { self.job = job }
@@ -228,10 +255,12 @@ private final class HeldSessionJob: SessionJob {
     var accepted = false
     var disposition = DeliveryDisposition.accepted
     var startupFailure: Error?
+    var control: (any SessionJobControl)?
     private var waiter: CheckedContinuation<Void, Never>?
     private var closeWaiter: CheckedContinuation<Void, Never>?
     func run(control: any SessionJobControl) async throws -> SessionCompletion {
         entered = true
+        self.control = control
         if let startupFailure { throw startupFailure }
         control.update(phase: .recording, transcript: "")
         await withCheckedContinuation { waiter = $0 }

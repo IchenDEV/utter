@@ -73,6 +73,7 @@ package protocol SessionJobControl: AnyObject {
 
 @MainActor
 package protocol SessionJob: AnyObject {
+    func attach(control: any SessionJobControl)
     func run(control: any SessionJobControl) async throws -> SessionCompletion
     func revoke()
     func close() async
@@ -106,4 +107,8 @@ package protocol SessionExecutionService: AnyObject {
 extension SessionServices {
     package static let workflows = ServiceKey<any SessionWorkflowFactory>("session.workflows")
     package static let execution = ServiceKey<any SessionExecutionService>("session.execution")
+}
+
+extension SessionJob {
+    package func attach(control: any SessionJobControl) {}
 }

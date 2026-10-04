@@ -11,6 +11,7 @@ package enum DataPlugins {
         )) { context, _ in
             let diagnostics = try context.optional(IntegrationServices.diagnostics)
             let registry = IntegrationClientRegistry(defaults: defaults, reportError: { diagnostics?.error($0) })
+            try context.scope.onDispose { registry.close() }
             try context.provide(IntegrationServices.clients, value: registry)
         }
     }

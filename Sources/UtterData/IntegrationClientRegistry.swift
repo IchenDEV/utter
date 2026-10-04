@@ -16,6 +16,9 @@ package final class IntegrationClientRegistry: IntegrationClientStore {
         }
     }
 
+    private let observerLock = NSLock()
+    private var observers: [UUID: () -> Void] = [:]
+    private var closed = false
     private let defaults: UserDefaults
     private let key: String
     private let reportError: (String) -> Void
@@ -24,6 +27,41 @@ package final class IntegrationClientRegistry: IntegrationClientStore {
         self.defaults = defaults
         self.key = key
         self.reportError = reportError
+    }
+
+    package func observeAuthorization(_ callback: @escaping () -> Void) -> UUID {
+        observerLock.lock()
+        defer { observerLock.unlock() }
+        let id = UUID()
+        if !closed { observers[id] = callback }
+        return id
+    }
+    package func removeAuthorizationObserver(_ id: UUID) {
+        observerLock.lock()
+        observers[id] = nil
+        observerLock.unlock()
+    }
+    package func close() {
+        observerLock.lock()
+        closed = true
+        observers.removeAll()
+        observerLock.unlock()
+    }
+    private var isOpen: Bool {
+        observerLock.lock()
+        defer { observerLock.unlock() }
+        return !closed
+    }
+    private func notifyAuthorization() {
+        observerLock.lock()
+        let ids = observers.keys.sorted { $0.uuidString < $1.uuidString }
+        observerLock.unlock()
+        for id in ids {
+            observerLock.lock()
+            let callback = observers[id]
+            observerLock.unlock()
+            callback?()
+        }
     }
 
     package func approvedClients() -> [IntegrationClient] {
@@ -37,6 +75,7 @@ package final class IntegrationClientRegistry: IntegrationClientStore {
     }
 
     package func approve(_ client: IntegrationClient) {
+        guard isOpen else { return }
         let result = load()
         guard case var .loaded(clients) = result else {
             return
@@ -60,18 +99,22 @@ package final class IntegrationClientRegistry: IntegrationClientStore {
         }
 
         save(clients)
+        notifyAuthorization()
     }
 
     package func revoke(clientID: String) {
+        guard isOpen else { return }
         let result = load()
         guard case let .loaded(clients) = result else {
             return
         }
 
         save(clients.filter { $0.id != clientID })
+        notifyAuthorization()
     }
 
     package func markUsed(clientID: String, at date: Date = Date()) {
+        guard isOpen else { return }
         let result = load()
         guard case var .loaded(clients) = result else {
             return
@@ -85,7 +128,7 @@ package final class IntegrationClientRegistry: IntegrationClientStore {
     }
 
     package func isAuthorized(clientID: String, capability: IntegrationClient.Capability) -> Bool {
-        guard let client = client(id: clientID) else {
+        guard isOpen, let client = client(id: clientID) else {
             return false
         }
 

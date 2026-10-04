@@ -22,7 +22,7 @@ final class SessionControl: SessionJobControl {
         guard isCurrent else { return }
         updateSnapshot(phase, transcript)
     }
-    func cancel() { cancelSession() }
+    func cancel() { if isCurrent { cancelSession() } }
     func activate() { activated = true; activationWaiter?.resume(); activationWaiter = nil }
     func waitForActivation() async throws {
         try Task.checkCancellation()
