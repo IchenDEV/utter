@@ -20,6 +20,22 @@ import UtterSession
 
 @MainActor
 final class VoiceWorkflowTests: XCTestCase {
+    func testSelectedIndustryVocabularyReachesTheEffectiveSpeechProvider() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        try await fixture.start()
+        let settings = try fixture.runtime.service(DataServices.settings)
+        settings.update { $0.outputMode = .direct; $0.industryLexicon = .technology }
+        let driver = try fixture.runtime.service(SessionServices.execution)
+        let intent = SessionIntent(input: .local)
+        try driver.start(intent)
+        try await driver.waitForRecording(intent.id)
+        driver.requestStop(intent.id)
+        _ = try await driver.waitForCompletion(intent.id)
+        XCTAssertTrue(fixture.engine.vocabulary.contains("Kubernetes"))
+        XCTAssertTrue(fixture.engine.vocabulary.contains("Redis"))
+        try await fixture.runtime.stop()
+    }
     func testUnavailableMicrophoneSettlesAsFailureAfterCaptureAndRecognitionDrain() async throws {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }

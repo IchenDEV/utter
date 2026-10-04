@@ -40,7 +40,7 @@ extension MLXPlugins {
                 make(request.selection, request.modelFiles.map { $0 as any ModelFilesService } ?? files, access, log)
             }
             try context.scope.onDispose { await cache.close() }
-            let descriptor = ProviderDescriptor(id: id, legacyIDs: [alias.rawValue], displayName: title, artifacts: artifacts, recognitionVocabulary: alias == .qwen3 ? .personal : .all)
+            let descriptor = ProviderDescriptor(id: id, legacyIDs: [alias.rawValue], displayName: title, artifacts: artifacts)
             try registry.register(ProviderDefinition(descriptor: descriptor, reset: { await cache.reset() }) { request in try await cache.engine(request) }, scope: context.scope)
             try context.provide(key, value: descriptor)
         }

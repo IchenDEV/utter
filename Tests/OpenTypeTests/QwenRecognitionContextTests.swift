@@ -14,10 +14,33 @@ import UtterANE
 import UtterRemoteInference
 import UtterIngress
 import UtterMLX
+import UtterRuntime
 import XCTest
 @testable import UtterPresentation
 
 final class QwenRecognitionContextTests: XCTestCase {
+    @MainActor
+    func testMountedQwenProviderSelectsTheSharedIndustryVocabulary() async throws {
+        let suite = "QwenVocabulary-" + UUID().uuidString
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let plugins = [DataPlugins.settings(defaults: defaults), DataPlugins.lexicons(),
+            DataPlugins.diagnostics(QwenContextDiagnostics()), ModelPlugins.artifacts(), ModelPlugins.files(),
+            ModelPlugins.resourceAccess(), ModelPlugins.speechProviders(), MLXPlugins.qwenSpeech()]
+        let runtime = PluginRuntime(catalog: try PluginCatalog(plugins))
+        try await runtime.start(plugins.map { PluginSelection($0.descriptor.id) })
+        let descriptor = try XCTUnwrap(runtime.service(SpeechServices.providers).descriptors.first { $0.id == "speech.qwen" })
+        XCTAssertEqual(descriptor.recognitionVocabulary, .all)
+        let dictionary = PersonalDictionarySnapshot(entries: [], editRules: [],
+            industryLexicon: try runtime.service(DataServices.lexicons).snapshot(for: .technology))
+        XCTAssertTrue(dictionary.recognitionPhrases.contains("Kubernetes"))
+        XCTAssertTrue(dictionary.recognitionPhrases.contains("Redis"))
+        let prompt = QwenRecognitionPrompt(phrases: dictionary.recognitionPhrases)
+        XCTAssertFalse(prompt.phrases.isEmpty)
+        XCTAssertLessThanOrEqual(prompt.phrases.count, 8)
+        XCTAssertLessThanOrEqual(prompt.text.count, 180)
+        try await runtime.stop()
+    }
     func testCancellationAfterEchoPreventsContextFreeRetry() async throws {
         let prompt = QwenRecognitionPrompt(phrases: ["Alpha", "Beta", "Gamma", "Delta"])
         let task = Task {
@@ -90,4 +113,10 @@ final class QwenRecognitionContextTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
+}
+
+private struct QwenContextDiagnostics: DiagnosticsService {
+    func info(_ message: String) {}
+    func sensitive(_ message: String) {}
+    func error(_ message: String) {}
 }
