@@ -132,7 +132,7 @@ done_msg "App bundle assembled"
 
 step "Building AppIcon asset catalog (system appearances)…"
 
-ICON_RESOURCE_DIR="${PROJECT_DIR}/Sources/Resources"
+ICON_RESOURCE_DIR="${PROJECT_DIR}/Sources/UtterPresentation/Resources"
 ICON_WORK_DIR="${PROJECT_DIR}/.build/AppIcon.work"
 ICON_COMPOSER_DIR="${ICON_RESOURCE_DIR}/AppIcon.icon"
 ACTOOL_OUT_DIR="${ICON_WORK_DIR}/compiled"

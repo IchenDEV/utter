@@ -86,48 +86,33 @@ package actor LLMEngine {
         return result
     }
 
-    package func benchmark(modelID: String, modelURL: URL? = nil) async throws -> ModelBenchmarkResult {
-        let loadT0 = CFAbsoluteTimeGetCurrent()
-        try await loadModel(id: modelID, modelURL: modelURL)
-        let loadTime = CFAbsoluteTimeGetCurrent() - loadT0
-
+    package func benchmark(_ request: TextGenerationRequest, modelURL: URL?) async throws -> ModelBenchmarkResult {
+        let loadStarted = ContinuousClock.now
+        try await loadModel(id: request.modelID, modelURL: modelURL)
+        let loadSeconds = milliseconds(loadStarted.duration(to: .now)) / 1000
+        try Task.checkCancellation()
         guard let container else { throw LLMError.modelNotLoaded }
-
-        let testPrompt = "将以下口述内容整理为书面文字：嗯那个就是我觉得我们首先应该把这个方案重新梳理一下然后呢第二个就是要确认一下时间节点第三呢就是把预算也算一下"
-        let systemPrompt = "你是语音转文字后处理引擎。直接输出整理后的文本，不要任何解释。"
-        let params = GenerateParameters(maxTokens: 256, temperature: 0.3)
-        let genT0 = CFAbsoluteTimeGetCurrent()
-
-        let messages: [[String: String]] = [
-            ["role": "system", "content": systemPrompt],
-            ["role": "user", "content": testPrompt],
-        ]
-        let lmInput = try await container.prepare(
-            input: .init(
-                messages: messages,
-                additionalContext: Self.chatTemplateContext(modelID: modelID)
-            )
-        )
-        let stream = try await container.generate(input: lmInput, parameters: params)
-
-        var tokenCount = 0
-        for await generation in stream {
-            if let info = generation.info {
-                tokenCount = info.generationTokenCount
-            }
+        let started = ContinuousClock.now
+        var messages: [[String: String]] = []
+        if let system = request.systemPrompt { messages.append(["role": "system", "content": system]) }
+        messages.append(["role": "user", "content": request.prompt])
+        let input = try await container.prepare(input: .init(messages: messages,
+            additionalContext: Self.chatTemplateContext(modelID: request.modelID)))
+        guard LocalGenerationBudget.allows(inputTokens: input.text.tokens.size, outputTokens: request.maxTokens,
+                                          contextLimit: contextLimit) else {
+            throw GenerationServiceError.contextLimitExceeded
         }
-
-        let genTime = CFAbsoluteTimeGetCurrent() - genT0
-        let tps = genTime > 0 ? Double(tokenCount) / genTime : 0
-
-        log.info("[LLMEngine] benchmark: \(tokenCount) tokens in \(String(format: "%.1f", genTime))s = \(String(format: "%.1f", tps)) tok/s")
-
-        return ModelBenchmarkResult(
-            loadTimeSeconds: loadTime,
-            generateTimeSeconds: genTime,
-            outputTokenEstimate: tokenCount,
-            tokensPerSecond: tps
-        )
+        let parameters = GenerateParameters(maxTokens: request.maxTokens, temperature: Float(request.temperature))
+        let stream = try await container.generate(input: input, parameters: parameters)
+        var tokens = 0
+        for await generation in stream {
+            try Task.checkCancellation()
+            if let info = generation.info { tokens = info.generationTokenCount }
+        }
+        try Task.checkCancellation()
+        let seconds = milliseconds(started.duration(to: .now)) / 1000
+        return ModelBenchmarkResult(loadTimeSeconds: loadSeconds, generateTimeSeconds: seconds,
+            outputTokenEstimate: tokens, tokensPerSecond: seconds > 0 ? Double(tokens) / seconds : 0)
     }
 
     package var isLoaded: Bool { container != nil }

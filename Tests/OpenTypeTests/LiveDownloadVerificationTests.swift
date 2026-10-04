@@ -1,8 +1,21 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import UtterModels
 import UtterMLX
 import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 import WhisperKit
 import Hub
 import HuggingFace

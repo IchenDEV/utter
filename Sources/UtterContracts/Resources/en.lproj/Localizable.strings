@@ -564,3 +564,13 @@
 "delivery.notDelivered" = "Not inserted";
 "pipeline.mic_engine_failed" = "The microphone could not start. Check the selected input device.";
 "capture.remote_unavailable" = "The remote microphone is unavailable.";
+
+"plugins.title" = "Plugins";
+"plugins.description" = "Choose the built-in plugins and providers using the configuration below.";
+"plugins.reset" = "Restore default configuration";
+"plugins.restart_required" = "Saved. Restart Utter to apply the plugin combination.";
+"plugins.saved" = "Saved. New sessions will use the updated configuration.";
+"plugins.reset_saved" = "Default configuration saved. The previous file was backed up. Restart Utter to apply it.";
+"plugins.recovery" = "The plugin combination could not start. Open Plugins in Settings to correct it or restore defaults.";
+
+"common.save" = "Save";

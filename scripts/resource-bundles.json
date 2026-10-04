@@ -33,9 +33,9 @@
       ]
     },
     {
-      "target": "OpenType",
-      "bundle": "OpenType_OpenType.bundle",
-      "source": "Sources/Resources",
+      "target": "UtterPresentation",
+      "bundle": "OpenType_UtterPresentation.bundle",
+      "source": "Sources/UtterPresentation/Resources",
       "files": [
         "AppIcon.png",
         "AppIcon.icns",

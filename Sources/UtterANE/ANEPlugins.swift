@@ -16,7 +16,7 @@ package enum ANEPlugins {
             )
             try context.scope.onDispose { await service.close() }
             let descriptor = ProviderDescriptor(id: "generation.ane", legacyIDs: [LocalLLMBackend.espresso.rawValue], displayName: "ANE-LM", modelLocation: .bundle)
-            try registry.register(ProviderDefinition(descriptor: descriptor) { _ in service }, scope: context.scope)
+            try registry.register(ProviderDefinition(descriptor: descriptor, reset: { await service.unload() }) { _ in service }, scope: context.scope)
             try context.provide(GenerationServices.ane, value: descriptor)
         }
     }

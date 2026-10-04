@@ -1,3 +1,13 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterMacServices
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import UtterModels
 import UtterAudio
 import UtterProcessing
@@ -7,7 +17,7 @@ import UtterContracts
 import AVFoundation
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class QwenNativeASREngineTests: XCTestCase {
     @MainActor

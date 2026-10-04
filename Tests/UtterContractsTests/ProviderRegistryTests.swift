@@ -6,6 +6,7 @@ final class ProviderRegistryTests: XCTestCase {
     func testMetadataRegistrationDoesNotConstructAProviderAndLegacyIDResolvesTheSameFactory() async throws {
         let key = ServiceKey<any ProviderCatalog<String, String>>("test.providers")
         var created = 0
+        var reset = 0
         let registry = ProviderRegistry<String, String>()
         let host = PluginRegistration(descriptor: PluginDescriptor(id: "host", provides: [key.reference])) { context, _ in
             try context.scope.onDispose { registry.close() }
@@ -13,7 +14,7 @@ final class ProviderRegistryTests: XCTestCase {
         }
         let plugin = PluginRegistration(descriptor: PluginDescriptor(id: "engine", requires: [key.required])) { context, _ in
             let service = try context.require(key)
-            try service.register(ProviderDefinition(descriptor: ProviderDescriptor(id: "speech.replaceable", legacyIDs: ["legacy"], displayName: "Synthetic")) { request in
+            try service.register(ProviderDefinition(descriptor: ProviderDescriptor(id: "speech.replaceable", legacyIDs: ["legacy"], displayName: "Synthetic"), reset: { reset += 1 }) { request in
                 created += 1
                 return request.uppercased()
             }, scope: context.scope)
@@ -26,10 +27,16 @@ final class ProviderRegistryTests: XCTestCase {
         let first = try await service.create(id: "legacy", request: "first")
         XCTAssertEqual(first, "FIRST")
         XCTAssertEqual(created, 1)
+        try await service.reset(id: "legacy")
+        XCTAssertEqual(reset, 1)
+        XCTAssertEqual(created, 1)
         try await runtime.stop()
         XCTAssertTrue(service.descriptors.isEmpty)
         do { _ = try await service.create(id: "legacy", request: "late"); XCTFail("Disposed registry constructed a provider") }
         catch ProviderCatalogError.closed {}
+        do { try await service.reset(id: "legacy"); XCTFail("Disposed registry reset resources") }
+        catch ProviderCatalogError.closed {}
+        XCTAssertEqual(reset, 1)
     }
 
     func testOverlappingLegacyAliasesFailActivationAndUnwindRegistration() async throws {

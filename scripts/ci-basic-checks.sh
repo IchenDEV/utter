@@ -69,11 +69,11 @@ step "Checking industry vocabulary"
 step "Checking required app resources"
 test -s Resources/Info.plist || fail "missing Info.plist"
 test -s Resources/OpenType.entitlements || fail "missing entitlements"
-test -s Sources/Resources/AppIconLight.png || fail "missing light app icon"
-test -s Sources/Resources/AppIconDark.png || fail "missing dark app icon"
-test -s Sources/Resources/AppIcon.icon/Assets/AppIconLightForeground.png \
+test -s Sources/UtterPresentation/Resources/AppIconLight.png || fail "missing light app icon"
+test -s Sources/UtterPresentation/Resources/AppIconDark.png || fail "missing dark app icon"
+test -s Sources/UtterPresentation/Resources/AppIcon.icon/Assets/AppIconLightForeground.png \
     || fail "missing light Icon Composer foreground"
-test -s Sources/Resources/AppIcon.icon/Assets/AppIconDarkForeground.png \
+test -s Sources/UtterPresentation/Resources/AppIcon.icon/Assets/AppIconDarkForeground.png \
     || fail "missing dark Icon Composer foreground"
 
 step "Checking bundled helper names"

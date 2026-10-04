@@ -7,6 +7,26 @@ import UtterRuntime
 
 @MainActor
 final class SessionAPIExecutionTests: XCTestCase {
+    func testStopRecordingUsesReservedExecutionAndReturnsOnlyAfterDrain() async throws {
+        let fixture = try APIExecutionFixture()
+        defer { fixture.remove() }
+        fixture.job.waitsForStop = true
+        try await fixture.start()
+        let api = try fixture.runtime.service(SessionServices.api)
+        let execution = try fixture.runtime.service(SessionServices.execution)
+        let row = try await api.createSession(InputSessionRequest(), clientID: fixture.client.id)
+        try await api.startRecording(sessionID: row.id, clientID: fixture.client.id)
+        let stop = Task { try await api.stopRecording(sessionID: row.id, clientID: fixture.client.id) }
+        while !fixture.job.closing { await Task.yield() }
+        XCTAssertTrue(execution.snapshot.isBusy)
+        fixture.job.finishClose()
+        let result = try await stop.value
+        XCTAssertEqual(result.session.state, .completed)
+        XCTAssertEqual(result.text, "final")
+        XCTAssertEqual(fixture.factory.intents.count, 1)
+        try await fixture.runtime.stop()
+    }
+
     func testCreatedReservationBindsOneSourceWithoutAnotherFactoryCall() async throws {
         let fixture = try APIExecutionFixture()
         defer { fixture.remove() }
@@ -159,6 +179,7 @@ private final class APIWorkflowFactory: SessionWorkflowFactory {
 
 @MainActor
 private final class APIHeldDeliveryJob: SessionJob {
+    var waitsForStop = false
     var boundInput: SessionInput?
     var entered = false
     var closing = false
@@ -168,9 +189,10 @@ private final class APIHeldDeliveryJob: SessionJob {
     func run(control: any SessionJobControl) async throws -> SessionCompletion {
         entered = true
         control.update(phase: .recording, transcript: "raw")
+        if waitsForStop { try await control.waitForStop() }
         control.update(phase: .transcribing, transcript: "")
         control.update(phase: .processing, transcript: "raw")
-        await withCheckedContinuation { work = $0 }
+        if !waitsForStop { await withCheckedContinuation { work = $0 } }
         return SessionCompletion(transcript: "raw", text: "final", acceptance: .delivery(
             DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, confirmation: .targetValue)
         ), record: InputRecord(rawText: "raw", processedText: "final", wasProcessed: true))

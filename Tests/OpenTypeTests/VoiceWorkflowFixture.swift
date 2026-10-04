@@ -1,3 +1,13 @@
+import UtterPresentationContracts
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import AVFoundation
 import Foundation
 import UtterContracts
@@ -20,6 +30,7 @@ final class VoiceWorkflowFixture {
     let recipe = WorkflowRecipe()
     let target = WorkflowTarget()
     let screen = WorkflowScreen()
+    let evidence = WorkflowEvidence()
     var speechRequests: [SpeechProviderRequest] = []
     private(set) var runtime: PluginRuntime!
     private var plugins: [PluginRegistration] = []
@@ -53,7 +64,7 @@ final class VoiceWorkflowFixture {
             try context.provide(ModeServices.recipes, value: modes)
             try context.provide(AudioServices.capture, value: capture)
             try context.provide(AudioServices.files, value: WorkflowAudioFiles())
-            try context.provide(AudioServices.evidence, value: WorkflowEvidence())
+            try context.provide(AudioServices.evidence, value: evidence)
             try context.provide(MacServices.output, value: output)
             try context.provide(MacServices.target, value: WorkflowTargets(target: target))
             try context.provide(MacServices.screen, value: screen)
@@ -91,6 +102,7 @@ final class WorkflowSpeech: SpeechEngine {
     var holdDrain = false
     private var drainWaiter: CheckedContinuation<Void, Never>?
     var isReady = true
+    var transcript = "Hello world."
     var preparing = false
     var holdPreparation = false
     var onPermission: (() -> Void)?
@@ -105,7 +117,7 @@ final class WorkflowSpeech: SpeechEngine {
     func configureRecognition(context: SpeechRecognitionContext) { vocabulary = context.phrases }
     func transcribe(audioURL: URL?, language: String?) async throws -> String {
         transcribed.append(audioURL)
-        return "Hello world."
+        return transcript
     }
     func release() { preparation?.resume(); preparation = nil }
     func drainRecognition() async {
@@ -134,13 +146,14 @@ final class WorkflowRecording: OwnedRecording {
     var closed = false
     var finished = false
     var stopped = false
+    var rms: Float = 0.1
     var revoked = false
     func revoke() { revoked = true }
     func stopCapture() async { revoke(); stopped = true }
     func finish() async throws -> CapturedAudio {
         finished = true
         var activity = AudioCaptureActivity()
-        activity.record(rms: 0.1, frameCount: 1_600)
+        activity.record(rms: rms, frameCount: 1_600)
         return CapturedAudio(url: URL(fileURLWithPath: "/captured.wav"), activity: activity)
     }
     func close() async { closed = true }
@@ -235,8 +248,9 @@ private final class WorkflowAudioFiles: AudioFileService {
     func inspect(_ url: URL) throws -> AudioFileMetadata { AudioFileMetadata(url: url, frameCount: 1600, sampleRate: 16000, channels: 1) }
 }
 @MainActor
-private final class WorkflowEvidence: SpeechEvidenceService {
-    func containsSpeech(at url: URL?) async throws -> Bool { true }
+final class WorkflowEvidence: SpeechEvidenceService {
+    var hasSpeech = true
+    func containsSpeech(at url: URL?) async throws -> Bool { hasSpeech }
 }
 @MainActor
 private final class WorkflowTargets: TargetCaptureService {

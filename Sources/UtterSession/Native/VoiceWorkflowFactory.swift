@@ -15,6 +15,10 @@ final class VoiceWorkflowFactory: SessionWorkflowFactory {
     func make(_ intent: SessionIntent) throws -> any SessionJob {
         guard isReady() else { throw CancellationError() }
         try authorize(intent)
+        if case .copy(let text) = intent.operation {
+            guard intent.clientID == nil else { throw IntegrationError.invalidSessionState }
+            return try CopySessionJob(id: intent.id, text: text, output: dependencies.output)
+        }
         if case .applyReplacement(let id) = intent.operation {
             guard intent.clientID == nil, let outputs = dependencies.outputs else { throw IntegrationError.invalidSessionState }
             let values = dependencies.settings.values
@@ -76,6 +80,7 @@ final class VoiceWorkflowFactory: SessionWorkflowFactory {
         let recordID = completion.historyReplacement?.recordID ?? intent.id
         switch completion.outputMutation {
         case .remember: dependencies.outputs?.remember(completion, recordID: recordID)
+        case .preserve: break
         case .copiedPending(let id, let message):
             dependencies.outputs?.updatePending(id) { $0.state = .copied; $0.message = message }
         }

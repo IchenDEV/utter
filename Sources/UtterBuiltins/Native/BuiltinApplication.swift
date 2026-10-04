@@ -6,13 +6,13 @@ import UtterRuntime
 @MainActor
 package final class BuiltinApplication {
     package let runtime: PluginRuntime
-    package let configuration: CompositionStore
+    package let configuration: any ConfigurationService
     package let compositionFailure: Error?
     private let settings: any SettingsService
     private let diagnostics: any DiagnosticsService
     private var settingsObservation: UUID?
 
-    private init(runtime: PluginRuntime, configuration: CompositionStore, settings: any SettingsService,
+    private init(runtime: PluginRuntime, configuration: any ConfigurationService, settings: any SettingsService,
                  failure: Error?, diagnostics: any DiagnosticsService) {
         self.runtime = runtime; self.configuration = configuration
         self.settings = settings; compositionFailure = failure; self.diagnostics = diagnostics
@@ -37,7 +37,7 @@ package final class BuiltinApplication {
             resolver: resolver, shipped: BuiltinCompositions.shipped, legacy: BuiltinCompositions.legacy(settings.values))
         configuration = store
         let selections: [PluginSelection]
-        let failure: Error?
+        var failure: Error?
         do { selections = try store.load().selections; failure = nil }
         catch {
             failure = error
@@ -45,11 +45,19 @@ package final class BuiltinApplication {
                 .map { PluginSelection($0.descriptor.id) }
         }
         let runtime = PluginRuntime(catalog: catalog)
-        try await runtime.start(selections)
-        let application = BuiltinApplication(runtime: runtime, configuration: store, settings: settings,
+        do { try await runtime.start(selections) }
+        catch {
+            failure = error
+            try await runtime.stop()
+            try await runtime.start(registrations.filter { BuiltinCompositions.recoveryIDs.contains($0.descriptor.id) }
+                .map { PluginSelection($0.descriptor.id) })
+        }
+        let activeSettings = try runtime.service(DataServices.settings)
+        let activeConfiguration = try runtime.service(DataServices.configuration)
+        let application = BuiltinApplication(runtime: runtime, configuration: activeConfiguration, settings: activeSettings,
             failure: failure, diagnostics: try runtime.service(IntegrationServices.diagnostics))
-        if failure == nil {
-            application.settingsObservation = settings.observe { [weak application] values in
+        if failure == nil, activeConfiguration === store {
+            application.settingsObservation = activeSettings.observe { [weak application] values in
                 guard let application else { return }
                 do { try store.updateLegacy(BuiltinCompositions.legacy(values)) }
                 catch { application.diagnostics.error("Provider selection unavailable: \(error.localizedDescription)") }

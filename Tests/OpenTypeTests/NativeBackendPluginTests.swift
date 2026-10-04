@@ -1,3 +1,12 @@
+import UtterPresentationContracts
+import UtterData
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterAppleSpeech
+import UtterIngress
 import Foundation
 import XCTest
 import UtterRuntime

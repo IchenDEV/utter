@@ -8,7 +8,13 @@ extension OpenTypeService {
         guard let session = sessions[sessionID] else { throw IntegrationError.sessionNotFound }
         guard session.state == .created, let execution else { throw IntegrationError.invalidSessionState }
         try execution.activate(sessionID, input: .file(audioURL))
-        let result = try await execution.waitForCompletion(sessionID)
+        let result: SessionExecutionSnapshot
+        do { result = try await execution.waitForCompletion(sessionID) }
+        catch is CancellationError {
+            execution.cancel(sessionID)
+            await Task { await execution.stop(sessionID) }.value
+            throw CancellationError()
+        }
         guard let completed = sessions[sessionID], completed.state == .completed else {
             throw IntegrationError.invalidSessionState
         }

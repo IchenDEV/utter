@@ -1,8 +1,22 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import UtterContracts
 import UtterModels
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 @MainActor
 final class ModelDownloadTasksTests: XCTestCase {

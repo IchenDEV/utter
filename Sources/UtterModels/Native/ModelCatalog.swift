@@ -205,7 +205,7 @@ package final class ModelCatalog: ObservableObject, ModelCatalogService {
         refreshStatus()
     }
 
-    // MARK: - External Status Updates (called by VoicePipeline)
+    // MARK: - Download status
 
     package func updateWhisperStatus(_ id: String, status: ModelStatus, detail: String = "") {
         guard !closed else { return }

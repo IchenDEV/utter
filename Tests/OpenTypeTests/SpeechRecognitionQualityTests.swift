@@ -1,7 +1,21 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import UtterAppleSpeech
 import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class SpeechRecognitionQualityTests: XCTestCase {
     func testWhisperModelSelectionResolvesQualityAliasInsteadOfDeviceFallback() {

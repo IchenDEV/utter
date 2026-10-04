@@ -13,6 +13,8 @@ import UtterWhisper
 import UtterMLX
 import UtterANE
 import UtterRemoteInference
+import UtterIngress
+import UtterPresentation
 
 @MainActor
 package enum BuiltinPlugins {
@@ -31,18 +33,23 @@ package enum BuiltinPlugins {
         ]
         let models = [ModelPlugins.artifacts(), ModelPlugins.resourceAccess(), ModelPlugins.files(),
                       ModelPlugins.speechProviders(), ModelPlugins.textProviders(), ModelPlugins.imageProviders(),
-                      MLXPlugins.modelDownloads(), ModelPlugins.catalog()]
+                      MLXPlugins.modelDownloads(), ModelPlugins.catalog(), ModelPlugins.storage(), ModelPlugins.lifecycle()]
         let inference = [AppleSpeechPlugins.speech(), WhisperPlugins.speech(), RemoteInferencePlugins.speech(),
                          MLXPlugins.qwenSpeech(), MLXPlugins.fireredSpeech(), MLXPlugins.megaSpeech(),
                          MLXPlugins.text(), MLXPlugins.image(), ANEPlugins.text(), RemoteInferencePlugins.text()]
         let processing = [ProcessingPlugins.preparation(), ProcessingPlugins.text(), ModePlugins.recipes(),
                           ModePlugins.direct(), ModePlugins.formatting(), ModePlugins.command(),
                           ModePlugins.translation(), ModePlugins.edit()]
-        let platform = [RemoteMicPlugins.capture(), AudioPlugins.capture(), AudioPlugins.files(), AudioPlugins.speechEvidence(),
+        let platform = [RemoteMicPlugins.capture(), AudioPlugins.capture(), AudioPlugins.files(), AudioPlugins.speechEvidence(), AudioPlugins.devices(),
                         MacPlugins.target(), MacPlugins.output(), MacPlugins.screen(), MacPlugins.hotkeys(),
                         MacPlugins.sounds(), MacPlugins.loginItem(), MacPlugins.correction()]
         let session = [SessionPlugins.outputs(), SessionPlugins.voiceWorkflows(), SessionPlugins.execution(), SessionPlugins.api()]
-        return try BuiltinRegistrationPolicy.replacing(data + models + inference + processing + platform + session + additional,
+        let ingress = [IngressPlugins.hotkeySessions(), IngressPlugins.remoteSessions(), IngressPlugins.http(), IngressPlugins.xpc()]
+        let presentation = [PresentationPlugins.catalog(), PresentationPlugins.icons(), PresentationPlugins.menu(),
+            PresentationPlugins.overlay(), PresentationPlugins.desktop(), PresentationPlugins.general(), PresentationPlugins.history(),
+            PresentationPlugins.models(), PresentationPlugins.style(), PresentationPlugins.integrations(), PresentationPlugins.about(),
+            PresentationPlugins.onboarding(), PresentationPlugins.configuration()]
+        return try BuiltinRegistrationPolicy.replacing(data + models + inference + processing + platform + session + ingress + presentation + additional,
                                                      with: replacements)
     }
 }

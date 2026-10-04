@@ -28,7 +28,7 @@ package struct SessionIntent: Equatable, Sendable {
     }
 }
 
-package enum SessionOperation: Equatable, Sendable { case input, applyReplacement(UUID) }
+package enum SessionOperation: Equatable, Sendable { case input, applyReplacement(UUID), copy(String) }
 
 package struct SessionHistoryReplacement {
     package let recordID: UUID
@@ -39,7 +39,7 @@ package struct SessionHistoryReplacement {
     }
 }
 
-package enum SessionOutputMutation { case remember, copiedPending(UUID, message: String) }
+package enum SessionOutputMutation { case remember, preserve, copiedPending(UUID, message: String) }
 
 package enum SessionExecutionPhase: Equatable, Sendable {
     case created, preparing, recording, transcribing, processing, delivering, completed, cancelled, failed

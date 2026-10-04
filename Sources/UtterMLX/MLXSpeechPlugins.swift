@@ -41,7 +41,7 @@ extension MLXPlugins {
             }
             try context.scope.onDispose { await cache.close() }
             let descriptor = ProviderDescriptor(id: id, legacyIDs: [alias.rawValue], displayName: title, artifacts: artifacts, recognitionVocabulary: alias == .qwen3 ? .personal : .all)
-            try registry.register(ProviderDefinition(descriptor: descriptor) { request in try await cache.engine(request) }, scope: context.scope)
+            try registry.register(ProviderDefinition(descriptor: descriptor, reset: { await cache.reset() }) { request in try await cache.engine(request) }, scope: context.scope)
             try context.provide(key, value: descriptor)
         }
     }
@@ -71,9 +71,14 @@ private final class MLXSpeechCache {
         return engine
     }
 
+    func reset() async {
+        let previous = cached
+        cached = nil
+        if let cached = previous { await cached.engine.shutdown() }
+    }
+
     func close() async {
         closed = true
-        if let cached { await cached.engine.shutdown() }
-        cached = nil
+        await reset()
     }
 }

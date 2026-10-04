@@ -1,3 +1,15 @@
+import UtterPresentationContracts
+import UtterData
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import UtterProcessing
 import Foundation
 import Synchronization
@@ -6,7 +18,7 @@ import UtterRuntime
 import UtterContracts
 import UtterMediaContracts
 import UtterModels
-@testable import OpenType
+@testable import UtterPresentation
 
 @MainActor
 final class TextProcessingProviderTests: XCTestCase {

@@ -1,8 +1,21 @@
+import UtterMediaContracts
+import UtterData
+import UtterModels
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import UtterContracts
 import UtterProcessing
 import UtterPresentationContracts
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class TextProcessorFallbackTests: XCTestCase {
     func testSmartFormatDoesNotUsePreparedFallbackByDefault() {

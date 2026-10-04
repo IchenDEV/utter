@@ -55,13 +55,6 @@ extension TextProcessor {
         }
     }
 
-    package func benchmarkLLM(modelID: String) async throws -> ModelBenchmarkResult {
-        let request = TextGenerationRequest(prompt: "", modelID: modelID, modelURL: modelFiles.installedTextModelURL(modelID))
-        let provider = try await providers.create(id: "generation.mlx", request: .benchmark)
-        try Task.checkCancellation()
-        return try await provider.benchmark(request)
-    }
-
     @discardableResult
     package func warmUpLLM(
         model: String, backend: LocalLLMBackend, espressoModelPath: String,

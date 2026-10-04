@@ -214,7 +214,7 @@ do {
     if CommandLine.arguments.dropFirst().first == "--refresh-assets" {
         let resourcesURL = CommandLine.arguments.count > 2
             ? URL(fileURLWithPath: CommandLine.arguments[2])
-            : projectDirectory().appendingPathComponent("Sources/Resources")
+            : projectDirectory().appendingPathComponent("Sources/UtterPresentation/Resources")
         try refreshAssets(in: resourcesURL)
         print("Utter app icon assets refreshed in \(resourcesURL.path)")
     } else {
@@ -225,7 +225,7 @@ do {
         let outputURL = URL(fileURLWithPath: CommandLine.arguments[1])
         let sourceURL = CommandLine.arguments.count > 2
             ? URL(fileURLWithPath: CommandLine.arguments[2])
-            : projectDirectory().appendingPathComponent("Sources/Resources/AppIcon.png")
+            : projectDirectory().appendingPathComponent("Sources/UtterPresentation/Resources/AppIcon.png")
         guard let icon = NSImage(contentsOf: sourceURL) else {
             throw NSError(
                 domain: "UtterIconGeneration",

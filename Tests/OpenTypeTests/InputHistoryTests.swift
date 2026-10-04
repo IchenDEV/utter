@@ -1,9 +1,22 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterModels
+import UtterProcessing
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import UtterMacServices
 import UtterData
 import UtterContracts
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class InputHistoryTests: XCTestCase {
     func testInputRecordDecodesOldHistoryShape() throws {

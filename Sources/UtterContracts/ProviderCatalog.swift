@@ -24,10 +24,13 @@ package struct ProviderDescriptor: Equatable, Sendable {
 package struct ProviderDefinition<Request, Value> {
     package let descriptor: ProviderDescriptor
     package let create: @MainActor (Request) async throws -> Value
+    package let reset: @MainActor () async throws -> Void
 
-    package init(descriptor: ProviderDescriptor, create: @escaping @MainActor (Request) async throws -> Value) {
+    package init(descriptor: ProviderDescriptor, reset: @escaping @MainActor () async throws -> Void = {},
+                 create: @escaping @MainActor (Request) async throws -> Value) {
         self.descriptor = descriptor
         self.create = create
+        self.reset = reset
     }
 }
 
@@ -38,6 +41,11 @@ package protocol ProviderCatalog<Request, Value>: AnyObject {
     var descriptors: [ProviderDescriptor] { get }
     func register(_ definition: ProviderDefinition<Request, Value>, scope: PluginScope) throws
     func create(id: String, request: Request) async throws -> Value
+    func reset(id: String) async throws
+}
+
+extension ProviderCatalog {
+    package func reset(id: String) async throws { throw ProviderCatalogError.unknownIdentifier(id) }
 }
 
 package enum ProviderCatalogError: Error, Equatable {

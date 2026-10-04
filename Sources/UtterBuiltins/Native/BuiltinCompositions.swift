@@ -5,7 +5,8 @@ import UtterRuntime
 package enum BuiltinCompositions {
     package static let shipped = CompositionDocument(bundles: ["desktop"])
     package static let recoveryIDs: Set<String> = ["data.settings", "data.credentials", "data.notifications",
-                                                 "data.diagnostics", "data.configuration"]
+                                                 "data.diagnostics", "data.configuration", "presentation.catalog", "presentation.icons",
+                                                 "presentation.menu", "presentation.desktop", "presentation.configuration"]
 
     package static func bundles(_ registrations: [PluginRegistration]) -> [CompositionLayer] {
         [CompositionLayer("desktop", plugins: registrations.map { PluginConfigurationRow($0.descriptor.id) }),

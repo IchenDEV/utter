@@ -1,3 +1,15 @@
+import UtterMediaContracts
+import UtterData
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterRemoteInference
+import UtterIngress
 import UtterModels
 import UtterANE
 import UtterPresentationContracts
@@ -5,7 +17,7 @@ import UtterContracts
 import AppKit
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class ConfigurationTests: XCTestCase {
     func testDefaultFormattingModelDoesNotUseTinyFallback() {

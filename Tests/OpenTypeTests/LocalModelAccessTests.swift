@@ -1,7 +1,21 @@
+import UtterContracts
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import UtterProcessing
 @testable import UtterModels
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class LocalModelAccessTests: XCTestCase {
     private actor EventRecorder {

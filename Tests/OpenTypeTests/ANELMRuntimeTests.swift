@@ -1,8 +1,22 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterRemoteInference
+import UtterIngress
 import UtterANE
 import UtterContracts
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class ANELMRuntimeTests: XCTestCase {
     func testModelValidationRejectsTruncatedMissingAndWrongDtypeWeights() async throws {

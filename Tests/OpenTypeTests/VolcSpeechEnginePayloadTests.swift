@@ -1,6 +1,21 @@
+import UtterContracts
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterIngress
 import UtterRemoteInference
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class VolcSpeechEnginePayloadTests: XCTestCase {
     func testHotwordContextSerializesPhrasesAsWordEntries() throws {

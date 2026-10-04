@@ -22,7 +22,10 @@ package final class ProviderRegistry<Request, Value>: ProviderCatalog {
         if let duplicate = proposed.first(where: { existing.contains($0) }) {
             throw ProviderCatalogError.duplicateIdentifier(duplicate)
         }
-        let scoped = ProviderDefinition<Request, Value>(descriptor: definition.descriptor) { request in
+        let scoped = ProviderDefinition<Request, Value>(descriptor: definition.descriptor, reset: {
+            guard scope.isActive else { throw ProviderCatalogError.closed }
+            try await scope.run { try await definition.reset() }
+        }) { request in
             guard scope.isActive else { throw ProviderCatalogError.closed }
             let value = try await scope.run { try await definition.create(request) }
             guard scope.isActive else { throw ProviderCatalogError.closed }
@@ -45,4 +48,15 @@ package final class ProviderRegistry<Request, Value>: ProviderCatalog {
     }
 
     package func close() { closed = true }
+
+    package func reset(id: String) async throws {
+        guard !closed else { throw ProviderCatalogError.closed }
+        guard let descriptor = descriptors.first(where: { $0.id == id || $0.legacyIDs.contains(id) }),
+              let definition = definitions.value(for: descriptor.id) else {
+            throw ProviderCatalogError.unknownIdentifier(id)
+        }
+        try Task.checkCancellation()
+        try await definition.reset()
+        guard !closed else { throw ProviderCatalogError.closed }
+    }
 }

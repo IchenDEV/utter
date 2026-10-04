@@ -14,7 +14,7 @@ extension RemoteInferencePlugins {
             let cache = VolcProviderCache(log: Log(service: try context.require(IntegrationServices.diagnostics)))
             try context.scope.onDispose { await cache.close() }
             let descriptor = ProviderDescriptor(id: "speech.volc", legacyIDs: [SpeechEngineType.volc.rawValue], displayName: L("engine.volc_short"))
-            try registry.register(ProviderDefinition(descriptor: descriptor) { request in try await cache.engine(request.selection) }, scope: context.scope)
+            try registry.register(ProviderDefinition(descriptor: descriptor, reset: { await cache.reset() }) { request in try await cache.engine(request.selection) }, scope: context.scope)
             try context.provide(SpeechServices.volc, value: descriptor)
         }
     }
@@ -42,9 +42,14 @@ private final class VolcProviderCache {
         return engine
     }
 
+    func reset() async {
+        let previous = cached
+        cached = nil
+        if let cached = previous { await cached.1.shutdown() }
+    }
+
     func close() async {
         closed = true
-        if let cached { await cached.1.shutdown() }
-        cached = nil
+        await reset()
     }
 }

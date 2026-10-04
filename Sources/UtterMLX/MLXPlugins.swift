@@ -22,7 +22,7 @@ package enum MLXPlugins {
                 await benchmark.close()
             }
             let descriptor = ProviderDescriptor(id: "generation.mlx", legacyIDs: [LocalLLMBackend.mlx.rawValue], displayName: "MLX", artifacts: MLXModelArtifacts.text)
-            try registry.register(ProviderDefinition(descriptor: descriptor) { purpose in
+            try registry.register(ProviderDefinition(descriptor: descriptor, reset: { await inference.unload(); await benchmark.unload() }) { purpose in
                 purpose == .benchmark ? benchmark : inference
             }, scope: context.scope)
             try context.provide(GenerationServices.mlx, value: descriptor)
@@ -42,7 +42,7 @@ package enum MLXPlugins {
             )
             try context.scope.onDispose { await service.close() }
             let descriptor = ProviderDescriptor(id: "generation.mlx-image", displayName: "MLX VLM")
-            try registry.register(ProviderDefinition(descriptor: descriptor) { _ in service }, scope: context.scope)
+            try registry.register(ProviderDefinition(descriptor: descriptor, reset: { await service.unload() }) { _ in service }, scope: context.scope)
             try context.provide(ImageGenerationServices.mlx, value: descriptor)
         }
     }

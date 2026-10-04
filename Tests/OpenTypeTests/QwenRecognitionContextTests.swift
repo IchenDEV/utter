@@ -1,6 +1,21 @@
+import UtterContracts
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import UtterMLX
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class QwenRecognitionContextTests: XCTestCase {
     func testCancellationAfterEchoPreventsContextFreeRetry() async throws {

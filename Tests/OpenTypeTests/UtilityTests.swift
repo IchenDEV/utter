@@ -1,9 +1,22 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterIngress
 @testable import UtterModels
 import UtterRemoteInference
 import UtterContracts
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 private final class StartupCleanupGate: @unchecked Sendable {
     private let lock = NSLock()

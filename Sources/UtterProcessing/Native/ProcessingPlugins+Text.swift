@@ -16,7 +16,7 @@ extension ProcessingPlugins {
                 GenerationServices.mlx.optional, GenerationServices.ane.optional, GenerationServices.remote.optional,
                 ImageGenerationServices.mlx.optional,
             ] + additionalDependencies,
-            provides: [ProcessingServices.text.reference]
+            provides: [ProcessingServices.text.reference, ProcessingServices.models.reference]
         )) { context, _ in
             let settings = try context.require(DataServices.settings)
             let credentials = try context.optional(DataServices.credentials)
@@ -35,6 +35,7 @@ extension ProcessingPlugins {
             try context.scope.onRevoke { service.revoke() }
             try context.scope.onDispose { await service.close() }
             try context.provide(ProcessingServices.text, value: service)
+            try context.provide(ProcessingServices.models, value: ScopedProcessingModels(processor: processor, scope: context.scope))
         }
     }
 }

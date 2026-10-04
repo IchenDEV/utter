@@ -1,3 +1,15 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterIngress
 @testable import UtterWhisper
 import UtterModels
 import UtterRemoteInference
@@ -6,7 +18,7 @@ import AVFoundation
 import Foundation
 import WhisperKit
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class StreamingASRIntegrationTests: XCTestCase {
     func testWhisperStreamingSessionEmitsPartialCallbackFromSampleAudio() async throws {
@@ -47,7 +59,7 @@ final class StreamingASRIntegrationTests: XCTestCase {
                     suppressBlank: true
                 )
             },
-            access: LocalModelAccessGate(), log: UtterContracts.Log(service: OpenType.Log.service)
+            access: LocalModelAccessGate(), log: UtterContracts.Log(service: TestDiagnostics.service)
         )
 
         let feedTask = Task {

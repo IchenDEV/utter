@@ -16,7 +16,7 @@ package enum AppleSpeechPlugins {
             let cache = AppleProviderCache(log: log)
             try context.scope.onDispose { cache.close() }
             let descriptor = ProviderDescriptor(id: "speech.apple", legacyIDs: [SpeechEngineType.apple.rawValue], displayName: L("engine.apple_speech"))
-            try providers.register(ProviderDefinition(descriptor: descriptor) { request in
+            try providers.register(ProviderDefinition(descriptor: descriptor, reset: { cache.reset() }) { request in
                 try cache.engine(locale: request.selection.locale)
             }, scope: context.scope)
             try context.provide(SpeechServices.apple, value: descriptor)
@@ -40,8 +40,9 @@ private final class AppleProviderCache {
         return engine
     }
 
-    func close() {
-        closed = true
+    func close() { closed = true; reset() }
+
+    func reset() {
         for engine in engines.values { engine.cancelListening() }
         engines.removeAll()
     }

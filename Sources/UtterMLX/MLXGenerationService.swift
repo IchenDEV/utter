@@ -40,14 +40,7 @@ package struct MLXGenerationService: TextGenerationService {
 
     package func benchmark(_ request: TextGenerationRequest) async throws -> ModelBenchmarkResult {
         try await access.withAccess {
-            do {
-                let result = try await engine.benchmark(modelID: request.modelID, modelURL: request.localModelURL(using: files))
-                await engine.unload()
-                return result
-            } catch {
-                await engine.unload()
-                throw error
-            }
+            try await engine.benchmark(request, modelURL: request.localModelURL(using: files))
         }
     }
     package func close() async {

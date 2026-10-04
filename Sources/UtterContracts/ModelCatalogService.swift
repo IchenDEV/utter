@@ -29,6 +29,9 @@ package protocol ModelCatalogService: AnyObject {
     func addLocalLLM(_ url: URL)
     func updateWhisperStatus(_ id: String, status: CatalogModelStatus, detail: String)
     func updateLLMStatus(_ id: String, status: CatalogModelStatus, detail: String)
+    func asrModels(for engine: SpeechEngineType) -> [CatalogModelEntry]
+    func estimatedLLMDownloadBytes(_ id: String) -> Int64?
+    func estimatedASRDownloadBytes(_ id: String) -> Int64?
 }
 
 package protocol TextModelDownloadService: Sendable {

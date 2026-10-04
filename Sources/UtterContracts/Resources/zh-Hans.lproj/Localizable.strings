@@ -564,3 +564,13 @@
 "delivery.notDelivered" = "未写入";
 "pipeline.mic_engine_failed" = "麦克风无法启动，请检查所选输入设备。";
 "capture.remote_unavailable" = "远程麦克风不可用。";
+
+"plugins.title" = "插件组合";
+"plugins.description" = "通过下方配置选择内置插件和服务提供方。";
+"plugins.reset" = "恢复默认配置";
+"plugins.restart_required" = "已保存，请重启 Utter 应用插件组合。";
+"plugins.saved" = "已保存，新会话将使用更新后的配置。";
+"plugins.reset_saved" = "已保存默认配置并备份原文件，请重启 Utter 生效。";
+"plugins.recovery" = "插件组合无法启动，请在设置的插件组合页修正配置或恢复默认。";
+
+"common.save" = "保存";

@@ -25,6 +25,8 @@
 | 原生翻译检查 `e0bf4d1` | [macOS CI](https://github.com/IchenDEV/utter/actions/runs/37224413746)：应用构建通过；1102 tests，18 skips，4 failures | 系统语言识别、UTF-16 和采集新用例通过；三处撤权结果错归为失败、一处测试未捕获预期失败已修正，待下次 CI |
 | 队列前采集、计时和呈现投影 | Linux 全套 603 tests，0 failures | 覆盖首段音频选择、首个停止时间、分段计时、默认无正文记录和交付状态投影；原生模型锁期间采集及读屏错误用例待 CI |
 | 原生队列检查 `a8b7fe1` | [macOS CI](https://github.com/IchenDEV/utter/actions/runs/37227742799)：重复的诊断构造器阻断编译；测试未运行 | 已删除重复声明；其余 SDK 适配尚待下一次 CI |
+| 原生采集修正 `18a2690` | [macOS CI](https://github.com/IchenDEV/utter/actions/runs/37229249610)：1117 tests，18 skips，0 failures；应用构建与 SDLC Gate 通过 | 模型锁期间先采集、读屏错误、计时投影和识别取消 drain 契约通过；真实麦克风及 HUD 窗口仍待本机验证 |
+| 桌面与外部入口收敛 | Linux 620 tests，0 failures；原生语法解析、SDLC 和 diff 检查通过 | 桌面及设置页、热键/遥控/HTTP/XPC 已接共享会话；旧流水线、协调器和 TextInserter 删除；新的 SDK 类型检查待下一次 macOS CI |
 | `ci-basic-checks.sh` | 模块、资源、脚本与 plist 检查通过；在缺少 `PlistBuddy` 时停止 | 完整检查必须在 macOS 运行 |
 | 真实模型质量 | 未运行 | 合成语料和宿主已建立，仍需明确的已安装模型 |
 | 原生窗口、权限、麦克风与剪贴板 | 未运行 | 按约定由用户本机验证 |

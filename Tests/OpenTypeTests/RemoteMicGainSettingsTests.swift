@@ -1,8 +1,22 @@
+import UtterContracts
+import UtterMediaContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import UtterRemoteMic
 import Foundation
 import XCTest
 import UtterPresentationContracts
-@testable import OpenType
+@testable import UtterPresentation
 
 final class RemoteMicGainSettingsTests: XCTestCase {
     func testRemoteMicGainAllowsPersistedZeroDB() {
