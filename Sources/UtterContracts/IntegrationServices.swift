@@ -14,8 +14,13 @@ package protocol IntegrationClientStore: AnyObject {
 
 package protocol DiagnosticsService: Sendable {
     func info(_ message: String)
+    func notice(_ message: String)
     func sensitive(_ message: String)
     func error(_ message: String)
+}
+
+extension DiagnosticsService {
+    package func notice(_ message: String) { info(message) }
 }
 
 package struct IntegrationServiceSettings {

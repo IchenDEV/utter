@@ -30,7 +30,7 @@ final class VoiceWorkflowTests: XCTestCase {
         let intent = SessionIntent(input: .local)
         try driver.start(intent)
         try await driver.waitForRecording(intent.id)
-        driver.requestStop(intent.id)
+        driver.requestStop(intent.id, at: nil)
         _ = try await driver.waitForCompletion(intent.id)
         XCTAssertTrue(fixture.engine.vocabulary.contains("Kubernetes"))
         XCTAssertTrue(fixture.engine.vocabulary.contains("Redis"))

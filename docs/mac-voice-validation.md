@@ -1,7 +1,8 @@
 # Mac 语音验收
 
-使用 macOS 26 的 Apple Silicon Mac 和 CI 产出的应用包。先安装所选识别和
-整理模型，保留当前应用与配置备份，以便退出新版本后恢复。
+使用 macOS 26 的 Apple Silicon Mac，在 CI 通过的同一提交运行
+`bash scripts/build-and-run.sh --verify` 构建应用。先安装所选识别和整理模型，
+保留当前应用与配置备份，以便退出新版本后恢复。
 
 | 操作 | 预期结果 |
 | --- | --- |

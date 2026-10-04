@@ -40,6 +40,10 @@ final class NativeBackendPluginTests: XCTestCase {
         let replacement = try await providers.create(id: "speech.qwen", request: SpeechProviderRequest(selection: selection,
             modelFiles: FrozenModelFiles(modelID: "model", using: files)))
         XCTAssertFalse(first === replacement)
+        try await providers.reset(id: "speech.qwen")
+        let reset = try await providers.create(id: "speech.qwen", request: SpeechProviderRequest(selection: selection,
+            modelFiles: FrozenModelFiles(modelID: "model", using: files)))
+        XCTAssertFalse(replacement === reset)
         try await runtime.stop()
     }
 

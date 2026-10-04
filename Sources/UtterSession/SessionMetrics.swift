@@ -27,7 +27,7 @@ extension SessionPlugins {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = [.sortedKeys]
                 guard let data = try? encoder.encode(event) else { return }
-                diagnostics.info("utter.session.performance " + String(decoding: data, as: UTF8.self))
+                diagnostics.notice("utter.session.performance " + String(decoding: data, as: UTF8.self))
             }
             try context.scope.onRevoke { execution.removeObserver(observation) }
         }
