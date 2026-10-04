@@ -6,6 +6,23 @@ import UtterRuntime
 
 final class ModelArtifactRegistryTests: XCTestCase {
     @MainActor
+    func testInvalidMemoryMetadataCannotBePublishedByAReplacementPlugin() async throws {
+        for memory in [ModelMemoryRequirements(minimumGB: -1, recommendedGB: 8),
+                       ModelMemoryRequirements(minimumGB: 16, recommendedGB: 8),
+                       ModelMemoryRequirements(minimumGB: 1, recommendedGB: .infinity)] {
+            let registry = ModelArtifactRegistry()
+            let plugin = PluginRegistration(descriptor: PluginDescriptor(id: "invalid.memory")) { context, _ in
+                try registry.register(ModelArtifact(id: "vendor/model", kind: .llm, displayName: "Model",
+                    memoryRequirements: memory), scope: context.scope)
+            }
+            let runtime = PluginRuntime(catalog: try PluginCatalog([plugin]))
+            do { try await runtime.start([PluginSelection(plugin.descriptor.id)]); XCTFail("Invalid model memory metadata was accepted") }
+            catch {}
+            XCTAssertTrue(registry.artifacts.isEmpty)
+        }
+    }
+
+    @MainActor
     func testBackendReplacementChangesItsModelListAndFileContract() async throws {
         let registry = ModelPlugins.artifacts()
         let provider = PluginRegistration(descriptor: PluginDescriptor(

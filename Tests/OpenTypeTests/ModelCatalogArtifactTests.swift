@@ -36,7 +36,7 @@ final class ModelCatalogArtifactTests: XCTestCase {
         let files = try runtime.service(ModelServices.files)
         XCTAssertEqual(catalog.snapshot.text.map(\.id), [textModel.id])
         XCTAssertEqual(catalog.snapshot.speech.map(\.id), [speechModel.id])
-        XCTAssertEqual(catalog.snapshot.text.first?.tier, .recommended)
+        XCTAssertEqual(catalog.snapshot.text.first?.tier, .standard, "Unknown memory requirements cannot advertise a recommendation")
         XCTAssertEqual(files.speechRequiredFiles(speechModel.id), speechModel.requiredFiles)
         let directory = root.appendingPathComponent("models").appendingPathComponent(speechModel.id)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

@@ -10,6 +10,7 @@ package protocol ModelArtifactService: Sendable {
 package enum ModelArtifactError: Error, Equatable {
     case duplicateID(String)
     case invalidRequiredFile(String)
+    case invalidMemoryRequirements(String)
     case closed
 }
 

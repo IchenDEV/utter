@@ -166,7 +166,8 @@ package final class ModelCatalog: ObservableObject, ModelCatalogService {
             }
             llmModels[i].compatibility = DeviceCapability.check(
                 modelID: id,
-                downloadSizeBytes: Self.defaultDownloadEstimateBytes(for: id)
+                downloadSizeBytes: Self.defaultDownloadEstimateBytes(for: id),
+                memoryRequirements: artifactsByID[id]?.memoryRequirements
             )
         }
         refreshASRStatus(recheckingErrors: recheckingErrors)

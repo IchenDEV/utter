@@ -1,4 +1,5 @@
 import Foundation
+import UtterContracts
 
 package enum ModelAssets {
     package static func speechModelIsComplete(at directory: URL?, requiredFiles: [String]) -> Bool {
@@ -7,6 +8,10 @@ package enum ModelAssets {
     }
 
     package static func whisperModelIsComplete(at dir: URL) -> Bool {
+        whisperWeightsAreComplete(at: dir) && (try? WhisperTokenizerAssets.read(at: dir)) != nil
+    }
+
+    package static func whisperWeightsAreComplete(at dir: URL) -> Bool {
         ["MelSpectrogram", "AudioEncoder", "TextDecoder"].allSatisfy { name in
             resourceHasContent(dir.appendingPathComponent("\(name).mlmodelc")) ||
                 resourceHasContent(dir.appendingPathComponent("\(name).mlpackage"))

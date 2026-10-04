@@ -29,7 +29,7 @@ package enum MLXModelArtifacts {
         ]
         return rows.enumerated().map { index, row in
             ModelArtifact(id: row.0, kind: .llm, displayName: row.1, hint: row.2,
-                          family: row.3, tier: row.4, rank: index)
+                          family: row.3, tier: row.4, rank: index, memoryRequirements: textMemoryRequirements[row.0])
         }
     }
 

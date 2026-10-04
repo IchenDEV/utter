@@ -21,6 +21,9 @@ package final class ModelArtifactRegistry: ModelArtifactService, @unchecked Send
 
     @MainActor
     package func register(_ artifact: ModelArtifact, scope: PluginScope) throws {
+        guard artifact.memoryRequirements?.isValid ?? true else {
+            throw ModelArtifactError.invalidMemoryRequirements(artifact.id)
+        }
         for file in artifact.requiredFiles {
             guard !file.isEmpty, !file.hasPrefix("/"), !file.split(separator: "/").contains("..") else {
                 throw ModelArtifactError.invalidRequiredFile(file)

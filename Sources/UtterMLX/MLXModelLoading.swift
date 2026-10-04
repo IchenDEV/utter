@@ -7,6 +7,16 @@ import Tokenizers
 
 package enum MLXModelLoading {
     package static let tokenizerLoader: any MLXLMCommon.TokenizerLoader = TransformersTokenizerLoader()
+    package static let offlineDownloader: any MLXLMCommon.Downloader = OfflineModelDownloader()
+
+    package static func configuration(id: String, directory: URL) throws -> ModelConfiguration {
+        let object = try JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent("config.json"))) as? [String: Any]
+        let type = (object?["model_type"] as? String ?? "").lowercased()
+        let normalized = id.lowercased().replacingOccurrences(of: "-", with: "").replacingOccurrences(of: "_", with: "")
+        let gemma4 = normalized.contains("gemma4") || type.replacingOccurrences(of: "_", with: "").contains("gemma4")
+        return ModelConfiguration(directory: directory, tokenizerSource: .directory(directory),
+            extraEOSTokens: gemma4 ? ["<turn|>"] : [])
+    }
 
     package static func downloader(downloadBase: URL, cache: HubCache) -> any MLXLMCommon.Downloader {
         HubDownloader(
@@ -15,6 +25,13 @@ package enum MLXModelLoading {
                 cache: cache
             )
         )
+    }
+}
+
+private struct OfflineModelDownloader: MLXLMCommon.Downloader {
+    func download(id: String, revision: String?, matching patterns: [String], useLatest: Bool,
+                  progressHandler: @Sendable @escaping (Progress) -> Void) async throws -> URL {
+        throw GenerationServiceError.modelUnavailable
     }
 }
 

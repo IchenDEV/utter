@@ -35,8 +35,9 @@ package actor VLMEngine {
         if currentModelID == id, currentModelRevision == revision, container != nil { return }
         modelLoadAttempted = true
         let loaded = try await VLMModelFactory.shared.loadContainer(
-            from: localURL,
-            using: MLXModelLoading.tokenizerLoader
+            from: MLXModelLoading.offlineDownloader,
+            using: MLXModelLoading.tokenizerLoader,
+            configuration: MLXModelLoading.configuration(id: id, directory: localURL)
         )
 
         try Task.checkCancellation()

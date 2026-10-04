@@ -36,22 +36,21 @@ package enum DeviceCapability {
         package let diskGB: Double
     }
 
-    package static func requirements(for modelID: String, downloadSizeBytes: Int64?) -> ModelRequirements {
-        if let known = knownRequirements[modelID] { return known }
+    package static func requirements(downloadSizeBytes: Int64?, memory: ModelMemoryRequirements?) -> ModelRequirements {
         let diskGB = downloadSizeBytes.map { Double($0) / 1_073_741_824 } ?? 0
-        let ramNeeded = max(diskGB * 1.2, 1)
+        let ramNeeded = max(diskGB * 1.2, memory?.minimumGB ?? 1)
         return ModelRequirements(
             minRAMGB: ramNeeded,
-            recommendedRAMGB: ramNeeded * 1.5,
+            recommendedRAMGB: max(ramNeeded, memory?.recommendedGB ?? ramNeeded * 1.5),
             diskGB: diskGB
         )
     }
 
     package static func check(
         modelID: String,
-        downloadSizeBytes: Int64?
+        downloadSizeBytes: Int64?, memoryRequirements: ModelMemoryRequirements? = nil
     ) -> Compatibility {
-        let reqs = requirements(for: modelID, downloadSizeBytes: downloadSizeBytes)
+        let reqs = requirements(downloadSizeBytes: downloadSizeBytes, memory: memoryRequirements)
         let info = current
 
         if reqs.diskGB > 0, info.availableDiskGB < reqs.diskGB * 1.1 {
@@ -66,14 +65,12 @@ package enum DeviceCapability {
         return .compatible
     }
 
-    package static func recommendedModelID(from candidates: [String]) -> String? {
-        let ram = current.totalRAMGB
-        for id in candidates.reversed() {
-            if let reqs = knownRequirements[id], ram >= reqs.recommendedRAMGB {
-                return id
-            }
+    package static func tier(for artifact: ModelArtifact, memoryGB: Double = current.totalRAMGB) -> CatalogModelTier {
+        guard artifact.tier == .recommended else { return artifact.tier }
+        guard let requirements = artifact.memoryRequirements, requirements.isValid, memoryGB >= requirements.recommendedGB else {
+            return .standard
         }
-        return candidates.first
+        return .recommended
     }
 
     // MARK: - Hardware Detection
@@ -143,46 +140,7 @@ package enum DeviceCapability {
         return 16
     }
 
-    // MARK: - Known Model Requirements (RAM needed at runtime, disk for download)
 
-    private static let knownRequirements: [String: ModelRequirements] = [
-        "mlx-community/Qwen3.5-0.8B-MLX-4bit":
-            ModelRequirements(minRAMGB: 2, recommendedRAMGB: 4, diskGB: 0.7),
-        "mlx-community/Qwen3.5-2B-4bit":
-            ModelRequirements(minRAMGB: 4, recommendedRAMGB: 6, diskGB: 1.8),
-        "mlx-community/Qwen3.5-9B-5bit":
-            ModelRequirements(minRAMGB: 10, recommendedRAMGB: 12, diskGB: 7.1),
-        "mlx-community/Qwen3-30B-A3B-4bit":
-            ModelRequirements(minRAMGB: 12, recommendedRAMGB: 18, diskGB: 17.2),
-        "mlx-community/Qwen3.5-35B-A3B-4bit":
-            ModelRequirements(minRAMGB: 16, recommendedRAMGB: 24, diskGB: 20.5),
-        "mlx-community/Qwen2.5-0.5B-Instruct-4bit":
-            ModelRequirements(minRAMGB: 2, recommendedRAMGB: 4, diskGB: 0.3),
-        "mlx-community/Qwen2.5-1.5B-Instruct-4bit":
-            ModelRequirements(minRAMGB: 2, recommendedRAMGB: 4, diskGB: 0.9),
-        "mlx-community/Qwen2.5-3B-Instruct-4bit":
-            ModelRequirements(minRAMGB: 4, recommendedRAMGB: 6, diskGB: 1.8),
-        "mlx-community/Qwen3-0.6B-4bit":
-            ModelRequirements(minRAMGB: 2, recommendedRAMGB: 4, diskGB: 0.4),
-        "mlx-community/Qwen3-1.7B-4bit":
-            ModelRequirements(minRAMGB: 2, recommendedRAMGB: 4, diskGB: 1.0),
-        "mlx-community/Qwen3-4B-4bit":
-            ModelRequirements(minRAMGB: 4, recommendedRAMGB: 6, diskGB: 2.3),
-        "mlx-community/gemma-4-e2b-it-4bit":
-            ModelRequirements(minRAMGB: 6, recommendedRAMGB: 8, diskGB: 3.6),
-        "mlx-community/gemma-4-e4b-it-4bit":
-            ModelRequirements(minRAMGB: 8, recommendedRAMGB: 10, diskGB: 5.3),
-        "mlx-community/gemma-3-1b-it-4bit":
-            ModelRequirements(minRAMGB: 2, recommendedRAMGB: 4, diskGB: 0.8),
-        "mlx-community/gemma-3-4b-it-4bit":
-            ModelRequirements(minRAMGB: 6, recommendedRAMGB: 8, diskGB: 3.5),
-        "mlx-community/gemma-3-12b-it-4bit":
-            ModelRequirements(minRAMGB: 12, recommendedRAMGB: 16, diskGB: 8.1),
-        "mlx-community/Llama-4-Scout-17B-16E-Instruct-4bit":
-            ModelRequirements(minRAMGB: 48, recommendedRAMGB: 64, diskGB: 61.2),
-        "mlx-community/Llama-4-Maverick-17B-128E-Instruct-4bit":
-            ModelRequirements(minRAMGB: 128, recommendedRAMGB: 192, diskGB: 226.0),
-    ]
 }
 
 extension DeviceCapability.Info {
@@ -191,4 +149,3 @@ extension DeviceCapability.Info {
     package var gpuDisplayText: String { "\(gpuCoreCount)-core GPU" }
     package var diskAvailableText: String { String(format: "%.1f GB", availableDiskGB) }
 }
-

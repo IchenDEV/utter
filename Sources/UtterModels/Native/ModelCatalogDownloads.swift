@@ -87,11 +87,14 @@ extension ModelCatalog {
                 handledByOverride = false
             }
             if !handledByOverride {
-                _ = try await WhisperKit.download(
-                    variant: id,
-                    downloadBase: staging.downloadBase,
-                    progressCallback: progressCallback
-                )
+                let installed = whisperVariantDir(id)
+                if ModelAssets.whisperWeightsAreComplete(at: installed) {
+                    try await stageExistingWhisper(from: installed, to: modelDir)
+                } else {
+                    _ = try await WhisperKit.download(variant: id,
+                        downloadBase: staging.downloadBase, progressCallback: progressCallback)
+                }
+                try await installWhisperTokenizer(model: id, directory: modelDir, staging: staging)
             }
             watchdog.stop()
             try Task.checkCancellation()
@@ -104,11 +107,8 @@ extension ModelCatalog {
                 }
                 return
             }
-            let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
-                kind: .whisper,
-                modelID: id,
-                staging: staging
-            )
+            let prepared = try await ModelGenerations.prepareOffMainActor(source: modelDir,
+                destination: whisperVariantDir(id), storageRoot: staging.storageRoot)
             let published: Bool
             do {
                 published = try await publish([prepared], key: key, token: token)

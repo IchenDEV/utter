@@ -56,7 +56,7 @@ package protocol TextGenerationService: Sendable {
 }
 
 package enum GenerationServiceError: Error, Equatable {
-    case unsupportedOperation, modelUnavailable, modelChanged
+    case unsupportedOperation, modelUnavailable, modelChanged, contextLimitExceeded
 }
 
 extension TextGenerationService {

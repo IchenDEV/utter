@@ -18,6 +18,7 @@ package actor LLMEngine {
     private var container: ModelContainer?
     private var currentModelID: String?
     private var currentModelRevision: String?
+    private var contextLimit: Int?
 
     package func loadModel(id: String, modelURL: URL? = nil) async throws {
         try Task.checkCancellation()
@@ -32,9 +33,11 @@ package actor LLMEngine {
         let revision = ModelLocationLease.identity(localURL)
         if currentModelID == id, currentModelRevision == revision, container != nil { return }
         modelLoadAttempted = true
+        let limit = try LocalGenerationBudget.contextLimit(configuration: Data(contentsOf: localURL.appendingPathComponent("config.json")))
         let loaded = try await LLMModelFactory.shared.loadContainer(
-            from: localURL,
-            using: MLXModelLoading.tokenizerLoader
+            from: MLXModelLoading.offlineDownloader,
+            using: MLXModelLoading.tokenizerLoader,
+            configuration: MLXModelLoading.configuration(id: id, directory: localURL)
         )
 
         try Task.checkCancellation()
@@ -42,6 +45,7 @@ package actor LLMEngine {
         container = loaded
         currentModelID = id
         currentModelRevision = revision
+        contextLimit = limit
         let elapsed = CFAbsoluteTimeGetCurrent() - t0
         log.info("[LLMEngine] model loaded in \(String(format: "%.1f", elapsed))s")
     }
@@ -61,6 +65,14 @@ package actor LLMEngine {
         let t0 = CFAbsoluteTimeGetCurrent()
 
         let params = GenerateParameters(maxTokens: maxTokens, temperature: Float(temperature))
+        var messages: [[String: String]] = []
+        if let systemPrompt { messages.append(["role": "system", "content": systemPrompt]) }
+        messages.append(["role": "user", "content": prompt])
+        let inputTokens = try await container.prepare(input: .init(messages: messages,
+            additionalContext: Self.chatTemplateContext(modelID: currentModelID))).text.tokens.size
+        guard LocalGenerationBudget.allows(inputTokens: inputTokens, outputTokens: maxTokens, contextLimit: contextLimit) else {
+            throw GenerationServiceError.contextLimitExceeded
+        }
         let session = ChatSession(
             container,
             instructions: systemPrompt,
@@ -129,6 +141,7 @@ package actor LLMEngine {
         container = nil
         currentModelID = nil
         currentModelRevision = nil
+        contextLimit = nil
         if modelLoadAttempted {
             modelLoadAttempted = false
             Memory.clearCache()
@@ -143,8 +156,4 @@ package actor LLMEngine {
         return ["enable_thinking": false]
     }
 
-    package static func modelConfiguration(for id: String) -> ModelConfiguration {
-        let extraEOSTokens: Set<String> = id.lowercased().contains("gemma-4") ? ["<turn|>"] : []
-        return ModelConfiguration(id: id, extraEOSTokens: extraEOSTokens)
-    }
 }

@@ -36,6 +36,8 @@ package enum WhisperModelSelection {
         }
         if result.hasPrefix("openai_whisper-") {
             result.removeFirst("openai_whisper-".count)
+        } else if result.hasPrefix("whisper-") {
+            result.removeFirst("whisper-".count)
         }
         result = result.replacingOccurrences(
             of: #"_[0-9]+mb$"#,

@@ -110,7 +110,8 @@ final class ModelAssetsTests: XCTestCase {
             )
             try Data("model".utf8).write(to: component.appendingPathComponent("model.bin"))
         }
-        XCTAssertTrue(ModelAssets.whisperModelIsComplete(at: root))
+        XCTAssertTrue(ModelAssets.whisperWeightsAreComplete(at: root))
+        XCTAssertFalse(ModelAssets.whisperModelIsComplete(at: root), "Weights without a local tokenizer need repair")
     }
 
 }
