@@ -93,6 +93,7 @@ final class VoiceWorkflowTests: XCTestCase {
     func testDesktopDeliveryReceivesFrozenClipboardPolicyThroughReplacementProvider() async throws {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }
+        fixture.recipe.generationOutcome = .fallback
         try await fixture.start()
         let settings = try fixture.runtime.service(DataServices.settings)
         settings.update { $0.allowClipboardPaste = false }
@@ -105,6 +106,7 @@ final class VoiceWorkflowTests: XCTestCase {
         XCTAssertEqual(fixture.output.requests.count, 1)
         XCTAssertFalse(try XCTUnwrap(fixture.output.requests.first).allowsClipboardPaste)
         XCTAssertEqual(driver.snapshot.deliveryStatus, .inserted)
+        XCTAssertEqual(driver.snapshot.generationOutcome, .fallback)
         try await fixture.runtime.stop()
     }
 

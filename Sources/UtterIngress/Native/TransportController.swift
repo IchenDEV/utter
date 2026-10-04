@@ -17,7 +17,7 @@ final class TransportController {
     private var credentialObservation: UUID?
     private var configuration: Configuration?
     private var closed = false
-    private var shutdowns: [Task<Void, Never>] = []
+    private var shutdowns: [UUID: Task<Void, Never>] = [:]
     private struct Configuration: Equatable {
         let enabled: Bool
         let port: Int
@@ -70,13 +70,21 @@ final class TransportController {
     private func stopTransport() {
         if let http {
             http.stop()
-            shutdowns.append(Task { await http.close() })
+            drain { await http.close() }
         }
         if let xpc {
             xpc.stop()
-            shutdowns.append(Task { await xpc.close() })
+            drain { await xpc.close() }
         }
         http = nil; xpc = nil
+    }
+
+    private func drain(_ operation: @escaping @MainActor () async -> Void) {
+        let id = UUID()
+        shutdowns[id] = Task { [weak self] in
+            await operation()
+            self?.shutdowns[id] = nil
+        }
     }
 
     func revoke() {
@@ -90,7 +98,7 @@ final class TransportController {
 
     func close() async {
         revoke()
-        for task in shutdowns { await task.value }
+        for task in Array(shutdowns.values) { await task.value }
         shutdowns.removeAll()
     }
 }

@@ -39,6 +39,7 @@ package final class AppState: ObservableObject {
         rawTranscription = snapshot.transcript
         processedText = snapshot.text
         audioLevel = snapshot.audioLevel
+        completionKind = snapshot.generationOutcome == .fallback ? .espressoFallback : .standard
         if case .translation(let target) = snapshot.mode { activeInputMode = .translation(target) }
         else { activeInputMode = .dictation }
         switch presentation.status {
@@ -55,7 +56,7 @@ package final class AppState: ObservableObject {
         }
         if let performance = snapshot.performance {
             lastFormattingDurationSeconds = performance.generations.reduce(0) { $0 + $1.elapsedMilliseconds } / 1000
-        }
+        } else { lastFormattingDurationSeconds = 0 }
     }
 
     package func project(_ output: SessionOutputSnapshot) {

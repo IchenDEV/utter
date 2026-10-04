@@ -228,12 +228,13 @@ package final class SessionDriver: SessionExecutionService {
             case .success(let completion) where completion.accepted:
                 snapshot = SessionExecutionSnapshot(id: intent.id, phase: .completed,
                     transcript: completion.transcript, text: completion.text, deliveryStatus: completion.acceptance.deliveryStatus,
-                    performance: performance, mode: intent.mode)
+                    performance: performance, mode: intent.mode, generationOutcome: completion.generationOutcome)
             case .success(let completion):
                 snapshot = SessionExecutionSnapshot(id: intent.id, phase: .failed,
                     transcript: completion.transcript, text: completion.text,
                     error: completion.acceptance.deliveryReason,
-                    deliveryStatus: completion.acceptance.deliveryStatus, performance: performance, mode: intent.mode)
+                    deliveryStatus: completion.acceptance.deliveryStatus, performance: performance, mode: intent.mode,
+                    generationOutcome: completion.generationOutcome)
             case .failure(let error):
                 terminalFailures[intent.id] = error
                 let failure = SessionFailurePresentation(error: error)

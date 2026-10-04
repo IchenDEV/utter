@@ -3,21 +3,23 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from voice_quality_acceptance import acceptance_report
+from voice_quality_acceptance import REQUIRED_DEMOS, acceptance_report
 
 
 class AcceptanceTests(unittest.TestCase):
     def rows(self):
         rows = []
-        for case_id, count, outcome in [("demo-clock", 5, "accepted"), ("custom-delete-01", 20, "accepted"), ("custom-added-fact-01", 20, "fallback")]:
+        cases = [(identity, 5, "accepted") for identity in sorted(REQUIRED_DEMOS)]
+        cases += [("custom-delete-01", 20, "accepted"), ("custom-added-fact-01", 20, "fallback")]
+        for case_id, count, outcome in cases:
             for attempt in range(count):
                 rows.append({"case_id": case_id if case_id.startswith("demo-") else case_id + f"-{attempt}", "id": f"{case_id}-{attempt}", "outcome": outcome,
                              "constraints_pass": True, "semantic_review": "required"})
         return rows
 
     def manifest(self):
-        return {"state": "completed", "completed_runs": 45, "expected_runs": 45,
-                "expected_cases": {**{"demo-clock": 5}, **{f"custom-delete-01-{i}": 1 for i in range(20)},
+        return {"state": "completed", "completed_runs": 80, "expected_runs": 80,
+                "expected_cases": {**{identity: 5 for identity in REQUIRED_DEMOS}, **{f"custom-delete-01-{i}": 1 for i in range(20)},
                                    **{f"custom-added-fact-01-{i}": 1 for i in range(20)}}}
 
     def test_engineering_success_requires_separate_semantic_review(self):
@@ -32,6 +34,14 @@ class AcceptanceTests(unittest.TestCase):
                                (self.rows(), {**self.manifest(), "state": "partial"})]:
             self.assertFalse(acceptance_report(rows, manifest)["acceptance_pass"])
             self.assertFalse(acceptance_report(rows, manifest)["complete"])
+
+    def test_omitting_a_demo_cannot_pass_with_an_adjusted_manifest(self):
+        rows = [row for row in self.rows() if row["case_id"] != "demo-clock"]
+        manifest = self.manifest()
+        del manifest["expected_cases"]["demo-clock"]
+        manifest.update(completed_runs=75, expected_runs=75)
+        self.assertTrue(acceptance_report(rows, manifest)["complete"])
+        self.assertFalse(acceptance_report(rows, manifest)["engineering_criteria_pass"])
 
     def test_any_unsafe_candidate_admitted_fails_the_gate(self):
         rows = self.rows()
@@ -52,13 +62,13 @@ class AcceptanceTests(unittest.TestCase):
 
     def test_deletion_threshold_is_nineteen_of_twenty(self):
         rows = self.rows()
-        rows[5]["outcome"] = "fallback"
-        rows[5]["constraints_pass"] = False
+        rows[40]["outcome"] = "fallback"
+        rows[40]["constraints_pass"] = False
         report = acceptance_report(rows, self.manifest())
         self.assertEqual(report["deletion_acceptance_rate"], .95)
         self.assertTrue(report["engineering_criteria_pass"])
-        rows[6]["outcome"] = "fallback"
-        rows[6]["constraints_pass"] = False
+        rows[41]["outcome"] = "fallback"
+        rows[41]["constraints_pass"] = False
         self.assertFalse(acceptance_report(rows, self.manifest())["engineering_criteria_pass"])
 
 

@@ -129,7 +129,7 @@ final class EspressoFallbackTests: XCTestCase {
                 : 0
             XCTAssertLessThan(growth, 384 * 1_024 * 1_024, "Repeated MLX requests retained \(growth) bytes")
         }
-        await processor.unloadLLM()
+        try await processor.resetModels()
         try await Task.sleep(for: .milliseconds(500))
         XCTAssertLessThan(Memory.activeMemory, 1 * 1_024 * 1_024)
         XCTAssertEqual(Memory.cacheMemory, 0)

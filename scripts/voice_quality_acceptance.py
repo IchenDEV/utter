@@ -2,6 +2,8 @@
 from collections import Counter
 from typing import Any
 
+REQUIRED_DEMOS = {"demo-clock", "demo-pieces", "demo-items", "demo-entries", "demo-date",
+                  "demo-clock-minutes", "demo-version", "demo-terms"}
 
 def acceptance_report(records: list[dict[str, Any]], manifest: dict[str, Any] | None) -> dict[str, Any]:
     rows = [row for row in records if "case_id" in row]
@@ -18,7 +20,7 @@ def acceptance_report(records: list[dict[str, Any]], manifest: dict[str, Any] | 
     constraints = all(row.get("constraints_pass") is True for row in rows
                       if not row["case_id"].startswith("custom-delete-"))
     demo_counts = Counter(row["case_id"] for row in demos)
-    demo_pass = bool(demos) and all(count >= 5 for count in demo_counts.values()) and all(
+    demo_pass = REQUIRED_DEMOS.issubset(demo_counts) and all(count >= 5 for count in demo_counts.values()) and all(
         row.get("outcome") == "accepted" and row.get("constraints_pass") is True for row in demos
     )
     deletion_accepted = sum(row.get("outcome") == "accepted" and row.get("constraints_pass") is True for row in deletion)

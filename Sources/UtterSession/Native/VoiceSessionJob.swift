@@ -152,7 +152,7 @@ final class VoiceSessionJob: SessionJob {
         }
         return SessionCompletion(transcript: transcript, text: text, acceptance: acceptance,
             record: InputRecord(id: intent.id, date: Date(), rawText: transcript, processedText: text, wasProcessed: mode != .direct,
-                                context: inputContext, formatKind: formatKind))
+                                context: inputContext, formatKind: formatKind), generationOutcome: output.generationOutcome)
     }
 
     func check(_ control: any SessionJobControl) throws {

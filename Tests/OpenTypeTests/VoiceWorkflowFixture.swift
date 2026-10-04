@@ -197,6 +197,7 @@ final class WorkflowDelivery: PreparedDelivery {
 
 @MainActor
 final class WorkflowRecipe: ModeRecipeService {
+    var generationOutcome: EspressoGenerationOutcome?
     var requests: [ProcessingRequest] = []
     var resolution: SpokenEditCommandLLMResolution?
     var resolutionContexts: [SpokenEditCommandResolutionContext] = []
@@ -223,7 +224,7 @@ final class WorkflowRecipe: ModeRecipeService {
             return ProcessingResult(text: request.text + " Formatted.",
                 decision: ProcessingDecision(.accepted, translation: assessment))
         }
-        return ProcessingResult(text: request.text + " Formatted.")
+        return ProcessingResult(text: request.text + " Formatted.", generationOutcome: generationOutcome)
     }
     func releaseFormatting() { formattingWaiter?.resume(); formattingWaiter = nil }
 }

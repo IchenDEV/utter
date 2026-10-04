@@ -23,6 +23,7 @@ python3 scripts/check-module-boundaries.py
 python3 scripts/tests/test_module_boundaries.py
 python3 scripts/check-resource-bundles.py
 python3 scripts/tests/test_resource_bundles.py
+python3 -m unittest discover -s scripts/tests
 
 step "Checking SDLC artifacts and harness regression tests"
 bash scripts/sdlc-checks.sh

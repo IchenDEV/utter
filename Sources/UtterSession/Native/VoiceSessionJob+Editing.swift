@@ -20,6 +20,7 @@ extension VoiceSessionJob {
         let outputCommand: DeliveryCommand
         let outputTarget: (any OutputTargetLease)?
         let text: String
+        var generationOutcome: EspressoGenerationOutcome?
         let recordsHistory: Bool
         switch command {
         case .replaceLast(let replacement):
@@ -30,7 +31,7 @@ extension VoiceSessionJob {
             recordsHistory = true
         case .rewriteLast(let instruction):
             let anchor = try recentAnchor()
-            text = try await rewrite(anchor.text, instruction: instruction, request: request, control: control)
+            (text, generationOutcome) = try await rewrite(anchor.text, instruction: instruction, request: request, control: control)
             outputCommand = .replaceAnchor(text, anchor)
             outputTarget = anchor.target
             recordsHistory = true
@@ -41,7 +42,7 @@ extension VoiceSessionJob {
             recordsHistory = true
         case .rewriteSelection(let instruction):
             let selectedTarget = try selectionTarget()
-            text = try await rewrite(selectedTarget.selectedText ?? "", instruction: instruction, request: request, control: control)
+            (text, generationOutcome) = try await rewrite(selectedTarget.selectedText ?? "", instruction: instruction, request: request, control: control)
             outputCommand = .replaceSelection(text)
             outputTarget = selectedTarget
             recordsHistory = true
@@ -61,7 +62,7 @@ extension VoiceSessionJob {
         let acceptance = try await deliver(outputCommand, target: outputTarget, control: control)
         return SessionCompletion(transcript: request.text, text: text, acceptance: acceptance,
             record: recordsHistory || !acceptance.isAccepted ? InputRecord(id: intent.id, date: Date(), rawText: request.text,
-                processedText: text, wasProcessed: true, context: request.inputContext) : nil)
+                processedText: text, wasProcessed: true, context: request.inputContext) : nil, generationOutcome: generationOutcome)
     }
 
     private func recentAnchor() throws -> any OutputAnchor {
@@ -84,13 +85,15 @@ extension VoiceSessionJob {
     }
 
     private func rewrite(_ text: String, instruction: SelectionRewriteIntent, request: ProcessingRequest,
-                         control: any SessionJobControl) async throws -> String {
+                         control: any SessionJobControl) async throws -> (String, EspressoGenerationOutcome?) {
         let recipe = try await dependencies.recipes.create(id: editRecipeID, request: ())
         try check(control)
+        let measurement = control.beginStage(.processing)
+        defer { control.endStage(measurement) }
         let output = try await recipe.process(ProcessingRequest(mode: .selectionEdit(instruction, spokenCommand: request.text),
             text: text, options: options, dictionary: settings.dictionary, screenContext: request.screenContext,
             screenImage: request.screenImage, memoryContext: request.memoryContext, inputContext: request.inputContext))
         try check(control)
-        return try replacementText(output.text)
+        return (try replacementText(output.text), output.generationOutcome)
     }
 }

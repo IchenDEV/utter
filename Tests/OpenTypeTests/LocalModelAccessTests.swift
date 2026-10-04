@@ -44,7 +44,7 @@ final class LocalModelAccessTests: XCTestCase {
         XCTAssertEqual(events, ["nested"])
     }
 
-    func testUnloadWaitsForActiveLocalModelOperation() async {
+    func testUnloadWaitsForActiveLocalModelOperation() async throws {
         let processor = TextProcessor()
         let recorder = EventRecorder()
         let operationStarted = expectation(description: "Local model operation started")
@@ -63,7 +63,7 @@ final class LocalModelAccessTests: XCTestCase {
 
         let unload = Task {
             unloadStarted.fulfill()
-            await processor.unloadLLM()
+            try await processor.resetModels()
             await recorder.append("unload-end")
         }
         await fulfillment(of: [unloadStarted], timeout: 1)
@@ -74,7 +74,7 @@ final class LocalModelAccessTests: XCTestCase {
         releaseContinuation.yield()
         releaseContinuation.finish()
         try? await operation.value
-        await unload.value
+        try await unload.value
 
         let finalEvents = await recorder.snapshot()
         XCTAssertEqual(finalEvents, ["operation-start", "operation-end", "unload-end"])

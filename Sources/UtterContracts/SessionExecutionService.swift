@@ -57,10 +57,11 @@ package struct SessionExecutionSnapshot: Equatable, Sendable {
     package let audioLevel: Float
     package let mode: TextProcessingMode?
     package let recoveryAction: SessionRecoveryAction?
+    package let generationOutcome: EspressoGenerationOutcome?
     package init(id: UUID? = nil, phase: SessionExecutionPhase? = nil, transcript: String = "",
                  text: String = "", error: String? = nil, isBusy: Bool = false, deliveryStatus: DeliveryStatus? = nil,
                  performance: SessionPerformance? = nil, audioLevel: Float = 0, mode: TextProcessingMode? = nil,
-                 recoveryAction: SessionRecoveryAction? = nil) {
+                 recoveryAction: SessionRecoveryAction? = nil, generationOutcome: EspressoGenerationOutcome? = nil) {
         self.id = id; self.phase = phase; self.transcript = transcript
         self.text = text; self.error = error; self.isBusy = isBusy
         self.deliveryStatus = deliveryStatus
@@ -68,6 +69,7 @@ package struct SessionExecutionSnapshot: Equatable, Sendable {
         self.audioLevel = audioLevel.isFinite ? min(1, max(0, audioLevel)) : 0
         self.mode = mode
         self.recoveryAction = recoveryAction
+        self.generationOutcome = generationOutcome
     }
 }
 
@@ -101,13 +103,15 @@ package struct SessionCompletion {
     package let followup: (any SessionFollowupWork)?
     package let historyReplacement: SessionHistoryReplacement?
     package let outputMutation: SessionOutputMutation
+    package let generationOutcome: EspressoGenerationOutcome?
     package init(transcript: String, text: String, acceptance: SessionAcceptance, record: InputRecord? = nil,
                  followup: (any SessionFollowupWork)? = nil, historyReplacement: SessionHistoryReplacement? = nil,
-                 outputMutation: SessionOutputMutation = .remember) {
+                 outputMutation: SessionOutputMutation = .remember, generationOutcome: EspressoGenerationOutcome? = nil) {
         self.transcript = transcript; self.text = text; self.acceptance = acceptance; self.record = record
         self.followup = followup
         self.historyReplacement = historyReplacement
         self.outputMutation = outputMutation
+        self.generationOutcome = generationOutcome
     }
 }
 

@@ -12,6 +12,7 @@ final class SessionDriverTests: XCTestCase {
         defer { fixture.remove() }
         let job = HeldSessionJob()
         job.accepted = true
+        job.generationOutcome = .fallback
         let factory = DriverFactory(job: job)
         let driver = fixture.driver(factory)
         let intent = SessionIntent(input: .local)
@@ -33,6 +34,7 @@ final class SessionDriverTests: XCTestCase {
         await stop.value
         XCTAssertEqual(driver.snapshot.id, intent.id)
         XCTAssertEqual(driver.snapshot.phase, .completed)
+        XCTAssertEqual(driver.snapshot.generationOutcome, .fallback)
         XCTAssertFalse(driver.promoteToTranslation(intent.id, reason: .recording))
         await driver.close()
     }
@@ -286,6 +288,7 @@ private final class DriverFactory: SessionWorkflowFactory {
 
 @MainActor
 private final class HeldSessionJob: SessionJob {
+    var generationOutcome: EspressoGenerationOutcome?
     var promotions = 0
     func promoteToTranslation() -> TextProcessingMode? {
         guard promotions == 0 else { return nil }
@@ -309,7 +312,7 @@ private final class HeldSessionJob: SessionJob {
         if !accepted { throw CancellationError() }
         return SessionCompletion(transcript: "raw", text: "accepted", acceptance: .delivery(
             DeliveryReceipt(operationID: UUID(), disposition: disposition, effect: .paste, confirmation: .targetValue)
-        ), record: InputRecord(rawText: "raw", processedText: "accepted", wasProcessed: true))
+        ), record: InputRecord(rawText: "raw", processedText: "accepted", wasProcessed: true), generationOutcome: generationOutcome)
     }
     func revoke() {}
     func close() async {
