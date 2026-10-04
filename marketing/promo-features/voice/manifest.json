@@ -1,0 +1,146 @@
+[
+ {
+  "id": "n0_intro",
+  "role": "narration",
+  "file": "n0_intro.mp3",
+  "start": 0.25,
+  "speech": [
+   0.25,
+   2.286
+  ],
+  "text": "Utter，不只是语音输入。",
+  "gain": 1.0
+ },
+ {
+  "id": "d1_list",
+  "role": "dictation",
+  "file": "d1_list.mp3",
+  "start": 3.45,
+  "speech": [
+   3.45,
+   9.823
+  ],
+  "text": "第一，先把需求过一下。第二，确认时间。第三，把预算拉出来。",
+  "gain": 1.0
+ },
+ {
+  "id": "n1_list",
+  "role": "narration",
+  "file": "n1_list.mp3",
+  "start": 10.423,
+  "speech": [
+   10.423,
+   12.75
+  ],
+  "text": "口述清单，自动整理成条目。",
+  "gain": 1.0
+ },
+ {
+  "id": "d2_command",
+  "role": "dictation",
+  "file": "d2_command.mp3",
+  "start": 14.573,
+  "speech": [
+   14.573,
+   17.827
+  ],
+  "text": "帮我回复：可以，改到周二上午十点。",
+  "gain": 1.0
+ },
+ {
+  "id": "n2_command",
+  "role": "narration",
+  "file": "n2_command.mp3",
+  "start": 18.427,
+  "speech": [
+   18.427,
+   21.409
+  ],
+  "text": "语音指令，读懂屏幕，替你起草回复。",
+  "gain": 1.0
+ },
+ {
+  "id": "d3_translate",
+  "role": "dictation",
+  "file": "d3_translate.mp3",
+  "start": 22.059,
+  "speech": [
+   22.059,
+   23.754
+  ],
+  "text": "没问题，我今晚发给你。",
+  "gain": 1.0
+ },
+ {
+  "id": "n3_translate",
+  "role": "narration",
+  "file": "n3_translate.mp3",
+  "start": 24.359,
+  "speech": [
+   24.359,
+   26.395
+  ],
+  "text": "说中文，直接写英文。",
+  "gain": 1.0
+ },
+ {
+  "id": "d4_lexicon",
+  "role": "dictation",
+  "file": "d4_lexicon.mp3",
+  "start": 27.759,
+  "speech": [
+   27.759,
+   32.03
+  ],
+  "text": "把 Kubernetes 的副本数调到三，再检查一下 Redis 缓存。",
+  "gain": 1.0
+ },
+ {
+  "id": "n4_lexicon",
+  "role": "narration",
+  "file": "n4_lexicon.mp3",
+  "start": 32.63,
+  "speech": [
+   32.63,
+   35.466
+  ],
+  "text": "行业词库，让专业术语一次写对。",
+  "gain": 1.0
+ },
+ {
+  "id": "n5_style",
+  "role": "narration",
+  "file": "n5_style.mp3",
+  "start": 35.58,
+  "speech": [
+   35.58,
+   38.853
+  ],
+  "text": "同一句话，口语还是专业，随你切换。",
+  "gain": 1.0
+ },
+ {
+  "id": "n6_models",
+  "role": "narration",
+  "file": "n6_models.mp3",
+  "start": 40.08,
+  "speech": [
+   40.08,
+   45.389
+  ],
+  "text": "Qwen、Whisper、Gemma，本地模型随你选，也能接入自己的 API。",
+  "gain": 1.0
+ },
+ {
+  "id": "n7_end",
+  "role": "narration",
+  "file": "n7_end.mp3",
+  "start": 46.139,
+  "speech": [
+   46.139,
+   48.466
+  ],
+  "text": "Utter。说出来，就写好了。",
+  "gain": 1.0
+ }
+]

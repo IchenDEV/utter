@@ -1,0 +1,51 @@
+{
+ "hash": "e0bbd641c153",
+ "request": {
+  "text": "说中文，直接写英文。",
+  "voice_id": "MI36FIkp9wRP7cpWKPTl",
+  "model_id": "eleven_v4",
+  "settings": {
+   "stability": 0.55,
+   "similarity_boost": 0.8,
+   "style": 0.1,
+   "use_speaker_boost": true
+  },
+  "language": "zh"
+ },
+ "chars": [
+  "说",
+  "中",
+  "文",
+  "，",
+  "直",
+  "接",
+  "写",
+  "英",
+  "文",
+  "。"
+ ],
+ "start": [
+  0.0,
+  0.32,
+  0.52,
+  0.72,
+  1.12,
+  1.36,
+  1.6,
+  1.84,
+  2.04,
+  2.24
+ ],
+ "end": [
+  0.32,
+  0.52,
+  0.72,
+  1.12,
+  1.36,
+  1.6,
+  1.84,
+  2.04,
+  2.24,
+  2.56
+ ]
+}

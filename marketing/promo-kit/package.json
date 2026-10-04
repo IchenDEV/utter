@@ -1,0 +1,8 @@
+{
+  "name": "utter-promo-kit",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "puppeteer-core": "23.11.1"
+  }
+}

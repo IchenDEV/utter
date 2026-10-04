@@ -34,12 +34,18 @@
 - **智能整理** — LLM 根据上下文清理语气词、修正口误、结构化排版
 - **语音指令** — 说出指令，AI 结合屏幕内容生成回复
 
+## 演示视频
+
+<p align="center"><a href="https://utter.idevlab.dev/#videos"><img src="docs/assets/videos/utter-features-51s-poster.png" width="31%" alt="功能一览" /></a> <a href="https://utter.idevlab.dev/#videos"><img src="docs/assets/videos/utter-day-58s-poster.png" width="31%" alt="办公室里的一天" /></a> <a href="https://utter.idevlab.dev/#videos"><img src="docs/assets/videos/utter-offline-28s-poster.png" width="31%" alt="本地语音输入" /></a></p>
+
+可在[官网](https://utter.idevlab.dev/#videos)观看，或直接下载 MP4：[功能一览 (0:51)](docs/assets/videos/utter-features-51s-zh-vo.mp4) · [办公室里的一天 (0:58)](docs/assets/videos/utter-day-58s-zh-vo.mp4) · [本地语音输入 (0:28)](docs/assets/videos/utter-offline-28s-zh-vo.mp4)。三支均为普通话配音；界面为真实应用的动画重建，示例文本仅作演示。
+
 ## 功能特性
 
 | 功能 | 说明 |
 |---|---|
-| **多语音引擎** | Apple 语音识别、WhisperKit、豆包语音识别、Qwen3-ASR 或 MiMo-V2.5-ASR |
-| **智能文字处理** | 本地 MLX Qwen2.5/Qwen3 或远程 LLM 理解口述意图 — 上下文感知的语气词清理、“算了/删掉刚才”重说处理、自动纠正、口述标点、技术词、数字/范围/单位和列表格式化 |
+| **多语音引擎** | 本地 Qwen3-ASR、Confucius4-R2T2、FireRedASR2、Mega-ASR、WhisperKit 或设备端 Apple 语音识别；豆包语音识别为远程选项 |
+| **智能文字处理** | 本地 MLX 模型（Qwen3.5 / Qwen3 / Gemma）或远程 LLM 理解口述意图 — 上下文感知的语气词清理、“算了/删掉刚才”重说处理、自动纠正、口述标点、技术词、数字/范围/单位和列表格式化 |
 | **LLM 负责口述格式** | 大小写、无空格、标识符、文件路径、快捷键、表情、Markdown 任务、日期时间、数量、单位、公式、分数和数字串都由智能整理/语音指令提示词交给 LLM 判断，不在本地写死替换规则 |
 | **语音编辑口令** | 在语音指令模式下，由 LLM 分类安全结构化动作，支持上一段/选区替换、撤销、校对、跨语言回复起草、接受/拒绝/追问回复、会议纪要、关键要点/结论/问题/风险/截止时间/负责人/行动项提取、标题化、摘要、语气改写、扩写、表格化、列表化、删除与改写口令 |
 | **直出与预览边界** | 原文直出、流式 HUD、集成 partial 和快速插入草稿尽量保留 ASR 原文，只做词库、空白、重复转写和非语音垃圾过滤 |
@@ -51,7 +57,7 @@
 | **输入记忆** | 近期输入历史作为 LLM 上下文，提升连续输入准确度 |
 | **行业词库** | 可选医疗、法律、金融财会或软件技术词库，为 Apple Speech / Whisper 提供优先术语并辅助输出规范化；个人词条优先 |
 | **编辑规则** | 自定义文本替换规则，每次输出自动应用 |
-| **语言风格预设** | 简洁精炼 / 正式书面 / 日常口语 / 自定义提示词 |
+| **语言风格预设** | 口语 / 专业 / 自定义提示词 |
 | **输入历史与统计** | 完整历史记录，原始文本与润色结果对比，字数统计，可配置保留时长 |
 | **双语界面** | 中英文界面切换，独立于识别语言设置 |
 | **音效反馈** | 录音开始/停止时播放提示音 |
@@ -61,7 +67,7 @@
 
 - **系统**：macOS 26 (Tahoe) 或更高版本
 - **芯片**：Apple Silicon（M1 / M2 / M3 / M4）
-- **空间**：最低约 400 MB（Apple Speech + Qwen3-0.6B），大模型最多约 4 GB
+- **空间**：最低约 0.7 GB（Apple 语音 + Qwen3.5 0.8B）；默认配置（Apple 语音 + Qwen3.5 2B）约 1.8 GB；更大的识别和整理模型还需要数 GB
 
 ## 安装
 
@@ -108,7 +114,7 @@ swift test
 1. 启动 Utter — 菜单栏出现波形图标
 2. 新手引导自动启动，引导完成权限和模型配置
 3. 授予 **麦克风** 和 **辅助功能** 权限（必需）
-4. 等待 LLM 模型下载完成（约 335 MB，仅首次）
+4. 等待默认整理模型（Qwen3.5 2B，约 1.7 GB）下载完成，仅首次
 5. 长按 **Fn** 键开始语音输入，松开后文字自动插入当前位置
 
 ## 权限说明
@@ -116,10 +122,21 @@ swift test
 | 权限 | 用途 | 必需 |
 |---|---|---|
 | 麦克风 | 语音采集 | 是 |
-| 辅助功能 | 全局快捷键 + 文本注入（模拟粘贴） | 是 |
+| 辅助功能 | 全局快捷键、文本写入（剪贴板 + 模拟 ⌘V）、读取当前输入框内容作为上下文 | 是 |
 | 语音识别 | Apple 语音识别引擎 | 使用 Apple Speech 时需要 |
 | 屏幕录制 | OCR 屏幕文字辅助纠错 + 语音指令模式 | 可选 |
 | 网络 | 下载模型；远程 LLM API 调用 | 首次运行 / 远程 LLM 模式 |
+
+## 本地模型
+
+以下模型都在你的 Mac 上运行。模型下载一次后，断网也能继续听写。
+
+| 环节 | 模型 | 说明 |
+|---|---|---|
+| 语音识别 | Qwen3-ASR 1.7B（推荐）、Confucius4-R2T2、FireRedASR2-AED、Mega-ASR、WhisperKit（large-v3-turbo … tiny）、Apple 语音识别（设备端） | Qwen3-ASR 与 Confucius 通过原生 Swift + MLX 运行；FireRed、Mega-ASR 通过 MLX 运行；Apple 语音强制设备端识别 |
+| 文字整理（LLM） | Qwen3.5 0.8B / **2B（默认）** / 9B / 35B-A3B、Qwen3 0.6B–30B-A3B、Qwen2.5、Gemma 4 E2B / E4B、Gemma 3 1B / 4B / 12B | 基于 Apple Silicon 上的 MLX；实验性的 ANE-LM 运行时可运行本地 Qwen3 模型；也可以添加自己的 MLX 模型 |
+
+远程选项需要手动开启：豆包（火山引擎）语音识别和下方的远程 LLM 服务商会把音频或文本发送给对应服务商。
 
 ## 远程 LLM 服务商
 
@@ -174,11 +191,12 @@ Sources/
 ## 技术栈
 
 - [WhisperKit](https://github.com/argmaxinc/argmax-oss-swift) — 离线 Whisper 语音识别
-- [mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm) — Apple Silicon 本地 LLM 推理（Qwen2.5 / Qwen3）
+- [mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm) — Apple Silicon 本地 LLM 推理（Qwen3.5 / Qwen3 / Gemma）
 - **SwiftUI + AppKit** — macOS 原生 UI
 - **ScreenCaptureKit + Vision** — 屏幕 OCR
 - **AVAudioEngine** — 低延迟麦克风采集
 - **Apple Speech Framework** — 系统语音识别
+- **MLX 上的 Qwen3-ASR / FireRedASR2 / Mega-ASR** — 本地语音识别
 
 ## License
 

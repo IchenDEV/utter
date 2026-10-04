@@ -1,0 +1,17 @@
+/* Local voice input promo specifics: desk outline and the local-model diagram. */
+#desk-frame { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; pointer-events: none;
+  border: 2px solid rgba(123, 127, 242, 0); }
+
+#privacy { position: absolute; inset: 0; }
+.pv-label { position: absolute; font-size: 22px; font-weight: 700; color: var(--indigo); letter-spacing: .02em; }
+.pv-node { position: absolute; width: 230px; padding: 22px 18px; border-radius: 22px; background: rgba(255, 255, 255, .92);
+  box-shadow: 0 14px 40px rgba(40, 42, 90, .14), 0 0 0 .5px rgba(0, 0, 0, .06); text-align: center; }
+.pv-node .ic { width: 46px; height: 46px; margin: 0 auto 12px; color: var(--indigo); }
+.pv-node .t { font-size: 24px; font-weight: 700; }
+.pv-node .d { font-size: 17px; color: var(--mut); margin-top: 6px; }
+.pv-link { position: absolute; height: 3px; border-radius: 2px; background: var(--brand); transform-origin: 0 50%; }
+.pv-shot { position: absolute; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(40, 42, 90, .14), 0 0 0 .5px rgba(0, 0, 0, .08); background: #fff; }
+.pv-shot img { display: block; }
+
+#veil { position: absolute; inset: 0; background: rgb(246, 246, 248); opacity: 0; }
+.pv-node.wide .d { font-size: 18px; line-height: 1.5; color: #4b4e5a; font-weight: 600; }

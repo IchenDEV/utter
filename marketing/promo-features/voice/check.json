@@ -1,0 +1,74 @@
+[
+ {
+  "id": "n0_intro",
+  "script": "Utter，不只是语音输入。",
+  "heard": "Utter 不只是语音输入。",
+  "cer": 0.0
+ },
+ {
+  "id": "d1_list",
+  "script": "第一，先把需求过一下。第二，确认时间。第三，把预算拉出来。",
+  "heard": "第一，先把需求过一下。第二，确认时间。第三，把预算拉出来。",
+  "cer": 0.0
+ },
+ {
+  "id": "n1_list",
+  "script": "口述清单，自动整理成条目。",
+  "heard": "口述清单自动整理成条目",
+  "cer": 0.0
+ },
+ {
+  "id": "d2_command",
+  "script": "帮我回复：可以，改到周二上午十点。",
+  "heard": "帮我回复：可以，改到周二上午十点。",
+  "cer": 0.0
+ },
+ {
+  "id": "n2_command",
+  "script": "语音指令，读懂屏幕，替你起草回复。",
+  "heard": "语音指令，读懂屏幕，替你起草回复。",
+  "cer": 0.0
+ },
+ {
+  "id": "d3_translate",
+  "script": "没问题，我今晚发给你。",
+  "heard": "没问题，我今晚发给你。",
+  "cer": 0.0
+ },
+ {
+  "id": "n3_translate",
+  "script": "说中文，直接写英文。",
+  "heard": "说中文直接写英文",
+  "cer": 0.0
+ },
+ {
+  "id": "d4_lexicon",
+  "script": "把 Kubernetes 的副本数调到三，再检查一下 Redis 缓存。",
+  "heard": "把 Kubernetes 的副本数调到3，再检查一下 Redis 缓存。",
+  "cer": 0.0
+ },
+ {
+  "id": "n4_lexicon",
+  "script": "行业词库，让专业术语一次写对。",
+  "heard": "行业词库让专业术语一次写对。",
+  "cer": 0.0
+ },
+ {
+  "id": "n5_style",
+  "script": "同一句话，口语还是专业，随你切换。",
+  "heard": "同一句话，口语还是专业，随你切换。",
+  "cer": 0.0
+ },
+ {
+  "id": "n6_models",
+  "script": "Qwen、Whisper、Gemma，本地模型随你选，也能接入自己的 API。",
+  "heard": "Qwen、Whisper、Gemma，本地模型随你选，也能接入自己的API。",
+  "cer": 0.0
+ },
+ {
+  "id": "n7_end",
+  "script": "Utter。说出来，就写好了。",
+  "heard": "Otter。说出来就写好了。",
+  "cer": 0.083
+ }
+]

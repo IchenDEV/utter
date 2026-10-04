@@ -1,0 +1,45 @@
+{
+ "hash": "8c640a24c224",
+ "request": {
+  "text": "一天要写多少字？",
+  "voice_id": "MI36FIkp9wRP7cpWKPTl",
+  "model_id": "eleven_v4",
+  "settings": {
+   "stability": 0.55,
+   "similarity_boost": 0.8,
+   "style": 0.1,
+   "use_speaker_boost": true
+  },
+  "language": "zh"
+ },
+ "chars": [
+  "一",
+  "天",
+  "要",
+  "写",
+  "多",
+  "少",
+  "字",
+  "？"
+ ],
+ "start": [
+  0.0,
+  0.48,
+  0.64,
+  0.8,
+  0.96,
+  1.16,
+  1.36,
+  1.52
+ ],
+ "end": [
+  0.48,
+  0.64,
+  0.8,
+  0.96,
+  1.16,
+  1.36,
+  1.52,
+  1.92
+ ]
+}

@@ -1,0 +1,54 @@
+{
+ "hash": "dc681bd12e57",
+ "request": {
+  "text": "没问题，我今晚发给你。",
+  "voice_id": "ByhETIclHirOlWnWKhHc",
+  "model_id": "eleven_v4",
+  "settings": {
+   "stability": 0.45,
+   "similarity_boost": 0.8,
+   "style": 0.15,
+   "use_speaker_boost": true
+  },
+  "language": "zh"
+ },
+ "chars": [
+  "没",
+  "问",
+  "题",
+  "，",
+  "我",
+  "今",
+  "晚",
+  "发",
+  "给",
+  "你",
+  "。"
+ ],
+ "start": [
+  0.0,
+  0.64,
+  0.8,
+  0.96,
+  1.04,
+  1.12,
+  1.32,
+  1.52,
+  1.68,
+  1.84,
+  2.0
+ ],
+ "end": [
+  0.64,
+  0.8,
+  0.96,
+  1.04,
+  1.12,
+  1.32,
+  1.52,
+  1.68,
+  1.84,
+  2.0,
+  2.4
+ ]
+}
