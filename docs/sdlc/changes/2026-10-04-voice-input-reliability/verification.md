@@ -20,6 +20,8 @@
 | 原生交付检查 `36b34df` | [macOS CI](https://github.com/IchenDEV/utter/actions/runs/37219757108)：SwiftUI 标题组件的 private 访问域阻断编译，单元测试未运行 | 已将共享标题组件移至独立文件；修正结果待下一次 CI |
 | 原生交付修正 `94972dd` | [macOS CI](https://github.com/IchenDEV/utter/actions/runs/37220871988)：应用构建通过；1071 tests，18 skips，1 failure | 失败为 Darwin 允许半个 UTF-16 代理对的范围转换；已改为显式边界检查，待下一次 CI 确认 |
 | 组合键、采集与取消契约 | Linux 全套 585 tests，0 failures | 覆盖即时启动、1000ms 分类与录音中的晚切换、同一 job/捕获 ID、迟到停止、单调时钟、回调 drain、尾部预算及停止 waiter；新增原生冷准备和设备错误用例待 CI |
+| 原生组合键检查 `983d831` | [macOS CI](https://github.com/IchenDEV/utter/actions/runs/37223097651)：热键入口缺少 Foundation 导入，阻断编译；测试未运行 | 已修正导入；下一检查点确认原生采集、手势及 UTF-16 修正 |
+| 翻译语言与交付门槛 | Linux 全套 593 tests，0 failures | 覆盖 0.7/0.2 门槛、非语言内容、目标证明和旧决策读取；系统语言识别及共享会话拒绝写入待 macOS CI |
 | `ci-basic-checks.sh` | 模块、资源、脚本与 plist 检查通过；在缺少 `PlistBuddy` 时停止 | 完整检查必须在 macOS 运行 |
 | 真实模型质量 | 未运行 | 合成语料和宿主已建立，仍需明确的已安装模型 |
 | 原生窗口、权限、麦克风与剪贴板 | 未运行 | 按约定由用户本机验证 |

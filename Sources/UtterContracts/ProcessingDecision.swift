@@ -4,10 +4,12 @@ package struct ProcessingDecision: Codable, Equatable, Sendable {
     package enum Disposition: String, Codable, Sendable { case direct, accepted, fallback, unverified, failed }
     package let disposition: Disposition
     package let reason: String?
+    package let translation: TranslationAssessment?
 
-    package init(_ disposition: Disposition, reason: String? = nil) {
+    package init(_ disposition: Disposition, reason: String? = nil, translation: TranslationAssessment? = nil) {
         self.disposition = disposition
         self.reason = reason
+        self.translation = translation
     }
 }
 

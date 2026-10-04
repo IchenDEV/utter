@@ -172,6 +172,8 @@ final class WorkflowRecipe: ModeRecipeService {
     var resolution: SpokenEditCommandLLMResolution?
     var resolutionContexts: [SpokenEditCommandResolutionContext] = []
     var holdFormatting = false
+    var confirmsTranslation = true
+    var translationProofTarget: TranslationLanguage?
     var formatting = false
     private var formattingWaiter: CheckedContinuation<Void, Never>?
     func resolveEditCommand(_ request: ProcessingRequest, context: SpokenEditCommandResolutionContext) async throws -> SpokenEditCommandLLMResolution? {
@@ -184,6 +186,13 @@ final class WorkflowRecipe: ModeRecipeService {
         if request.mode == .formatting {
             formatting = true
             if holdFormatting { await withCheckedContinuation { formattingWaiter = $0 } }
+        }
+        if case .translation(let target) = request.mode, confirmsTranslation {
+            let language = translationProofTarget ?? target
+            let assessment = TranslationAssessment.assess(target: language,
+                hasLinguisticContent: true, scores: [language.rawValue: 1])
+            return ProcessingResult(text: request.text + " Formatted.",
+                decision: ProcessingDecision(.accepted, translation: assessment))
         }
         return ProcessingResult(text: request.text + " Formatted.")
     }

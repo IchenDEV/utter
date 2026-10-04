@@ -163,6 +163,8 @@
 "translation.language.spanish" = "西班牙语";
 "translation.language.french" = "法语";
 "translation.language.german" = "德语";
+"translation.wrong_language" = "结果不是目标语言。可复制后自行使用。";
+"translation.unverifiable" = "无法确认结果的语言。可复制后自行使用。";
 "settings.sound_cues" = "播放提示音";
 "settings.microphone" = "麦克风";
 "settings.system_default" = "系统默认";

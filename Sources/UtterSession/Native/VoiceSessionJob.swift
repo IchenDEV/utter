@@ -119,6 +119,9 @@ final class VoiceSessionJob: SessionJob {
         try check(control)
         let text = output.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { throw IntegrationError.operationFailed }
+        if let refused = unverifiedTranslation(output, transcript: transcript, text: text, context: inputContext) {
+            return refused
+        }
         let acceptance: SessionAcceptance
         if intent.clientID != nil {
             acceptance = .returnedText

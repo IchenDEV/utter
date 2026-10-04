@@ -163,6 +163,8 @@
 "translation.language.spanish" = "Spanish";
 "translation.language.french" = "French";
 "translation.language.german" = "German";
+"translation.wrong_language" = "The result is not in the target language. Copy it to use it.";
+"translation.unverifiable" = "The result's language could not be confirmed. Copy it to use it.";
 "settings.sound_cues" = "Sound cues";
 "settings.microphone" = "Microphone";
 "settings.system_default" = "System Default";

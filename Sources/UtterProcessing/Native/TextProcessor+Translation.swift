@@ -30,7 +30,15 @@ extension TextProcessor {
                 maxTokens: maxTokens,
                 temperature: 0.1
             )
-            return cleanCommandGeneratedOutput(result, inputLanguage: options.inputLanguage)
+            let candidate = cleanCommandGeneratedOutput(result, inputLanguage: options.inputLanguage)
+            let dictionary = dictionarySnapshot ?? snapshotDictionary()
+            let assessment = TranslationLanguageRecognition.assess(candidate, target: targetLanguage,
+                knownTerms: dictionary.recognitionPhrases)
+            let disposition: ProcessingDecision.Disposition = assessment.status == .confirmed ? .accepted
+                : assessment.status == .wrongLanguage ? .failed : .unverified
+            ProcessingObservations.current?.record(source: prepared, candidate: candidate,
+                decision: ProcessingDecision(disposition, translation: assessment))
+            return candidate
         } catch {
             log.error("[TextProcessor] translation failed: \(error.localizedDescription)")
             return ""

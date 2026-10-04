@@ -9,6 +9,21 @@ import UtterRuntime
 
 @MainActor
 final class ProcessingPluginTests: XCTestCase {
+    func testTranslationCarriesLanguageProofAndRetainsWrongLanguageCandidate() async throws {
+        let candidate = "We have completed the review and will discuss the remaining work at our meeting tomorrow afternoon."
+        for target in [TranslationLanguage.english, .korean] {
+            try await withFixture(output: candidate) { runtime, _, _ in
+                let base = self.request(mode: .translation(target), text: "我们已经完成了检查。")
+                let result = try await runtime.service(ProcessingServices.text).process(base)
+                XCTAssertEqual(result.text, candidate)
+                XCTAssertEqual(result.decision.translation?.target, target)
+                XCTAssertEqual(result.decision.translation?.status, target == .english ? .confirmed : .wrongLanguage)
+                XCTAssertEqual(result.decision.disposition, target == .english ? .accepted : .failed)
+                XCTAssertNil(result.trace, "Default diagnostics must not retain bodies")
+            }
+        }
+    }
+
     func testCustomTransformationAllowsDeletionAndRequiresFactSupport() async throws {
         let source = "Alice has 2 tasks. Review is complete. No refund was promised."
         let cases: [(String, String, ProcessingDecision.Disposition)] = [

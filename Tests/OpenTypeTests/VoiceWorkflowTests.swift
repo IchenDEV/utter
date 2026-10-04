@@ -202,7 +202,8 @@ final class VoiceWorkflowTests: XCTestCase {
         while driver.snapshot.phase != .recording { await Task.yield() }
         fixture.capture.callbacks?.inputUnavailable()
         while driver.snapshot.isBusy { await Task.yield() }
-        XCTAssertEqual(driver.snapshot.phase, .cancelled)
+        XCTAssertEqual(driver.snapshot.phase, .failed)
+        XCTAssertEqual(driver.snapshot.error, AudioCaptureStartFailure.noUsableInput.localizedDescription)
         XCTAssertTrue(fixture.capture.recording.closed)
         XCTAssertTrue(fixture.engine.transcribed.isEmpty)
         XCTAssertTrue(fixture.output.requests.isEmpty)
