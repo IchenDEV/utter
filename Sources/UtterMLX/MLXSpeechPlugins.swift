@@ -35,10 +35,12 @@ extension MLXPlugins {
             let files = try context.require(ModelServices.files)
             let access = try context.require(ModelServices.resourceAccess)
             let log = Log(service: try context.require(IntegrationServices.diagnostics))
-            let cache = MLXSpeechCache { make($0, files, access, log) }
+            let cache = MLXSpeechCache { request in
+                make(request.selection, request.modelFiles.map { $0 as any ModelFilesService } ?? files, access, log)
+            }
             try context.scope.onDispose { await cache.close() }
             let descriptor = ProviderDescriptor(id: id, legacyIDs: [alias.rawValue], displayName: title, recognitionVocabulary: alias == .qwen3 ? .personal : .all)
-            try registry.register(ProviderDefinition(descriptor: descriptor) { request in try await cache.engine(request.selection) }, scope: context.scope)
+            try registry.register(ProviderDefinition(descriptor: descriptor) { request in try await cache.engine(request) }, scope: context.scope)
             try context.provide(key, value: descriptor)
         }
     }
@@ -46,29 +48,31 @@ extension MLXPlugins {
 
 @MainActor
 private final class MLXSpeechCache {
-    private let make: (SpeechSelection) -> any SpeechEngine
-    private var cached: (SpeechSelection, any SpeechEngine)?
+    private let make: (SpeechProviderRequest) -> any SpeechEngine
+    private var cached: (selection: SpeechSelection, revision: String?, engine: any SpeechEngine)?
     private var closed = false
 
-    init(make: @escaping (SpeechSelection) -> any SpeechEngine) { self.make = make }
+    init(make: @escaping (SpeechProviderRequest) -> any SpeechEngine) { self.make = make }
 
-    func engine(_ selection: SpeechSelection) async throws -> any SpeechEngine {
+    func engine(_ request: SpeechProviderRequest) async throws -> any SpeechEngine {
+        let selection = request.selection
+        let revision = request.modelFiles?.revision
         try Task.checkCancellation()
         guard !closed else { throw ProviderCatalogError.closed }
-        if let cached, cached.0 == selection { return cached.1 }
+        if let cached, cached.selection == selection, cached.revision == revision { return cached.engine }
         let previous = cached
         cached = nil
-        if let previous { await previous.1.shutdown() }
+        if let previous { await previous.engine.shutdown() }
         try Task.checkCancellation()
         guard !closed else { throw ProviderCatalogError.closed }
-        let engine = make(selection)
-        cached = (selection, engine)
+        let engine = make(request)
+        cached = (selection, revision, engine)
         return engine
     }
 
     func close() async {
         closed = true
-        if let cached { await cached.1.shutdown() }
+        if let cached { await cached.engine.shutdown() }
         cached = nil
     }
 }

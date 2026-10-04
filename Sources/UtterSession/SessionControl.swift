@@ -4,6 +4,7 @@ import UtterContracts
 @MainActor
 final class SessionControl: SessionJobControl {
     private let current: () -> Bool
+    private let cancelSession: () -> Void
     private let updateSnapshot: (SessionExecutionPhase, String) -> Void
     private var cancelled = false
     private var stopped = false
@@ -11,8 +12,9 @@ final class SessionControl: SessionJobControl {
     private var activationWaiter: CheckedContinuation<Void, Error>?
     private var waiter: CheckedContinuation<Void, Error>?
 
-    init(isCurrent: @escaping () -> Bool, update: @escaping (SessionExecutionPhase, String) -> Void) {
+    init(isCurrent: @escaping () -> Bool, cancel: @escaping () -> Void, update: @escaping (SessionExecutionPhase, String) -> Void) {
         current = isCurrent
+        cancelSession = cancel
         updateSnapshot = update
     }
     var isCurrent: Bool { !cancelled && current() }
@@ -20,6 +22,7 @@ final class SessionControl: SessionJobControl {
         guard isCurrent else { return }
         updateSnapshot(phase, transcript)
     }
+    func cancel() { cancelSession() }
     func activate() { activated = true; activationWaiter?.resume(); activationWaiter = nil }
     func waitForActivation() async throws {
         try Task.checkCancellation()

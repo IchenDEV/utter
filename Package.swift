@@ -22,6 +22,8 @@ let modelDependencies: [Target.Dependency] = [
 let modelExclusions: [String] = []
 let remoteDependencies: [Target.Dependency] = ["UtterMediaContracts"]
 let remoteExclusions: [String] = []
+let sessionDependencies: [Target.Dependency] = ["UtterMediaContracts"]
+let sessionExclusions: [String] = []
 let processingDependencies: [Target.Dependency] = ["UtterMediaContracts"]
 let processingExclusions: [String] = []
 let audioDependencies: [Target.Dependency] = ["UtterMediaContracts"]
@@ -34,6 +36,8 @@ let macServiceExclusions: [String] = []
 let dataExclusions = ["SystemDiagnostics.swift"]
 let modelDependencies: [Target.Dependency] = []
 let modelExclusions = ["SpeechRegistry.swift", "ImageRegistry.swift", "Native"]
+let sessionDependencies: [Target.Dependency] = []
+let sessionExclusions = ["Native"]
 let processingDependencies: [Target.Dependency] = []
 let processingExclusions = ["Native"]
 let audioDependencies: [Target.Dependency] = []
@@ -112,7 +116,8 @@ let portableTargets: [Target] = [
     ),
     .target(
         name: "UtterSession",
-        dependencies: ["UtterRuntime", "UtterContracts"],
+        dependencies: ["UtterRuntime", "UtterContracts"] + sessionDependencies,
+        exclude: sessionExclusions,
         swiftSettings: [.swiftLanguageMode(.v5)]
     ),
     .executableTarget(

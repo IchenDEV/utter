@@ -4,9 +4,11 @@ import UtterRuntime
 
 package struct SpeechProviderRequest {
     package let selection: SpeechSelection
+    package let modelFiles: FrozenModelFiles?
     package let progress: (SpeechModelProgress) -> Void
-    package init(selection: SpeechSelection, progress: @escaping (SpeechModelProgress) -> Void = { _ in }) {
+    package init(selection: SpeechSelection, modelFiles: FrozenModelFiles? = nil, progress: @escaping (SpeechModelProgress) -> Void = { _ in }) {
         self.selection = selection
+        self.modelFiles = modelFiles
         self.progress = progress
     }
 }

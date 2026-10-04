@@ -67,6 +67,7 @@ package struct SessionCompletion {
 package protocol SessionJobControl: AnyObject {
     var isCurrent: Bool { get }
     func update(phase: SessionExecutionPhase, transcript: String)
+    func cancel()
     func waitForStop() async throws
 }
 

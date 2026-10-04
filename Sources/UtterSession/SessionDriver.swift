@@ -50,7 +50,7 @@ package final class SessionDriver: SessionExecutionService {
         let job = try workflows.make(intent)
         let control = SessionControl(isCurrent: { [weak self] in
             self?.active?.intent.id == intent.id && self?.closed == false && self?.isReady() == true && self?.active?.task.isCancelled == false
-        }, update: { [weak self] phase, transcript in self?.update(intent.id, phase: phase, transcript: transcript) })
+        }, cancel: { [weak self] in self?.cancel() }, update: { [weak self] phase, transcript in self?.update(intent.id, phase: phase, transcript: transcript) })
         let task = Task { [self] in
             let result: Result<SessionCompletion, Error>
             do {

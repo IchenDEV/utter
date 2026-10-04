@@ -42,19 +42,20 @@ private final class WhisperProviderCache {
     func engine(_ request: SpeechProviderRequest) async throws -> any SpeechEngine {
         try Task.checkCancellation()
         guard !closed else { throw ProviderCatalogError.closed }
+        let identity = request.selection.model + ":" + (request.modelFiles?.revision ?? "live")
         if let pending {
             let loaded = try await pending.task.value
             try Task.checkCancellation()
             guard !closed else { throw ProviderCatalogError.closed }
-            if pending.model == request.selection.model { return loaded }
+            if pending.model == identity { return loaded }
         }
-        if let cached, cached.0 == request.selection.model { return cached.1 }
+        if let cached, cached.0 == identity { return cached.1 }
         let previous = cached
         cached = nil
         if let previous { await previous.1.shutdown() }
         try Task.checkCancellation()
         guard !closed else { throw ProviderCatalogError.closed }
-        let engine = WhisperEngine(modelName: request.selection.model, files: files, access: access, log: log)
+        let engine = WhisperEngine(modelName: request.selection.model, files: request.modelFiles.map { $0 as any ModelFilesService } ?? files, access: access, log: log)
         let task = Task {
             do {
                 try await engine.loadModel(progress: request.progress)
@@ -65,13 +66,13 @@ private final class WhisperProviderCache {
             }
         }
         let id = UUID()
-        pending = (id, request.selection.model, task)
+        pending = (id, identity, task)
         defer { if pending?.id == id { pending = nil } }
         do {
             let loaded = try await withTaskCancellationHandler { try await task.value } onCancel: { task.cancel() }
             try Task.checkCancellation()
             guard !closed else { throw ProviderCatalogError.closed }
-            cached = (request.selection.model, loaded)
+            cached = (identity, loaded)
             return loaded
         } catch {
             await engine.shutdown()

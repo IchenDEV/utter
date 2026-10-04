@@ -11,6 +11,29 @@ import UtterRemoteInference
 
 @MainActor
 final class NativeBackendPluginTests: XCTestCase {
+    func testSpeechCacheUsesFrozenModelIdentityAcrossPathChanges() async throws {
+        let files = WorkflowFiles()
+        files.url = URL(fileURLWithPath: "/original-model")
+        let environment = PluginRegistration(descriptor: PluginDescriptor(id: "fixture.speech-files", provides: [ModelServices.files.reference, IntegrationServices.diagnostics.reference])) { context, _ in
+            try context.provide(ModelServices.files, value: files)
+            try context.provide(IntegrationServices.diagnostics, value: QuietNativeDiagnostics())
+        }
+        let plugins = [environment, ModelPlugins.resourceAccess(), ModelPlugins.speechProviders(), MLXPlugins.qwenSpeech()]
+        let runtime = PluginRuntime(catalog: try PluginCatalog(plugins))
+        try await runtime.start(plugins.map { PluginSelection($0.descriptor.id) })
+        let providers = try runtime.service(SpeechServices.providers)
+        let selection = SpeechSelection(providerID: "speech.qwen", type: .qwen3, model: "model", modelPath: "/missing")
+        let original = SpeechProviderRequest(selection: selection, modelFiles: FrozenModelFiles(modelID: "model", using: files))
+        let first = try await providers.create(id: "speech.qwen", request: original)
+        let repeated = try await providers.create(id: "speech.qwen", request: original)
+        XCTAssertTrue(first === repeated)
+        files.url = URL(fileURLWithPath: "/replacement-model")
+        let replacement = try await providers.create(id: "speech.qwen", request: SpeechProviderRequest(selection: selection,
+            modelFiles: FrozenModelFiles(modelID: "model", using: files)))
+        XCTAssertFalse(first === replacement)
+        try await runtime.stop()
+    }
+
     func testRegisteredBackendsStayUnloadedAndRevokeRetainedServices() async throws {
         let environment = PluginRegistration(descriptor: PluginDescriptor(
             id: "fixture.environment", provides: [ModelServices.files.reference, IntegrationServices.diagnostics.reference]
