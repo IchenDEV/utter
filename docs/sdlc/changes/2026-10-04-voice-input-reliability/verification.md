@@ -12,16 +12,12 @@ M1–M8 的实现已接入生产插件图。真实模型质量、本机操作和
 
 | 检查 | 结果与边界 |
 | --- | --- |
-| Linux Swift 6.2 全套 | 633 tests，0 failures；HUD 中英恢复按钮与无正文性能事件契约通过 |
+| Linux Swift 6.2 全套 | 635 tests，0 failures；包含关闭剪贴板、失效延后替换、HUD 中英恢复按钮与无正文性能事件契约 |
 | Python 评测、资源和模块脚本 | 27 tests，0 failures；缺样本、部分 manifest、未审阅事实、遗漏宣传片用例、对象错配和错误终点不能记为通过 |
 | SDLC、模块边界与 diff | `sdlc-checks.sh`、模块/资源检查和 `git diff --check` 通过 |
 | `ci-basic-checks.sh` | Linux 运行至 macOS `PlistBuddy` 检查停止；完整结果以 macOS CI 为准 |
-| 已通过的原生检查 | [`18a2690` macOS CI](https://github.com/IchenDEV/utter/actions/runs/37229249610)：1117 tests，18 skips，0 failures；release-style app 与 SDLC Gate 通过 |
-| 桌面迁移 SDK 构建 | [`e680783` CI](https://github.com/IchenDEV/utter/actions/runs/37232679151)：app 通过，测试因引用已删除的预加载策略而未编译；已迁为模型模块的实际契约 |
-| 新入口和窗口渲染 | [`1607b69` CI](https://github.com/IchenDEV/utter/actions/runs/37233704976)：app 和基础检查通过；合成窗口完成渲染，测试随后停在遥控入口用例，已取消 |
-| 遥控测试修正 | `23ab9bb` 改为等待正常松键的 `finish` 信号，增加有界等待；原无限等待来自测试错误，无生产采集逻辑改动 |
-| HUD 原生审查修正 | `63396d9` 补中英恢复按钮、统一面板按钮配色、长错误换行和等待稳定布局；合成窗口图像从 CI 日志取回，重验待下表最终 CI |
-| 最终代码检查点 | [`1165d97` macOS CI](https://github.com/IchenDEV/utter/actions/runs/37235260722)：新词库测试漏传停止时间参数，阻断编译；已补 `at: nil`，下一检查点复验 |
+| 原生测试与应用构建 | [`e3871cf` macOS CI](https://github.com/IchenDEV/utter/actions/runs/37237728434)：1109 tests，18 skips，0 failures；基础检查、release-style app 与 SDLC Gate 全部通过。跳过项与真实模型、设备验收分别保留 |
+| 剪贴板关闭策略 | 新回归在修复前产生 10 项断言失败；修复后 10 项受影响测试全部通过。直接写入保留，普通/快速输出由后端执行冻结策略，失效延后替换保留候选，显式复制单独授权 |
 | 与 main 合并 | 已同步 `06a9502`，解决 README 冲突；未创建或合并 PR |
 
 ## 用例与自动化证据
@@ -37,7 +33,7 @@ M1–M8 的实现已接入生产插件图。真实模型质量、本机操作和
 | F6 | `Tests/UtterProcessingTests/CustomFactSupportTests.swift`、`Tests/UtterContractsTests/OperationDeadlineTests.swift`、`Tests/OpenTypeTests/PromptAndProcessingTests.swift`；合法删减/重排、严格事实结果、失败/超时回退及取消 |
 | F7 | `Tests/OpenTypeTests/VoiceEditingTests.swift`、`VoiceScreenFailureTests.swift`、`ScreenReliabilityTests.swift`、`Tests/UtterContractsTests/SpokenEditEvidenceTests.swift`、`Tests/UtterProcessingTests/CommandOutputCleanerTests.swift`；回复不覆盖、明确编辑对象、中文 OCR、HUD 身份排除和读屏失败拒绝写入 |
 | F8.4 | `Tests/UtterContractsTests/TranslationAssessmentTests.swift`、`Tests/OpenTypeTests/TranslationLanguageRecognitionTests.swift`、`VoiceTranslationDeliveryTests.swift`；0.7/0.2 门槛、错误/无法确认语言不交付 |
-| F9 | `Tests/UtterMacServicesTests/ClipboardPasteTransactionTests.swift`、`TextDeliveryTransactionTests.swift`、`DeliveryReceiptTests.swift`；慢读取、超时、第三方 changeCount、UTF-16 范围、取消清理和不自动重试 |
+| F9 | `Tests/UtterMacServicesTests/ClipboardPasteTransactionTests.swift`、`TextDeliveryTransactionTests.swift`、`NativeOutputBackendClipboardTests.swift`、`DeliveryReceiptTests.swift`、`Tests/UtterSessionTests/DeferredReplacementExecutionTests.swift`、`Tests/OpenTypeTests/VoiceTextInputTests.swift`；慢读取、超时、第三方 changeCount、UTF-16 范围、取消清理、不自动重试及关闭自动剪贴板策略 |
 | F10 | `Tests/UtterContractsTests/WhisperTokenizerAssetsTests.swift`、`LocalModelReliabilityTests.swift`、`Tests/OpenTypeTests/WhisperOfflineLoadingTests.swift`、`LocalGenerationLoadingTests.swift`；本地 tokenizer、拒绝下载、实际加载配置中的 Gemma EOS 和内存建议 |
 | F11 | `Tests/UtterSessionTests/SessionTimingTests.swift`、`SessionMetricsTests.swift`、`Tests/UtterContractsTests/ModelBenchmarkSuiteTests.swift`、`scripts/tests/test_session_performance.py`；默认无正文、真实终点、确认插入分布、冷/热与长度分组 |
 | 所有生产入口 | `Tests/UtterSessionTests/SessionDriverTests.swift`、`SessionAPIExecutionTests.swift`、`Tests/UtterIngressTests/IntegrationHTTPTests.swift`、`Tests/OpenTypeTests/IntegrationXPCProtocolTests.swift`、`VoiceWorkflowTests.swift`、`RemoteSessionIngressTests.swift`；共享租约、冻结配置、撤权、旧连接清理和可替换提供者 |
@@ -46,6 +42,29 @@ M1–M8 的实现已接入生产插件图。真实模型质量、本机操作和
 旧 `VoicePipeline`、`InputSessionCoordinator`、`TextInserter` 和生产预热 helper
 已移除。App 入口仅启动/停止 `BuiltinApplication`；会话、交付和呈现分别由
 唯一契约提供者拥有。OpenType 包名、兼容标识和外部协议保留。
+
+## 原生窗口证据
+
+以下 PNG 来自 `e3871cf5a062a1eb006114b6ffb2248983b640c2` 的上述 CI，
+由 `PresentationRenderingTests` 在实际 `NSWindow` 中渲染并从日志取回。
+作者检查了浅/深色设置页、中英文恢复按钮、长错误换行、复制及不确定状态。
+HUD 使用统一深色面板，在两种系统外观下的内容相同。
+
+| 范围 | 图像 |
+| --- | --- |
+| 通用设置 760×680 | [浅色](evidence/settings-light.png)、[深色](evidence/settings-dark.png) |
+| 录音预览 304×80 | [浅色](evidence/hud-recording-light.png)、[深色](evidence/hud-recording-dark.png) |
+| 已复制 192×40 | [浅色](evidence/hud-copied-light.png)、[深色](evidence/hud-copied-dark.png) |
+| 写入不确定 360×96 | [浅色](evidence/hud-uncertain-light.png)、[深色](evidence/hud-uncertain-dark.png) |
+| 模型恢复 360×96 | [中文浅色](evidence/hud-models-light.png)、[中文深色](evidence/hud-models-dark.png)、[英文](evidence/hud-models-english.png) |
+
+渲染测试还包含 148px 紧凑录音、屏幕权限恢复和关闭剪贴板的候选复制状态。
+图像使用合成状态，不代表完整设置窗口、TCC 提示、真实麦克风或多屏采集验收。
+可在 Mac 用以下命令生成全部状态图像：
+
+```bash
+UTTER_UI_SNAPSHOTS=/tmp/utter-ui swift test --filter PresentationRenderingTests
+```
 
 ## 未运行的验收
 

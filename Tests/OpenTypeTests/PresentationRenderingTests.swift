@@ -24,10 +24,14 @@ final class PresentationRenderingTests: XCTestCase {
             try await render(AnyView(GeneralSettingsView().environmentObject(settings).environmentObject(platform)),
                 size: NSSize(width: 760, height: 680), appearance: name, file: "settings-\(suffix)")
             for (label, snapshot) in [
+                ("recording-compact", SessionExecutionSnapshot(phase: .recording, isBusy: true)),
                 ("recording", SessionExecutionSnapshot(phase: .recording, transcript: "今天确认三件事。", isBusy: true)),
                 ("copied", SessionExecutionSnapshot(phase: .completed, text: "今天确认 3 件事。", deliveryStatus: .copied)),
                 ("uncertain", SessionExecutionSnapshot(phase: .failed, text: "今天确认 3 件事。", deliveryStatus: .uncertain)),
                 ("models", SessionExecutionSnapshot(phase: .failed, error: L("pipeline.model_load_failed"), recoveryAction: .models)),
+                ("permissions", SessionExecutionSnapshot(phase: .failed, error: L("screen.permission_required"), recoveryAction: .screenPrivacy)),
+                ("clipboard-disabled", SessionExecutionSnapshot(phase: .failed, text: "今天确认 3 件事。",
+                    error: L("delivery.unavailable"), deliveryStatus: .notDelivered)),
             ] {
                 let state = AppState()
                 state.project(snapshot)
