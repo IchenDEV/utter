@@ -13,6 +13,7 @@ final class VoiceRecognitionDrainTests: XCTestCase {
         let access = try fixture.runtime.service(ModelServices.resourceAccess)
         try driver.start(SessionIntent(input: .local))
         while driver.snapshot.phase != .recording { await Task.yield() }
+        while !fixture.engine.preparing { await Task.yield() }
         driver.cancel()
         while !fixture.engine.draining { await Task.yield() }
         XCTAssertTrue(fixture.capture.recording.stopped)
