@@ -15,6 +15,8 @@ final class PresentationRenderingTests: XCTestCase {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let settings = AppSettings(service: SettingsStore(defaults: defaults))
+        Loc.use(.chinese)
+        defer { Loc.use(.chinese) }
         let platform = PlatformProjection(remote: nil, login: nil, devices: nil, screen: nil, diagnostics: RenderingDiagnostics())
         defer { platform.dispose() }
         for name in [NSAppearance.Name.aqua, .darkAqua] {
@@ -35,6 +37,12 @@ final class PresentationRenderingTests: XCTestCase {
                 try await render(AnyView(view), size: layout.panelSize, appearance: name, file: "hud-\(label)-\(suffix)")
             }
         }
+        Loc.use(.english)
+        let state = AppState()
+        state.project(SessionExecutionSnapshot(phase: .failed, error: L("pipeline.model_load_failed"), recoveryAction: .models))
+        let view = OverlayContentView(onLayoutChange: { _ in }, onCancel: {}, onConfirm: {},
+            onCopy: {}, onRecover: {}, onDismiss: {}).environmentObject(state)
+        try await render(AnyView(view), size: OverlayLayout(appState: state).panelSize, appearance: .aqua, file: "hud-models-english")
     }
 
     func testOverlayExcludesItsActualWindowAndReleasesThatIdentityOnHide() throws {
@@ -59,7 +67,7 @@ final class PresentationRenderingTests: XCTestCase {
         window.orderFront(nil)
         defer { window.close() }
         hosting.setFrameSize(size)
-        await Task.yield()
+        try await Task.sleep(for: .milliseconds(250))
         hosting.layoutSubtreeIfNeeded()
         hosting.displayIfNeeded()
         let bitmap = try XCTUnwrap(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds))
@@ -72,7 +80,7 @@ final class PresentationRenderingTests: XCTestCase {
             let characters = Array(encoded)
             for start in stride(from: 0, to: characters.count, by: 768) {
                 let chunk = String(characters[start..<min(start + 768, characters.count)])
-                print("UTTER_UI_RENDER \(file) \(start / 768) \(chunk)")
+                FileHandle.standardError.write(Data("UTTER_UI_RENDER \(file) \(start / 768) \(chunk)\n".utf8))
             }
         }
         if let destination = ProcessInfo.processInfo.environment["UTTER_UI_SNAPSHOTS"] {

@@ -5,6 +5,9 @@
 "common.add" = "Add";
 "common.delete" = "Delete";
 "common.copy" = "Copy";
+"common.close" = "Close";
+"hud.open_models" = "Open Models";
+"hud.open_permissions" = "Open Privacy Settings";
 "common.clear" = "Clear";
 "common.download" = "Download";
 "common.settings" = "Settings";

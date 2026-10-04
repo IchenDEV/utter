@@ -5,6 +5,9 @@
 "common.add" = "添加";
 "common.delete" = "删除";
 "common.copy" = "复制";
+"common.close" = "关闭";
+"hud.open_models" = "打开模型页";
+"hud.open_permissions" = "打开隐私设置";
 "common.clear" = "清除";
 "common.download" = "下载";
 "common.settings" = "设置";

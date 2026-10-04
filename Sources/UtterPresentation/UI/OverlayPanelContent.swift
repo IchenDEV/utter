@@ -130,6 +130,7 @@ struct OverlayContentView: View {
         .background(panelBackground)
         .clipShape(RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous))
         .compositingGroup()
+        .environment(\.colorScheme, .dark)
         .onAppear {
             onLayoutChange(layout)
         }
@@ -149,11 +150,12 @@ struct OverlayContentView: View {
             Text(appState.statusMessage)
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.white.opacity(isError ? 0.94 : 0.88))
-                .lineLimit(isError || showsEspressoFallback ? 2 : 1)
+                .lineLimit(isError ? 3 : showsEspressoFallback ? 2 : 1)
                 .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 4)
         }
+        .frame(width: layout.width - 2 * layout.horizontalPadding, alignment: .leading)
     }
 
     private var recoveryControls: some View {
