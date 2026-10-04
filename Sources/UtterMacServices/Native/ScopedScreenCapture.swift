@@ -11,7 +11,7 @@ extension MacPlugins {
         )) { context, _ in
             let log = Log(service: try context.require(IntegrationServices.diagnostics))
             let service = ScopedScreenCapture(isCurrent: { context.isReady },
-                capture: { await ScreenOCR.capture(mode: $0, log: log) },
+                capture: { await ScreenOCR.capture(mode: $0, excludedWindowIDs: $1, log: log) },
                 checkPermission: { await ScreenOCR.checkScreenCapturePermission() },
                 requestPermission: { ScreenOCR.requestPermissionIfNeeded() }
             )
@@ -25,14 +25,15 @@ extension MacPlugins {
 @MainActor
 final class ScopedScreenCapture: ScreenCaptureService {
     private let isCurrent: () -> Bool
-    private let captureScreen: (ScreenContextMode) async -> ScreenContextSnapshot
+    private let captureScreen: (ScreenContextMode, Set<UInt32>) async -> ScreenContextSnapshot
+    private var excludedWindowIDs: Set<UInt32> = []
     private let permission: () async -> Bool
     private let request: () -> Void
     private var closed = false
     private var operations: [UUID: () async -> Void] = [:]
     private var cancellations: [UUID: () -> Void] = [:]
 
-    init(isCurrent: @escaping () -> Bool, capture: @escaping (ScreenContextMode) async -> ScreenContextSnapshot,
+    init(isCurrent: @escaping () -> Bool, capture: @escaping (ScreenContextMode, Set<UInt32>) async -> ScreenContextSnapshot,
          checkPermission: @escaping () async -> Bool, requestPermission: @escaping () -> Void) {
         self.isCurrent = isCurrent
         captureScreen = capture
@@ -41,8 +42,16 @@ final class ScopedScreenCapture: ScreenCaptureService {
     }
 
     func capture(mode: ScreenContextMode) async throws -> ScreenContextSnapshot {
-        try await run { await self.captureScreen(mode) }
+        let exclusions = excludedWindowIDs
+        return try await run { await self.captureScreen(mode, exclusions) }
     }
+
+    func excludeWindow(_ id: UInt32) {
+        guard !closed, isCurrent() else { return }
+        excludedWindowIDs.insert(id)
+    }
+
+    func includeWindow(_ id: UInt32) { excludedWindowIDs.remove(id) }
 
     func checkPermission() async throws -> Bool { try await run(permission) }
 
@@ -70,6 +79,7 @@ final class ScopedScreenCapture: ScreenCaptureService {
     func revoke() {
         guard !closed else { return }
         closed = true
+        excludedWindowIDs.removeAll()
         for cancel in cancellations.values { cancel() }
     }
 

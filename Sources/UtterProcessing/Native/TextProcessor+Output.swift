@@ -87,10 +87,7 @@ extension TextProcessor {
         inputLanguage: InputLanguage
     ) -> String {
         let stripped = stripThinkingTags(text)
-        if let finalText = LLMFinalTextOutput.text(from: stripped) {
-            return FormattedOutputCleaner.clean(finalText)
-        }
-        return cleanGeneratedOutput(text, inputLanguage: inputLanguage)
+        return CommandOutputCleaner.clean(stripped)
     }
 
     package func validatedOutput(

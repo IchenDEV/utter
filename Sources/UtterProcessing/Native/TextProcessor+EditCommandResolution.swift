@@ -53,7 +53,10 @@ extension TextProcessor {
                 temperature: generationOptions.temperature
             )
             let resolution = SpokenEditCommandLLMResolver.resolution(from: result)
-            if case .command = resolution {
+            if case .command(let command) = resolution {
+                guard SpokenEditEvidence.allows(command, transcript: transcript, context: context) else {
+                    return .some(.none)
+                }
                 log.info("[TextProcessor] LLM resolved a spoken edit command")
             }
             return resolution

@@ -54,7 +54,8 @@ final class VoicePipelineSilentInsertionTests: XCTestCase {
         defer { defaults.removePersistentDomain(forName: suite) }
         let settings = AppSettings(defaults: defaults)
         settings.industryLexicon = .technology
-        let terms = ["云原生", "容器编排", "微服务", "服务网格", "持续集成", "CI", "持续交付", "CD"]
+        let terms = Array(VoiceInputSettings(settings: settings).dictionary.recognitionPhrases.prefix(8))
+        XCTAssertEqual(terms.count, 8)
         let transcript = terms.joined(separator: ", ")
         var activity = AudioCaptureActivity()
         activity.record(rms: 0.002, frameCount: 16_000)

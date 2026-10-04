@@ -11,7 +11,7 @@ final class MacServiceLifetimeTests: XCTestCase {
         let entered = MacLifetimeSignal()
         let release = MacLifetimeSignal()
         let closeEntered = MacLifetimeSignal()
-        let service = ScopedScreenCapture(isCurrent: { true }, capture: { _ in
+        let service = ScopedScreenCapture(isCurrent: { true }, capture: { _, _ in
             entered.send()
             await release.wait()
             return .empty
@@ -35,7 +35,7 @@ final class MacServiceLifetimeTests: XCTestCase {
 
     func testColdScreenMetadataDoesNotCheckCaptureOrRequestPermissions() async {
         var calls = 0
-        let service = ScopedScreenCapture(isCurrent: { true }, capture: { _ in calls += 1; return .empty },
+        let service = ScopedScreenCapture(isCurrent: { true }, capture: { _, _ in calls += 1; return .empty },
             checkPermission: { calls += 1; return true }, requestPermission: { calls += 1 })
         XCTAssertEqual(calls, 0)
         service.revoke()

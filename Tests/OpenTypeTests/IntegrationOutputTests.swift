@@ -47,8 +47,9 @@ final class IntegrationOutputTests: XCTestCase {
         coordinator.requestSettings = VoiceInputSettings(settings: settings)
         var activity = AudioCaptureActivity()
         activity.record(rms: 0.002, frameCount: 16_000)
-        let echo = ["云原生", "容器编排", "微服务", "服务网格", "持续集成", "CI", "持续交付", "CD"]
-            .joined(separator: ", ")
+        let phrases = Array(coordinator.requestSettings!.dictionary.recognitionPhrases.prefix(8))
+        XCTAssertEqual(phrases.count, 8)
+        let echo = phrases.joined(separator: ", ")
 
         XCTAssertThrowsError(try coordinator.prepareTranscript(echo, audioActivity: activity)) { error in
             XCTAssertEqual(error as? IntegrationError, .noSpeechDetected)
