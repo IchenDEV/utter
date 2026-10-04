@@ -10,6 +10,7 @@ struct OnboardingView: View {
     @State var step = 0
     @EnvironmentObject var settings: AppSettings
     @ObservedObject var catalog: ModelCatalogProjection
+    let storage: any ModelStorageService
     @State var skippedModelDownload = false
     @State var showModelDownloadConfirmation = false
 

@@ -83,6 +83,9 @@ extension ModelManagementView {
                 busyModelStatus(model)
                     .padding(.leading, 18)
             }
+            if let result = catalog.benchmark(model.id), !result.groups.isEmpty {
+                BenchmarkDetailsView(result: result)
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)

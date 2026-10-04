@@ -574,3 +574,12 @@
 "plugins.recovery" = "The plugin combination could not start. Open Plugins in Settings to correct it or restore defaults.";
 
 "common.save" = "Save";
+
+"settings.fn_conflict_help" = "For the Globe/Fn key, set “Press Globe key to” to “Do Nothing” in macOS Keyboard settings. Fn + arrow keys keep their system behavior.";
+"benchmark.workload" = "Workload";
+"benchmark.samples" = "Samples";
+"benchmark.cold" = "Cold";
+"benchmark.warm" = "Warm";
+"benchmark.short" = "Short";
+"benchmark.medium" = "Medium";
+"benchmark.long" = "Long";

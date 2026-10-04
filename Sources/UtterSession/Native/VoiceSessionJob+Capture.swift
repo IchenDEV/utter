@@ -93,7 +93,6 @@ extension VoiceSessionJob {
     }
 
     func startScreenCapture() {
-        guard let screen = dependencies.screen else { return }
         guard intent.clientID == nil || settings.useScreenContext else { return }
         let shouldCapture: Bool
         switch mode {
@@ -102,6 +101,10 @@ extension VoiceSessionJob {
         case .direct, .translation: shouldCapture = false
         }
         guard shouldCapture else { return }
+        guard let screen = dependencies.screen else {
+            screenTask = Task { ScreenContextSnapshot(text: "", image: nil, status: .captureFailed) }
+            return
+        }
         let captureMode = ScreenContextMode.effectiveCaptureMode(preference: options.screenContextMode,
             useRemoteLLM: options.useRemoteLLM || options.localLLMBackend == .espresso, modelID: options.llmModel)
         screenTask = Task {

@@ -96,18 +96,22 @@ final class IntegrationXPCServer: NSObject, NSXPCListenerDelegate {
         connection.exportedObject = handler
         connection.invalidationHandler = { [weak self, weak handler] in
             Task { @MainActor in
-                if let handler { handler.invalidate(); self?.retired.append(handler) }
-                self?.handlers[id] = nil
+                self?.retire(id)
             }
         }
         connection.interruptionHandler = { [weak self, weak handler] in
             Task { @MainActor in
-                if let handler { handler.invalidate(); self?.retired.append(handler) }
-                self?.handlers[id] = nil
+                self?.retire(id)
             }
         }
         connection.resume()
         registry.markUsed(clientID: client.id, at: Date())
         return true
+    }
+
+    private func retire(_ id: ObjectIdentifier) {
+        guard let handler = handlers.removeValue(forKey: id) else { return }
+        handler.invalidate()
+        retired.append(handler)
     }
 }

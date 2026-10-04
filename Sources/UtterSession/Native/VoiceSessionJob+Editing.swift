@@ -15,7 +15,8 @@ extension VoiceSessionJob {
             selectedTextPreview: SpokenEditCommandResolutionContext.preview(selected))
         let resolution = try await recipe.resolveEditCommand(request, context: availability)
         try check(control)
-        guard case .command(let command) = resolution else { return nil }
+        guard case .command(let command) = resolution,
+              SpokenEditEvidence.namesTargetAndOperation(command, transcript: request.text) else { return nil }
         let outputCommand: DeliveryCommand
         let outputTarget: (any OutputTargetLease)?
         let text: String

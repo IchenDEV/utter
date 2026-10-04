@@ -47,13 +47,25 @@ final class ModelLifecycle: ModelLifecycleService {
     }
 
     func preloadSpeech() async throws {
-        let values = credentials.snapshot.applying(to: settings.values)
+        guard let frozen = try preflight({ try speechRequest() }) else { return }
+        try await run {
+            let engine = try await self.speech.create(id: frozen.0, request: frozen.1)
+            await engine.prepare()
+            try Task.checkCancellation()
+            guard engine.isReady else { throw IntegrationError.modelNotReady }
+            self.speechReady = true
+        }
+    }
+
+    private func speechRequest() throws -> (String, SpeechProviderRequest)? {
+        var values = credentials.snapshot.applying(to: settings.values)
         let bindings = try configuration?.sessionSnapshot.bindings ?? [:]
         let id = bindings["speech"] ?? values.speechEngine.rawValue
         guard let descriptor = speech.descriptors.first(where: { $0.id == id || $0.legacyIDs.contains(id) }) else {
             throw ProviderCatalogError.unknownIdentifier(id)
         }
-        if descriptor.legacyIDs.contains(SpeechEngineType.apple.rawValue) || descriptor.legacyIDs.contains(SpeechEngineType.volc.rawValue) { return }
+        if descriptor.legacyIDs.contains(SpeechEngineType.apple.rawValue) || descriptor.legacyIDs.contains(SpeechEngineType.volc.rawValue) { return nil }
+        if let type = descriptor.legacyIDs.compactMap(SpeechEngineType.init(rawValue:)).first { values.speechEngine = type }
         let selection = SpeechSelection(settings: values, providerID: descriptor.id)
         let frozen = FrozenModelFiles(modelID: selection.model, using: files)
         let url = frozen.installedSpeechModelURL(selection.model)
@@ -64,16 +76,18 @@ final class ModelLifecycle: ModelLifecycleService {
         let selected = SpeechSelection(providerID: descriptor.id, type: selection.type, model: selection.model,
             modelPath: url?.path ?? selection.modelPath, locale: selection.locale,
             appKey: selection.appKey, accessKey: selection.accessKey, resourceID: selection.resourceID)
-        try await run {
-            let engine = try await self.speech.create(id: descriptor.id, request: SpeechProviderRequest(selection: selected, modelFiles: frozen))
-            await engine.prepare()
-            try Task.checkCancellation()
-            guard engine.isReady else { throw IntegrationError.modelNotReady }
-            self.speechReady = true
-        }
+        return (descriptor.id, SpeechProviderRequest(selection: selected, modelFiles: frozen))
     }
 
     func preloadText() async throws {
+        guard let frozen = try preflight({ try textOptions() }) else { return }
+        try await run {
+            _ = try await self.processing.prepare(frozen)
+            self.textReady = true
+        }
+    }
+
+    private func textOptions() throws -> TextProcessingOptions? {
         let values = credentials.snapshot.applying(to: settings.values)
         var options = TextProcessingOptions(settings: values)
         let bindings = try configuration?.sessionSnapshot.bindings ?? [:]
@@ -81,13 +95,19 @@ final class ModelLifecycle: ModelLifecycleService {
         guard let descriptor = generation.descriptors.first(where: { $0.id == id || $0.legacyIDs.contains(id) }) else {
             throw ProviderCatalogError.unknownIdentifier(id)
         }
-        guard descriptor.modelLocation != .remote else { return }
+        guard descriptor.modelLocation != .remote else { return nil }
         options = options.selecting(descriptor).freezingModelLocations(using: files)
         options.fallbackProviderID = bindings["fallback"] ?? options.fallbackProviderID
-        let frozen = options
-        try await run {
-            _ = try await self.processing.prepare(frozen)
-            self.textReady = true
+        return options
+    }
+
+    private func preflight<Value>(_ operation: () throws -> Value) throws -> Value {
+        guard !closed, scope.isActive else { throw CancellationError() }
+        do { return try operation() }
+        catch {
+            failure = SessionFailurePresentation(error: error).message
+            publish()
+            throw error
         }
     }
 

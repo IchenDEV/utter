@@ -8,6 +8,8 @@ package protocol InputSessionService: AnyObject {
     func startRecording(sessionID: UUID, clientID: String) async throws
     func stopRecording(sessionID: UUID, clientID: String) async throws -> InputSessionResult
     func disconnect(clientID: String) async
+    func revokeSession(clientID: String) -> UUID?
+    func drainSession(sessionID: UUID, clientID: String) async
     func processAudioFile(sessionID: UUID, clientID: String, audioURL: URL) async throws -> InputSessionResult
     func beginProcessing(sessionID: UUID, clientID: String) async throws
     func completeSession(sessionID: UUID, clientID: String, finalText: String?) async throws

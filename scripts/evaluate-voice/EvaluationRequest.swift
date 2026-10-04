@@ -6,7 +6,7 @@ import UtterRuntime
 
 extension VoiceEvaluationCase {
     @MainActor
-    func request(model: URL, modelID: String, maxTokens: Int, runtime: PluginRuntime) throws -> ProcessingRequest {
+    func request(model: URL, modelID: String, maxTokens: Int, runtime: PluginRuntime, transcript: String? = nil) throws -> ProcessingRequest {
         let inputLanguage: InputLanguage
         switch language {
         case "zh", "zh-Hans", "zh-Hant": inputLanguage = .chinese
@@ -24,7 +24,8 @@ extension VoiceEvaluationCase {
         options.useRemoteLLM = false
         options.localLLMBackend = .mlx
         options.fallbackToMLXOnEspressoFailure = false
-        options.generationTokenLimit = maxTokens
+        let factReservation = options.fidelityPolicy == .boundedCustomTransformation ? min(768, maxTokens / 2) : 0
+        options.generationTokenLimit = max(1, maxTokens - factReservation)
         options.modelLocations = .frozen(bundle: nil, directory: model)
         options.modelVersions = FrozenGenerationVersions(bundle: nil, directory: model)
         let processingMode: TextProcessingMode
@@ -45,7 +46,7 @@ extension VoiceEvaluationCase {
         } else { lexiconID = SettingsValues().industryLexicon }
         let dictionary = PersonalDictionarySnapshot(entries: [], editRules: [],
             industryLexicon: try runtime.service(DataServices.lexicons).snapshot(for: lexiconID))
-        return ProcessingRequest(mode: processingMode, text: text, options: options, dictionary: dictionary,
+        return ProcessingRequest(mode: processingMode, text: transcript ?? text, options: options, dictionary: dictionary,
             screenContext: screen_context ?? "", collectsDiagnostics: true)
     }
 

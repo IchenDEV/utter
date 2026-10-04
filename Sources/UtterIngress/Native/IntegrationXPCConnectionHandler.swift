@@ -151,7 +151,9 @@ final class IntegrationXPCConnectionHandler: NSObject, OpenTypeXPCProtocol {
         guard !closed else { return }
         closed = true
         work.revoke()
-        disconnectTask = Task { await service.disconnect(clientID: clientID) }
+        if let id = service.revokeSession(clientID: clientID) {
+            disconnectTask = Task { await service.drainSession(sessionID: id, clientID: clientID) }
+        }
         for subscription in subscriptions.values {
             service.unsubscribeEvents(
                 sessionID: subscription.sessionID,

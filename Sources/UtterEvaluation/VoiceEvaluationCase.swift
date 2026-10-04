@@ -1,4 +1,5 @@
 import Foundation
+import UtterContracts
 
 package struct VoiceEvaluationCase: Codable, Sendable {
     package let id: String
@@ -33,6 +34,10 @@ package struct VoiceEvaluationCase: Codable, Sendable {
                   ["zh", "zh-Hans", "zh-Hant", "en", "ja", "ko", "yue", "auto"].contains(value.language),
                   ["formatting", "direct", "command", "translation"].contains(value.mode ?? "formatting"),
                   ["casual", "professional", "custom"].contains(value.style ?? "casual"),
+                  value.lexicon == nil || IndustryLexiconID(rawValue: value.lexicon!) != nil,
+                  value.target_language == nil || TranslationLanguage(rawValue: value.target_language!) != nil,
+                  value.expected_outcome == nil || ["accepted", "fallback"].contains(value.expected_outcome!),
+                  value.audio_file == nil || !value.audio_file!.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   value.repeatCount > 0, value.repeatCount <= maximumRuns,
                   value.audio_file == nil || value.input_text == nil else {
                 throw VoiceEvaluationError.invalidCase(value.id)
@@ -50,13 +55,14 @@ package struct VoiceEvaluationCase: Codable, Sendable {
 }
 
 package enum VoiceEvaluationError: Error, CustomStringConvertible {
-    case invalidCase(String), emptyCorpus, runBudgetExceeded, timedOut, invalidArguments(String), unavailableAudioProvider
+    case invalidCase(String), emptyCorpus, runBudgetExceeded, tokenBudgetExceeded, timedOut, invalidArguments(String), unavailableAudioProvider
 
     package var description: String {
         switch self {
         case .invalidCase(let id): return "Invalid evaluation case: \(id)"
         case .emptyCorpus: return "Evaluation corpus is empty"
         case .runBudgetExceeded: return "Requested corpus exceeds the run budget"
+        case .tokenBudgetExceeded: return "Evaluation output-token budget exceeded"
         case .timedOut: return "Evaluation time budget exceeded"
         case .invalidArguments(let detail): return "Invalid evaluation arguments: \(detail)"
         case .unavailableAudioProvider: return "Audio evaluation requires an explicitly selected installed speech model"

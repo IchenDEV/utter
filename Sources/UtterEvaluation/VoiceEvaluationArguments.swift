@@ -10,13 +10,15 @@ package struct VoiceEvaluationArguments {
     package let totalTimeout: Int
     package let maxTokens: Int
     package let cold: Bool
+    package let speech: SpeechEvaluationSelection?
 
     package init(_ arguments: [String]) throws {
         var values: [String: String] = [:]
         var cold = false
         var index = 0
         let keys = ["--corpus", "--model", "--model-id", "--output", "--max-runs",
-                    "--case-timeout", "--total-timeout", "--max-tokens"]
+                    "--case-timeout", "--total-timeout", "--max-tokens",
+                    "--speech-provider", "--speech-model", "--speech-model-id"]
         while index < arguments.count {
             let key = arguments[index]
             if key == "--cold" {
@@ -47,8 +49,15 @@ package struct VoiceEvaluationArguments {
         model = URL(fileURLWithPath: try required("--model")).standardizedFileURL.resolvingSymlinksInPath()
         modelID = try required("--model-id")
         output = URL(fileURLWithPath: try required("--output")).standardizedFileURL.resolvingSymlinksInPath()
+        if ["--speech-provider", "--speech-model", "--speech-model-id"].contains(where: { values[$0] != nil }) {
+            speech = try SpeechEvaluationSelection(provider: required("--speech-provider"),
+                model: URL(fileURLWithPath: required("--speech-model")), modelID: required("--speech-model-id"))
+        } else { speech = nil }
         guard corpus != output, !output.path.hasPrefix(model.path + "/"), output != model else {
             throw VoiceEvaluationError.invalidArguments("output overlaps the corpus or model")
+        }
+        if let speech, output == speech.model || output.path.hasPrefix(speech.model.path + "/") {
+            throw VoiceEvaluationError.invalidArguments("output overlaps the speech model")
         }
         maximumRuns = try positive("--max-runs", defaultValue: 100, ceiling: 10_000)
         caseTimeout = try positive("--case-timeout", defaultValue: 120, ceiling: 3_600)

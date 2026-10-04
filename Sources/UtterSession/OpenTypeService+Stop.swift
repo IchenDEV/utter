@@ -17,9 +17,19 @@ extension OpenTypeService {
     }
 
     package func disconnect(clientID: String) async {
+        guard let id = revokeSession(clientID: clientID) else { return }
+        await drainSession(sessionID: id, clientID: clientID)
+    }
+
+    package func revokeSession(clientID: String) -> UUID? {
         guard let execution, let id = execution.snapshot.id, sessionOwners[id] == clientID,
-              sessions[id]?.state.isTerminal == false else { return }
+              sessions[id]?.state.isTerminal == false else { return nil }
         execution.cancel(id)
-        await execution.stop(id)
+        return id
+    }
+
+    package func drainSession(sessionID: UUID, clientID: String) async {
+        guard sessionOwners[sessionID] == clientID else { return }
+        await execution?.stop(sessionID)
     }
 }

@@ -1,10 +1,10 @@
-import UtterRemoteInference
 import UtterPresentationContracts
 import UtterContracts
 import SwiftUI
 
 struct RemoteLLMConfigView: View {
     @EnvironmentObject var settings: AppSettings
+    let connection: (any RemoteConnectionService)?
 
     @State private var testMessage: String?
     @State private var testSuccess: Bool?
@@ -45,7 +45,7 @@ struct RemoteLLMConfigView: View {
                     Task { await testRemoteConnection() }
                 }
                 .controlSize(.small)
-                .disabled(isTesting || settings.remoteAPIKey.isEmpty || settings.remoteBaseURL.isEmpty || settings.remoteModel.isEmpty)
+                .disabled(connection == nil || isTesting || settings.remoteAPIKey.isEmpty || settings.remoteBaseURL.isEmpty || settings.remoteModel.isEmpty)
 
                 if isTesting {
                     ProgressView()
@@ -68,17 +68,10 @@ struct RemoteLLMConfigView: View {
         isTesting = true
         defer { isTesting = false }
 
-        let client = RemoteLLMClient()
+        guard let connection else { return }
         do {
-            _ = try await client.generate(
-                prompt: "Hi",
-                systemPrompt: nil,
-                baseURL: settings.remoteBaseURL,
-                apiKey: settings.remoteAPIKey,
-                model: settings.remoteModel,
-                provider: settings.remoteProvider,
-                maxTokens: 10
-            )
+            try await connection.test(configuration: RemoteGenerationConfiguration(baseURL: settings.remoteBaseURL,
+                apiKey: settings.remoteAPIKey, provider: settings.remoteProvider), modelID: settings.remoteModel)
             testMessage = L("remote.test_success")
             testSuccess = true
         } catch {

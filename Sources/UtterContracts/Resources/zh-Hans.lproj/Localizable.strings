@@ -574,3 +574,12 @@
 "plugins.recovery" = "插件组合无法启动，请在设置的插件组合页修正配置或恢复默认。";
 
 "common.save" = "保存";
+
+"settings.fn_conflict_help" = "使用地球键/Fn 时，请在 macOS 键盘设置中将“按下地球键时”设为“不执行操作”。Fn + 方向键仍保留系统行为。";
+"benchmark.workload" = "文本长度与启动方式";
+"benchmark.samples" = "样本数";
+"benchmark.cold" = "冷启动";
+"benchmark.warm" = "热启动";
+"benchmark.short" = "短句";
+"benchmark.medium" = "段落";
+"benchmark.long" = "长文本";

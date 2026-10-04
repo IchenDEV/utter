@@ -7,6 +7,29 @@ import UtterRuntime
 
 @MainActor
 final class SessionAPIExecutionTests: XCTestCase {
+    func testRetiredTransportDrainCannotCancelANewerReservationForTheSameClient() async throws {
+        let fixture = try APIExecutionFixture()
+        defer { fixture.remove() }
+        try await fixture.start()
+        let api = try fixture.runtime.service(SessionServices.api)
+        let execution = try fixture.runtime.service(SessionServices.execution)
+        let first = try await api.createSession(InputSessionRequest(), clientID: fixture.client.id)
+        XCTAssertEqual(api.revokeSession(clientID: fixture.client.id), first.id)
+        while !fixture.job.closing { await Task.yield() }
+        fixture.job.finishClose()
+        await api.drainSession(sessionID: first.id, clientID: fixture.client.id)
+        let next = try await api.createSession(InputSessionRequest(), clientID: fixture.client.id)
+        await api.drainSession(sessionID: first.id, clientID: fixture.client.id)
+        XCTAssertEqual(execution.snapshot.id, next.id)
+        XCTAssertTrue(execution.snapshot.isBusy)
+        fixture.job.closing = false
+        XCTAssertEqual(api.revokeSession(clientID: fixture.client.id), next.id)
+        while !fixture.job.closing { await Task.yield() }
+        fixture.job.finishClose()
+        await api.drainSession(sessionID: next.id, clientID: fixture.client.id)
+        try await fixture.runtime.stop()
+    }
+
     func testStopRecordingUsesReservedExecutionAndReturnsOnlyAfterDrain() async throws {
         let fixture = try APIExecutionFixture()
         defer { fixture.remove() }

@@ -12,7 +12,7 @@ struct IntegrationHTTPDispatcher {
     let registry: any IntegrationClientStore
     let settingsProvider: @MainActor () -> IntegrationServiceSettings
 
-    func dispatch(_ request: IntegrationHTTPRequest) async -> IntegrationHTTPResponse {
+    func dispatch(_ request: IntegrationHTTPRequest, onAuthorized: ((IntegrationClient) -> Void)? = nil) async -> IntegrationHTTPResponse {
         let authorizedClient = authorizeLocalHTTPClient(for: request)
         guard case let .success(client) = authorizedClient else {
             if case let .failure(response) = authorizedClient {
@@ -20,6 +20,7 @@ struct IntegrationHTTPDispatcher {
             }
             return Self.internalServerError()
         }
+        onAuthorized?(client)
 
         do {
             switch IntegrationHTTPRoute.match(method: request.method, path: request.path) {

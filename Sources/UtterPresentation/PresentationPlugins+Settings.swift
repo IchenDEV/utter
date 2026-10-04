@@ -23,12 +23,15 @@ extension PresentationPlugins {
     }
     package static func models() -> PluginRegistration {
         contribution(id: "presentation.models", role: .settings, order: 20, label: "tab.models", symbol: "cpu",
-            requires: [ModelServices.catalog.required, ModelServices.storage.required, ModelServices.lifecycle.required]) { context, _ in
+            requires: [ModelServices.catalog.required, ModelServices.storage.required, ModelServices.lifecycle.required,
+                       GenerationServices.connection.optional]) { context, _ in
                 let catalog = ModelCatalogProjection(service: try context.require(ModelServices.catalog))
                 let storage = try context.require(ModelServices.storage)
                 let lifecycle = ModelLifecycleProjection(service: try context.require(ModelServices.lifecycle))
+                let connection = try context.optional(GenerationServices.connection)
                 try context.scope.onDispose { catalog.dispose(); lifecycle.dispose() }
                 return { _ in AnyView(ModelManagementView(catalog: catalog, storage: storage, lifecycle: lifecycle,
+                    remoteConnection: connection,
                     onUnloadWhisper: { Task { try? await lifecycle.unloadSpeech("speech.whisper") } },
                     onUnloadLLM: { Task { try? await lifecycle.unloadText() } },
                     onLoadLLM: { Task { try? await lifecycle.preloadText() } },
@@ -60,11 +63,12 @@ extension PresentationPlugins {
     }
     package static func onboarding() -> PluginRegistration {
         contribution(id: "presentation.onboarding", role: .onboarding,
-            requires: platformRequirements + [ModelServices.catalog.required]) { context, _ in
+            requires: platformRequirements + [ModelServices.catalog.required, ModelServices.storage.required]) { context, _ in
                 let platform = try platform(context)
                 let catalog = ModelCatalogProjection(service: try context.require(ModelServices.catalog))
+                let storage = try context.require(ModelServices.storage)
                 try context.scope.onDispose { catalog.dispose() }
-                return { presentation in AnyView(OnboardingView(onComplete: presentation.completeOnboarding, catalog: catalog)
+                return { presentation in AnyView(OnboardingView(onComplete: presentation.completeOnboarding, catalog: catalog, storage: storage)
                     .environmentObject(platform)) }
             }
     }

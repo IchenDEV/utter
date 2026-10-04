@@ -3,26 +3,35 @@ import Foundation
 package enum SpokenEditEvidence {
     package static func allows(_ command: SpokenEditCommand, transcript: String,
                                context: SpokenEditCommandResolutionContext) -> Bool {
+        let available: Bool
+        switch command {
+        case .replaceLast, .rewriteLast, .undoLastInsertion: available = context.lastInsertion == .available
+        case .replaceSelection, .rewriteSelection, .deleteSelection: available = context.selectedText == .available
+        }
+        return available && namesTargetAndOperation(command, transcript: transcript)
+    }
+
+    package static func namesTargetAndOperation(_ command: SpokenEditCommand, transcript: String) -> Bool {
         let target: Bool
         let operation: String
         switch command {
         case .replaceLast:
-            target = context.lastInsertion == .available && matches(last, transcript)
+            target = matches(last, transcript)
             operation = replace
         case .rewriteLast:
-            target = context.lastInsertion == .available && matches(last, transcript)
+            target = matches(last, transcript)
             operation = rewrite
         case .replaceSelection:
-            target = context.selectedText == .available && matches(selection, transcript)
+            target = matches(selection, transcript)
             operation = replace
         case .rewriteSelection:
-            target = context.selectedText == .available && matches(selection, transcript)
+            target = matches(selection, transcript)
             operation = rewrite + "|回复|回覆|返信|답장|\\breply\\b"
         case .deleteSelection:
-            target = context.selectedText == .available && matches(selection, transcript)
+            target = matches(selection, transcript)
             operation = "删除|删掉|刪除|刪咗|削除|消して|삭제|지워|\\b(delete|remove)\\b"
         case .undoLastInsertion:
-            target = context.lastInsertion == .available && matches(last, transcript)
+            target = matches(last, transcript)
             operation = "撤销|撤回|撤銷|取り消|戻して|취소|되돌|\\bundo\\b"
         }
         return target && matches(operation, transcript)

@@ -46,7 +46,10 @@ struct GeneralSettingsView: View {
             } header: {
                 SettingsSectionHeader(title: L("settings.activation"))
             } footer: {
-                Text(L("settings.activation_help"))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L("settings.activation_help"))
+                    if settings.hotkeyType == .fn { Text(L("settings.fn_conflict_help")) }
+                }
             }
 
             Section {
@@ -200,6 +203,7 @@ struct GeneralSettingsView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .disabled(!platform.hasRemoteProvider)
         if settings.remoteMicEnabled {
             HStack {
                 Text(L("settings.remote_mic_status"))

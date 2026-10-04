@@ -50,12 +50,30 @@ final class VoiceEditingTests: XCTestCase {
             DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor, confirmation: .targetValue))), recordID: UUID())
         fixture.recipe.resolution = .command(.undoLastInsertion)
         let driver = try fixture.runtime.service(SessionServices.execution)
-        try driver.start(SessionIntent(input: .text("Undo"), mode: .command))
+        try driver.start(SessionIntent(input: .text("Undo last insertion"), mode: .command))
         _ = try await driver.waitForCompletion(try XCTUnwrap(driver.snapshot.id))
         guard case .undoAnchor(let used) = fixture.output.requests.first?.command else { return XCTFail("Missing anchored undo") }
         XCTAssertTrue(used === anchor)
         XCTAssertTrue(history.records.isEmpty)
         XCTAssertNil(outputs.recent)
+        try await fixture.runtime.stop()
+    }
+
+    func testReplacementRecipeCannotTreatANormalReplyAsRewritingTheLastInsertion() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        try await fixture.start()
+        let anchor = EditingAnchor(target: fixture.target, text: "First reply")
+        try fixture.runtime.service(SessionServices.outputs).remember(SessionCompletion(transcript: "original", text: anchor.text,
+            acceptance: .delivery(DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste,
+                anchor: anchor, confirmation: .targetValue))), recordID: UUID())
+        fixture.recipe.resolution = .command(.rewriteLast(.formal))
+        let execution = try fixture.runtime.service(SessionServices.execution)
+        let intent = SessionIntent(input: .text("帮我回复这封邮件"), mode: .command)
+        try execution.start(intent)
+        _ = try await execution.waitForCompletion(intent.id)
+        guard case .insert = fixture.output.requests.first?.command else { return XCTFail("A normal reply overwrote the old reply") }
+        XCTAssertEqual(fixture.recipe.requests.first?.mode, .command)
         try await fixture.runtime.stop()
     }
 
@@ -69,7 +87,7 @@ final class VoiceEditingTests: XCTestCase {
         fixture.recipe.resolution = .command(.replaceLast("Replacement"))
         anchor.isCurrent = false
         let driver = try fixture.runtime.service(SessionServices.execution)
-        try driver.start(SessionIntent(input: .text("Replace that"), mode: .command))
+        try driver.start(SessionIntent(input: .text("Replace last input with Replacement"), mode: .command))
         do { _ = try await driver.waitForCompletion(try XCTUnwrap(driver.snapshot.id)); XCTFail("Stale anchor committed") }
         catch { XCTAssertEqual(error as? DeliveryError, .invalidTarget) }
         XCTAssertTrue(fixture.output.requests.isEmpty)

@@ -24,13 +24,16 @@ struct EvaluationReport {
         handle = try FileHandle(forWritingTo: arguments.output)
     }
 
-    func write(_ sample: VoiceEvaluationCase, attempt: Int, result: ProcessingResult) throws {
+    func write(_ sample: VoiceEvaluationCase, attempt: Int, result: ProcessingResult, transcript: String,
+               asrMilliseconds: Double?, reservedTokens: Int) throws {
         var object: [String: Any] = ["id": "\(sample.id)-\(attempt)", "case_id": sample.id,
             "language": sample.language, "faithful_reference": sample.faithful_reference,
-            "asr_text": sample.text, "processed_text": result.text,
+            "asr_text": transcript, "processed_text": result.text,
             "processing_latency_ms": result.trace?.elapsedMilliseconds ?? 0,
             "outcome": result.decision.disposition.rawValue,
             "evaluation_path": sample.supplied_candidate == nil ? "generation" : "fixed_candidate"]
+        object["reserved_output_tokens"] = reservedTokens
+        if let asrMilliseconds { object["asr_latency_ms"] = asrMilliseconds }
         if let reference = sample.sendable_reference { object["sendable_reference"] = reference }
         object["terms"] = sample.terms ?? []
         if let reason = result.decision.reason { object["fallback_reason"] = reason }
@@ -41,6 +44,8 @@ struct EvaluationReport {
             && !(sample.forbidden_terms ?? []).contains { result.text.contains($0) }
             && (sample.expected_outcome == nil || sample.expected_outcome == result.decision.disposition.rawValue)
         object["constraints_pass"] = constraintsPass
+        object["expected_outcome"] = sample.expected_outcome
+        object["forbidden_terms"] = sample.forbidden_terms ?? []
         object["semantic_review"] = "required"
         var data = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
         data.append(10)
@@ -56,6 +61,11 @@ struct EvaluationReport {
             "total_timeout_seconds": arguments.totalTimeout,
             "source_commit": ProcessInfo.processInfo.environment["UTTER_EVAL_REVISION"] ?? "unknown",
             "quality_status": "requires semantic review"]
+        if let speech = arguments.speech {
+            object["speech_provider"] = speech.providerID
+            object["speech_model_id"] = speech.modelID
+            object["speech_asset_fingerprint"] = try Self.fingerprint(speech.model)
+        }
         if let failure { object["failure"] = failure }
         try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
             .write(to: manifestURL, options: .atomic)

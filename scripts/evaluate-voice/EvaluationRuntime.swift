@@ -4,6 +4,9 @@ import UtterData
 import UtterMediaContracts
 import UtterModels
 import UtterMLX
+import UtterWhisper
+import UtterAudio
+import UtterEvaluation
 import UtterProcessing
 import UtterRuntime
 
@@ -14,7 +17,7 @@ struct EvaluationRuntime {
     private let defaults: UserDefaults
     private let suiteName: String
 
-    init(model: URL, modelID: String) throws {
+    init(model: URL, modelID: String, speech: SpeechEvaluationSelection?) throws {
         suiteName = "UtterVoiceEval-\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else { throw CocoaError(.fileReadUnknown) }
         self.defaults = defaults
@@ -22,7 +25,7 @@ struct EvaluationRuntime {
         self.backend = backend
         let fixtures = PluginRegistration(descriptor: PluginDescriptor(id: "evaluation.inputs",
             provides: [ModelServices.files.reference, DataServices.dictionarySnapshot.reference])) { context, _ in
-            try context.provide(ModelServices.files, value: EvaluationFiles(model: model, modelID: modelID))
+            try context.provide(ModelServices.files, value: EvaluationFiles(model: model, modelID: modelID, speech: speech))
             try context.provide(DataServices.dictionarySnapshot, value: EvaluationDictionary())
         }
         let provider = PluginRegistration(descriptor: PluginDescriptor(id: "evaluation.provider",
@@ -32,11 +35,21 @@ struct EvaluationRuntime {
             try registry.register(ProviderDefinition(descriptor: ProviderDescriptor(
                 id: "evaluation.text", displayName: "Evaluation local model")) { _ in backend }, scope: context.scope)
         }
-        let plugins = [DataPlugins.settings(defaults: defaults), DataPlugins.lexicons(),
+        var plugins = [DataPlugins.settings(defaults: defaults), DataPlugins.lexicons(),
             DataPlugins.diagnostics(EvaluationDiagnostics()), fixtures, ModelPlugins.resourceAccess(),
             ModelPlugins.textProviders(), MLXPlugins.text(), provider, ProcessingPlugins.text(),
             ModePlugins.recipes(), ModePlugins.direct(), ModePlugins.formatting(),
-            ModePlugins.command(), ModePlugins.translation()]
+            ModePlugins.command(), ModePlugins.translation(), ProcessingPlugins.preparation(), AudioPlugins.files(), AudioPlugins.speechEvidence()]
+        if let speech {
+            plugins.append(ModelPlugins.speechProviders())
+            switch speech.type {
+            case .whisper: plugins.append(WhisperPlugins.speech())
+            case .qwen3: plugins.append(MLXPlugins.qwenSpeech())
+            case .firered: plugins.append(MLXPlugins.fireredSpeech())
+            case .megaASR: plugins.append(MLXPlugins.megaSpeech())
+            case .apple, .volc: throw VoiceEvaluationError.unavailableAudioProvider
+            }
+        }
         runtime = PluginRuntime(catalog: try PluginCatalog(plugins))
         selections = plugins.map { PluginSelection($0.descriptor.id) }
     }
@@ -52,13 +65,18 @@ struct EvaluationRuntime {
 actor EvaluationBackend: TextGenerationService {
     private var model: (any TextGenerationService)?
     private var suppliedCandidate: String?
+    private var budget: EvaluationTokenBudget?
     func attach(_ model: any TextGenerationService) { self.model = model }
-    func setCandidate(_ candidate: String?) { suppliedCandidate = candidate }
+    func setCandidate(_ candidate: String?, budget: EvaluationTokenBudget) { suppliedCandidate = candidate; self.budget = budget }
     func generate(_ request: TextGenerationRequest) async throws -> String {
         try Task.checkCancellation()
         if let candidate = suppliedCandidate { suppliedCandidate = nil; return candidate }
         guard let model else { throw GenerationServiceError.modelUnavailable }
-        return try await model.generate(request)
+        guard let budget else { throw VoiceEvaluationError.tokenBudgetExceeded }
+        let tokens = try await budget.reserve(request.maxTokens)
+        return try await model.generate(TextGenerationRequest(prompt: request.prompt, systemPrompt: request.systemPrompt,
+            modelID: request.modelID, modelURL: request.modelURL, maxTokens: tokens, temperature: request.temperature,
+            remote: request.remote, frozenModel: request.frozenModel))
     }
     func unload() async { await model?.unload() }
 }
@@ -66,13 +84,14 @@ actor EvaluationBackend: TextGenerationService {
 private struct EvaluationFiles: ModelFilesService {
     let model: URL
     let modelID: String
+    let speech: SpeechEvaluationSelection?
     func installedTextModelURL(_ id: String) -> URL? { id == modelID ? model : nil }
     func textModelIsComplete(at url: URL) -> Bool { ModelAssets.llmRepoIsComplete(at: url) }
-    func installedSpeechModelURL(_ id: String) -> URL? { nil }
-    func speechRequiredFiles(_ id: String) -> [String] { [] }
-    func installedWhisperURL(_ id: String) -> URL? { nil }
-    func whisperVariantURL(_ id: String) -> URL { model.appendingPathComponent("unavailable-speech") }
-    func whisperModelIsComplete(at url: URL) -> Bool { false }
+    func installedSpeechModelURL(_ id: String) -> URL? { id == speech?.modelID ? speech?.model : nil }
+    func speechRequiredFiles(_ id: String) -> [String] { MLXModelArtifacts.speech.first(where: { $0.id == id })?.requiredFiles ?? ["config.json", "model.safetensors", "tokenizer.json", "tokenizer_config.json"] }
+    func installedWhisperURL(_ id: String) -> URL? { installedSpeechModelURL(id) }
+    func whisperVariantURL(_ id: String) -> URL { installedSpeechModelURL(id) ?? model.appendingPathComponent("unavailable-speech") }
+    func whisperModelIsComplete(at url: URL) -> Bool { ModelAssets.whisperModelIsComplete(at: url) }
 }
 
 private final class EvaluationDictionary: DictionarySnapshotService {

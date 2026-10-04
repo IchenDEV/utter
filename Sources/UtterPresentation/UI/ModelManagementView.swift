@@ -10,6 +10,7 @@ struct ModelManagementView: View {
     @ObservedObject var catalog: ModelCatalogProjection
     let storage: any ModelStorageService
     @ObservedObject var lifecycle: ModelLifecycleProjection
+    let remoteConnection: (any RemoteConnectionService)?
 
     var onUnloadWhisper: (() -> Void)?
     var onUnloadLLM: (() -> Void)?
@@ -164,7 +165,7 @@ extension ModelManagementView {
         panel.message = L("model.import_local")
         if panel.runModal() == .OK, let url = panel.url {
             guard storage.llmRepoIsComplete(at: url) else {
-                importErrorMessage = ""
+                importErrorMessage = L("model.import_invalid")
                 showImportError = true
                 return
             }

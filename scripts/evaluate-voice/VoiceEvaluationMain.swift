@@ -20,14 +20,16 @@ struct VoiceEvaluationMain {
         let arguments = try VoiceEvaluationArguments(Array(CommandLine.arguments.dropFirst()))
         let samples = try VoiceEvaluationCase.load(Data(contentsOf: arguments.corpus), maximumRuns: arguments.maximumRuns)
         guard ModelAssets.llmRepoIsComplete(at: arguments.model) else { throw GenerationServiceError.modelUnavailable }
-        guard samples.allSatisfy({ $0.audio_file == nil }) else { throw VoiceEvaluationError.unavailableAudioProvider }
-        let host = try EvaluationRuntime(model: arguments.model, modelID: arguments.modelID)
+        try EvaluationAudio.validateModel(arguments, samples: samples)
+        let host = try EvaluationRuntime(model: arguments.model, modelID: arguments.modelID, speech: arguments.speech)
         let report = try EvaluationReport(arguments: arguments, expectedRuns: samples.reduce(0) { $0 + $1.repeatCount })
         var completed = 0
         let started = ContinuousClock.now
         do {
             try report.manifest(state: "running", completed: 0)
             try await host.start()
+            let audio = try EvaluationAudio(arguments: arguments, samples: samples, runtime: host.runtime)
+            let speechFingerprint = try arguments.speech.map { try EvaluationReport.fingerprint($0.model) }
             for sample in samples {
                 for attempt in 1...sample.repeatCount {
                     try Task.checkCancellation()
@@ -36,21 +38,33 @@ struct VoiceEvaluationMain {
                     guard try EvaluationReport.fingerprint(arguments.model) == report.assetFingerprint else {
                         throw GenerationServiceError.modelChanged
                     }
-                    if arguments.cold { await host.backend.unload() }
-                    await host.backend.setCandidate(sample.supplied_candidate)
-                    let recipe = try await host.runtime.service(ModeServices.recipes).create(id: sample.recipeID, request: ())
-                    let request = try sample.request(model: arguments.model, modelID: arguments.modelID,
-                        maxTokens: arguments.maxTokens, runtime: host.runtime)
-                    let result = try await withThrowingTaskGroup(of: ProcessingResult.self) { group in
-                        group.addTask { @MainActor in try await recipe.process(request) }
-                        group.addTask {
-                            try await Task.sleep(for: .seconds(min(Double(arguments.caseTimeout), remaining)))
-                            throw VoiceEvaluationError.timedOut
+                    if let speech = arguments.speech {
+                        guard try EvaluationReport.fingerprint(speech.model) == speechFingerprint else {
+                            throw GenerationServiceError.modelChanged
                         }
-                        defer { group.cancelAll() }
-                        return try await group.next()!
                     }
-                    try report.write(sample, attempt: attempt, result: result)
+                    let budget = EvaluationTokenBudget(limit: arguments.maxTokens)
+                    await host.backend.setCandidate(sample.supplied_candidate, budget: budget)
+                    let recipe = try await host.runtime.service(ModeServices.recipes).create(id: sample.recipeID, request: ())
+                    let result = try await withOperationDeadline(for: .seconds(min(Double(arguments.caseTimeout), remaining))) { @MainActor in
+                        if arguments.cold {
+                            await host.backend.unload()
+                            if let speech = arguments.speech {
+                                try await host.runtime.service(SpeechServices.providers).reset(id: speech.providerID)
+                            }
+                        }
+                        let baseRequest = try sample.request(model: arguments.model, modelID: arguments.modelID,
+                            maxTokens: arguments.maxTokens, runtime: host.runtime)
+                        let asrStarted = ContinuousClock.now
+                        let transcript = try await audio.transcript(sample, request: baseRequest, runtime: host.runtime)
+                        let asrTime = sample.audio_file == nil ? nil : elapsedMilliseconds(since: asrStarted)
+                        let request = try sample.request(model: arguments.model, modelID: arguments.modelID,
+                            maxTokens: arguments.maxTokens, runtime: host.runtime, transcript: transcript)
+                        return EvaluationRunResult(transcript: transcript, asrMilliseconds: asrTime,
+                            processing: try await recipe.process(request))
+                    }
+                    try report.write(sample, attempt: attempt, result: result.processing, transcript: result.transcript,
+                        asrMilliseconds: result.asrMilliseconds, reservedTokens: await budget.reserved)
                     completed += 1
                 }
             }
@@ -64,4 +78,10 @@ struct VoiceEvaluationMain {
             throw error
         }
     }
+}
+
+private struct EvaluationRunResult: Sendable {
+    let transcript: String
+    let asrMilliseconds: Double?
+    let processing: ProcessingResult
 }

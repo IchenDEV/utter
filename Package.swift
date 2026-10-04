@@ -193,7 +193,7 @@ let package = Package(
     targets: [
         .executableTarget(name: "UtterVoiceEval",
             dependencies: ["UtterEvaluation", "UtterRuntime", "UtterContracts", "UtterData", "UtterModels",
-                           "UtterMediaContracts", "UtterProcessing", "UtterMLX"],
+                           "UtterMediaContracts", "UtterProcessing", "UtterMLX", "UtterWhisper", "UtterAudio"],
             path: "scripts/evaluate-voice", swiftSettings: [.swiftLanguageMode(.v5)]),
         .target(
             name: "UtterWhisper",

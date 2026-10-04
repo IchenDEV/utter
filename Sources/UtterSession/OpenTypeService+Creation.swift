@@ -7,6 +7,7 @@ extension OpenTypeService {
     }
 
     package func createSession(_ request: InputSessionRequest, input: SessionInput, clientID: String) async throws -> InputSession {
+        try Task.checkCancellation()
         try requireAuthorized(clientID: clientID, capability: .record)
         guard sessions.values.allSatisfy({ $0.state.isTerminal }) else {
             throw IntegrationError.busy

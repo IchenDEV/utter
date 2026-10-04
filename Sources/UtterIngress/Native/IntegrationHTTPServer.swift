@@ -55,7 +55,8 @@ final class IntegrationHTTPServer {
         newListener.stateUpdateHandler = { [weak self] state in
             if case let .failed(error) = state {
                 Task { @MainActor in
-                    self?.onFailure?(error)
+                    guard let self, !self.closed else { return }
+                    self.onFailure?(error)
                 }
             }
         }
@@ -69,7 +70,9 @@ final class IntegrationHTTPServer {
         closed = true
         work.revoke()
         for clientID in requestClients {
-            disconnects.append(Task { await service.disconnect(clientID: clientID) })
+            if let id = service.revokeSession(clientID: clientID) {
+                disconnects.append(Task { await service.drainSession(sessionID: id, clientID: clientID) })
+            }
         }
         requestClients.removeAll()
         listener?.cancel()
@@ -93,8 +96,7 @@ final class IntegrationHTTPServer {
 
     func dispatch(_ request: IntegrationHTTPRequest) async -> IntegrationHTTPResponse {
         guard !closed, !Task.isCancelled else { return IntegrationHTTPResponse.error(.sessionCancelled, statusCode: 409) }
-        if case .success(let client) = dispatcher.authorizeLocalHTTPClient(for: request) { requestClients.insert(client.id) }
-        return await dispatcher.dispatch(request)
+        return await dispatcher.dispatch(request) { [weak self] client in self?.requestClients.insert(client.id) }
     }
 
     private func accept(_ connection: NWConnection) {
@@ -187,6 +189,7 @@ final class IntegrationHTTPServer {
             send(IntegrationHTTPResponse.notFound(), on: connection)
             return
         }
+        requestClients.insert(client.id)
 
         do {
             let subscription = try service.subscribeEvents(sessionID: sessionID, clientID: client.id) { [weak self, weak connection] event in

@@ -142,7 +142,7 @@ extension ModelManagementView {
             }
 
             if settings.useRemoteLLM {
-                RemoteLLMConfigView()
+                RemoteLLMConfigView(connection: remoteConnection)
             } else if settings.localLLMBackend == .espresso {
                 espressoLLMSection
             } else {

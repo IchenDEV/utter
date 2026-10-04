@@ -153,8 +153,8 @@ package final class OpenTypeService: InputSessionService {
 
         if let execution {
             guard execution.snapshot.id == sessionID else { throw IntegrationError.invalidSessionState }
-            execution.cancel()
-            await execution.stop()
+            execution.cancel(sessionID)
+            await execution.stop(sessionID)
             return
         }
         let now = Date()

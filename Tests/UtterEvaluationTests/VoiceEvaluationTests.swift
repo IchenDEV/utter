@@ -41,4 +41,35 @@ final class VoiceEvaluationTests: XCTestCase {
             XCTAssertThrowsError(try VoiceEvaluationArguments(Array(arguments.dropLast(2)) + ["--output", destination]))
         }
     }
+
+    func testSpeechEvaluationRequiresAnExplicitLocalProviderAndCompleteSelection() throws {
+        XCTAssertThrowsError(try VoiceEvaluationArguments(arguments + ["--speech-provider", "whisper"]))
+        let selection = try VoiceEvaluationArguments(arguments + ["--speech-provider", "whisper",
+            "--speech-model", "/tmp/whisper", "--speech-model-id", "base"])
+        XCTAssertEqual(selection.speech?.providerID, "speech.whisper")
+        XCTAssertEqual(selection.speech?.modelID, "base")
+        XCTAssertThrowsError(try VoiceEvaluationArguments(arguments + ["--speech-provider", "apple",
+            "--speech-model", "/tmp/whisper", "--speech-model-id", "base"]))
+        XCTAssertThrowsError(try VoiceEvaluationArguments(Array(arguments.dropLast(2)) + ["--output", "/tmp/whisper/tokenizer.json",
+            "--speech-provider", "whisper", "--speech-model", "/tmp/whisper", "--speech-model-id", "base"]))
+    }
+
+    func testInvalidLexiconTargetAndExpectationFailDuringCorpusPreflight() {
+        for field in [#""lexicon":"unknown""#, #""target_language":"unknown""#,
+                      #""expected_outcome":"unknown""#, #""audio_file":" ""#] {
+            let record = "{\"id\":\"x\",\"language\":\"zh\",\"faithful_reference\":\"你好\",\(field)}"
+            XCTAssertThrowsError(try VoiceEvaluationCase.load(Data(record.utf8), maximumRuns: 100))
+        }
+    }
+
+    func testTokenBudgetIncludesEveryGenerationAndFactCheck() async throws {
+        let budget = EvaluationTokenBudget(limit: 4_096)
+        let generation = try await budget.reserve(3_328)
+        let checker = try await budget.reserve(768)
+        XCTAssertEqual(generation + checker, 4_096)
+        do { _ = try await budget.reserve(1); XCTFail("The fact check cannot bypass the total token budget") }
+        catch VoiceEvaluationError.tokenBudgetExceeded {}
+        let reserved = await budget.reserved
+        XCTAssertEqual(reserved, 4_096)
+    }
 }
