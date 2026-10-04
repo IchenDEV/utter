@@ -13,7 +13,7 @@ extension VoiceSessionJob {
         let text = quick.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { throw IntegrationError.noSpeechDetected }
         control.update(phase: .delivering, transcript: transcript)
-        let acceptance = try await deliver(target == nil ? .clipboard(text) : .insert(text), target: target, control: control)
+        let acceptance = try await deliver(.insert(text), target: target, control: control)
         let kind = dependencies.preparation.format(text: transcript, context: context).kind
         let record = InputRecord(id: intent.id, date: Date(), rawText: transcript, processedText: text,
             wasProcessed: false, context: context, formatKind: kind)

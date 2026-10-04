@@ -46,6 +46,21 @@ final class DeferredReplacementExecutionTests: XCTestCase {
         await driver.close()
     }
 
+    func testExpiredAnchorWithClipboardDisabledKeepsTheCandidateWithoutCopying() async throws {
+        let fixture = try ReplacementFixture(expired: true, allowsClipboardPaste: false)
+        defer { fixture.remove() }
+        let driver = fixture.driver()
+        let intent = SessionIntent(input: .local, operation: .applyReplacement(fixture.pending.id))
+        try driver.start(intent)
+        do { _ = try await driver.waitForCompletion(intent.id); XCTFail("A disabled clipboard fallback was accepted") }
+        catch { XCTAssertEqual(error as? IntegrationError, .operationFailed) }
+        XCTAssertEqual(driver.snapshot.text, "Formatted")
+        XCTAssertEqual(driver.snapshot.deliveryStatus, .notDelivered)
+        XCTAssertTrue(fixture.output.requests.isEmpty)
+        XCTAssertEqual(fixture.outputs.snapshot.pending?.id, fixture.pending.id)
+        await driver.close()
+    }
+
     func testReservedReplacementCannotDeliverAfterItsPendingIDChanges() async throws {
         let fixture = try ReplacementFixture()
         defer { fixture.remove() }
@@ -72,7 +87,9 @@ private final class ReplacementFixture: SessionWorkflowFactory {
     let outputs: SessionOutputState
     let history: HistoryStore
     let pending: DeferredReplacement
-    init(expired: Bool = false) throws {
+    let allowsClipboardPaste: Bool
+    init(expired: Bool = false, allowsClipboardPaste: Bool = true) throws {
+        self.allowsClipboardPaste = allowsClipboardPaste
         outputs = SessionOutputState(notifications: notifications)
         history = HistoryStore(directoryURL: directory, retention: { .forever }, reportError: { _ in }, notifications: notifications)
         let anchor = ReplacementAnchor(target: target)
@@ -87,7 +104,8 @@ private final class ReplacementFixture: SessionWorkflowFactory {
     }
     func make(_ intent: SessionIntent) throws -> any SessionJob {
         try DeferredReplacementJob(id: pending.id, outputs: outputs, output: output,
-            access: ReplacementAccess(), target: target, operationID: intent.id, authorize: {})
+            access: ReplacementAccess(), target: target, operationID: intent.id,
+            allowsClipboardPaste: allowsClipboardPaste, authorize: {})
     }
     func settle(_ intent: SessionIntent, result: Result<SessionCompletion, Error>) {}
     func driver() -> SessionDriver { SessionDriver(workflows: self, history: history, notifications: notifications) }

@@ -29,6 +29,7 @@ final class VoiceWorkflowFixture {
     let files = WorkflowFiles()
     let recipe = WorkflowRecipe()
     let target = WorkflowTarget()
+    var targetAvailable = true
     let screen = WorkflowScreen()
     let evidence = WorkflowEvidence()
     var speechRequests: [SpeechProviderRequest] = []
@@ -66,7 +67,7 @@ final class VoiceWorkflowFixture {
             try context.provide(AudioServices.files, value: WorkflowAudioFiles())
             try context.provide(AudioServices.evidence, value: evidence)
             try context.provide(MacServices.output, value: output)
-            try context.provide(MacServices.target, value: WorkflowTargets(target: target))
+            try context.provide(MacServices.target, value: WorkflowTargets(target: target, isAvailable: { [self] in targetAvailable }))
             try context.provide(MacServices.screen, value: screen)
         }
         plugins = [DataPlugins.settings(defaults: defaults), DataPlugins.credentials(), DataPlugins.notifications(),
@@ -256,8 +257,12 @@ final class WorkflowEvidence: SpeechEvidenceService {
 @MainActor
 private final class WorkflowTargets: TargetCaptureService {
     let target: WorkflowTarget
-    init(target: WorkflowTarget) { self.target = target }
-    func capture(_ request: TargetCaptureRequest) throws -> any OutputTargetLease { target }
+    let isAvailable: () -> Bool
+    init(target: WorkflowTarget, isAvailable: @escaping () -> Bool) { self.target = target; self.isAvailable = isAvailable }
+    func capture(_ request: TargetCaptureRequest) throws -> any OutputTargetLease {
+        guard isAvailable() else { throw DeliveryError.invalidTarget }
+        return target
+    }
 }
 @MainActor
 final class WorkflowTarget: OutputTargetLease {

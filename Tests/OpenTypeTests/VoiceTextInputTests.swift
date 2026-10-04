@@ -19,6 +19,27 @@ import UtterSession
 
 @MainActor
 final class VoiceTextInputTests: XCTestCase {
+    func testMissingTargetKeepsAutomaticOutputUnderTheProviderClipboardPolicy() async throws {
+        for instant in [false, true] {
+            let fixture = try VoiceWorkflowFixture()
+            defer { fixture.remove() }
+            fixture.targetAvailable = false
+            fixture.defaults.set(false, forKey: "allowClipboardPaste")
+            fixture.defaults.set(instant, forKey: "enableInstantInsert")
+            try await fixture.start()
+            let driver = try fixture.runtime.service(SessionServices.execution)
+            let intent = SessionIntent(input: .text("Synthetic dictation"), mode: .formatting)
+            try driver.start(intent)
+            _ = try await driver.waitForCompletion(intent.id)
+            let request = try XCTUnwrap(fixture.output.requests.first)
+            guard case .insert = request.command else { return XCTFail("Automatic output bypassed provider policy with a copy command") }
+            XCTAssertNil(request.target)
+            XCTAssertFalse(request.allowsClipboardPaste)
+            XCTAssertEqual(fixture.output.requests.count, 1)
+            try await fixture.runtime.stop()
+        }
+    }
+
     func testCreatedTextJobFreezesMemoryBeforeHistoryChanges() async throws {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }

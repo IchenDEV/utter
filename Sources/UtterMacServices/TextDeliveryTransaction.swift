@@ -38,7 +38,10 @@ enum TextDeliveryTransaction {
             return DeliveryCompletion(disposition: confirmed ? .accepted : .uncertain,
                 reason: confirmed ? nil : L("delivery.unconfirmed"), confirmation: confirmed ? .targetValue : .none)
         }
-        guard allowsClipboardPaste, !isSecureInput(), let post = prepareKeys(text.isEmpty) else {
+        guard allowsClipboardPaste else {
+            return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.unavailable"))
+        }
+        guard !isSecureInput(), let post = prepareKeys(text.isEmpty) else {
             guard !text.isEmpty else { return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.unavailable")) }
             return ClipboardPasteTransaction.copy(text, pasteboard: pasteboard, canCommit: mayWrite, mark: mark)
         }

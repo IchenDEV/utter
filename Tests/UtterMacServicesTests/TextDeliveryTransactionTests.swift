@@ -5,17 +5,19 @@ import UtterContracts
 @MainActor
 final class TextDeliveryTransactionTests: XCTestCase {
     func testDirectRangeWriteHasNoClipboardOrKeyboardEffects() async {
-        let target = TransactionTarget()
-        let clipboard = TransactionPasteboard()
-        var effects: Set<DeliveryEffect> = []
-        let result = await TextDeliveryTransaction.deliver("new", target: target, pasteboard: clipboard,
-            allowsClipboardPaste: true, isSecureInput: { false }, prepareKeys: { _ in XCTFail("AX should write directly"); return nil },
-            canCommit: { true }, mark: { effects.insert($0).inserted })
-        XCTAssertEqual(result.confirmation, .targetValue)
-        XCTAssertEqual(effects, [.accessibility])
-        XCTAssertEqual(target.writes, ["new"])
-        XCTAssertEqual(clipboard.changeCount, 0)
-        XCTAssertEqual(target.restorations, 0)
+        for allowed in [false, true] {
+            let target = TransactionTarget()
+            let clipboard = TransactionPasteboard()
+            var effects: Set<DeliveryEffect> = []
+            let result = await TextDeliveryTransaction.deliver("new", target: target, pasteboard: clipboard,
+                allowsClipboardPaste: allowed, isSecureInput: { false }, prepareKeys: { _ in XCTFail("AX should write directly"); return nil },
+                canCommit: { true }, mark: { effects.insert($0).inserted })
+            XCTAssertEqual(result.confirmation, .targetValue)
+            XCTAssertEqual(effects, [.accessibility])
+            XCTAssertEqual(target.writes, ["new"])
+            XCTAssertEqual(clipboard.changeCount, 0)
+            XCTAssertEqual(target.restorations, 0)
+        }
     }
 
     func testPossiblyPartialAXFailureNeverRetriesUsingClipboard() async {
@@ -32,20 +34,35 @@ final class TextDeliveryTransactionTests: XCTestCase {
         XCTAssertEqual(effects, [.accessibility])
     }
 
-    func testSecureInputAndDisabledPasteOfferConfirmedCopyWithoutKeys() async {
+    func testDisabledPasteCannotWriteTheClipboardEvenUnderSecureInput() async {
         for secure in [false, true] {
             let target = TransactionTarget()
             target.supportsSelectionWrite = false
             let clipboard = TransactionPasteboard()
             var effects: Set<DeliveryEffect> = []
             let result = await TextDeliveryTransaction.deliver("new", target: target, pasteboard: clipboard,
-                allowsClipboardPaste: secure, isSecureInput: { secure }, prepareKeys: { _ in XCTFail("Keys are disabled"); return nil },
+                allowsClipboardPaste: false, isSecureInput: { secure }, prepareKeys: { _ in XCTFail("Keys are disabled"); return nil },
                 canCommit: { true }, mark: { effects.insert($0).inserted })
-            XCTAssertEqual(result.confirmation, .clipboardValue)
-            XCTAssertEqual(effects, [.clipboard])
-            XCTAssertEqual(clipboard.text, "new")
+            XCTAssertEqual(result.disposition, .notCommitted)
+            XCTAssertEqual(result.confirmation, .none)
+            XCTAssertTrue(effects.isEmpty)
+            XCTAssertEqual(clipboard.text, "old")
+            XCTAssertEqual(clipboard.changeCount, 0)
             XCTAssertEqual(target.restorations, 1)
         }
+    }
+
+    func testEnabledClipboardFallbackCanCopyUnderSecureInputWithoutPostingKeys() async {
+        let target = TransactionTarget()
+        target.supportsSelectionWrite = false
+        let clipboard = TransactionPasteboard()
+        var effects: Set<DeliveryEffect> = []
+        let result = await TextDeliveryTransaction.deliver("new", target: target, pasteboard: clipboard,
+            allowsClipboardPaste: true, isSecureInput: { true }, prepareKeys: { _ in XCTFail("Secure input blocks keys"); return nil },
+            canCommit: { true }, mark: { effects.insert($0).inserted })
+        XCTAssertEqual(result.confirmation, .clipboardValue)
+        XCTAssertEqual(effects, [.clipboard])
+        XCTAssertEqual(clipboard.text, "new")
     }
 
     func testTargetChangeDuringSelectionPreparationCommitsNothing() async {

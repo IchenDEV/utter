@@ -44,6 +44,11 @@ package final class DeferredReplacementJob: SessionJob {
                     context: replacement.context, formatKind: replacement.formatKind)
                 mutation = .remember
             } else {
+                guard allowsClipboardPaste else {
+                    return SessionCompletion(transcript: replacement.rawText, text: text, acceptance: .delivery(
+                        DeliveryReceipt(operationID: operationID, disposition: .notCommitted, effect: .none,
+                                        reason: L("delivery.unavailable"))), outputMutation: .preserve)
+                }
                 command = .clipboard(text)
                 history = nil
                 mutation = .copiedPending(replacement.id, message: copyMessage(decision))

@@ -22,12 +22,15 @@ final class TestGenerationCatalog<Value: Sendable>: ProviderCatalog {
     typealias Request = GenerationPurpose
     private let values: [String: Value]
     private let benchmarkValues: [String: Value]
+    private let unload: @MainActor (Value) async -> Void
     let descriptors: [ProviderDescriptor]
 
-    nonisolated init(values: [String: Value], benchmarkValues: [String: Value] = [:]) {
+    nonisolated init(values: [String: Value], benchmarkValues: [String: Value] = [:],
+                     descriptors: [ProviderDescriptor]? = nil, unload: @escaping @MainActor (Value) async -> Void = { _ in }) {
         self.values = values
         self.benchmarkValues = benchmarkValues
-        descriptors = values.keys.sorted().map { ProviderDescriptor(id: $0, displayName: $0) }
+        self.descriptors = descriptors ?? values.keys.sorted().map { ProviderDescriptor(id: $0, displayName: $0) }
+        self.unload = unload
     }
 
     func register(_ definition: ProviderDefinition<GenerationPurpose, Value>, scope: PluginScope) throws {
@@ -36,9 +39,25 @@ final class TestGenerationCatalog<Value: Sendable>: ProviderCatalog {
 
     func create(id: String, request: GenerationPurpose) async throws -> Value {
         try Task.checkCancellation()
-        if request == .benchmark, let value = benchmarkValues[id] { return value }
-        guard let value = values[id] else { throw ProviderCatalogError.unknownIdentifier(id) }
+        let key = try canonicalID(id)
+        if request == .benchmark, let value = benchmarkValues[key] { return value }
+        guard let value = values[key] else { throw ProviderCatalogError.unknownIdentifier(id) }
         return value
+    }
+
+    func reset(id: String) async throws {
+        try Task.checkCancellation()
+        let key = try canonicalID(id)
+        guard let value = values[key] else { throw ProviderCatalogError.unknownIdentifier(id) }
+        await unload(value)
+        if let benchmark = benchmarkValues[key] { await unload(benchmark) }
+    }
+
+    private func canonicalID(_ id: String) throws -> String {
+        guard let descriptor = descriptors.first(where: { $0.id == id || $0.legacyIDs.contains(id) }) else {
+            throw ProviderCatalogError.unknownIdentifier(id)
+        }
+        return descriptor.id
     }
 }
 
@@ -52,10 +71,14 @@ struct TestGenerationServices {
         let remote = RemoteLLMClient(transport: URLSessionRemoteTransport(), log: log)
         let benchmark = MLXGenerationService(files: files, access: access, log: log)
         text = TestGenerationCatalog<any TextGenerationService>(
-            values: ["mlx": mlx, "generation.mlx": mlx, "espresso": ane, "generation.ane": ane, "remote": remote, "generation.remote": remote],
-            benchmarkValues: ["mlx": benchmark, "generation.mlx": benchmark]
+            values: ["generation.mlx": mlx, "generation.ane": ane, "generation.remote": remote],
+            benchmarkValues: ["generation.mlx": benchmark],
+            descriptors: [ProviderDescriptor(id: "generation.mlx", legacyIDs: ["mlx"], displayName: "MLX"),
+                          ProviderDescriptor(id: "generation.ane", legacyIDs: ["espresso"], displayName: "ANE"),
+                          ProviderDescriptor(id: "generation.remote", legacyIDs: ["remote"], displayName: "Remote")],
+            unload: { await $0.unload() }
         )
         let vlm = MLXImageGenerationService(files: files, access: access, log: log)
-        image = TestGenerationCatalog<any ImageGenerationService>(values: ["generation.mlx-image": vlm])
+        image = TestGenerationCatalog<any ImageGenerationService>(values: ["generation.mlx-image": vlm], unload: { await $0.unload() })
     }
 }

@@ -38,7 +38,7 @@ Tests use owner modules directly. Construction fixtures under `Tests/OpenTypeTes
 
 - **`@MainActor`** is used for all UI-touching code; background work uses `Task { }` and `actor`
 - **Localization**: all user-facing strings go through `L("key")` (defined in `Loc.swift`), with entries in both `en.lproj` and `zh-Hans.lproj`
-- **Settings persistence**: `AppSettings` uses `@Published` + Combine `sink` to auto-persist to `UserDefaults`
+- **Settings persistence**: `SettingsStore` owns `UserDefaults` through `SettingsService`; `AppSettings` observes that service and projects values for SwiftUI. Credentials have a separate service.
 - **Remote LLM**: `RemoteLLMClient` dispatches to OpenAI-format (`/chat/completions`) or Anthropic-format (`/messages`) based on `provider.apiFormat`
 - **Prompt management**: `Sources/UtterProcessing/PromptBuilder.swift` assembles prompts; fixed prompt text belongs in `PromptCatalog.swift` and style presets belong in `PromptStylePrompts.swift`
 - **Text processing**: no hardcoded filler-word removal — the LLM handles all contextual cleanup via the system prompt

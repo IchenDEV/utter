@@ -147,7 +147,7 @@ final class VoiceSessionJob: SessionJob {
             if case .selectionEdit = mode {
                 guard target?.selectedText?.isEmpty == false else { throw DeliveryError.invalidTarget }
                 command = .replaceSelection(text)
-            } else { command = target == nil ? .clipboard(text) : .insert(text) }
+            } else { command = .insert(text) }
             acceptance = try await deliver(command, target: target, control: control)
         }
         return SessionCompletion(transcript: transcript, text: text, acceptance: acceptance,

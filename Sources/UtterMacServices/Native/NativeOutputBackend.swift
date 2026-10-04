@@ -47,6 +47,12 @@ final class NativeOutputBackend {
         case .replaceAnchor(let value, let previous): text = value; target = previous.target; anchor = previous; requiresSelection = false
         case .undoAnchor(let previous): text = ""; target = previous.target; anchor = previous; requiresSelection = false
         }
+        if case .insert = request.command, target == nil {
+            guard request.allowsClipboardPaste else {
+                return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.unavailable"))
+            }
+            return ClipboardPasteTransaction.copy(text, pasteboard: pasteboard, canCommit: canCommit, mark: markCommitted)
+        }
         guard canCommit(), let target,
               let destination = NativeDeliveryTarget(lease: target, anchor: anchor, requiresSelection: requiresSelection) else {
             return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.target_changed"))
