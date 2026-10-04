@@ -13,6 +13,8 @@ package final class HotkeyManager {
     var ownedTasks: [UUID: Task<Void, Never>] = [:]
     var retryTask: Task<Void, Never>?
     let gestures: HotkeyGestureController
+    private let eventTime: HotkeyEventTime
+    package var eventTimestamp: Duration? { eventTime.current }
     var eventTap: CFMachPort?
     var runLoopSource: CFRunLoopSource?
     var globalMonitor: Any?
@@ -32,10 +34,13 @@ package final class HotkeyManager {
         self.markAccessibilityPrompted = markAccessibilityPrompted
         self.log = log
         self.settings = settings
+        let eventTime = HotkeyEventTime()
+        self.eventTime = eventTime
         gestures = HotkeyGestureController(
             settings: settings,
             onStart: onStart,
-            onStop: onStop, onPromote: onPromote, onCancel: onCancel
+            onStop: onStop, onPromote: onPromote, onCancel: onCancel,
+            now: { eventTime.current ?? .seconds(ProcessInfo.processInfo.systemUptime) }
         )
     }
 
@@ -125,6 +130,7 @@ package final class HotkeyManager {
     }
 
     func handleFlagsChanged(_ event: CGEvent) {
+        eventTime.current = .nanoseconds(Int64(clamping: event.timestamp))
         if event.type == .keyDown {
             handleNavigationKey(UInt16(event.getIntegerValueField(.keyboardEventKeycode)))
             return
@@ -139,6 +145,7 @@ package final class HotkeyManager {
 
     func handleNSEventFlags(_ event: NSEvent) {
         guard eventTap == nil else { return }
+        if event.timestamp.isFinite, event.timestamp >= 0 { eventTime.current = .seconds(event.timestamp) }
         if event.type == .keyDown { handleNavigationKey(event.keyCode); return }
         let values = gestures.keySettings
         processPhysicalKeyState(

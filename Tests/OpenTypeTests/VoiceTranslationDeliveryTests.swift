@@ -15,7 +15,9 @@ final class VoiceTranslationDeliveryTests: XCTestCase {
             let driver = try fixture.runtime.service(SessionServices.execution)
             let intent = SessionIntent(input: .text("Synthetic input"), mode: .translation(.english))
             try driver.start(intent)
-            let result = try await driver.waitForCompletion(intent.id)
+            do { _ = try await driver.waitForCompletion(intent.id); XCTFail("Unverified translation was accepted") }
+            catch { XCTAssertEqual(error as? IntegrationError, .operationFailed) }
+            let result = driver.snapshot
             XCTAssertEqual(result.phase, .failed)
             XCTAssertEqual(result.deliveryStatus, .notDelivered)
             XCTAssertEqual(result.text, "Synthetic input Formatted.")

@@ -2,6 +2,7 @@ import os
 import UtterContracts
 
 package struct SystemDiagnostics: DiagnosticsService {
+    package init() {}
     private let logger = Logger(subsystem: ProductBrand.bundleIdentifier, category: "app")
 
     package init() {}

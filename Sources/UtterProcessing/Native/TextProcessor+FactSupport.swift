@@ -23,8 +23,10 @@ extension TextProcessor {
         checkOptions.textProviderID = ProcessingObservations.current?.lastSuccessfulProviderID ?? options.textProviderID
         checkOptions.fallbackToMLXOnEspressoFailure = false
         do {
-            let result = try await generateText(prompt: prompt, systemPrompt: PromptCatalog.factSupportSystemPrompt,
-                options: checkOptions, maxTokens: 768, temperature: 0)
+            let result = try await ProcessingObservations.$generationStage.withValue(.factSupport) {
+                try await generateText(prompt: prompt, systemPrompt: PromptCatalog.factSupportSystemPrompt,
+                    options: checkOptions, maxTokens: 768, temperature: 0)
+            }
             try Task.checkCancellation()
             guard FactSupportVerdict.accepts(result) else {
                 return rejectedTransformation(candidate, source: source, reason: "fact_support_unconfirmed")

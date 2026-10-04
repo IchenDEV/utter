@@ -19,6 +19,7 @@ final class VoiceWorkflowFixture {
     let files = WorkflowFiles()
     let recipe = WorkflowRecipe()
     let target = WorkflowTarget()
+    let screen = WorkflowScreen()
     var speechRequests: [SpeechProviderRequest] = []
     private(set) var runtime: PluginRuntime!
     private var plugins: [PluginRegistration] = []
@@ -33,7 +34,7 @@ final class VoiceWorkflowFixture {
         let capabilities = PluginRegistration(descriptor: PluginDescriptor(id: "fixture.voice-capabilities", provides: [
             ModelServices.files.reference, SpeechServices.providers.reference, GenerationServices.providers.reference,
             ModeServices.recipes.reference, AudioServices.capture.reference, AudioServices.files.reference,
-            AudioServices.evidence.reference, MacServices.output.reference, MacServices.target.reference
+            AudioServices.evidence.reference, MacServices.output.reference, MacServices.target.reference, MacServices.screen.reference
         ])) { [self] context, _ in
             let speech = ProviderRegistry<SpeechProviderRequest, any SpeechEngine>()
             try speech.register(ProviderDefinition(descriptor: ProviderDescriptor(id: "speech.fixture", legacyIDs: ["apple"], displayName: "Fixture")) { [self] request in
@@ -55,6 +56,7 @@ final class VoiceWorkflowFixture {
             try context.provide(AudioServices.evidence, value: WorkflowEvidence())
             try context.provide(MacServices.output, value: output)
             try context.provide(MacServices.target, value: WorkflowTargets(target: target))
+            try context.provide(MacServices.screen, value: screen)
         }
         plugins = [DataPlugins.settings(defaults: defaults), DataPlugins.credentials(), DataPlugins.notifications(),
                    DataPlugins.integrationClients(defaults: defaults), DataPlugins.dictionary(directoryURL: directory),
@@ -68,6 +70,20 @@ final class VoiceWorkflowFixture {
         defaults.removePersistentDomain(forName: suite)
         try? FileManager.default.removeItem(at: directory)
     }
+}
+
+@MainActor
+final class WorkflowScreen: ScreenCaptureService {
+    var requests: [ScreenContextMode] = []
+    var snapshot = ScreenContextSnapshot.empty
+    func capture(mode: ScreenContextMode) async throws -> ScreenContextSnapshot {
+        requests.append(mode)
+        return snapshot
+    }
+    func checkPermission() async throws -> Bool { snapshot.status != .permissionDenied }
+    func requestPermission() {}
+    func excludeWindow(_ id: UInt32) {}
+    func includeWindow(_ id: UInt32) {}
 }
 
 final class WorkflowSpeech: SpeechEngine {

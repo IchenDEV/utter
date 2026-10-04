@@ -13,6 +13,7 @@ final class HotkeyIngress: HotkeyControlService {
     private var cancel: (() -> Void)?
     private var manager: HotkeyManager?
     var captureID: UUID? { manager?.gestures.captureID }
+    var eventTimestamp: Duration? { manager?.eventTimestamp }
 
     init(settings: any SettingsService, log: Log, isReady: @escaping () -> Bool) {
         self.isReady = isReady

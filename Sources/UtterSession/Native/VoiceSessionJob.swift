@@ -10,6 +10,7 @@ final class VoiceSessionJob: SessionJob {
     let settings: VoiceInputSettings
     let options: TextProcessingOptions
     var mode: TextProcessingMode
+    var presentationMode: TextProcessingMode? { mode }
     var recipeID: String
     let translationRecipeID: String
     let directRecipeID: String
@@ -26,6 +27,7 @@ final class VoiceSessionJob: SessionJob {
     var engine: (any SpeechEngine)?
     var recording: (any OwnedRecording)?
     var captureTask: Task<Audio, Error>?
+    let streamingCapture = StreamingCapturePlan()
     var delivery: (any PreparedDelivery)?
     var screenTask: Task<ScreenContextSnapshot, Never>?
     var revoked = false
@@ -78,16 +80,25 @@ final class VoiceSessionJob: SessionJob {
     }
 
     func run(control: any SessionJobControl) async throws -> SessionCompletion {
-        try await dependencies.access.withAccess {
-            do {
-                let completion = try await execute(control: control)
-                await close()
-                return completion
-            } catch {
-                let failure = captureFailure ?? error
-                await close()
-                throw failure
+        do {
+            try await startCapture(control: control)
+            let queue = control.beginStage(.queue)
+            return try await dependencies.access.withAccess {
+                control.endStage(queue)
+                do {
+                    let completion = try await execute(control: control)
+                    await close()
+                    return completion
+                } catch {
+                    let failure = captureFailure ?? error
+                    await close()
+                    throw failure
+                }
             }
+        } catch {
+            let failure = captureFailure ?? error
+            await close()
+            throw failure
         }
     }
 
@@ -115,7 +126,12 @@ final class VoiceSessionJob: SessionJob {
             memoryContext: memoryContext, inputContext: inputContext, formatKind: formatKind)
         if intent.clientID == nil, mode == .command,
            let edited = try await performSpokenEdit(request, recipe: recipe, control: control) { return edited }
+        if mode == .command, [.permissionDenied, .captureFailed, .recognitionFailed].contains(screen.status) {
+            throw ScreenContextFailure(status: screen.status)
+        }
+        let processing = control.beginStage(.processing)
         let output = try await recipe.process(request)
+        control.endStage(processing)
         try check(control)
         let text = output.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { throw IntegrationError.operationFailed }
@@ -142,12 +158,15 @@ final class VoiceSessionJob: SessionJob {
     func check(_ control: any SessionJobControl) throws {
         try Task.checkCancellation()
         guard !revoked, control.isCurrent else { throw CancellationError() }
-        try authorize()
+        do { try authorize() }
+        catch IntegrationError.unauthorizedClient { throw CancellationError() }
+        catch IntegrationError.developerInterfaceDisabled { throw CancellationError() }
     }
 
     func revoke() {
         revoked = true
         callbacks.revoke()
+        _ = streamingCapture.finish()
         screenTask?.cancel()
         captureTask?.cancel()
         recording?.revoke()

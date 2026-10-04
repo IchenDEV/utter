@@ -15,6 +15,7 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
     package internal(set) var isReady = false
     package internal(set) var isLoading = false
     var loadError: String?
+    var preparationProgress: (SpeechModelProgress) -> Void = { _ in }
     private var retiredStreams: [WhisperStreamingSession] = []
     private var streamingSession: WhisperStreamingSession?
     private let recognitionContextLock = NSLock()
@@ -31,6 +32,10 @@ package final class WhisperEngine: SpeechEngine, @unchecked Sendable {
         let retired = retiredStreams
         retiredStreams.removeAll()
         for stream in retired { await stream.shutdown() }
+        if !isReady, !closed {
+            do { try await loadModel(progress: preparationProgress) }
+            catch { loadError = error.localizedDescription }
+        }
     }
 
     package var supportsStreaming: Bool { true }

@@ -7,10 +7,10 @@ extension VoiceSessionJob {
         if case .text(let text) = input {
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { throw IntegrationError.noSpeechDetected }
-            startScreenCapture()
             return trimmed
         }
         guard let speechFiles, let speechDescriptor, speechFiles.isCurrent else { throw IntegrationError.modelNotReady }
+        let preparation = control.beginStage(.preparation)
         let selected = try await dependencies.speech.create(id: settings.speech.providerID,
             request: SpeechProviderRequest(selection: settings.speech, modelFiles: speechFiles))
         engine = selected
@@ -19,31 +19,27 @@ extension VoiceSessionJob {
         try check(control)
         selected.configureRecognition(context: SpeechRecognitionContext(phrases: speechDescriptor.recognitionVocabulary == .personal
             ? settings.dictionary.personalRecognitionPhrases : settings.dictionary.recognitionPhrases))
-        startScreenCapture()
-        let (starts, continuation) = AsyncStream<Result<Void, Error>>.makeStream(bufferingPolicy: .bufferingNewest(2))
-        let task = Task {
-            defer { continuation.finish() }
-            do { return try await self.capture(using: selected, control: control, onStarted: { continuation.yield(.success(())) }) }
-            catch { continuation.yield(.failure(error)); throw error }
-        }
-        captureTask = task
-        for await started in starts { try started.get(); break }
+        startStreamingIfReady(using: selected, control: control)
         try check(control)
         await selected.prepare()
+        control.endStage(preparation)
         try check(control)
         guard selected.isReady else { throw IntegrationError.modelNotReady }
-        let audio = try await task.value
+        guard let captureTask else { throw IntegrationError.invalidSessionState }
+        let audio = try await captureTask.value
         try check(control)
         control.update(phase: .transcribing, transcript: "")
         if let activity = audio.activity, !activity.hasMeaningfulAudio { throw IntegrationError.noSpeechDetected }
         guard try await dependencies.evidence.containsSpeech(at: audio.url) else { throw IntegrationError.noSpeechDetected }
         try check(control)
+        let transcription = control.beginStage(.transcription)
         let raw: String
         if audio.streaming {
             raw = try await selected.finishListening(audioURL: audio.url, language: settings.inputLanguage.whisperCode)
         } else {
             raw = try await selected.transcribe(audioURL: audio.url, language: settings.inputLanguage.whisperCode)
         }
+        control.endStage(transcription)
         try check(control)
         guard let transcript = dependencies.preparation.transcript(raw, activity: audio.activity,
             recognitionPhrases: settings.dictionary.recognitionPhrases) else { throw IntegrationError.noSpeechDetected }

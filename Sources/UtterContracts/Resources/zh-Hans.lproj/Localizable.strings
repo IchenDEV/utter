@@ -52,6 +52,10 @@
 "pipeline.model_load_failed" = "模型未能加载，请重试；若仍失败，请在模型页重新下载或切换模型";
 "pipeline.model_load_failed_network" = "模型未能加载，请检查网络后重试";
 "pipeline.recording" = "录音中…";
+"pipeline.preparing_capture" = "正在准备录音…";
+"screen.permission_required" = "请允许屏幕录制，以读取屏幕并生成回复。";
+"screen.capture_failed" = "无法截取屏幕，请重试。";
+"screen.recognition_failed" = "无法读取屏幕文字，请重试。";
 "pipeline.recording_translation" = "正在录音并准备翻译…";
 "overlay.cancel_recording" = "取消录音";
 "overlay.finish_recording" = "结束录音";

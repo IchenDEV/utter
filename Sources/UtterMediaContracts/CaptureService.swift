@@ -56,10 +56,15 @@ package protocol CaptureService: AnyObject {
     func begin(_ request: CaptureRequest, callbacks: CaptureCallbacks) async throws -> any OwnedRecording
 }
 
-package enum CaptureError: Error, Equatable, LocalizedError {
+package enum CaptureError: Error, Equatable, LocalizedError, SessionFailurePresenting {
     case busy
     case remoteUnavailable
     case startFailed(AudioCaptureStartFailure)
+
+    package var sessionFailure: SessionFailurePresentation {
+        if case .startFailed(let reason) = self { return reason.sessionFailure }
+        return SessionFailurePresentation(message: localizedDescription)
+    }
 
     package var errorDescription: String? {
         switch self {

@@ -80,8 +80,10 @@ extension TextProcessor {
                     mlx: {
                         let fallback = try await self.providers.create(id: options.fallbackProviderID, request: .inference)
                         try Task.checkCancellation()
-                        return try await self.observedGeneration(fallbackRequest, providerID: options.fallbackProviderID) {
-                            try await fallback.generate(fallbackRequest)
+                        return try await ProcessingObservations.$generationStage.withValue(.fallback) {
+                            try await self.observedGeneration(fallbackRequest, providerID: options.fallbackProviderID) {
+                                try await fallback.generate(fallbackRequest)
+                            }
                         }
                     }
                 )
@@ -125,8 +127,10 @@ extension TextProcessor {
         guard let imageProviders else { throw GenerationServiceError.unsupportedOperation }
         let provider = try await imageProviders.create(id: providerID, request: .inference)
         try Task.checkCancellation()
-        let result = try await observedGeneration(request, providerID: providerID) {
-            try await provider.generate(ImageGenerationRequest(text: request, image: image))
+        let result = try await ProcessingObservations.$generationStage.withValue(.image) {
+            try await observedGeneration(request, providerID: providerID) {
+                try await provider.generate(ImageGenerationRequest(text: request, image: image))
+            }
         }
         try Task.checkCancellation()
         return result

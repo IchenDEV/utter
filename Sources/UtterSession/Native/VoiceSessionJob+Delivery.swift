@@ -25,6 +25,9 @@ extension VoiceSessionJob {
                 return (try? self.check(control)) != nil
             })
         delivery = prepared
-        return .delivery(await prepared.commit())
+        let measurement = control.beginStage(.delivery)
+        let receipt = await prepared.commit()
+        control.endStage(measurement)
+        return .delivery(receipt)
     }
 }

@@ -6,6 +6,8 @@ final class SessionControl: SessionJobControl {
     private let current: () -> Bool
     private let cancelSession: () -> Void
     private let updateSnapshot: (SessionExecutionPhase, String) -> Void
+    private let timing: SessionTiming?
+    private let audioLevel: (Float) -> Void
     private var cancelled = false
     private var stopped = false
     private var activated = false
@@ -13,13 +15,18 @@ final class SessionControl: SessionJobControl {
     private var waiter: CheckedContinuation<Void, Error>?
     private var stopWaiterID: UUID?
 
-    init(isCurrent: @escaping () -> Bool, cancel: @escaping () -> Void, update: @escaping (SessionExecutionPhase, String) -> Void) {
+    init(isCurrent: @escaping () -> Bool, cancel: @escaping () -> Void, update: @escaping (SessionExecutionPhase, String) -> Void,
+         timing: SessionTiming? = nil, audioLevel: @escaping (Float) -> Void = { _ in }) {
         current = isCurrent
         cancelSession = cancel
         updateSnapshot = update
+        self.timing = timing; self.audioLevel = audioLevel
     }
     var isCurrent: Bool { !cancelled && current() }
     var isStopped: Bool { stopped }
+    func beginStage(_ stage: SessionStage) -> UUID { timing?.begin(stage) ?? UUID() }
+    func endStage(_ id: UUID) { timing?.end(id) }
+    func updateAudioLevel(_ level: Float) { if isCurrent { audioLevel(level) } }
     func update(phase: SessionExecutionPhase, transcript: String) {
         guard isCurrent else { return }
         updateSnapshot(phase, transcript)

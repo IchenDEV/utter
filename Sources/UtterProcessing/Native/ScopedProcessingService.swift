@@ -21,6 +21,7 @@ final class ScopedProcessingService: ProcessingService {
 
     func process(_ request: ProcessingRequest) async throws -> ProcessingResult {
         try await run {
+            try self.requireFrozenModel(request)
             let observation = ProcessingObservation(collectsBody: request.collectsDiagnostics)
             return try await ProcessingObservations.$current.withValue(observation) {
               try await TextProcessor.withEspressoOutcomeTracking {
@@ -33,10 +34,20 @@ final class ScopedProcessingService: ProcessingService {
                 observation.complete(source: request.text, candidate: text)
                 let snapshot = observation.snapshot()
                 return ProcessingResult(text: text, generationOutcome: outcome,
-                    decision: snapshot.decision, trace: snapshot.trace)
+                    decision: snapshot.decision, trace: snapshot.trace, timings: snapshot.timings)
               }
             }
         }
+    }
+
+    private func requireFrozenModel(_ request: ProcessingRequest) throws {
+        guard request.mode != .direct, !request.options.useRemoteLLM,
+              case .frozen(let bundle, let directory) = request.options.modelLocations else { return }
+        if request.options.localLLMBackend == .espresso {
+            guard bundle != nil || (request.options.fallbackToMLXOnEspressoFailure && directory != nil) else {
+                throw GenerationServiceError.modelUnavailable
+            }
+        } else if directory == nil { throw GenerationServiceError.modelUnavailable }
     }
 
     func cleanReplacement(_ text: String, language: InputLanguage) throws -> String {

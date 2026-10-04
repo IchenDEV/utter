@@ -53,11 +53,21 @@ package struct SessionExecutionSnapshot: Equatable, Sendable {
     package let error: String?
     package let isBusy: Bool
     package let deliveryStatus: DeliveryStatus?
+    package let performance: SessionPerformance?
+    package let audioLevel: Float
+    package let mode: TextProcessingMode?
+    package let recoveryAction: SessionRecoveryAction?
     package init(id: UUID? = nil, phase: SessionExecutionPhase? = nil, transcript: String = "",
-                 text: String = "", error: String? = nil, isBusy: Bool = false, deliveryStatus: DeliveryStatus? = nil) {
+                 text: String = "", error: String? = nil, isBusy: Bool = false, deliveryStatus: DeliveryStatus? = nil,
+                 performance: SessionPerformance? = nil, audioLevel: Float = 0, mode: TextProcessingMode? = nil,
+                 recoveryAction: SessionRecoveryAction? = nil) {
         self.id = id; self.phase = phase; self.transcript = transcript
         self.text = text; self.error = error; self.isBusy = isBusy
         self.deliveryStatus = deliveryStatus
+        self.performance = performance
+        self.audioLevel = audioLevel.isFinite ? min(1, max(0, audioLevel)) : 0
+        self.mode = mode
+        self.recoveryAction = recoveryAction
     }
 }
 
@@ -112,13 +122,18 @@ package protocol SessionFollowupWork: AnyObject {
 @MainActor
 package protocol SessionJobControl: AnyObject {
     var isCurrent: Bool { get }
+    var isStopped: Bool { get }
     func update(phase: SessionExecutionPhase, transcript: String)
     func cancel()
     func waitForStop() async throws
+    func beginStage(_ stage: SessionStage) -> UUID
+    func endStage(_ id: UUID)
+    func updateAudioLevel(_ level: Float)
 }
 
 @MainActor
 package protocol SessionJob: AnyObject {
+    var presentationMode: TextProcessingMode? { get }
     func promoteToTranslation() -> TextProcessingMode?
     func bind(input: SessionInput) throws
     func attach(control: any SessionJobControl)
@@ -138,6 +153,7 @@ package protocol SessionWorkflowFactory: AnyObject {
 
 @MainActor
 package protocol SessionExecutionService: AnyObject {
+    @discardableResult func requestStop(_ id: UUID, at timestamp: Duration?) -> Bool
     func promoteToTranslation(_ id: UUID, reason: HotkeyPromotion) -> Bool
     var snapshot: SessionExecutionSnapshot { get }
     func reserve(_ intent: SessionIntent) throws
@@ -163,6 +179,7 @@ extension SessionServices {
 }
 
 extension SessionJob {
+    package var presentationMode: TextProcessingMode? { nil }
     package func promoteToTranslation() -> TextProcessingMode? { nil }
     package func bind(input: SessionInput) throws { throw IntegrationError.invalidSessionState }
     package func attach(control: any SessionJobControl) {}

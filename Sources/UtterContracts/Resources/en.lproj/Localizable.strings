@@ -52,6 +52,10 @@
 "pipeline.model_load_failed" = "The model could not be loaded. Try again; if it still fails, redownload or switch models in Models.";
 "pipeline.model_load_failed_network" = "The model could not be loaded. Check your network and try again.";
 "pipeline.recording" = "Recording…";
+"pipeline.preparing_capture" = "Preparing recording…";
+"screen.permission_required" = "Allow Screen Recording to read the screen and reply.";
+"screen.capture_failed" = "The screen could not be captured. Try again.";
+"screen.recognition_failed" = "The screen text could not be read. Try again.";
 "pipeline.recording_translation" = "Recording for translation…";
 "overlay.cancel_recording" = "Cancel recording";
 "overlay.finish_recording" = "Finish recording";

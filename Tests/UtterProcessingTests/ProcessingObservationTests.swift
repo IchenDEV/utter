@@ -15,6 +15,7 @@ final class ProcessingObservationTests: XCTestCase {
         XCTAssertEqual(snapshot.decision.reason, "protected_token_change")
         XCTAssertEqual(observation.lastSuccessfulProviderID, "fixture")
         XCTAssertNil(snapshot.trace)
+        XCTAssertEqual(snapshot.timings, [GenerationTiming(stage: .primary, elapsedMilliseconds: 2, failed: false)])
     }
 
     func testOptInTraceDistinguishesGeneratedCandidateAndDecision() throws {

@@ -86,6 +86,12 @@ final class NativeBackendPluginTests: XCTestCase {
         XCTAssertEqual(speech.descriptors.map(\.id), ["speech.firered", "speech.mega", "speech.qwen", "speech.volc", "speech.whisper"])
         let qwen = try await speech.create(id: SpeechEngineType.qwen3.rawValue, request: SpeechProviderRequest(selection: SpeechSelection(providerID: "speech.qwen", type: .qwen3, modelPath: "/missing")))
         XCTAssertFalse(qwen.isReady)
+        let whisperRequest = SpeechProviderRequest(selection: SpeechSelection(
+            providerID: "speech.whisper", type: .whisper, model: "tiny"))
+        let whisper = try await speech.create(id: "speech.whisper", request: whisperRequest)
+        XCTAssertFalse(whisper.isReady, "The factory must return before cold model preparation")
+        let repeatedWhisper = try await speech.create(id: "speech.whisper", request: whisperRequest)
+        XCTAssertTrue(whisper === repeatedWhisper)
         try await runtime.stop()
         XCTAssertTrue(providers.descriptors.isEmpty)
         XCTAssertTrue(artifacts.artifacts.isEmpty)

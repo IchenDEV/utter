@@ -8,11 +8,13 @@ package final class SessionDriver: SessionExecutionService {
         let job: any SessionJob
         let control: SessionControl
         let task: Task<Void, Never>
+        let timing: SessionTiming
     }
     private let workflows: any SessionWorkflowFactory
     private let history: any HistoryService
     private let notifications: StateNotifications
     private let isReady: () -> Bool
+    private let now: () -> Duration
     private var active: Active?
     private var closed = false
     private var reserving = false
@@ -25,11 +27,13 @@ package final class SessionDriver: SessionExecutionService {
     private var observers: [UUID: (SessionExecutionSnapshot) -> Void] = [:]
     package private(set) var snapshot = SessionExecutionSnapshot()
 
-    package init(workflows: any SessionWorkflowFactory, history: any HistoryService, notifications: StateNotifications, isReady: @escaping () -> Bool = { true }) {
+    package init(workflows: any SessionWorkflowFactory, history: any HistoryService, notifications: StateNotifications,
+                 isReady: @escaping () -> Bool = { true }, now: @escaping () -> Duration = { .seconds(ProcessInfo.processInfo.systemUptime) }) {
         self.isReady = isReady
         self.workflows = workflows
         self.history = history
         self.notifications = notifications
+        self.now = now
     }
 
     package func reserve(_ intent: SessionIntent) throws { try admit(intent, activate: false) }
@@ -44,6 +48,7 @@ package final class SessionDriver: SessionExecutionService {
         current.intent = SessionIntent(id: id, clientID: nil, input: current.intent.input, request: current.intent.request,
             mode: mode, operation: current.intent.operation)
         active = current
+        update(id, phase: snapshot.phase ?? .preparing, transcript: snapshot.transcript)
         return true
     }
 
@@ -108,30 +113,45 @@ package final class SessionDriver: SessionExecutionService {
         defer { reserving = false }
         let job = try workflows.make(intent)
         if activate, intent.input == .unselected { try job.bind(input: .local) }
+        let timing = SessionTiming(now: now)
         let control = SessionControl(isCurrent: { [weak self] in
             self?.active?.intent.id == intent.id && self?.closed == false && self?.isReady() == true && self?.active?.task.isCancelled == false
-        }, cancel: { [weak self] in self?.cancel() }, update: { [weak self] phase, transcript in self?.update(intent.id, phase: phase, transcript: transcript) })
+        }, cancel: { [weak self] in self?.cancel() }, update: { [weak self] phase, transcript in self?.update(intent.id, phase: phase, transcript: transcript) },
+        timing: timing, audioLevel: { [weak self] level in self?.updateLevel(intent.id, level: level) })
         let task = Task { [self] in
             let result: Result<SessionCompletion, Error>
             do {
                 try await control.waitForActivation()
-                result = .success(try await job.run(control: control))
+                result = .success(try await GenerationTimingObservations.$current.withValue(timing.generations) {
+                    try await job.run(control: control)
+                })
             }
             catch { result = .failure(error) }
             await job.close()
             finish(intent, result: result)
         }
         admittedIDs.insert(intent.id)
-        active = Active(intent: intent, job: job, control: control, task: task)
+        let frozen = SessionIntent(id: intent.id, clientID: intent.clientID, input: intent.input, request: intent.request,
+            mode: intent.mode ?? job.presentationMode, operation: intent.operation)
+        active = Active(intent: frozen, job: job, control: control, task: task, timing: timing)
         job.attach(control: control)
         if activate { workflows.willActivate(intent); control.activate() }
-        publish(SessionExecutionSnapshot(id: intent.id, phase: activate ? .preparing : .created, isBusy: true))
+        publish(SessionExecutionSnapshot(id: intent.id, phase: activate ? .preparing : .created, isBusy: true, mode: frozen.mode))
+    }
+
+    @discardableResult
+    package func requestStop(_ id: UUID, at timestamp: Duration? = nil) -> Bool {
+        guard let active, active.intent.id == id, active.control.isCurrent, !active.control.isStopped,
+              [.preparing, .recording].contains(snapshot.phase) else { return false }
+        active.timing.stop(at: timestamp)
+        active.control.stop()
+        return true
     }
 
     package func stop() async {
         guard let active else { return }
         if snapshot.phase == .created { cancel() }
-        else { active.control.stop() }
+        else { requestStop(active.intent.id) }
         await withTaskCancellationHandler {
             await active.task.value
         } onCancel: { active.task.cancel() }
@@ -188,27 +208,38 @@ package final class SessionDriver: SessionExecutionService {
     private func update(_ id: UUID, phase: SessionExecutionPhase, transcript: String) {
         guard let active, active.intent.id == id, active.control.isCurrent else { return }
         guard [.recording, .transcribing, .processing, .delivering].contains(phase) else { return }
-        publish(SessionExecutionSnapshot(id: id, phase: phase, transcript: transcript, isBusy: true))
+        publish(SessionExecutionSnapshot(id: id, phase: phase, transcript: transcript, isBusy: true,
+            audioLevel: phase == .recording ? snapshot.audioLevel : 0, mode: active.intent.mode))
+    }
+
+    private func updateLevel(_ id: UUID, level: Float) {
+        guard active?.intent.id == id, snapshot.phase == .recording else { return }
+        publish(SessionExecutionSnapshot(id: id, phase: .recording, transcript: snapshot.transcript,
+            isBusy: true, audioLevel: level, mode: active?.intent.mode))
     }
 
     private func finish(_ original: SessionIntent, result: Result<SessionCompletion, Error>) {
         guard let intent = active?.intent, intent.id == original.id else { return }
+        let performance = active?.timing.finish(terminal(for: result))
         settling = true
         notifications.settle {
             active = nil
             switch result {
             case .success(let completion) where completion.accepted:
                 snapshot = SessionExecutionSnapshot(id: intent.id, phase: .completed,
-                    transcript: completion.transcript, text: completion.text, deliveryStatus: completion.acceptance.deliveryStatus)
+                    transcript: completion.transcript, text: completion.text, deliveryStatus: completion.acceptance.deliveryStatus,
+                    performance: performance, mode: intent.mode)
             case .success(let completion):
                 snapshot = SessionExecutionSnapshot(id: intent.id, phase: .failed,
                     transcript: completion.transcript, text: completion.text,
                     error: completion.acceptance.deliveryReason,
-                    deliveryStatus: completion.acceptance.deliveryStatus)
+                    deliveryStatus: completion.acceptance.deliveryStatus, performance: performance, mode: intent.mode)
             case .failure(let error):
                 terminalFailures[intent.id] = error
+                let failure = SessionFailurePresentation(error: error)
                 snapshot = SessionExecutionSnapshot(id: intent.id,
-                    phase: error is CancellationError ? .cancelled : .failed, error: error.localizedDescription)
+                    phase: error is CancellationError ? .cancelled : .failed, transcript: snapshot.transcript, error: failure.message,
+                    performance: performance, mode: intent.mode, recoveryAction: failure.recovery)
             }
             terminalSnapshots[intent.id] = snapshot
             for (id, callback) in Array(settlementObservers) where settlementObservers[id] != nil { callback(intent, result) }
@@ -236,6 +267,20 @@ package final class SessionDriver: SessionExecutionService {
                 for (id, callback) in Array(progressObservers) where progressObservers[id] != nil { callback(intent, value) }
             }
             enqueueSnapshot()
+        }
+    }
+
+    private func terminal(for result: Result<SessionCompletion, Error>) -> SessionPerformance.Terminal {
+        switch result {
+        case .failure(let error): return error is CancellationError ? .cancelled : .failed
+        case .success(let completion):
+            switch completion.acceptance.deliveryStatus {
+            case .inserted: return .inserted
+            case .copied: return .copied
+            case .uncertain: return .uncertain
+            case .notDelivered: return .notDelivered
+            case .none: return completion.accepted ? .returnedText : .failed
+            }
         }
     }
     private func enqueueSnapshot() {

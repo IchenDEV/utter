@@ -22,6 +22,8 @@
 | 组合键、采集与取消契约 | Linux 全套 585 tests，0 failures | 覆盖即时启动、1000ms 分类与录音中的晚切换、同一 job/捕获 ID、迟到停止、单调时钟、回调 drain、尾部预算及停止 waiter；新增原生冷准备和设备错误用例待 CI |
 | 原生组合键检查 `983d831` | [macOS CI](https://github.com/IchenDEV/utter/actions/runs/37223097651)：热键入口缺少 Foundation 导入，阻断编译；测试未运行 | 已修正导入；下一检查点确认原生采集、手势及 UTF-16 修正 |
 | 翻译语言与交付门槛 | Linux 全套 593 tests，0 failures | 覆盖 0.7/0.2 门槛、非语言内容、目标证明和旧决策读取；系统语言识别及共享会话拒绝写入待 macOS CI |
+| 原生翻译检查 `e0bf4d1` | [macOS CI](https://github.com/IchenDEV/utter/actions/runs/37224413746)：应用构建通过；1102 tests，18 skips，4 failures | 系统语言识别、UTF-16 和采集新用例通过；三处撤权结果错归为失败、一处测试未捕获预期失败已修正，待下次 CI |
+| 队列前采集、计时和呈现投影 | Linux 全套 603 tests，0 failures | 覆盖首段音频选择、首个停止时间、分段计时、默认无正文记录和交付状态投影；原生模型锁期间采集及读屏错误用例待 CI |
 | `ci-basic-checks.sh` | 模块、资源、脚本与 plist 检查通过；在缺少 `PlistBuddy` 时停止 | 完整检查必须在 macOS 运行 |
 | 真实模型质量 | 未运行 | 合成语料和宿主已建立，仍需明确的已安装模型 |
 | 原生窗口、权限、麦克风与剪贴板 | 未运行 | 按约定由用户本机验证 |

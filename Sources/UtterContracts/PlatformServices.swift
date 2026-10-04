@@ -5,9 +5,14 @@ import UtterRuntime
 package protocol HotkeyControlService: AnyObject {
     /// Read synchronously in callbacks; the identity stays stable through promotion and stop.
     var captureID: UUID? { get }
+    var eventTimestamp: Duration? { get }
     func setEnabled(_ enabled: Bool)
     func setCallbacks(start: ((HotkeyAction) -> Void)?, stop: ((HotkeyAction) -> Void)?,
                       promote: ((HotkeyPromotion) -> Bool)?, cancel: (() -> Void)?)
+}
+
+extension HotkeyControlService {
+    package var eventTimestamp: Duration? { nil }
 }
 
 @MainActor

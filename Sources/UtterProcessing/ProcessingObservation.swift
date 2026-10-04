@@ -3,6 +3,7 @@ import UtterContracts
 
 package enum ProcessingObservations {
     @TaskLocal package static var current: ProcessingObservation?
+    @TaskLocal package static var generationStage: GenerationStage = .primary
 }
 
 package final class ProcessingObservation: @unchecked Sendable {
@@ -13,6 +14,7 @@ package final class ProcessingObservation: @unchecked Sendable {
     private var source: String?
     private var candidate: String?
     private var generations: [GenerationTrace] = []
+    private var timings: [GenerationTiming] = []
     private var providerID: String?
 
     package init(collectsBody: Bool = false) { self.collectsBody = collectsBody }
@@ -29,9 +31,11 @@ package final class ProcessingObservation: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         if output != nil { self.providerID = providerID }
+        let stage = ProcessingObservations.generationStage
+        timings.append(GenerationTiming(stage: stage, elapsedMilliseconds: elapsedMilliseconds, failed: failure != nil))
         guard collectsBody else { return }
         generations.append(GenerationTrace(request: request, providerID: providerID,
-            output: output, failure: failure, elapsedMilliseconds: elapsedMilliseconds))
+            output: output, failure: failure, elapsedMilliseconds: elapsedMilliseconds, stage: stage))
     }
 
     package var lastSuccessfulProviderID: String? {
@@ -47,11 +51,11 @@ package final class ProcessingObservation: @unchecked Sendable {
         if self.candidate == nil { self.candidate = candidate }
     }
 
-    package func snapshot() -> (decision: ProcessingDecision, trace: ProcessingTrace?) {
+    package func snapshot() -> (decision: ProcessingDecision, trace: ProcessingTrace?, timings: [GenerationTiming]) {
         lock.lock()
         defer { lock.unlock() }
         let trace = collectsBody ? ProcessingTrace(source: source, candidate: candidate,
             generations: generations, elapsedMilliseconds: elapsedMilliseconds(since: started)) : nil
-        return (decision, trace)
+        return (decision, trace, timings)
     }
 }

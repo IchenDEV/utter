@@ -23,9 +23,10 @@ package struct GenerationTrace: Codable, Sendable {
     package let maxTokens: Int
     package let temperature: Double
     package let elapsedMilliseconds: Double
+    package let stage: GenerationStage
 
     package init(request: TextGenerationRequest, providerID: String, output: String?,
-                 failure: String?, elapsedMilliseconds: Double) {
+                 failure: String?, elapsedMilliseconds: Double, stage: GenerationStage = .primary) {
         self.providerID = providerID
         modelID = request.modelID
         prompt = request.prompt
@@ -35,6 +36,7 @@ package struct GenerationTrace: Codable, Sendable {
         maxTokens = request.maxTokens
         temperature = request.temperature
         self.elapsedMilliseconds = elapsedMilliseconds
+        self.stage = stage
     }
 }
 

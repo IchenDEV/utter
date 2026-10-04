@@ -49,13 +49,16 @@ package struct ProcessingResult: Sendable {
     package let generationOutcome: EspressoGenerationOutcome?
     package let decision: ProcessingDecision
     package let trace: ProcessingTrace?
+    package let timings: [GenerationTiming]
 
     package init(text: String, generationOutcome: EspressoGenerationOutcome? = nil,
-                 decision: ProcessingDecision = ProcessingDecision(.accepted), trace: ProcessingTrace? = nil) {
+                 decision: ProcessingDecision = ProcessingDecision(.accepted), trace: ProcessingTrace? = nil,
+                 timings: [GenerationTiming] = []) {
         self.text = text
         self.generationOutcome = generationOutcome
         self.decision = decision
         self.trace = trace
+        self.timings = timings
     }
 }
 
@@ -75,11 +78,17 @@ extension ProcessingService {
     }
 }
 
-package enum ProcessingError: LocalizedError {
+package enum ProcessingError: LocalizedError, SessionFailurePresenting {
     case emptyResult(EspressoGenerationOutcome?)
     package var errorDescription: String? {
         switch self {
         case .emptyResult(let outcome): return outcome?.message ?? L("pipeline.formatting_failed")
+        }
+    }
+    package var sessionFailure: SessionFailurePresentation {
+        switch self {
+        case .emptyResult(let outcome):
+            return SessionFailurePresentation(message: localizedDescription, recovery: outcome == nil ? nil : .models)
         }
     }
 }

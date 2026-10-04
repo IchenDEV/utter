@@ -72,8 +72,12 @@ package enum DataPlugins {
     }
 
     package static func settings(defaults: UserDefaults) -> PluginRegistration {
+        settings { SettingsStore(defaults: defaults) }
+    }
+
+    package static func settings(makeService: @escaping () -> any SettingsService) -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(id: "data.settings", provides: [DataServices.settings.reference])) { context, _ in
-            try context.provide(DataServices.settings, value: SettingsStore(defaults: defaults))
+            try context.provide(DataServices.settings, value: makeService())
         }
     }
 
@@ -87,8 +91,12 @@ package enum DataPlugins {
     }
 
     package static func configuration(_ store: CompositionStore) -> PluginRegistration {
+        configuration { store }
+    }
+
+    package static func configuration(makeService: @escaping () throws -> any ConfigurationService) -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(id: "data.configuration", provides: [DataServices.configuration.reference])) { context, _ in
-            try context.provide(DataServices.configuration, value: store)
+            try context.provide(DataServices.configuration, value: try makeService())
         }
     }
 }
