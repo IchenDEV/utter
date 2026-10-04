@@ -9,7 +9,7 @@ import UtterSession
 final class RemoteSessionIngressTests: XCTestCase {
     func testReleaseDuringModelPreparationStopsTheOriginalCaptureWithoutRestartingIt() async throws {
         let fixture = try VoiceWorkflowFixture()
-        defer { fixture.remove() }
+        defer { fixture.engine.holdPreparation = false; fixture.engine.release(); fixture.remove() }
         fixture.defaults.set(true, forKey: "remoteMicEnabled")
         fixture.engine.holdPreparation = true
         try await fixture.start()
@@ -21,9 +21,9 @@ final class RemoteSessionIngressTests: XCTestCase {
         remote.pressed?(42)
         let id = try XCTUnwrap(execution.snapshot.id)
         try await execution.waitForRecording(id)
-        while !fixture.engine.preparing { await Task.yield() }
+        try await waitUntil { fixture.engine.preparing }
         remote.released?()
-        while !fixture.capture.recording.stopped { await Task.yield() }
+        try await waitUntil { fixture.capture.recording.finished }
         XCTAssertEqual(fixture.capture.requests.count, 1)
         XCTAssertTrue(execution.snapshot.isBusy)
         fixture.engine.release()
@@ -62,6 +62,18 @@ final class RemoteSessionIngressTests: XCTestCase {
         XCTAssertEqual(execution.snapshot.phase, .cancelled)
         try await fixture.runtime.stop()
     }
+
+    private func waitUntil(_ condition: () -> Bool, file: StaticString = #filePath, line: UInt = #line) async throws {
+        let deadline = ContinuousClock.now + .seconds(10)
+        while !condition() {
+            guard ContinuousClock.now < deadline else {
+                XCTFail("Expected ingress signal was not received", file: file, line: line)
+                throw WaitFailure.timedOut
+            }
+            try await Task.sleep(for: .milliseconds(1))
+        }
+    }
+    private enum WaitFailure: Error { case timedOut }
 }
 
 @MainActor
