@@ -8,7 +8,8 @@ final class IntegrationAuthorizationObservationTests: XCTestCase {
         let suite = "AuthorizationObservations-" + UUID().uuidString
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        let registry = IntegrationClientRegistry(defaults: defaults, reportError: { _ in })
+        let key = "authorizationFixtureClients"
+        let registry = IntegrationClientRegistry(defaults: defaults, key: key, reportError: { _ in })
         let client = IntegrationClient.localHTTP(tokenID: "fixture")
         var calls = 0
         let observation = registry.observeAuthorization { calls += 1 }
@@ -21,10 +22,10 @@ final class IntegrationAuthorizationObservationTests: XCTestCase {
         registry.removeAuthorizationObserver(observation)
         registry.approve(client)
         XCTAssertEqual(calls, 2)
-        let stored = defaults.data(forKey: "integrationApprovedClients")
+        let stored = try XCTUnwrap(defaults.data(forKey: key))
         registry.close()
         registry.revoke(clientID: client.id)
-        XCTAssertEqual(defaults.data(forKey: "integrationApprovedClients"), stored)
+        XCTAssertEqual(defaults.data(forKey: key), stored)
         XCTAssertFalse(registry.isAuthorized(clientID: client.id, capability: .record))
     }
 
