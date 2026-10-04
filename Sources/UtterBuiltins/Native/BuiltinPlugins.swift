@@ -43,7 +43,7 @@ package enum BuiltinPlugins {
         let platform = [RemoteMicPlugins.capture(), AudioPlugins.capture(), AudioPlugins.files(), AudioPlugins.speechEvidence(), AudioPlugins.devices(),
                         MacPlugins.target(), MacPlugins.output(), MacPlugins.screen(), MacPlugins.hotkeys(),
                         MacPlugins.sounds(), MacPlugins.loginItem(), MacPlugins.correction()]
-        let session = [SessionPlugins.outputs(), SessionPlugins.voiceWorkflows(), SessionPlugins.execution(), SessionPlugins.api()]
+        let session = [SessionPlugins.outputs(), SessionPlugins.voiceWorkflows(), SessionPlugins.execution(), SessionPlugins.api(), SessionPlugins.metrics()]
         let ingress = [IngressPlugins.hotkeySessions(), IngressPlugins.remoteSessions(), IngressPlugins.http(), IngressPlugins.xpc()]
         let presentation = [PresentationPlugins.catalog(), PresentationPlugins.icons(), PresentationPlugins.menu(),
             PresentationPlugins.overlay(), PresentationPlugins.desktop(), PresentationPlugins.general(), PresentationPlugins.history(),

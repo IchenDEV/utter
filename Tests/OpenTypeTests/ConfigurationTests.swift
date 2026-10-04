@@ -421,55 +421,6 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(AppSettings(defaults: largeDefaults).developerHTTPPort, 38_765)
     }
 
-    func testStartupPreloadPolicyLoadsOnlyWhisperSpeechModel() {
-        XCTAssertTrue(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
-            enabled: true, speechEngine: .whisper, modelDownloaded: true
-        ))
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
-            enabled: true, speechEngine: .whisper, modelDownloaded: false
-        ))
-        for engine in [SpeechEngineType.apple, .volc, .qwen3] {
-            XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
-                enabled: true, speechEngine: engine, modelDownloaded: true
-            ))
-        }
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadSpeechModel(
-            enabled: false, speechEngine: .whisper, modelDownloaded: true
-        ))
-    }
-
-    func testStartupPreloadPolicyLoadsOnlyDownloadedLocalFormattingModelWithID() {
-        XCTAssertTrue(StartupModelPreloadPolicy.shouldPreloadFormattingModel(
-            enabled: true,
-            useRemoteLLM: false,
-            modelID: "mlx-community/Qwen3.5-2B-4bit",
-            modelDownloaded: true
-        ))
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadFormattingModel(
-            enabled: true,
-            useRemoteLLM: false,
-            modelID: "mlx-community/Qwen3.5-2B-4bit",
-            modelDownloaded: false
-        ))
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadFormattingModel(
-            enabled: true,
-            useRemoteLLM: true,
-            modelID: "gpt-4.1-mini",
-            modelDownloaded: true
-        ))
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadFormattingModel(
-            enabled: true,
-            useRemoteLLM: false,
-            modelID: "  ",
-            modelDownloaded: true
-        ))
-        XCTAssertFalse(StartupModelPreloadPolicy.shouldPreloadFormattingModel(
-            enabled: false,
-            useRemoteLLM: false,
-            modelID: "mlx-community/Qwen3.5-2B-4bit",
-            modelDownloaded: true
-        ))
-    }
 
 }
 

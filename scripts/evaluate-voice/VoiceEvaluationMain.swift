@@ -22,7 +22,7 @@ struct VoiceEvaluationMain {
         guard ModelAssets.llmRepoIsComplete(at: arguments.model) else { throw GenerationServiceError.modelUnavailable }
         try EvaluationAudio.validateModel(arguments, samples: samples)
         let host = try EvaluationRuntime(model: arguments.model, modelID: arguments.modelID, speech: arguments.speech)
-        let report = try EvaluationReport(arguments: arguments, expectedRuns: samples.reduce(0) { $0 + $1.repeatCount })
+        let report = try EvaluationReport(arguments: arguments, samples: samples)
         var completed = 0
         let started = ContinuousClock.now
         do {

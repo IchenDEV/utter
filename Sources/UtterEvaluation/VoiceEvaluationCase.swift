@@ -36,7 +36,7 @@ package struct VoiceEvaluationCase: Codable, Sendable {
                   ["casual", "professional", "custom"].contains(value.style ?? "casual"),
                   value.lexicon == nil || IndustryLexiconID(rawValue: value.lexicon!) != nil,
                   value.target_language == nil || TranslationLanguage(rawValue: value.target_language!) != nil,
-                  value.expected_outcome == nil || ["accepted", "fallback"].contains(value.expected_outcome!),
+                  value.expected_outcome == nil || ProcessingDecision.Disposition(rawValue: value.expected_outcome!) != nil,
                   value.audio_file == nil || !value.audio_file!.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   value.repeatCount > 0, value.repeatCount <= maximumRuns,
                   value.audio_file == nil || value.input_text == nil else {

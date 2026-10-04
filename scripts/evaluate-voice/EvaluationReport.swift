@@ -8,12 +8,16 @@ struct EvaluationReport {
     let arguments: VoiceEvaluationArguments
     let assetFingerprint: String
     let expectedRuns: Int
+    let expectedCaseRuns: [String: Int]
+    let speechAssetFingerprint: String?
     let handle: FileHandle
     let manifestURL: URL
 
-    init(arguments: VoiceEvaluationArguments, expectedRuns: Int) throws {
+    init(arguments: VoiceEvaluationArguments, samples: [VoiceEvaluationCase]) throws {
         self.arguments = arguments
-        self.expectedRuns = expectedRuns
+        expectedRuns = samples.reduce(0) { $0 + $1.repeatCount }
+        expectedCaseRuns = Dictionary(uniqueKeysWithValues: samples.map { ($0.id, $0.repeatCount) })
+        speechAssetFingerprint = try arguments.speech.map { try Self.fingerprint($0.model) }
         assetFingerprint = try Self.fingerprint(arguments.model)
         manifestURL = arguments.output.appendingPathExtension("manifest.json")
         guard !FileManager.default.fileExists(atPath: arguments.output.path),
@@ -32,6 +36,8 @@ struct EvaluationReport {
             "processing_latency_ms": result.trace?.elapsedMilliseconds ?? 0,
             "outcome": result.decision.disposition.rawValue,
             "evaluation_path": sample.supplied_candidate == nil ? "generation" : "fixed_candidate"]
+        object["cold"] = arguments.cold
+        object["generation_timings"] = try JSONSerialization.jsonObject(with: JSONEncoder().encode(result.timings))
         object["reserved_output_tokens"] = reservedTokens
         if let asrMilliseconds { object["asr_latency_ms"] = asrMilliseconds }
         if let reference = sample.sendable_reference { object["sendable_reference"] = reference }
@@ -55,7 +61,7 @@ struct EvaluationReport {
 
     func manifest(state: String, completed: Int, failure: String? = nil) throws {
         var object: [String: Any] = ["state": state, "completed_runs": completed,
-            "expected_runs": expectedRuns, "model_id": arguments.modelID,
+            "expected_runs": expectedRuns, "expected_cases": expectedCaseRuns, "model_id": arguments.modelID,
             "model_asset_fingerprint": assetFingerprint, "cold": arguments.cold,
             "max_tokens": arguments.maxTokens, "case_timeout_seconds": arguments.caseTimeout,
             "total_timeout_seconds": arguments.totalTimeout,
@@ -64,7 +70,7 @@ struct EvaluationReport {
         if let speech = arguments.speech {
             object["speech_provider"] = speech.providerID
             object["speech_model_id"] = speech.modelID
-            object["speech_asset_fingerprint"] = try Self.fingerprint(speech.model)
+            object["speech_asset_fingerprint"] = speechAssetFingerprint
         }
         if let failure { object["failure"] = failure }
         try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])

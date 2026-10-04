@@ -51,6 +51,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
 
     func start() {
         guard !closed, isCurrent() else { return }
+        Loc.use(settings.uiLanguage)
         NSApplication.shared.setActivationPolicy(.accessory)
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem?.button?.target = self
@@ -63,6 +64,8 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
         settings.objectWillChange.sink { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self, !self.closed, self.isCurrent() else { return }
+                Loc.use(self.settings.uiLanguage)
+                self.state.project(self.state.snapshot)
                 self.refreshIcons()
                 self.settingsWindow?.title = SettingsWindowTitle.text(for: self.settings.uiLanguage)
             }

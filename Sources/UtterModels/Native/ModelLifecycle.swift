@@ -42,7 +42,13 @@ final class ModelLifecycle: ModelLifecycleService {
     func revoke() { closed = true; observers.removeAll() }
 
     func preloadOnLaunch() async {
-        if settings.values.preloadSpeechModelOnLaunch { try? await preloadSpeech() }
+        let values = settings.values
+        let bindings = (try? configuration?.sessionSnapshot.bindings) ?? [:]
+        let speechID = bindings["speech"] ?? values.speechEngine.rawValue
+        let descriptor = speech.descriptors.first { $0.id == speechID || $0.legacyIDs.contains(speechID) }
+        let type = descriptor?.legacyIDs.compactMap(SpeechEngineType.init(rawValue:)).first ?? values.speechEngine
+        if ModelPreloadPolicy.speech(enabled: values.preloadSpeechModelOnLaunch, engine: type,
+            installed: files.installedWhisperURL(values.whisperModel) != nil) { try? await preloadSpeech() }
         if settings.values.preloadFormattingModelOnLaunch, !Task.isCancelled { try? await preloadText() }
     }
 
@@ -97,6 +103,9 @@ final class ModelLifecycle: ModelLifecycleService {
         }
         guard descriptor.modelLocation != .remote else { return nil }
         options = options.selecting(descriptor).freezingModelLocations(using: files)
+        if descriptor.modelLocation == .directory,
+           !ModelPreloadPolicy.text(enabled: true, remote: false, modelID: options.llmModel,
+               installed: files.installedTextModelURL(options.llmModel) != nil) { return nil }
         options.fallbackProviderID = bindings["fallback"] ?? options.fallbackProviderID
         return options
     }
