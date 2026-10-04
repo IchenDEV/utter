@@ -22,11 +22,17 @@ def violations(root, description):
     errors = []
     for target in description["targets"]:
         name = target["name"]
+        swift_filenames = {}
         for source in target.get("sources", []):
             path = (root / target["path"] / source).resolve()
             if path in owners:
                 errors.append(f"{path}: owned by both {owners[path]} and {name}")
             owners[path] = name
+            if path.suffix == ".swift":
+                filename = path.name.casefold()
+                if filename in swift_filenames:
+                    errors.append(f"{name}: duplicate Swift filename {path.name} in {swift_filenames[filename]} and {path}")
+                swift_filenames[filename] = path
             if not path.is_file():
                 errors.append(f"{path}: missing declared source")
                 continue

@@ -20,6 +20,7 @@ package protocol ModelFilesService: Sendable {
 }
 
 package enum ModelServices {
+    package static let artifacts = ServiceKey<any ModelArtifactService>("models.artifacts")
     package static let catalog = ServiceKey<any ModelCatalogService>("models.catalog")
     package static let textDownloads = ServiceKey<any TextModelDownloadService>("models.text-downloads")
     package static let resourceAccess = ServiceKey<any ModelResourceAccess>("models.resource-access")

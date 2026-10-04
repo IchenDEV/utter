@@ -32,6 +32,16 @@ class ModuleBoundaryTests(unittest.TestCase):
     def test_overlapping_ownership_is_rejected(self):
         self.assertTrue(self.check("import Foundation\n", ["UtterContracts", "UtterRuntime"]))
 
+    def test_duplicate_swift_filenames_in_one_target_are_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Native").mkdir()
+            (root / "Worker.swift").write_text("import Foundation\n")
+            (root / "Native/Worker.swift").write_text("import Foundation\n")
+            description = {"targets": [{"name": "UtterModels", "path": ".", "sources": ["Worker.swift", "Native/Worker.swift"]}]}
+            errors = boundaries.violations(root, description)
+            self.assertTrue(any("duplicate Swift filename" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()
