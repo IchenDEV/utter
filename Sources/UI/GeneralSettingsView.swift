@@ -3,7 +3,6 @@ import SwiftUI
 
 struct GeneralSettingsView: View {
     @EnvironmentObject private var settings: AppSettings
-    @StateObject private var remoteMicBridge = XiaomiRemoteMicBridge.shared
     @State private var launchAtLoginEnabled = false
     @State private var launchAtLoginRequiresApproval = false
     @State private var launchAtLoginErrorMessage = ""
@@ -49,7 +48,6 @@ struct GeneralSettingsView: View {
 
             Section {
                 microphonePicker
-                remoteMicControls
                 Picker(L("settings.recognition_language"), selection: $settings.inputLanguage) {
                     ForEach(InputLanguage.allCases, id: \.self) { Text($0.rawValue) }
                 }
@@ -199,41 +197,6 @@ struct GeneralSettingsView: View {
             Text(L("settings.system_default")).tag(nil as String?)
             ForEach(AudioCaptureManager.availableMicrophones(), id: \.id) { microphone in
                 Text(microphone.name).tag(microphone.id as String?)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var remoteMicControls: some View {
-        Toggle(isOn: $settings.remoteMicEnabled) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L("settings.remote_mic"))
-                Text(L("settings.remote_mic_help"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .onChange(of: settings.remoteMicEnabled) { _, enabled in
-            if enabled {
-                RemoteMicCaptureManager.shared.activate()
-            } else {
-                RemoteMicCaptureManager.shared.deactivate()
-            }
-        }
-        if settings.remoteMicEnabled {
-            HStack {
-                Text(L("settings.remote_mic_status"))
-                Spacer()
-                Text(remoteMicBridge.state.summary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            HStack {
-                Text(L("settings.remote_mic_gain"))
-                Slider(value: $settings.remoteMicGainDB, in: 0...24, step: 1)
-                Text("\(Int(settings.remoteMicGainDB)) dB")
-                    .monospacedDigit()
-                    .frame(width: 46, alignment: .trailing)
             }
         }
     }

@@ -137,19 +137,25 @@ final class RemoteMicADPCMDecoder {
 
     private(set) var predictor = 0
     private(set) var stepIndex = 0
+    /// Remote 2 / 2 Pro firmware (model `ARN9`) packs the earlier sample in the
+    /// low nibble.
+    var lowNibbleFirst = false
 
     func reset(predictor: Int = 0, stepIndex: Int = 0) {
         self.predictor = min(32_767, max(-32_768, predictor))
         self.stepIndex = min(88, max(0, stepIndex))
     }
 
-    /// Decodes high-nibble-first, the RC003/`MI RC` ordering.
+    /// Decodes high-nibble-first (the RC003/`MI RC` ordering) unless
+    /// `lowNibbleFirst` is set.
     func decode(_ data: Data) -> [Int16] {
         var samples: [Int16] = []
         samples.reserveCapacity(data.count * 2)
         for byte in data {
-            samples.append(decodeNibble(Int(byte >> 4)))
-            samples.append(decodeNibble(Int(byte & 0x0F)))
+            let high = Int(byte >> 4)
+            let low = Int(byte & 0x0F)
+            samples.append(decodeNibble(lowNibbleFirst ? low : high))
+            samples.append(decodeNibble(lowNibbleFirst ? high : low))
         }
         return samples
     }

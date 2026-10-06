@@ -112,16 +112,20 @@ final class AudioCaptureManager {
         bufferCallback = bufferUpdate
 
         // Only a session latched by the remote's voice key adopts its audio.
-        if AppSettings.shared.remoteMicEnabled,
-           let remoteMicSource,
-           let token = remoteMicSource.currentSessionToken {
-            remoteMicSource.thresholds = thresholds
-            if remoteMicSource.start(token: token, levelUpdate: levelUpdate, bufferUpdate: bufferUpdate) {
-                usesRemoteMic = true
-                isRunning = true
-                return nil
+        if AppSettings.shared.remoteMicEnabled, let remoteMicSource {
+            var source = RemoteMicCaptureSource.systemNoRemoteSession
+            if let token = remoteMicSource.currentSessionToken {
+                remoteMicSource.thresholds = thresholds
+                if remoteMicSource.start(token: token, levelUpdate: levelUpdate, bufferUpdate: bufferUpdate) {
+                    usesRemoteMic = true
+                    isRunning = true
+                    remoteMicSource.noteCapture(.remote)
+                    return nil
+                }
+                Log.info("[AudioCapture] wireless remote unavailable; using the system input")
+                source = .systemRemoteUnavailable
             }
-            Log.info("[AudioCapture] wireless remote unavailable; using the system input")
+            remoteMicSource.noteCapture(source)
         }
 
         let authStatus = AVCaptureDevice.authorizationStatus(for: .audio)

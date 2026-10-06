@@ -44,6 +44,7 @@ enum XiaomiRemoteMicTestCallback: Equatable {
     case disconnect
     case control(Data)
     case audio(Data)
+    case modelNumber(Data)
 }
 
 /// Central callbacks have the same source problem as peripheral callbacks:
@@ -164,6 +165,13 @@ final class XiaomiRemoteMicCentralDelegateProxy: NSObject, CBCentralManagerDeleg
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
+        // The scan is unfiltered so a remote that only advertises its name is
+        // still found; everything that is not a supported remote is ignored.
+        guard RemoteMicDeviceMatcher.isCandidate(
+            peripheralName: peripheral.name,
+            advertisedName: advertisementData[CBAdvertisementDataLocalNameKey] as? String,
+            advertisedServiceUUIDs: advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID]
+        ) else { return }
         bindManagerIdentity(central)
         bindPeripheralIdentity(peripheral)
         bridge?.routeCentralDidDiscover(
@@ -245,8 +253,21 @@ protocol XiaomiRemoteMicCentralTransport: AnyObject {
 
     func stopScan()
     func scanForPeripherals(withServices services: [CBUUID], options: [String: Any]?)
+    /// Peripherals macOS already holds a connection to (for example a remote
+    /// paired in System Settings). Those stop advertising, so a scan alone
+    /// never finds them.
+    func connectedPeripherals(withServices services: [CBUUID]) -> [RemoteMicKnownPeripheral]
     func connect(to peripheral: AnyObject)
     func cancel(peripheral: AnyObject)
+}
+
+extension XiaomiRemoteMicCentralTransport {
+    func connectedPeripherals(withServices services: [CBUUID]) -> [RemoteMicKnownPeripheral] { [] }
+}
+
+struct RemoteMicKnownPeripheral {
+    let identity: AnyObject
+    let name: String?
 }
 
 /// Production transport. The manager and its weak delegate are held together
@@ -276,6 +297,11 @@ final class XiaomiRemoteMicCoreBluetoothCentralTransport: XiaomiRemoteMicCentral
 
     func scanForPeripherals(withServices services: [CBUUID], options: [String: Any]?) {
         manager.scanForPeripherals(withServices: services, options: options)
+    }
+
+    func connectedPeripherals(withServices services: [CBUUID]) -> [RemoteMicKnownPeripheral] {
+        manager.retrieveConnectedPeripherals(withServices: services)
+            .map { RemoteMicKnownPeripheral(identity: $0, name: $0.name) }
     }
 
     func connect(to peripheral: AnyObject) {
@@ -347,6 +373,8 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     static let initializationTimeout: TimeInterval = 8
 
     @Published private(set) var state: RemoteMicBridgeState = .idle
+    @Published private(set) var diagnostics = RemoteMicDiagnostics()
+    private var pendingDiscoverySource: RemoteMicDiscoverySource?
 
     /// Decoded 16 kHz mono samples while a voice session is streaming.
     var onSamples: (([Int16]) -> Void)?
@@ -437,6 +465,18 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
             return
         }
         installCentralTransport()
+    }
+
+    /// Drops the current link and searches again, for the settings page's
+    /// "reconnect" action.
+    func reconnectNow() {
+        if isActive { deactivate() }
+        activate()
+    }
+
+    /// Records where the latest recording got its audio.
+    func noteCapture(_ source: RemoteMicCaptureSource) {
+        diagnostics.lastCapture = source
     }
 
     func deactivate() {
@@ -729,10 +769,41 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         capabilities = .default
         centralLifecycle = .scanning(generation)
         state = .scanning
+        let lastCapture = diagnostics.lastCapture
+        diagnostics = RemoteMicDiagnostics(lastCapture: lastCapture)
+        decoder.lowNibbleFirst = false
+        if connectToKnownRemote(using: transport) { return }
         transport.scanForPeripherals(
-            withServices: [serviceUUID],
+            withServices: [],
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
+    }
+
+    /// A remote already connected in System Settings no longer advertises, so a
+    /// scan never reports it. Ask CoreBluetooth for the connections macOS holds
+    /// first: remotes exposing the voice service, then HID devices whose name
+    /// is an approved remote name.
+    private func connectToKnownRemote(using transport: XiaomiRemoteMicCentralTransport) -> Bool {
+        let lookups: [(CBUUID, RemoteMicDiscoverySource)] = [
+            (serviceUUID, .connectedVoiceService),
+            (RemoteMicDeviceMatcher.hidServiceUUID, .connectedHID),
+        ]
+        for (service, source) in lookups {
+            guard let known = transport.connectedPeripherals(withServices: [service])
+                .first(where: { RemoteMicDeviceMatcher.matches(name: $0.name) }) else { continue }
+            transport.delegateProxy.bindPeripheralIdentity(known.identity)
+            pendingDiscoverySource = source
+            routeCentralDidDiscover(
+                managerIdentity: transport.identity,
+                peripheralIdentity: known.identity,
+                peripheral: known.identity as? CBPeripheral,
+                advertisementData: [:],
+                rssi: 0,
+                sourceAttempt: nil
+            )
+            return state == .connecting
+        }
+        return false
     }
 
     /// Creates the central transport through the same factory used by the
@@ -1142,6 +1213,8 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
               case .scanning(_) = centralLifecycle else { return }
         transport.stopScan()
         state = .connecting
+        diagnostics.discovery = pendingDiscoverySource ?? .scan
+        pendingDiscoverySource = nil
         // Bind this central manager to a fresh lifecycle before issuing the
         // connect. Every later central callback from this manager carries the
         // captured attempt through its proxy.
@@ -1186,7 +1259,7 @@ extension XiaomiRemoteMicBridge: CBCentralManagerDelegate {
             reason: L("remote_mic.error.initialization_timeout"),
             isSatisfied: { [weak self] in self?.handshake.isReady ?? false }
         )
-        peripheral?.discoverServices([serviceUUID])
+        peripheral?.discoverServices([serviceUUID, RemoteMicDeviceMatcher.deviceInformationServiceUUID])
     }
 
     fileprivate func routeCentralDidFailToConnect(
@@ -1345,6 +1418,11 @@ extension XiaomiRemoteMicBridge {
              CBUUID(string: RemoteMicProtocol.controlUUID)],
             for: service
         )
+        if let info = peripheral.services?.first(where: {
+            $0.uuid == RemoteMicDeviceMatcher.deviceInformationServiceUUID
+        }) {
+            peripheral.discoverCharacteristics([RemoteMicDeviceMatcher.modelNumberUUID], for: info)
+        }
     }
 
     fileprivate func routeDidDiscoverCharacteristics(
@@ -1354,6 +1432,14 @@ extension XiaomiRemoteMicBridge {
         attempt: UInt64
     ) {
         guard acceptsPeripheralCallback(peripheral, attempt: attempt), error == nil else { return }
+        if service.uuid == RemoteMicDeviceMatcher.deviceInformationServiceUUID {
+            if let model = service.characteristics?.first(where: {
+                $0.uuid == RemoteMicDeviceMatcher.modelNumberUUID
+            }) {
+                peripheral.readValue(for: model)
+            }
+            return
+        }
         let transmit = RemoteMicProtocol.transmitUUID.uppercased()
         let audio = RemoteMicProtocol.audioUUID.uppercased()
         let control = RemoteMicProtocol.controlUUID.uppercased()
@@ -1417,9 +1503,24 @@ extension XiaomiRemoteMicBridge {
             handleControl(data, attempt: attempt)
         case RemoteMicProtocol.audioUUID.uppercased():
             handleAudio(data, attempt: attempt)
+        case RemoteMicDeviceMatcher.modelNumberUUID.uuidString.uppercased():
+            handleModelNumber(data, attempt: attempt)
         default:
             break
         }
+    }
+
+    /// The model decides the ADPCM nibble order, which must be known before the
+    /// first audio frame; the read is issued right after the connection.
+    fileprivate func handleModelNumber(_ data: Data, attempt: UInt64) {
+        guard handshake.accepts(attempt),
+              let text = String(data: data, encoding: .utf8) else { return }
+        let model = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lowFirst = RemoteMicDeviceMatcher.usesLowNibbleFirst(modelNumber: model)
+        decoder.lowNibbleFirst = lowFirst
+        diagnostics.modelNumber = model
+        diagnostics.lowNibbleFirst = lowFirst
+        Log.info("[RemoteMic] model=\(model) adpcm=\(lowFirst ? "low" : "high")-nibble-first")
     }
 
     /// The common gate for every CBPeripheralDelegate callback. Unlike the old
@@ -1450,6 +1551,8 @@ extension XiaomiRemoteMicBridge {
             handleControl(data, attempt: attempt)
         case let .audio(data):
             handleAudio(data, attempt: attempt)
+        case let .modelNumber(data):
+            handleModelNumber(data, attempt: attempt)
         }
     }
 }

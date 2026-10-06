@@ -41,6 +41,10 @@ final class RemoteMicCaptureManager {
         bridge.activate()
     }
 
+    func noteCapture(_ source: RemoteMicCaptureSource) {
+        bridge.noteCapture(source)
+    }
+
     func deactivate() {
         bridge.deactivate()
     }

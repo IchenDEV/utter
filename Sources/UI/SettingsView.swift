@@ -46,6 +46,8 @@ struct SettingsView: View {
             .tabItem { Label(L("tab.models"), systemImage: "cpu") }
             DictionaryStyleView()
                 .tabItem { Label(L("tab.style"), systemImage: "text.book.closed") }
+            RemoteMicSettingsView()
+                .tabItem { Label(L("tab.remote"), systemImage: "dot.radiowaves.left.and.right") }
             IntegrationsSettingsView()
                 .tabItem { Label(L("settings.integrations"), systemImage: "point.3.connected.trianglepath.dotted") }
             AboutView()
