@@ -1,0 +1,33 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Utter PiP device test</title>
+<style>
+body { font: 18px system-ui; margin: 24px; color: #171717; background: white; }
+button, textarea { font: inherit; padding: 12px; margin: 8px 0; }
+textarea { display: block; width: 90%; height: 90px; }
+video { display: block; width: 240px; height: 135px; }
+</style>
+<h1>External video test</h1>
+<video id="video" src="probe.mp4" playsinline muted preload="auto" controls></video>
+<p id="state" aria-label="Video state">Video: loading</p>
+<label for="field">Fixed test text</label>
+<textarea id="field" aria-label="Fixed test text"></textarea>
+<button id="start">Play video</button>
+<button id="pip">Start video PiP</button>
+<button id="stop">Stop video</button>
+<script>
+const video = document.querySelector('video');
+const state = document.querySelector('#state');
+document.querySelector('#start').onclick = () => video.play().catch(showError);
+document.querySelector('#pip').onclick = () => {
+  try { video.webkitSetPresentationMode('picture-in-picture'); } catch (error) { showError(error); }
+};
+document.querySelector('#stop').onclick = () => {
+  video.pause();
+  if (video.webkitPresentationMode === 'picture-in-picture') video.webkitSetPresentationMode('inline');
+};
+function showError(error) { state.textContent = 'Video error: ' + error.name; }
+setInterval(() => {
+  state.textContent = `Video: ${video.webkitPresentationMode} time=${video.currentTime.toFixed(1)} paused=${video.paused}`;
+}, 500);
+</script>

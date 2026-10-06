@@ -133,6 +133,7 @@ package protocol SessionJobControl: AnyObject {
     func beginStage(_ stage: SessionStage) -> UUID
     func endStage(_ id: UUID)
     func updateAudioLevel(_ level: Float)
+    func stop()
 }
 
 @MainActor

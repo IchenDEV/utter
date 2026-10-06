@@ -1,6 +1,8 @@
 import UtterContracts
 import Foundation
+#if os(macOS)
 import IOKit
+#endif
 
 package enum DeviceCapability {
     package struct Info: Sendable {
@@ -106,6 +108,7 @@ package enum DeviceCapability {
     }
 
     private static func ioRegistryInt(className: String, key: String) -> Int? {
+        #if os(macOS)
         var iterator: io_iterator_t = 0
         guard IOServiceGetMatchingServices(
             kIOMainPortDefault,
@@ -124,6 +127,9 @@ package enum DeviceCapability {
             }
         }
         return nil
+        #else
+        return nil
+        #endif
     }
 
     private static func gpuCoresFromChipName(_ name: String) -> Int {
