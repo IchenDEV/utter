@@ -21,6 +21,7 @@
 		6A395776620B4C98A13CB104 /* UITests/UtterSimulatorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A395776620B4C98A13CB103 /* UITests/UtterSimulatorSettings.swift */; };
 		B202610060000000000000036 /* UITests/UtterSimulatorKeyboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000035; };
 		B202610060000000000000073 /* UITests/UtterSimulatorKeyboardStreaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000072; };
+		B202610070000000000000006 /* UITests/UtterSimulatorSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610070000000000000005; };
 		B202610060000000000000075 /* UITests/UtterKeyboardScreenshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000074; };
 		B202610060000000000000077 /* UITests/UtterSimulatorKeyboardTranslucency.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000076; };
 		71113B1E7025CB5E6660554F /* App/VoiceHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF2B501631894DEAA543CB5 /* App/VoiceHost.swift */; };
@@ -47,6 +48,7 @@
 		F958B45B329177FC5EDE58D2 /* Shared/VoiceActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5955D1F153EDD25040CCDEE /* Shared/VoiceActivity.swift */; };
 		B202610050000000000000002 /* App/MobileModelsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610050000000000000001; };
 		B202610070000000000000002 /* App/MobileModelRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610070000000000000001; };
+		B202610070000000000000004 /* App/ModelProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610070000000000000003; };
 		B202610050000000000000012 /* App/MobileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610050000000000000011; };
 		B202610060000000000000002 /* App/StandbyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000001; };
 		B202610050000000000000022 /* UITests/UtterDeviceChecks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610050000000000000021; };
@@ -106,6 +108,7 @@
 		6A395776620B4C98A13CB103 /* UITests/UtterSimulatorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorSettings.swift; sourceTree = "<group>"; };
 		B202610060000000000000035 /* UITests/UtterSimulatorKeyboardLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorKeyboardLayout.swift; sourceTree = "<group>"; };
 		B202610060000000000000072 /* UITests/UtterSimulatorKeyboardStreaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorKeyboardStreaming.swift; sourceTree = "<group>"; };
+		B202610070000000000000005 /* UITests/UtterSimulatorSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorSetup.swift; sourceTree = "<group>"; };
 		B202610060000000000000074 /* UITests/UtterKeyboardScreenshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterKeyboardScreenshot.swift; sourceTree = "<group>"; };
 		B202610060000000000000076 /* UITests/UtterSimulatorKeyboardTranslucency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorKeyboardTranslucency.swift; sourceTree = "<group>"; };
 		6D571936431A66D1C7684FEE /* LiveActivity/UtterLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity/UtterLiveActivity.swift; sourceTree = "<group>"; };
@@ -130,6 +133,7 @@
 		FC79171DFD18CFC963050233 /* UtterLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; path = UtterLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B202610050000000000000001 /* App/MobileModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileModelsView.swift; sourceTree = "<group>"; };
 		B202610070000000000000001 /* App/MobileModelRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileModelRow.swift; sourceTree = "<group>"; };
+		B202610070000000000000003 /* App/ModelProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/ModelProbe.swift; sourceTree = "<group>"; };
 		B202610050000000000000011 /* App/MobileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileSettingsView.swift; sourceTree = "<group>"; };
 		B202610060000000000000001 /* App/StandbyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/StandbyService.swift; sourceTree = "<group>"; };
 		B202610050000000000000021 /* UITests/UtterDeviceChecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceChecks.swift; sourceTree = "<group>"; };
@@ -195,6 +199,7 @@
 				6A395776620B4C98A13CB103 /* UITests/UtterSimulatorSettings.swift */,
 				B202610060000000000000035 /* UITests/UtterSimulatorKeyboardLayout.swift */,
 				B202610060000000000000072 /* UITests/UtterSimulatorKeyboardStreaming.swift */,
+				B202610070000000000000005 /* UITests/UtterSimulatorSetup.swift */,
 				B202610060000000000000074 /* UITests/UtterKeyboardScreenshot.swift */,
 				B202610060000000000000076 /* UITests/UtterSimulatorKeyboardTranslucency.swift */,
 				B202610050000000000000031 /* UITests/UtterDeviceSpeech.swift */,
@@ -212,6 +217,7 @@
 				8159DB2461F003EC92EAC319 /* App/DictionaryView.swift */,
 				B202610050000000000000001 /* App/MobileModelsView.swift */,
 				B202610070000000000000001 /* App/MobileModelRow.swift */,
+				B202610070000000000000003 /* App/ModelProbe.swift */,
 				B202610050000000000000011 /* App/MobileSettingsView.swift */,
 				B202610060000000000000001 /* App/StandbyService.swift */,
 				E6BE0C4B002989A3AE6FAD1F /* App/UtterPhoneApp.swift */,
@@ -401,6 +407,7 @@
 				29E528EC66776EC1FCD17C4E /* App/DictionaryView.swift in Sources */,
 				B202610050000000000000002 /* App/MobileModelsView.swift in Sources */,
 				B202610070000000000000002 /* App/MobileModelRow.swift in Sources */,
+				B202610070000000000000004 /* App/ModelProbe.swift in Sources */,
 				B202610050000000000000012 /* App/MobileSettingsView.swift in Sources */,
 				B202610060000000000000002 /* App/StandbyService.swift in Sources */,
 				A004E2FCD2816FFBC378C2E1 /* App/UtterPhoneApp.swift in Sources */,
@@ -430,6 +437,7 @@
 				6A395776620B4C98A13CB104 /* UITests/UtterSimulatorSettings.swift in Sources */,
 				B202610060000000000000036 /* UITests/UtterSimulatorKeyboardLayout.swift in Sources */,
 				B202610060000000000000073 /* UITests/UtterSimulatorKeyboardStreaming.swift in Sources */,
+				B202610070000000000000006 /* UITests/UtterSimulatorSetup.swift in Sources */,
 				B202610060000000000000075 /* UITests/UtterKeyboardScreenshot.swift in Sources */,
 				B202610060000000000000077 /* UITests/UtterSimulatorKeyboardTranslucency.swift in Sources */,
 				B202610050000000000000032 /* UITests/UtterDeviceSpeech.swift in Sources */,

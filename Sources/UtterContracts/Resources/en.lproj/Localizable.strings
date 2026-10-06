@@ -712,3 +712,4 @@
 "ios.settings.polish_model" = "Polish model";
 "ios.models.paused" = "Paused";
 "ios.models.resume" = "Resume";
+"ios.models.simulator_unsupported" = "MLX models need a real iPhone or iPad. The Simulator cannot run them.";

@@ -712,3 +712,4 @@
 "ios.settings.polish_model" = "整形模型";
 "ios.models.paused" = "已暂停";
 "ios.models.resume" = "继续下载";
+"ios.models.simulator_unsupported" = "MLX 模型需要真实的 iPhone 或 iPad，模拟器无法运行。";

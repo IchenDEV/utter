@@ -131,9 +131,11 @@ extension UtterSimulatorFlow {
         openProductPage("Models")
         XCTAssertTrue(app.buttons["model.apple.download"].waitForExistence(timeout: 10))
         let list = app.collectionViews.matching(NSPredicate(format: "label != %@", "Sidebar")).firstMatch
-        let local = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "model.download.mlx-community/Qwen3.5-0.8B")).firstMatch
+        let local = app.staticTexts["Qwen3.5 0.8B"]
         for _ in 0..<12 where !local.isHittable { list.swipeUp() }
-        XCTAssertTrue(local.isHittable, "The desktop text models are offered for download")
+        XCTAssertTrue(local.isHittable, "The desktop text models are listed")
+        XCTAssertFalse(app.buttons["model.download.mlx-community/Qwen3.5-0.8B-MLX-4bit"].exists, "MLX cannot run in the Simulator, so it is not offered there")
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "real iPhone or iPad")).firstMatch.exists)
         let system = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "System language model")).firstMatch
         for _ in 0..<6 where !system.exists { list.swipeDown() }
         capture("Models page polish section")

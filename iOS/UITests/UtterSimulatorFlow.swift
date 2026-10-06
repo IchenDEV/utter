@@ -94,7 +94,10 @@ final class UtterSimulatorFlow: XCTestCase {
         tapButton("voice.copy")
         let field = app.textFields["field.first"]
         reveal(field); field.tap(); field.press(forDuration: 1)
-        let paste = app.menuItems["Paste"].exists ? app.menuItems["Paste"] : app.buttons["Paste"].firstMatch
+        let labels = ["Paste", "粘贴"]
+        let paste = app.menuItems.matching(NSPredicate(format: "label IN %@", labels)).firstMatch.exists
+            ? app.menuItems.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
+            : app.buttons.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
         XCTAssertTrue(paste.waitForExistence(timeout: 5))
         paste.tap()
         waitForValue(field, "Utter bridge sample")

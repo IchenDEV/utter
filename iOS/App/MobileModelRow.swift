@@ -11,7 +11,7 @@ struct MobileModelRow: View {
     let cancel: () -> Void
 
     var body: some View {
-        if model.downloaded {
+        if model.downloaded, !blocked {
             Button(action: select) { content }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selected ? .isSelected : [])

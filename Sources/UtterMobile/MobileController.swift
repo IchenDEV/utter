@@ -24,7 +24,10 @@ public final class MobileController: ObservableObject {
     /// "system" is Apple's on-device model; any other value is the id of a downloaded text model.
     @Published public internal(set) var polishModel = UserDefaults.standard.string(forKey: "mobile.polish.model") ?? "system"
     public var polishAvailable: Bool {
-        polishModel == "system" ? MobilePolisher.isAvailable : models.contains { $0.id == polishModel && $0.downloaded }
+        polishModel == "system" ? MobilePolisher.isAvailable : models.contains { model in
+            if case .blocked = model.fit { return false }
+            return model.id == polishModel && model.downloaded
+        }
     }
     public var polishModelName: String {
         polishModel == "system" ? L("ios.models.system_polish") : models.first { $0.id == polishModel }?.name ?? polishModel

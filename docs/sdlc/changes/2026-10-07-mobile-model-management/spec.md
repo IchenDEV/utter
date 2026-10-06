@@ -48,7 +48,13 @@
 
 新增键同时写入 en 与 zh-Hans。`Loc.use(...)` 在安装时按系统语言设置，使目录名称与简介不再固定为中文。
 
-## 7. 已知限制
+## 7. 模拟器
+
+MLX 在 iOS 模拟器上无法启动：加载模型时 `mlx/backend/metal/device.cpp` 读取 Metal 架构名得到空指针，libc++ 加固断言使 App 直接退出。因此在模拟器上 MLX 语音与文本模型一律标为“本机装不下”（`ios.models.simulator_unsupported`），不可选用；所选整形模型还要求 `fit` 不是 `blocked` 才算可用，避免遗留的偏好值触发加载。Whisper 与系统识别不受影响。
+
+调试构建带 `--polish-probe <模型 id>`（`iOS/App/ModelProbe.swift`）：在真机上下载、选用并真实运行三条整形样例，进度与结果写入 `Documents/polish-probe.json`。
+
+## 8. 已知限制
 
 - MLX 在模拟器与后台（画中画待命）下是否可靠未验证；整形失败保留原文。
 - iPad 与 iPhone 共用同一列表，没有单独的 iPad 布局。

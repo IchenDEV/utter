@@ -48,6 +48,10 @@ extension MobileController {
     }
 
     private static func fit(for entry: CatalogModelEntry, expected: Int64?, engine: MobileModel.Engine) -> MobileModel.Fit {
+        #if targetEnvironment(simulator)
+        // MLX cannot start on the Simulator's GPU (it aborts reading the Metal architecture name), so these models are device-only.
+        if engine != .whisper { return .blocked(L("ios.models.simulator_unsupported")) }
+        #endif
         let result = engine == .mlxText ? entry.compatibility
             : DeviceCapability.check(modelID: entry.id, downloadSizeBytes: expected)
         switch result {
@@ -78,6 +82,7 @@ extension MobileController {
             return
         }
         guard let model = models.first(where: { $0.id == id && $0.downloaded }) else { return }
+        if case .blocked = model.fit { return }
         switch model.kind {
         case .speech: selectedModel = id; UserDefaults.standard.set(id, forKey: "mobile.model")
         case .polish:

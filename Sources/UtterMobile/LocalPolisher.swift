@@ -22,11 +22,14 @@ final class LocalPolisher {
     }
 
     func warmUp(modelID: String) {
-        guard let service else { return }
         idle?.cancel()
-        let request = TextGenerationRequest(prompt: "", modelID: modelID)
-        Task { try? await service.prepare(request) }
+        Task { try? await load(modelID: modelID) }
         scheduleUnload()
+    }
+
+    func load(modelID: String) async throws {
+        guard let service else { return }
+        try await service.prepare(TextGenerationRequest(prompt: "", modelID: modelID))
     }
 
     func polish(_ text: String, language: String, protectedTerms: [String], modelID: String) async -> String? {

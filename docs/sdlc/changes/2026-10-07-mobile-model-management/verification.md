@@ -23,6 +23,15 @@ iPhone Air 与 iPad mini（A17 Pro）模拟器，iOS 27.0，英文界面。模�
 | `scripts/ci-basic-checks.sh`、`scripts/sdlc-checks.sh`、`scripts/check-ios-bridge.sh`、`git diff --check` | 见交付说明（本文件写入后重跑） |
 | 截图目检 | 分组列表、云下载图标、进度环、暂停文字、iPad 宽布局均符合预期；MLX 行不再重复显示大小 |
 
+## 模拟器补充验证（2026-10-07）
+
+- **MLX 在模拟器上不可用**：用 `--polish-probe` 在 iPhone Air 上实测，Qwen3.5 0.8B（652 MB）下载与完整性校验成功，但加载时 App 因 libc++ 断言（空 `const char*`，对应 `device.cpp:328` 读取 Metal 架构名）退出。所以本地整形、MLX 语音在模拟器上**无法**验证，只能在真机。处理：模拟器上 MLX 模型标为不可用；`polishAvailable` 也要求模型未被 `blocked`（遗留的 `mobile.polish.model` 曾让每次点录音都崩溃，已修）。
+- 重装 App 会清掉键盘的“完全访问”与麦克风授权；新增 `testSetupSimulatorPermissions`（仅当 `/tmp/utter-setup-simulator` 存在时运行）恢复完全访问。
+- 在恢复授权后的 iPhone Air 上重跑非真机用例：27 个用例中 25 个通过（含键盘流式/整形/撤销、模型目录、下载取消重试、选用重启删除、旋转、Live Activity），另有 `testModelDownloadSelectRestartDelete` 通过；失败的两个如下。
+  - `testCopyResultAndOpenSettings`：失败。前一条用例让 Utter 键盘保持为当前键盘，字段长按没有系统“粘贴”菜单。属于用例间依赖/环境，未改动这条路径，未单独确认。
+  - `testNativeAccessibilityAudit`：失败（对比度、动态字体），涉及语音页的“Open settings”“Personal dictionary”“diagnostic.enable”等，不在模型页。没有拿基线提交对比，不能断言是否既有问题。
+- `testDevice*` 用例需要真机，未在模拟器运行。
+
 ## 没有验证的
 
 - “下载后无法选用”**没有复现**；修复是设计性的（选用不再走关闭语音输入的路径，整行可点）。若用户在真机上仍遇到，需要真机日志。

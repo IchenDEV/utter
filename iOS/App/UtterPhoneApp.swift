@@ -86,6 +86,9 @@ private struct MobileRootView: View {
         .overlay(alignment: .top) { if showsReturnGuide { ReturnGuide() } }
         .task { await controller.prepareLibrary() }
         #if DEBUG
+        .task { await ModelProbe.runIfRequested(controller) }
+        #endif
+        #if DEBUG
         // Debugger-free device experiments start standby without a tap; permissions must already be granted.
         .task { if ProcessInfo.processInfo.arguments.contains("--standby-autostart") { await standby.activate() } }
         #endif
