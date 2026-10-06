@@ -166,6 +166,14 @@ extension TranscriptFidelityGuard {
         }
         if raw.count > 1 { return true }
 
+        if followsASCIIWord(range: range, in: text),
+           suffix.range(
+               of: #"^(?:下|直|起|些|切|样|樣|般|定|旦|共|边|邊|面|同|致|律|方|旁)"#,
+               options: .regularExpression
+           ) == nil {
+            return true
+        }
+
         let prefix = String(text[..<range.lowerBound].suffix(4))
         if prefix.range(
             of: #"(?:周|星期|禮拜|礼拜)$"#,
@@ -181,6 +189,21 @@ extension TranscriptFidelityGuard {
             || prefix.hasSuffix("至")
             || suffix.hasPrefix("到")
             || suffix.hasPrefix("至")
+    }
+
+    private static func followsASCIIWord(
+        range: Range<String.Index>,
+        in text: String
+    ) -> Bool {
+        var index = range.lowerBound
+        guard index > text.startIndex else { return false }
+        index = text.index(before: index)
+        if text[index] == " " {
+            guard index > text.startIndex else { return false }
+            index = text.index(before: index)
+        }
+        let character = text[index]
+        return character.isASCII && (character.isLetter || character.isNumber)
     }
 
     private static func overlaps(_ range: NSRange, _ occupied: [NSRange]) -> Bool {

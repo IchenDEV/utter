@@ -139,6 +139,17 @@ extension TranscriptFidelityGuard {
         source: String,
         candidate: String
     ) -> Bool {
+        if protectedTokensMatch(source: source, candidate: candidate) { return true }
+        guard let stripped = strippingListMarkers(source: source, candidate: candidate) else {
+            return false
+        }
+        return protectedTokensMatch(source: stripped.source, candidate: stripped.candidate)
+    }
+
+    private static func protectedTokensMatch(
+        source: String,
+        candidate: String
+    ) -> Bool {
         let candidateSequence = protectedSemanticSequence(in: candidate)
         if protectedSemanticSequence(in: source) == candidateSequence {
             return numberBindingsAreFaithful(source: source, candidate: candidate)
@@ -160,7 +171,7 @@ extension TranscriptFidelityGuard {
     }
 
     static func removingCorrectedNumberEvidence(from text: String) -> String {
-        let number = #"(?:[+-]?\d+(?:[.,:/-]\d+)*(?:[%％])?|(?:第|百分之)?[零〇一二两兩三四五六七八九十百千万萬亿億兆]+(?:[点點][零〇一二两兩三四五六七八九]+)?|\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|first|second|third)\b)"#
+        let number = #"(?:[+-]?\d+(?:[.,:/-]\d+)*(?:[%％])?|(?:第|百分之)?[零〇一二两兩三四五六七八九十百千万萬亿億兆]+(?:[点點][零〇一二两兩三四五六七八九]+)?(?:[点點号號天个個])?|\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|first|second|third)\b)"#
         let marker = #"(?:不对|講錯咗|说错了|sorry|i mean|correction)"#
         let pattern = "(?i)\(number)\\s*[，,]?\\s*\(marker)\\s*[，,]?\\s*"
         var range = NSRange(text.startIndex..., in: text)
