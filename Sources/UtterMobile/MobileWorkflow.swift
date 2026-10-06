@@ -55,6 +55,7 @@ private final class MobileJob: SessionJob {
     var speech: (any SpeechEngine)?
     var recording: (any OwnedRecording)?
     var timeout: Task<Void, Never>?
+    var live: MobileLiveSpeech?
     var revoked = false
 
     init(input: SessionInput, language: String, dictionary: PersonalDictionarySnapshot,
@@ -71,31 +72,60 @@ private final class MobileJob: SessionJob {
         var activity: AudioCaptureActivity?
         if case .text(let text) = input {
             control.update(phase: .recording, transcript: "")
+            #if DEBUG
+            // Stands in for live recognition so the keyboard's streaming can be exercised without a microphone.
+            let feeder = Task { @MainActor in
+                for part in 1...4 {
+                    try? await Task.sleep(for: .milliseconds(400))
+                    guard !Task.isCancelled, control.isCurrent else { return }
+                    control.update(phase: .recording, transcript: String(text.prefix(text.count * part / 4)))
+                }
+            }
+            defer { feeder.cancel() }
+            #endif
             try await waitForStop(control)
             transcript = text
         } else {
             try check(control)
             var settings = SettingsValues()
             settings.audioGateSensitivity = AudioSensitivity(rawValue: sensitivity) ?? .standard
+            let sink = DraftSink(control: control, preparation: preparation, dictionary: dictionary)
+            if modelID == "apple" {
+                live = MobileLiveSpeech(locale: Locale(identifier: language == "en" ? "en-US" : "zh-CN"),
+                                        context: SpeechRecognitionContext(phrases: dictionary.recognitionPhrases),
+                                        onDraft: { sink.submit($0) })
+            }
+            let tap = live
             recording = try await capture.begin(CaptureRequest(source: .local(deviceID: nil), thresholds: settings.audioActivityThresholds),
-                                                callbacks: CaptureCallbacks(inputUnavailable: { control.cancel() }))
+                                                callbacks: CaptureCallbacks(buffer: tap.map { live in { live.append($0) } },
+                                                                            inputUnavailable: { control.cancel() }))
             try check(control)
             control.update(phase: .recording, transcript: "")
             try await waitForStop(control)
+            sink.phase = .transcribing
             let audio = try await recording!.finish()
             activity = audio.activity
             try check(control)
-            control.update(phase: .transcribing, transcript: "")
+            control.update(phase: .transcribing, transcript: sink.latest)
+            defer { sink.close() }
             guard let url = audio.url else { throw MobileError.emptyResult }
             if modelID == "apple" {
-                transcript = try await AppleSpeechAnalyzer.transcribe(audioURL: url,
-                locale: Locale(identifier: language == "en" ? "en-US" : "zh-CN"),
-                context: SpeechRecognitionContext(phrases: dictionary.recognitionPhrases),
-                allowAssetInstallation: false, log: Log(service: MobileDiagnostics()))
+                if let streamed = await live?.finish() { transcript = streamed }
+                else {
+                    transcript = try await AppleSpeechAnalyzer.transcribe(audioURL: url,
+                    locale: Locale(identifier: language == "en" ? "en-US" : "zh-CN"),
+                    context: SpeechRecognitionContext(phrases: dictionary.recognitionPhrases),
+                    allowAssetInstallation: false, log: Log(service: MobileDiagnostics()))
+                }
             } else {
                 guard files.isCurrent else { throw MobileError.localUnavailable }
                 if let directory = files.installedSpeechModelURL(modelID) {
-                    speech = QwenNativeASREngine(modelPath: directory.path, modelID: modelID, access: access, log: Log(service: MobileDiagnostics()))
+                    let log = Log(service: MobileDiagnostics())
+                    if MLXModelArtifacts.qwen.contains(where: { $0.id == modelID }) {
+                        speech = QwenNativeASREngine(modelPath: directory.path, modelID: modelID, access: access, log: log)
+                    } else {
+                        speech = MLXSTTEngine(modelID: modelID, files: files, access: access, log: log)
+                    }
                 } else {
                     let engine = WhisperEngine(modelName: modelID, files: files, access: access, log: Log(service: MobileDiagnostics()))
                     speech = engine
@@ -107,7 +137,7 @@ private final class MobileJob: SessionJob {
             }
         }
         try check(control)
-        control.update(phase: .processing, transcript: "")
+        control.update(phase: .processing, transcript: transcript)
         guard let cleaned = preparation.transcript(transcript, activity: activity, recognitionPhrases: dictionary.recognitionPhrases) else { throw MobileError.emptyResult }
         let text = dictionary.applyReplacements(to: cleaned)
         guard !text.isEmpty else { throw MobileError.emptyResult }
@@ -125,14 +155,48 @@ private final class MobileJob: SessionJob {
         try await control.waitForStop()
     }
 
-    func revoke() { revoked = true; timeout?.cancel(); recording?.revoke(); speech?.cancelListening() }
+    func revoke() { revoked = true; timeout?.cancel(); recording?.revoke(); speech?.cancelListening(); live?.cancel() }
     func close() async {
-        timeout?.cancel(); await recording?.close(); recording = nil
+        timeout?.cancel(); live?.cancel(); live = nil; await recording?.close(); recording = nil
         if let speech { await Task { await speech.shutdown() }.value }; speech = nil
     }
     private func check(_ control: any SessionJobControl) throws {
         try Task.checkCancellation()
         guard !revoked, control.isCurrent else { throw CancellationError() }
+    }
+}
+
+/// Carries live drafts from the recognizer's thread to the session, newest first: a late, older draft is dropped.
+@MainActor
+private final class DraftSink: @unchecked Sendable {
+    private let control: any SessionJobControl
+    private let preparation: any TextPreparationService
+    private let dictionary: PersonalDictionarySnapshot
+    private let lock = NSLock()
+    private nonisolated(unsafe) var counter = 0
+    private var applied = 0
+    private(set) var latest = ""
+    var phase = SessionExecutionPhase.recording
+    private var open = true
+
+    func close() { open = false }
+
+    init(control: any SessionJobControl, preparation: any TextPreparationService, dictionary: PersonalDictionarySnapshot) {
+        self.control = control; self.preparation = preparation; self.dictionary = dictionary
+    }
+
+    nonisolated func submit(_ draft: String) {
+        lock.lock(); counter += 1; let number = counter; lock.unlock()
+        Task { @MainActor in self.apply(draft, number: number) }
+    }
+
+    private func apply(_ draft: String, number: Int) {
+        guard open, number > applied else { return }
+        applied = number
+        let shown = dictionary.applyReplacements(to: preparation.preview(draft, language: .auto))
+        guard !shown.isEmpty else { return }
+        latest = shown
+        control.update(phase: phase, transcript: shown)
     }
 }
 

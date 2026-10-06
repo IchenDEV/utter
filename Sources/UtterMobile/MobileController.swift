@@ -17,6 +17,20 @@ public final class MobileController: ObservableObject {
     @Published public var language = UserDefaults.standard.string(forKey: "mobile.language") ?? "zh" {
         didSet { UserDefaults.standard.set(language, forKey: "mobile.language") }
     }
+    /// Rewrite finished keyboard dictations with the on-device language model.
+    @Published public var polishEnabled = UserDefaults.standard.object(forKey: "mobile.polish") == nil || UserDefaults.standard.bool(forKey: "mobile.polish") {
+        didSet { UserDefaults.standard.set(polishEnabled, forKey: "mobile.polish") }
+    }
+    /// "system" is Apple's on-device model; any other value is the id of a downloaded text model.
+    @Published public internal(set) var polishModel = UserDefaults.standard.string(forKey: "mobile.polish.model") ?? "system"
+    public var polishAvailable: Bool {
+        polishModel == "system" ? MobilePolisher.isAvailable : models.contains { $0.id == polishModel && $0.downloaded }
+    }
+    public var polishModelName: String {
+        polishModel == "system" ? L("ios.models.system_polish") : models.first { $0.id == polishModel }?.name ?? polishModel
+    }
+    public var systemPolishAvailable: Bool { MobilePolisher.isAvailable }
+    let polishService = LocalPolisher()
     @Published public internal(set) var isEnabled = false
     /// True only while the app holds a system capability that lets it serve keyboard commands in the background.
     public private(set) var standbyActive = false
@@ -39,6 +53,7 @@ public final class MobileController: ObservableObject {
     var activeLease: KeyboardLease?
     var watchdog: Task<Void, Never>?
     var resultMonitor: Task<Void, Never>?
+    var polishTask: Task<Void, Never>?
     var activation: Task<Void, Error>?
     #if DEBUG
     var diagnosticText: String?
@@ -97,6 +112,7 @@ public final class MobileController: ObservableObject {
         if let activation { _ = await activation.result }
         watchdog?.cancel(); watchdog = nil
         resultMonitor?.cancel(); resultMonitor = nil
+        polishTask?.cancel(); polishTask = nil
         execution?.cancel()
         await execution?.stop()
         isEnabled = false; activeLease = nil; standbyActive = false
@@ -120,7 +136,8 @@ public final class MobileController: ObservableObject {
     public func discardResult() {
         guard !status.isBusy else { return }
         resultMonitor?.cancel(); resultMonitor = nil
-        status.text = ""; status.expiresAt = nil
+        polishTask?.cancel(); polishTask = nil
+        status.text = ""; status.expiresAt = nil; status.polish = nil; status.polished = nil
         status.phase = isEnabled ? .ready : .disabled
         publish()
     }
@@ -198,7 +215,9 @@ public final class MobileController: ObservableObject {
         let previous = status
         activeLease = lease
         status.requestID = id; status.leaseID = lease?.id; status.documentID = lease?.documentID
-        status.text = ""; status.errorKey = nil; status.expiresAt = nil
+        status.text = ""; status.errorKey = nil; status.expiresAt = nil; status.polish = nil; status.polished = nil
+        polishTask?.cancel(); polishTask = nil
+        if polishEnabled, polishModel != "system", polishAvailable { polishService.warmUp(modelID: polishModel) }
         factory?.language = language
         factory?.modelID = selectedModel
         factory?.maximumDuration = recordingLimit

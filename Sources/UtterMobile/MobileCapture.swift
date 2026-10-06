@@ -56,7 +56,8 @@ private final class MobileRecording: OwnedRecording {
             writer = try RecordingWriter(format: format, thresholds: thresholds)
             pendingWriter = writer
             let writer = self.writer
-            input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in writer.append(buffer) }
+            let live = callbacks.buffer
+            input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in writer.append(buffer); live?(buffer) }
             installedTap = true
             try engine.start()
             #if DEBUG

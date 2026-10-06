@@ -198,6 +198,10 @@ let package = Package(
                            "UtterMediaContracts", "UtterProcessing", "UtterMLX", "UtterWhisper", "UtterAudio"],
             path: "scripts/evaluate-voice", swiftSettings: [.swiftLanguageMode(.v5)]),
         .target(name: "UtterKeyboardBridge", swiftSettings: [.swiftLanguageMode(.v5)]),
+        .testTarget(
+            name: "UtterKeyboardBridgeTests", dependencies: ["UtterKeyboardBridge"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
         .target(name: "UtterMobile", dependencies: ["UtterKeyboardBridge", "UtterRuntime", "UtterContracts", "UtterData", "UtterProcessing", "UtterSession", "UtterMediaContracts", "UtterAppleSpeech", "UtterModels", "UtterWhisper", "UtterMLX"], swiftSettings: [.swiftLanguageMode(.v5)]),
         .target(
             name: "UtterWhisper",

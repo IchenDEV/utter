@@ -55,7 +55,6 @@ extension UtterSimulatorFlow {
     func testNativeProductRotation() {
         openProductPage("Models")
         XCUIDevice.shared.orientation = .landscapeLeft
-        reveal(app.descendants(matching: .any)["model.apple.download"])
         XCTAssertTrue(app.descendants(matching: .any)["model.apple.download"].waitForExistence(timeout: 5))
         capture("Native landscape model library")
         openProductPage("Settings")
@@ -72,7 +71,7 @@ extension UtterSimulatorFlow {
         let globe = app.buttons["keyboard.globe"]
         XCTAssertTrue(globe.waitForExistence(timeout: 5))
         XCTAssertTrue(globe.isHittable)
-        capture("Product keyboard with bottom right globe")
+        capture("Product keyboard with the globe in the system position")
         globe.tap()
         let next = app.buttons["Next keyboard"].firstMatch
         XCTAssertTrue(next.waitForExistence(timeout: 5))
@@ -103,28 +102,45 @@ extension UtterSimulatorFlow {
 
     func testModelDownloadSelectRestartDelete() throws {
         openProductPage("Models")
-        let existing = app.buttons["model.delete.openai_whisper-tiny"]
+        let existing = app.buttons["model.use.openai_whisper-tiny"]
         if existing.waitForExistence(timeout: 2) { throw XCTSkip("Preserve the pre-existing model; lifecycle requires an absent test model") }
-        let selected = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "model.use.")).allElementsBoundByIndex.first { !$0.isEnabled }?.identifier
         let download = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "model.download.openai_whisper-tiny")).firstMatch
         XCTAssertTrue(download.waitForExistence(timeout: 10))
         let id = String(download.identifier.dropFirst("model.download.".count))
         download.tap()
         let use = app.buttons["model.use.\(id)"]
         XCTAssertTrue(use.waitForExistence(timeout: 300), "Real model download and integrity validation must finish")
+        XCTAssertFalse(use.isSelected, "A finished download is offered, not silently chosen")
         use.tap()
-        XCTAssertFalse(use.isEnabled)
+        XCTAssertTrue(use.isSelected, "Tapping a downloaded model chooses it as the speech model")
         capture("Downloaded model selected")
         app.terminate(); app.launch()
         openProductPage("Models")
         XCTAssertTrue(use.waitForExistence(timeout: 10))
-        XCTAssertFalse(use.isEnabled, "Selection must survive restart")
+        XCTAssertTrue(use.isSelected, "Selection must survive restart")
+        use.swipeLeft()
         app.buttons["model.delete.\(id)"].tap()
         app.buttons["model.delete.confirm"].firstMatch.tap()
         XCTAssertTrue(download.waitForExistence(timeout: 20))
         XCTAssertFalse(use.exists)
-        if let selected, app.buttons[selected].exists { app.buttons[selected].tap() }
+        XCTAssertTrue(app.buttons["model.use.apple"].exists || app.buttons["model.apple.download"].exists, "System recognition remains after deleting the chosen model")
         capture("Deleted model offers download again")
+    }
+
+    func testModelCatalogIncludesPolishModels() throws {
+        openProductPage("Models")
+        XCTAssertTrue(app.buttons["model.apple.download"].waitForExistence(timeout: 10))
+        let list = app.collectionViews.matching(NSPredicate(format: "label != %@", "Sidebar")).firstMatch
+        let local = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "model.download.mlx-community/Qwen3.5-0.8B")).firstMatch
+        for _ in 0..<12 where !local.isHittable { list.swipeUp() }
+        XCTAssertTrue(local.isHittable, "The desktop text models are offered for download")
+        let system = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "System language model")).firstMatch
+        for _ in 0..<6 where !system.exists { list.swipeDown() }
+        capture("Models page polish section")
+        XCTAssertTrue(system.exists, "Apple's language model stays available as the polish default")
+        capture("Models page lists the desktop polish models")
+        openProductPage("Settings")
+        XCTAssertTrue(app.descendants(matching: .any)["settings.polish.model"].waitForExistence(timeout: 5))
     }
 
     func testNativeAccessibilityAudit() throws {

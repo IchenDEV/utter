@@ -4,16 +4,37 @@ import UtterContracts
 import UtterModels
 import UtterAppleSpeech
 
+/// One downloadable model as the phone shows it: the same catalog the desktop app uses, judged against this device.
 public struct MobileModel: Identifiable {
+    public enum Kind { case speech, polish }
+    public enum Tier: Int { case recommended = 0, standard, legacy }
+    public enum Fit: Equatable { case ok, marginal(String), blocked(String) }
+    public enum State: Equatable { case notDownloaded, downloading, preparing, downloaded, paused, failed(String) }
+
     public let id: String
+    public let kind: Kind
     public let name: String
     public let detail: String
+    public let family: String?
+    public let tier: Tier
+    public let fit: Fit
+    /// Download size before the model is installed; the installed size afterwards.
     public let bytes: Int64
     public let progress: Double
-    public let downloading: Bool
-    public let downloaded: Bool
-    public let error: String?
-    public let experimental: Bool
+    public let progressDetail: String
+    public let state: State
+    let engine: Engine
+
+    enum Engine { case whisper, mlxSpeech, mlxText }
+
+    public var isWhisper: Bool { engine == .whisper }
+    public var downloaded: Bool { state == .downloaded }
+    public var downloading: Bool { state == .downloading || state == .preparing }
+    public var error: String? { if case .failed(let message) = state { return message }; return nil }
+    public var canDownload: Bool {
+        if case .blocked = fit { return false }
+        return state == .notDownloaded || state == .paused || error != nil
+    }
 }
 
 extension MobileController {
@@ -55,63 +76,6 @@ extension MobileController {
         libraryTask = task
         defer { libraryTask = nil }
         try await task.value
-    }
-
-    func updateModels(_ snapshot: ModelCatalogSnapshot) {
-        // Keep desktop-size Whisper models out of the mobile picker.
-        let small = snapshot.whisper.reversed().filter { entry in
-            ["tiny", "base", "small"].contains { WhisperModelSelection.matches(entry.id, variant: $0) }
-        }
-        models = (small + snapshot.speech).map { entry in
-            let error: String?
-            switch entry.status { case .error(let value), .unavailable(let value): error = value; default: error = nil }
-            return MobileModel(id: entry.id, name: snapshot.whisper.contains(where: { $0.id == entry.id }) ? "Whisper " + entry.displayName : entry.displayName, detail: entry.downloadDetail,
-                               bytes: entry.cacheSize, progress: entry.downloadProgress,
-                               downloading: entry.status.isBusy,
-                               downloaded: entry.status == .downloaded || entry.status == .ready,
-                               error: error, experimental: snapshot.speech.contains { $0.id == entry.id })
-        }
-    }
-
-    func requireDownloadedModel() throws {
-        guard models.contains(where: { $0.id == selectedModel && $0.downloaded && !$0.downloading }) else {
-            throw MobileError.localUnavailable
-        }
-    }
-
-    public func selectModel(_ id: String) async {
-        guard canChangeConfiguration, id == "apple" || models.contains(where: { $0.id == id && $0.downloaded }) else { return }
-        modelMutation = id
-        defer { modelMutation = nil }
-        await disable()
-        selectedModel = id
-        UserDefaults.standard.set(id, forKey: "mobile.model")
-    }
-
-    public func downloadModel(_ id: String) async {
-        guard !clearing, modelMutation != id, let model = models.first(where: { $0.id == id }), !model.downloading,
-              let catalog = try? runtime?.service(ModelServices.catalog) else { return }
-        if model.experimental { await catalog.downloadASR(id, onProgress: nil) }
-        else { await catalog.downloadWhisper(id) }
-    }
-
-    public func cancelDownload(_ id: String) {
-        guard let model = models.first(where: { $0.id == id }) else { return }
-        (try? runtime?.service(ModelServices.catalog))?.cancelDownload(id, kind: model.experimental ? .asr : .whisper)
-    }
-
-    public func deleteModel(_ id: String) async {
-        guard canChangeConfiguration, let model = models.first(where: { $0.id == id }),
-              let catalog = try? runtime?.service(ModelServices.catalog) else { return }
-        modelMutation = id
-        defer { modelMutation = nil }
-        if selectedModel == id {
-            await disable()
-            selectedModel = "apple"
-            UserDefaults.standard.set("apple", forKey: "mobile.model")
-        }
-        if model.experimental { await catalog.deleteASR(id) }
-        else { await catalog.deleteWhisper(id) }
     }
 
     public func prepareAppleModel() async {

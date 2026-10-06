@@ -8,6 +8,20 @@ struct UtterPhoneApp: App {
     var body: some Scene { WindowGroup { MobileRootView(controller: VoiceHost.shared.controller, standby: VoiceHost.shared.standby) } }
 }
 
+#if DEBUG
+/// Paints the whole window so a test can see what the translucent keyboard keys do over a known colour:
+/// `--backdrop-color 0.8,0.1,0.1`.
+private enum DebugBackdrop {
+    static let color: UIColor? = {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "--backdrop-color"), index + 1 < arguments.count else { return nil }
+        let values = arguments[index + 1].split(separator: ",").compactMap { Double($0) }
+        guard values.count == 3 else { return nil }
+        return UIColor(red: values[0], green: values[1], blue: values[2], alpha: 1)
+    }()
+}
+#endif
+
 private enum MobilePage: String, CaseIterable, Identifiable {
     case voice, models, settings
     var id: String { rawValue }
@@ -23,6 +37,8 @@ private struct MobileRootView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.scenePhase) private var scenePhase
     @State private var selected: MobilePage? = .voice
+    /// Set when the keyboard sent the user here to turn dictation on; cleared once they leave again.
+    @State private var showsReturnGuide = false
     var body: some View {
         Group {
             if sizeClass == .regular {
@@ -51,20 +67,31 @@ private struct MobileRootView: View {
             }
         }
         .tint(.primary)
+        #if DEBUG
+        .overlay { if let color = DebugBackdrop.color { Color(color).ignoresSafeArea().allowsHitTesting(false).accessibilityHidden(true) } }
+        #endif
         .overlay(alignment: .bottomTrailing) {
             // Picture in Picture needs a visible source view; it is transparent and ignores touches.
             StandbySource(view: standby.sourceView).frame(width: 44, height: 44).allowsHitTesting(false).accessibilityHidden(true)
         }
         .onOpenURL { url in
             // The keyboard opens this link when voice standby is not running; activation needs the app in the foreground.
-            if url.scheme == "utter", url.host == "standby" { Task { await standby.activate() } }
+            guard url.scheme == "utter", url.host == "standby" else { return }
+            let dictate = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.contains { $0.name == "dictate" } == true
+            Task {
+                await standby.activate()
+                if dictate, standby.phase == .active { showsReturnGuide = true }
+            }
         }
+        .overlay(alignment: .top) { if showsReturnGuide { ReturnGuide() } }
         .task { await controller.prepareLibrary() }
         #if DEBUG
         // Debugger-free device experiments start standby without a tap; permissions must already be granted.
         .task { if ProcessInfo.processInfo.arguments.contains("--standby-autostart") { await standby.activate() } }
         #endif
-        .onChange(of: scenePhase) { if scenePhase == .active { controller.refreshResult() } }
+        .onChange(of: scenePhase) {
+            if scenePhase == .active { controller.refreshResult() } else if scenePhase == .background { showsReturnGuide = false }
+        }
         #if DEBUG && targetEnvironment(simulator)
         .task(id: scenePhase) { if scenePhase == .active { await VoiceHost.shared.runSimulatorBridge() } }
         #endif
@@ -75,6 +102,21 @@ private struct MobileRootView: View {
         case .models: MobileModelsView(controller: controller)
         case .settings: MobileSettingsView(controller: controller)
         }
+    }
+}
+
+/// Utter cannot send the user back to the app they came from; this says so plainly and points at the way back.
+private struct ReturnGuide: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(L("ios.standby.return_title"), systemImage: "checkmark.circle.fill").font(.headline)
+                .accessibilityIdentifier("standby.return_title")
+            Text(L("ios.standby.return_body")).font(.subheadline).foregroundStyle(.secondary)
+        }
+        .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(.horizontal, 16).padding(.top, 8)
+        .accessibilityElement(children: .combine).accessibilityIdentifier("standby.return")
     }
 }
 

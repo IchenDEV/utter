@@ -22,6 +22,7 @@ public final class SharedVoiceBridge {
             let consumed = value.requestID.map(self.isConsumed) ?? false
             if value.phase == .result && (consumed || (value.expiresAt ?? .distantPast) <= Date()) {
                 value.text = ""; value.phase = .ready; value.expiresAt = nil
+                value.polish = nil; value.polished = nil
                 try self.writeData(self.encoder.encode(value), to: url)
             }
             return value
@@ -85,11 +86,24 @@ public final class SharedVoiceBridge {
         }
     }
 
+    static let intentFile = "dictation-intent.json"
+
+    public func postDictationIntent(_ intent: DictationIntent) throws { try write(intent, name: Self.intentFile, limit: 1024) }
+
+    /// The pending intent, if it has not expired. It stays until `clearDictationIntent()`.
+    public func dictationIntent() throws -> DictationIntent? {
+        guard let intent: DictationIntent = try read(Self.intentFile, limit: 1024) else { return nil }
+        return intent.expiresAt > Date() ? intent : nil
+    }
+
+    public func clearDictationIntent() throws { try remove(Self.intentFile) }
+
     public func isConsumed(_ id: UUID) -> Bool { files.fileExists(atPath: root.appendingPathComponent("consumed-\(id).json").path) }
 
     public func reset() throws {
         for url in try files.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) {
-            guard url.lastPathComponent != "status.json" else { continue }
+            // The intent is written before the app that is about to call reset() is even running.
+            guard url.lastPathComponent != "status.json", url.lastPathComponent != Self.intentFile else { continue }
             try files.removeItem(at: url)
         }
     }

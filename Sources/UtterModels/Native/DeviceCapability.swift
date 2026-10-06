@@ -48,20 +48,30 @@ package enum DeviceCapability {
         )
     }
 
+    /// iOS ends an app that holds most of the device's memory; budget what one app can reasonably keep.
+    package static var usableMemoryFraction: Double {
+        #if os(iOS)
+        0.7
+        #else
+        1
+        #endif
+    }
+
     package static func check(
         modelID: String,
         downloadSizeBytes: Int64?, memoryRequirements: ModelMemoryRequirements? = nil
     ) -> Compatibility {
         let reqs = requirements(downloadSizeBytes: downloadSizeBytes, memory: memoryRequirements)
         let info = current
+        let ram = info.totalRAMGB * usableMemoryFraction
 
         if reqs.diskGB > 0, info.availableDiskGB < reqs.diskGB * 1.1 {
             return .incompatible(L("device.insufficient_disk"))
         }
-        if info.totalRAMGB < reqs.minRAMGB {
+        if ram < reqs.minRAMGB {
             return .incompatible(L("device.insufficient_ram"))
         }
-        if info.totalRAMGB < reqs.recommendedRAMGB {
+        if ram < reqs.recommendedRAMGB {
             return .marginal(L("device.marginal_ram"))
         }
         return .compatible

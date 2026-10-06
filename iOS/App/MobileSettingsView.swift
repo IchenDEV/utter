@@ -26,6 +26,12 @@ struct MobileSettingsView: View {
                 NavigationLink(L("ios.dictionary")) { DictionaryView(controller: controller) }.accessibilityIdentifier("dictionary.open")
             } header: { mobileSectionHeader("ios.settings.recognition") }
             Section {
+                Toggle(L("ios.settings.polish"), isOn: $controller.polishEnabled)
+                    .disabled(!controller.polishAvailable).accessibilityIdentifier("settings.polish")
+                LabeledContent(L("ios.settings.polish_model"), value: controller.polishModelName)
+                    .accessibilityIdentifier("settings.polish.model")
+            } footer: { mobileSectionFooter(controller.polishAvailable ? "ios.settings.polish_notice" : "ios.settings.polish_unavailable") }
+            Section {
                 Toggle(L("ios.settings.haptics"), isOn: $haptics).accessibilityIdentifier("settings.haptics")
                 Toggle(L("ios.settings.sounds"), isOn: $sounds).accessibilityIdentifier("settings.sounds")
             } header: { mobileSectionHeader("ios.settings.feedback") } footer: { mobileSectionFooter("ios.settings.feedback_notice") }

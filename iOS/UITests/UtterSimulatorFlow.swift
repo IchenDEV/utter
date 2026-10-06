@@ -57,90 +57,6 @@ final class UtterSimulatorFlow: XCTestCase {
         capture("Local result discarded and runtime disabled after clear")
     }
 
-    func testKeyboardEndToEnd() {
-        activateDiagnostic()
-        app.textFields["field.first"].tap()
-        selectUtterKeyboard()
-        capture("Keyboard selection")
-        startKeyboardSession()
-        app.buttons["keyboard.stop"].tap()
-        XCTAssertTrue(app.buttons["keyboard.insert"].waitForExistence(timeout: 10))
-        app.buttons["keyboard.insert"].tap()
-        XCTAssertEqual(app.textFields["field.first"].value as? String, "Utter bridge sample")
-        XCTAssertFalse(app.buttons["keyboard.insert"].exists)
-        capture("Single keyboard result insertion")
-    }
-
-    func testSimulatorKeyboardTransportAndEditing() {
-        activateSimulatorHost()
-        let field = app.textFields["field.first"]
-        reveal(field); field.tap()
-        selectUtterKeyboard()
-        startKeyboardSession()
-        capture("Simulator keyboard recording controls")
-        app.buttons["keyboard.stop"].tap()
-        XCTAssertTrue(app.buttons["keyboard.insert"].waitForExistence(timeout: 10))
-        app.buttons["keyboard.insert"].tap()
-        waitForValue(field, "Utter bridge sample")
-        XCTAssertFalse(app.buttons["keyboard.insert"].exists)
-        app.buttons["keyboard.delete"].tap()
-        waitForValue(field, "Utter bridge sampl")
-        app.buttons["keyboard.space"].tap()
-        waitForValue(field, "Utter bridge sampl ")
-        app.buttons["keyboard.return"].tap()
-        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.buttons["keyboard.return"])
-        waitForExpectations(timeout: 5)
-        waitForPhase("ready")
-        XCTAssertFalse(app.buttons["voice.copy"].exists)
-        capture("Simulator foreground transport and keyboard editing")
-    }
-
-    func testSimulatorFieldChangeCancelsAndRejectsOldResult() {
-        activateSimulatorHost()
-        let first = app.textFields["field.first"]
-        let second = app.textFields["field.second"]
-        reveal(first); first.tap()
-        selectUtterKeyboard()
-        startKeyboardSession()
-        reveal(second); second.tap()
-        expectation(for: NSPredicate(format: "value == %@", "cancelled"), evaluatedWith: app.staticTexts["keyboard.status"])
-        waitForExpectations(timeout: 10)
-        XCTAssertFalse(app.buttons["keyboard.insert"].exists)
-        startKeyboardSession()
-        app.buttons["keyboard.stop"].tap()
-        XCTAssertTrue(app.buttons["keyboard.insert"].waitForExistence(timeout: 10))
-        reveal(first); first.tap()
-        XCTAssertFalse(app.buttons["keyboard.insert"].exists)
-        XCTAssertEqual(second.value as? String, "Second field")
-        startKeyboardSession()
-        app.buttons["keyboard.stop"].tap()
-        XCTAssertTrue(app.buttons["keyboard.insert"].waitForExistence(timeout: 10))
-        app.buttons["keyboard.insert"].tap()
-        waitForValue(first, "Utter bridge sample")
-        XCTAssertEqual(second.value as? String, "Second field")
-        capture("Old field results rejected and new session inserted")
-    }
-
-    @MainActor
-    func testSimulatorDelayedCancelDoesNotStopNextSession() async throws {
-        activateSimulatorHost(arguments: ["--simulator-delayed-cancel"])
-        let field = app.textFields["field.first"]
-        reveal(field); field.tap()
-        selectUtterKeyboard()
-        startKeyboardSession()
-        app.buttons["keyboard.cancel"].tap()
-        await fulfillment(of: [expectation(for: NSPredicate(format: "value == %@", "cancelled"),
-                                         evaluatedWith: app.staticTexts["keyboard.status"])], timeout: 10)
-        startKeyboardSession()
-        try await Task.sleep(for: .seconds(10))
-        XCTAssertEqual(app.staticTexts["keyboard.status"].value as? String, "recording")
-        app.buttons["keyboard.stop"].tap()
-        XCTAssertTrue(app.buttons["keyboard.insert"].waitForExistence(timeout: 10))
-        app.buttons["keyboard.insert"].tap()
-        waitForValue(field, "Utter bridge sample")
-        capture("Delayed old cancel rejected during next recording")
-    }
-
     func testDictionaryReplacementAndDeletion() {
         clearTestData()
         activateDiagnostic()
@@ -209,14 +125,14 @@ final class UtterSimulatorFlow: XCTestCase {
         }
     }
 
-    private func startKeyboardSession() {
+    func startKeyboardSession() {
         XCTAssertTrue(app.buttons["keyboard.start"].waitForExistence(timeout: 5))
         app.buttons["keyboard.start"].tap()
         expectation(for: NSPredicate(format: "value == %@", "recording"), evaluatedWith: app.staticTexts["keyboard.status"])
         waitForExpectations(timeout: 15)
     }
 
-    private func activateSimulatorHost(arguments: [String] = []) {
+    func activateSimulatorHost(arguments: [String] = []) {
         app.terminate()
         app.launchArguments.append("--simulator-bridge-host")
         app.launchArguments.append(contentsOf: arguments)

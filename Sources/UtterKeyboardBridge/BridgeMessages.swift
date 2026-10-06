@@ -27,6 +27,23 @@ public struct VoiceCommand: Codable, Sendable {
     }
 }
 
+/// State of the language-model rewrite that follows a finished dictation.
+public enum PolishState: String, Codable, Sendable { case pending, done, failed }
+
+/// Left by the keyboard just before it sends the user to the main app, so the keyboard that comes back can
+/// start recording without a second tap. It expires quickly and is used once.
+public struct DictationIntent: Codable, Equatable, Sendable {
+    public static let lifetime: TimeInterval = 60
+    public let id: UUID
+    public let documentID: UUID
+    public let createdAt: Date
+    public var expiresAt: Date { createdAt.addingTimeInterval(Self.lifetime) }
+
+    public init(id: UUID = UUID(), documentID: UUID, createdAt: Date = Date()) {
+        self.id = id; self.documentID = documentID; self.createdAt = createdAt
+    }
+}
+
 public struct VoiceStatus: Codable, Equatable, Sendable {
     public var version = 1
     public var generation: UUID
@@ -34,7 +51,11 @@ public struct VoiceStatus: Codable, Equatable, Sendable {
     public var requestID: UUID?
     public var leaseID: UUID?
     public var documentID: UUID?
+    /// While recording or processing this is the live draft; in `result` it is the final text.
     public var text = ""
+    /// Rewrite of `text` by a language model. Optional so older status files still decode.
+    public var polish: PolishState?
+    public var polished: String?
     public var errorKey: String?
     public var updatedAt = Date()
     public var expiresAt: Date?

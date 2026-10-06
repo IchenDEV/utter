@@ -199,28 +199,25 @@ extension UtterSimulatorFlow {
         Thread.sleep(forTimeInterval: 12)
         settings.buttons["keyboard.stop"].tap()
         capture("Keyboard immediately after stop request")
-        XCTAssertTrue(settings.buttons["keyboard.insert"].waitForExistence(timeout: 100))
+        // The text is written into the field while it is recognized; the dictation is final once undo is offered.
+        XCTAssertTrue(settings.buttons["keyboard.undo"].waitForExistence(timeout: 100), "Dictation must finish into the host field")
         XCTAssertEqual(settings.state, .runningForeground)
-        let recognized = settings.staticTexts["keyboard.result"].label
+        let value = field.value as? String ?? ""
+        let recognized = String(value.dropFirst(before.count))
         print("DEVICE_STANDBY_RESULT \(recognized)")
-        XCTAssertTrue(recognized.contains("公园") && recognized.contains("水"))
-        capture("Keyboard result before single insertion")
+        XCTAssertTrue(value.hasPrefix(before) && recognized.contains("公园") && recognized.contains("水"), recognized)
+        capture("Real background speech streamed into Settings")
         if rejectAfterDocumentChange {
             settings.buttons["keyboard.space"].tap()
-            XCTAssertFalse(settings.buttons["keyboard.insert"].exists, "Document editing must invalidate the old result")
-            XCTAssertEqual(field.value as? String, before + " ")
-            capture("Keyboard old speech result rejected after document edit")
+            XCTAssertFalse(settings.buttons["keyboard.undo"].exists, "Editing the document must end the dictation")
+            XCTAssertEqual(field.value as? String, value + " ")
+            capture("Keyboard offers no undo after a document edit")
             return
         }
-        if scrollResult {
-            settings.scrollViews.containing(.staticText, identifier: "keyboard.status").firstMatch.swipeUp()
-            capture("Keyboard maximum text result scrolled to end")
-        }
-        settings.buttons["keyboard.insert"].tap()
-        capture("Real background speech inserted into Settings")
-        let inserted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", before + recognized), object: field)
-        XCTAssertEqual(XCTWaiter.wait(for: [inserted], timeout: 5), .completed)
-        XCTAssertFalse(settings.buttons["keyboard.insert"].exists, "A result must be inserted once")
+        if scrollResult { capture("Keyboard with a long dictation in the field") }
+        settings.buttons["keyboard.undo"].tap()
+        let rewritten = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value != %@", value), object: field)
+        XCTAssertEqual(XCTWaiter.wait(for: [rewritten], timeout: 5), .completed, "Undo must take the dictation back")
     }
 
     func tapIfPresent(_ id: String) {

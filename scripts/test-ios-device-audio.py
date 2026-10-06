@@ -38,11 +38,15 @@ with (output / f"{run_name}.log").open("w") as log:
         for line in run.stdout:
             log.write(line)
             log.flush()
-            marker = re.fullmatch(r"UTTER_AUDIO_READY (zh|en|cancel) ([0-9.]+)\s*", line)
+            # `delay=` lets a test that blocks inside a long press have the speech begin after recording started.
+            marker = re.fullmatch(r"UTTER_AUDIO_READY (zh|en|cancel) ([0-9.]+)(?: delay=([0-9.]+))?\s*", line)
             if marker:
                 played += 1
                 assert played <= 8, "Unexpected repeated capture markers"
                 sample = "en" if marker[1] == "en" else "zh"
+                if marker[3]:
+                    assert float(marker[3]) <= 10, "Marker delay is capped at 10 seconds"
+                    time.sleep(float(marker[3]))
                 log.write(f"HOST_AUDIO_START {time.time():.3f} markerDelay={time.time() - float(marker[2]):.3f}\n")
                 log.flush()
                 print(f"Playing fixed {sample} sample ({played})", flush=True)
