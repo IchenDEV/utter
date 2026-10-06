@@ -47,8 +47,8 @@ extension KeyboardController {
     /// Positions the globe on the system keyboard's own slot and sizes the view like the system keyboard.
     func applyMetrics() {
         guard view.bounds.width > 0 else { return }
-        // iPhones inset the keys from the notch side like the system keyboard; iPads have no side insets.
-        let pad = traitCollection.userInterfaceIdiom == .pad
+        // Compact layouts inset the keys from the notch side like the system keyboard; tablet layouts have no side insets.
+        let pad = KeyboardMetrics.usesTabletGrid(traitCollection)
         let left = pad ? 0 : view.safeAreaInsets.left, right = pad ? 0 : view.safeAreaInsets.right
         if let sides = hostSides {
             if sides.leading.constant != left { sides.leading.constant = left }

@@ -20,6 +20,14 @@ struct KeyboardMetrics: Equatable {
     /// Space the system adds below the input view, which the key area includes. iPad only.
     var bottomSpacer: CGFloat = 0
 
+    /// Whether the system draws its tablet-style keyboard here. Decided by size classes rather than the
+    /// device idiom: a foldable iPhone reports the iPhone idiom on its inner display but is regular in
+    /// both dimensions there, while an iPhone Max in landscape is only regular in width.
+    static func usesTabletGrid(_ traits: UITraitCollection) -> Bool {
+        traits.userInterfaceIdiom == .pad
+            || (traits.horizontalSizeClass == .regular && traits.verticalSizeClass == .regular)
+    }
+
     static var initial: KeyboardMetrics {
         UIDevice.current.userInterfaceIdiom == .pad
             ? make(width: 744, landscape: false, pad: true) : make(width: 393, landscape: false, pad: false)
