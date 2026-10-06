@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Utter 语音键盘 · 界面重设计方向</title>
+<style>
+  :root{ --page:#121211; --card:#1d1d1b; --line:#393936; --ink:#e9e8e3; --sub:#a5a39d; }
+  *{box-sizing:border-box; margin:0}
+  body{background:var(--page); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif; padding:28px 0 56px}
+  .wrap{max-width:1600px; margin:0 auto; padding:0 12px}
+  h1{font-size:26px; font-weight:700; letter-spacing:.5px}
+  .lede{color:var(--sub); margin:10px 0 6px; line-height:1.7; max-width:860px}
+  .recommendation{background:#20291f; border:1px solid #394c39; border-radius:14px; padding:16px 20px; margin:24px 0; line-height:1.8; color:#d2ddd0}
+  .recommendation b{color:#b9d4b4}
+  h2{font-size:19px; margin:48px 0 4px; font-weight:700}
+  .desc{color:var(--sub); font-size:14px; line-height:1.7; margin-bottom:18px; max-width:900px}
+  .grid{display:flex; flex-wrap:wrap; gap:22px}
+  .item{display:flex; flex-direction:column; gap:8px;width:744px;max-width:100%}
+  .item[hidden]{display:none!important}
+  .tag{font-size:12px; color:var(--sub); letter-spacing:.4px}
+  .tag b{color:var(--ink); font-weight:600}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 8px}
+  .controls button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 13px;border-radius:8px;font:inherit;cursor:pointer}
+  .controls button[aria-pressed="true"]{background:#315f49;border-color:#4c946e;color:#effff5}
+  .panel-frame{width:100%;aspect-ratio:744/300;position:relative;overflow:hidden}
+
+  /* ---------- 键盘面板（1:1，744 × 300 pt） ---------- */
+  .panel{width:744px; height:300px; position:absolute;top:0;left:0;transform-origin:top left;border-radius:2px;
+         font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif; overflow:hidden}
+  .l{--kb:#d1d4da; --cap:#ffffff; --capsoft:rgba(255,255,255,.62); --txt:#1b1d20; --txt2:#5c6167;
+     --blue:#007aff; --red:#ff3b30; --ok:#34c759; --sh:0 1.5px 0 rgba(0,0,0,.22)}
+  .d{--kb:#3f434a; --cap:#7a7f86; --capsoft:rgba(255,255,255,.16); --txt:#fff; --txt2:rgba(255,255,255,.66);
+     --blue:#0a84ff; --red:#ff453a; --ok:#30d158; --sh:0 1.5px 0 rgba(0,0,0,.5)}
+  .panel.l{background:var(--kb)} .panel.d{background:var(--kb)}
+
+  .cap{background:var(--cap); border-radius:10px; box-shadow:var(--sh); color:var(--txt);
+       display:flex; align-items:center; justify-content:center; gap:9px; user-select:none}
+  .panel svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .cap svg{width:22px; height:22px}
+  .cap.sq{width:56px; height:56px}
+  .pill{display:inline-flex; align-items:center; gap:7px; background:var(--capsoft); border-radius:999px;
+        padding:5px 12px; font-size:13px; font-weight:600; color:var(--txt)}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--ok)}
+  .dot.rec{background:var(--red)}
+  .dot.blue{background:var(--blue)} .dot.gray{background:var(--txt2)}
+
+  .wave{display:flex; gap:3px; align-items:center; height:20px}
+  .wave i{width:3.5px; border-radius:2px; background:currentColor; height:20px; transform-origin:center;
+          animation:wv 1.1s ease-in-out infinite}
+  .wave i:nth-child(1){animation-delay:.05s} .wave i:nth-child(2){animation-delay:.18s}
+  .wave i:nth-child(3){animation-delay:.31s} .wave i:nth-child(4){animation-delay:.44s}
+  .wave i:nth-child(5){animation-delay:.57s} .wave i:nth-child(6){animation-delay:.70s}
+  .wave i:nth-child(7){animation-delay:.83s}
+  @keyframes wv{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+  @media (prefers-reduced-motion:reduce){.wave i{animation:none;transform:none}}
+
+  .globe{position:absolute; right:10px; bottom:6px; width:44px; height:44px; opacity:.7;
+         display:flex; align-items:center; justify-content:center; color:var(--txt)}
+  .globe svg{width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.7}
+  .linkcap{color:var(--blue); font-weight:600}
+  .linkcap svg{width:17px; height:17px}
+  .note-under{position:absolute; left:0; right:0; bottom:64px; text-align:center; font-size:12px; color:var(--txt2)}
+
+  /* 现状面板 */
+  .now .status{margin-top:22px; text-align:center; font-size:15px; color:#8a8e94}
+  .now .mainrow{display:flex; justify-content:center; align-items:center; gap:34px; margin-top:14px}
+  .now .micbtn{width:88px; height:88px; border-radius:50%; background:#000; color:#fff; display:flex;
+               align-items:center; justify-content:center}
+  .now .micbtn svg{width:34px; height:34px}
+  .now .icon{width:44px; height:44px; display:flex; align-items:center; justify-content:center; color:#3a3a3c}
+  .now .icon svg{width:20px; height:20px}
+  .now .edits{display:flex; justify-content:center; gap:12px; margin-top:16px}
+  .now .ter{background:#e2e2e7; border-radius:8px; min-height:44px; display:flex; align-items:center;
+            justify-content:center; font-size:15px; color:#1b1d20; padding:0 26px}
+  .now .ter.wide{width:300px}
+  .now.d{background:#1c1c1e}
+  .now.d .status{color:#aeb0b4}
+  .now.d .icon,.now.d .globe{color:#d1d1d6}
+  .now.d .ter{background:#3a3a3c;color:#f2f2f7}
+
+  /* 方向 A */
+  .a .top{padding:16px 20px 0}
+  .a .keys{display:flex; gap:10px; padding:0 20px; margin-top:26px; max-width:580px}
+  .a.center{display:flex; justify-content:center}
+  .a .voice{flex:1; height:58px; font-size:17px; font-weight:600}
+  .a .voice svg{width:23px; height:23px}
+  .a .voice.rec{background:var(--red); color:#fff; border-radius:10px; box-shadow:var(--sh)}
+  .a .voice.off{background:var(--cap);color:var(--txt2);border:1px dashed var(--txt2);box-shadow:none}
+  .a .card{display:flex; gap:12px; align-items:center; margin:26px 20px 0; background:var(--cap);
+           border-radius:12px; box-shadow:var(--sh); padding:12px 14px; max-width:580px}
+  .a .card .txt{flex:1; font-size:16px; line-height:1.45; color:var(--txt)}
+  .a .card .col{display:flex; flex-direction:column; gap:8px}
+  .a .ins{background:var(--blue); color:#fff; font-weight:600; padding:0 22px; height:44px}
+  .a .del{width:44px; height:44px}
+  .a .cancel{color:var(--red); font-weight:600}
+
+  /* 方向 B */
+  .b .top{display:flex; justify-content:center; padding-top:16px}
+  .b .stage{position:absolute; top:54px; bottom:88px; left:0; right:0; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; gap:14px}
+  .b .badge{width:64px; height:64px; border-radius:50%; color:#fff; display:flex; align-items:center;
+            justify-content:center; background:#007aff; box-shadow:0 2px 4px rgba(0,0,0,.2)}
+  .b .badge svg{width:28px; height:28px}
+  .b .badge.rec{background:var(--red); box-shadow:0 2px 4px rgba(0,0,0,.2)}
+  .b .badge.off{background:transparent; border:2px solid var(--txt2); color:var(--txt2); box-shadow:none}
+  .b .caption{font-size:15px; color:var(--txt); font-weight:600}
+  .b .sub{font-size:12.5px; color:var(--txt2)}
+  .b .res{font-size:20px; font-weight:600; line-height:1.4; color:var(--txt); text-align:center; max-width:520px}
+  .b .linkcap{background:var(--cap); border-radius:999px; padding:9px 18px; box-shadow:var(--sh)}
+  .b .bottom{position:absolute; left:20px; right:64px; bottom:16px; display:flex; gap:8px; align-items:center}
+  .b .bottom .cap{height:42px; font-size:14px; font-weight:600}
+  .b .bottom .sp{flex:1}
+  .b .bottom .cap svg{width:19px; height:19px}
+  .b .bottom .ins{background:var(--blue); color:#fff; padding:0 20px}
+  .b .bottom .cn{color:var(--red)}
+
+  /* 方向 C */
+  .c{--bgc:#fff; --kcap:#efeff2}
+  .c.d{--bgc:#1c1c1e; --kcap:#2c2c2e}
+  .c.panel{background:var(--bgc)}
+  .c .top{display:flex; justify-content:center; padding-top:14px}
+  .c .pill{background:var(--kcap)}
+  .c .stage{position:absolute; top:54px; bottom:96px; left:0; right:0; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; gap:14px}
+  .c .orb{width:88px; height:88px; border-radius:50%; color:#fff; display:flex; align-items:center; justify-content:center;
+          background:#007aff; box-shadow:0 2px 5px rgba(0,0,0,.2)}
+  .c .orb svg{width:34px; height:34px}
+  .c .orb.rec{background:var(--red);box-shadow:0 2px 5px rgba(0,0,0,.2)}
+  .c .orb.off{background:var(--txt2); box-shadow:none}
+  .c .caption{font-size:15px; color:var(--txt); font-weight:600}
+  .c .cancel{position:absolute; left:calc(50% + 84px); top:38%; width:44px; height:44px; border-radius:50%;
+             background:var(--kcap); color:var(--red); display:flex; align-items:center; justify-content:center}
+  .c .cancel svg{width:18px; height:18px}
+  .c .card{position:absolute; top:52px; bottom:96px; left:50%; transform:translateX(-50%); width:560px;
+           background:var(--bgc); border:1px solid var(--line); border-radius:16px;
+           box-shadow:0 2px 6px rgba(0,0,0,.2); padding:18px 20px; display:flex; flex-direction:column; gap:14px}
+  .c .card .txt{font-size:17px; line-height:1.5; color:var(--txt)}
+  .c .card .row{display:flex; gap:10px; justify-content:flex-end}
+  .c .kcap{background:var(--kcap); border-radius:10px; height:44px; display:flex; align-items:center;
+           justify-content:center; color:var(--txt); font-size:15px; font-weight:600}
+  .c .kcap svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+  .c .kcap.ins{background:var(--blue); color:#fff; padding:0 20px}
+  .c .kcap.link{color:var(--blue); padding:0 16px}
+  .c .bottom{position:absolute; left:20px; right:64px; bottom:16px; display:flex; gap:8px}
+  .c .bottom .kcap{flex:none; width:56px}
+  .c .bottom .kcap.sp{flex:1; width:auto}
+  .c .linkunder{background:var(--kcap); border-radius:10px; padding:9px 16px; color:var(--blue); font-weight:600;
+                font-size:14px; display:inline-flex; align-items:center; gap:6px}
+
+  .foot{margin-top:56px; color:var(--sub); font-size:14px; line-height:1.9; max-width:900px;
+        border-top:1px solid var(--line); padding-top:24px}
+  .foot b{color:var(--ink)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 3a4 4 0 0 1 4 4v5a4 4 0 0 1-8 0V7a4 4 0 0 1 4-4z"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></symbol>
+    <symbol id="i-del" viewBox="0 0 24 24"><path d="M21 5H8l-5 7 5 7h13a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/><line x1="12" y1="9" x2="17" y2="14"/><line x1="17" y1="9" x2="12" y2="14"/></symbol>
+    <symbol id="i-ret" viewBox="0 0 24 24"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><ellipse cx="12" cy="12" rx="4" ry="9"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/></symbol>
+    <symbol id="i-spc" viewBox="0 0 24 24"></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <h1>Utter 语音键盘 · 界面重设计</h1>
+  <p class="lede">每块键盘面板按 744 × 300 pt 绘制，等比例缩放展示；右下角为切换键盘键。每个方向展示<b>就绪 / 录音中 / 结果 / 待命失效</b>四态，并覆盖浅色与深色。文案语义、无障碍标识符和行为保持不变。</p>
+  <div class="controls" role="group" aria-label="筛选外观">
+    <button type="button" data-filter="all" aria-pressed="true">全部外观</button>
+    <button type="button" data-filter="light" aria-pressed="false">浅色</button>
+    <button type="button" data-filter="dark" aria-pressed="false">深色</button>
+  </div>
+  <div class="recommendation"><b>推荐：方向 A「原生键盘」</b> — 键帽与材质和系统键盘同语言，无论浅色深色、任何宿主 App 里都不突兀；录音态用整块红色键帽 + 波形给出明确进行时反馈；状态收敛为左上角一枚状态点胶囊。方向 B 更雅致但可用键更少、信息密度低；方向 C 保留大按钮个性，但仍是“App 感”，和宿主键盘并排时违和。</div>
+
+  <h2>现状（对照）</h2>
+  <p class="desc">不透明白底 + 居中一行说明文字 + 88pt 纯黑圆形麦克风 + 散落的无边框小图标 + tertiary 文本块。问题：像设置表单，不像键盘；录音中没有任何进行时反馈。</p>
+  <div class="grid">
+    <div class="item">
+      <div class="tag"><b>现状 · 就绪（浅色）</b></div>
+        <div class="panel-frame"><div class="panel l now">
+        <div class="status">可以开始录音</div>
+        <div class="mainrow">
+          <div class="icon"><svg><use href="#i-del"/></svg></div>
+          <div class="micbtn"><svg><use href="#i-mic"/></svg></div>
+          <div class="icon"><svg><use href="#i-x"/></svg></div>
+        </div>
+        <div class="edits">
+          <div class="ter"><svg width="18" height="18" style="stroke:#3a3a3c;fill:none;stroke-width:2"><use href="#i-del"/></svg></div>
+          <div class="ter wide">空格</div>
+          <div class="ter">换行</div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div></div>
+    <div class="item"><div class="tag"><b>现状 · 就绪（深色）</b></div>
+      <div class="panel-frame"><div class="panel d now">
+        <div class="status">可以开始录音</div><div class="mainrow"><div class="icon"><svg><use href="#i-del"/></svg></div><div class="micbtn"><svg><use href="#i-mic"/></svg></div><div class="icon"><svg><use href="#i-x"/></svg></div></div>
+        <div class="edits"><div class="ter"><svg width="18" height="18" style="stroke:#ddd;fill:none;stroke-width:2"><use href="#i-del"/></svg></div><div class="ter wide">空格</div><div class="ter">换行</div></div><div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div></div>
+    </div>
+  </div>
+
+  <h2>方向 A · 原生键盘</h2>
+  <p class="desc">系统键盘材质（浅 #D1D4DA / 深 #43474D）+ 标准键帽（白/深灰、1.5pt 底影）。左上角状态点胶囊；主行是「删除键 · 宽语音键 · 换行键」，录音时语音键整块变红并内嵌波形；结果态换成结果卡片 + 蓝色「插入」键帽；待命失效时语音键置灰、右侧出现「打开 Utter」链接键帽。</p>
+  <div class="grid">
+    <div class="item"><div class="tag"><b>A1 · 就绪（浅色）</b></div>
+      <div class="panel-frame"><div class="panel l a">
+        <div class="top"><span class="pill"><i class="dot"></i>待命中 · 可以开始</span></div>
+        <div class="keys center" style="margin:0 auto; padding:0">
+          <div class="cap sq"><svg><use href="#i-del"/></svg></div>
+          <div class="cap voice"><svg><use href="#i-mic"/></svg>点按说话</div>
+          <div class="cap sq"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div></div>
+    </div>
+    <div class="item"><div class="tag"><b>A2 · 录音中（浅色）</b></div>
+      <div class="panel-frame"><div class="panel l a">
+        <div class="top"><span class="pill"><i class="dot rec"></i>正在录音</span></div>
+        <div class="keys center" style="margin:0 auto; padding:0">
+          <div class="cap sq"><svg><use href="#i-del"/></svg></div>
+          <div class="voice rec"><svg style="width:23px;height:23px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="#i-stop"/></svg>正在录音<span class="wave" style="color:#fff"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          <div class="cap sq cancel"><svg><use href="#i-x"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div></div>
+    </div>
+    <div class="item"><div class="tag"><b>A3 · 结果（浅色）</b></div>
+      <div class="panel-frame"><div class="panel l a">
+        <div class="top"><span class="pill"><i class="dot blue"></i>结果已生成</span></div>
+        <div style="display:flex; justify-content:center">
+          <div class="card">
+            <div class="txt">今天下午 3:00，我们在公园见面，请记得带一瓶水。</div>
+            <div class="col">
+              <div class="cap ins">插入</div>
+              <div class="cap del"><svg><use href="#i-del"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div></div>
+    </div>
+    <div class="item"><div class="tag"><b>A4 · 待命失效（浅色）</b></div>
+      <div class="panel-frame"><div class="panel l a">
+        <div class="top"><span class="pill"><i class="dot gray"></i>待命已停止</span></div>
+        <div class="keys center" style="margin:0 auto; padding:0">
+          <div class="cap sq"><svg><use href="#i-del"/></svg></div>
+          <div class="voice off"><svg><use href="#i-mic"/></svg>待命已停止</div>
+          <div class="cap sq linkcap" style="width:150px; font-size:15px"><svg><use href="#i-out"/></svg>打开 Utter</div>
+        </div>
+        <div class="note-under">可能已关闭，或被其他小窗取代</div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div></div>
+    </div>
+    <div class="item"><div class="tag"><b>A1 · 就绪（深色）</b></div>
+      <div class="panel d a">
+        <div class="top"><span class="pill"><i class="dot"></i>待命中 · 可以开始</span></div>
+        <div class="keys center" style="margin:0 auto; padding:0">
+          <div class="cap sq"><svg><use href="#i-del"/></svg></div>
+          <div class="cap voice"><svg><use href="#i-mic"/></svg>点按说话</div>
+          <div class="cap sq"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>A2 · 录音中（深色）</b></div>
+      <div class="panel d a">
+        <div class="top"><span class="pill"><i class="dot rec"></i>正在录音</span></div>
+        <div class="keys center" style="margin:0 auto; padding:0">
+          <div class="cap sq"><svg><use href="#i-del"/></svg></div>
+          <div class="voice rec"><svg style="width:23px;height:23px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="#i-stop"/></svg>正在录音<span class="wave" style="color:#fff"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          <div class="cap sq cancel"><svg><use href="#i-x"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>方向 B · 听写台</h2>
+  <p class="desc">舞台式：中央一枚 64pt 蓝色语音圆钮，录音时换成红色停止键，七根波形柱在上方给出实时反馈；文案居中、留白多；底部一行小号编辑键（删除 / 空格 / 换行）。编辑键存在感较弱。</p>
+  <div class="grid">
+    <div class="item"><div class="tag"><b>B1 · 就绪（浅色）</b></div>
+      <div class="panel l b">
+        <div class="top"><span class="pill"><i class="dot"></i>待命中</span></div>
+        <div class="stage">
+          <div class="badge"><svg><use href="#i-mic"/></svg></div>
+          <div class="caption">点按麦克风，开始说话</div>
+          <div class="sub">语音在本机识别</div>
+        </div>
+        <div class="bottom">
+          <div class="cap" style="width:44px"><svg><use href="#i-del"/></svg></div>
+          <div class="cap sp">空格</div>
+          <div class="cap" style="width:44px"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>B2 · 录音中（浅色）</b></div>
+      <div class="panel l b">
+        <div class="top"><span class="pill"><i class="dot rec"></i>正在录音</span></div>
+        <div class="stage">
+          <span class="wave" style="color:var(--red); height:40px; scale:1.6"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          <div class="caption">正在录音 · 说完点按停止</div>
+          <div class="badge rec" style="margin-top:2px"><svg><use href="#i-stop"/></svg></div>
+        </div>
+        <div class="bottom">
+          <div class="cap cn" style="width:64px"><svg><use href="#i-x"/></svg>取消</div>
+          <div class="cap sp">空格</div>
+          <div class="cap" style="width:44px"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>B3 · 结果（浅色）</b></div>
+      <div class="panel l b">
+        <div class="top"><span class="pill"><i class="dot blue"></i>结果已生成</span></div>
+        <div class="stage">
+          <div class="res">今天下午 3:00，我们在公园见面，<br>请记得带一瓶水。</div>
+          <div class="sub">只插入一次 · 可删除重说</div>
+        </div>
+        <div class="bottom">
+          <div class="cap" style="width:44px"><svg><use href="#i-del"/></svg></div>
+          <div class="cap sp">空格</div>
+          <div class="cap ins">插入</div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>B4 · 待命失效（浅色）</b></div>
+      <div class="panel l b">
+        <div class="top"><span class="pill"><i class="dot gray"></i>待命已停止</span></div>
+        <div class="stage">
+          <div class="badge off"><svg><use href="#i-mic"/></svg></div>
+          <div class="caption">待命已停止 · 可能被其他小窗取代</div>
+          <div class="linkcap" style="color:var(--blue); font-size:15px"><svg style="stroke:var(--blue);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="#i-out"/></svg>打开 Utter 启用</div>
+        </div>
+        <div class="bottom">
+          <div class="cap" style="width:44px"><svg><use href="#i-del"/></svg></div>
+          <div class="cap sp">空格</div>
+          <div class="cap" style="width:44px"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>B1 · 就绪（深色）</b></div>
+      <div class="panel d b">
+        <div class="top"><span class="pill"><i class="dot"></i>待命中</span></div>
+        <div class="stage">
+          <div class="badge"><svg><use href="#i-mic"/></svg></div>
+          <div class="caption">点按麦克风，开始说话</div>
+          <div class="sub">语音在本机识别</div>
+        </div>
+        <div class="bottom">
+          <div class="cap" style="width:44px"><svg><use href="#i-del"/></svg></div>
+          <div class="cap sp">空格</div>
+          <div class="cap" style="width:44px"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>B2 · 录音中（深色）</b></div>
+      <div class="panel d b">
+        <div class="top"><span class="pill"><i class="dot rec"></i>正在录音</span></div>
+        <div class="stage">
+          <span class="wave" style="color:var(--red); height:40px; scale:1.6"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          <div class="caption">正在录音 · 说完点按停止</div>
+          <div class="badge rec" style="margin-top:2px"><svg><use href="#i-stop"/></svg></div>
+        </div>
+        <div class="bottom">
+          <div class="cap cn" style="width:64px"><svg><use href="#i-x"/></svg>取消</div>
+          <div class="cap sp">空格</div>
+          <div class="cap" style="width:44px"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>方向 C · 声控球</h2>
+  <p class="desc">保留“大圆钮”记忆点：88pt 蓝色圆钮，录音时改为红色停止键；状态胶囊置顶，编辑键帽排在底部，结果态收进浮卡。它比现状完整，但仍带有明显的 App 感，与系统键盘并排时对比更强。</p>
+  <div class="grid">
+    <div class="item"><div class="tag"><b>C1 · 就绪（浅色）</b></div>
+      <div class="panel l c">
+        <div class="top"><span class="pill"><i class="dot"></i>待命中 · 可以开始</span></div>
+        <div class="stage">
+          <div class="orb"><svg><use href="#i-mic"/></svg></div>
+          <div class="caption">点按麦克风，开始说话</div>
+        </div>
+        <div class="bottom">
+          <div class="kcap"><svg><use href="#i-del"/></svg></div>
+          <div class="kcap sp">空格</div>
+          <div class="kcap"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>C2 · 录音中（浅色）</b></div>
+      <div class="panel l c">
+        <div class="top"><span class="pill"><i class="dot rec"></i>正在录音</span></div>
+        <div class="stage">
+          <div style="position:relative">
+            <div class="orb rec"><svg><use href="#i-stop"/></svg></div>
+            <div class="cancel"><svg><use href="#i-x"/></svg></div>
+          </div>
+          <div class="caption">说完点按停止 · ✕ 取消</div>
+        </div>
+        <div class="bottom">
+          <div class="kcap"><svg><use href="#i-del"/></svg></div>
+          <div class="kcap sp">空格</div>
+          <div class="kcap"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>C3 · 结果（浅色）</b></div>
+      <div class="panel l c">
+        <div class="top"><span class="pill"><i class="dot blue"></i>结果已生成</span></div>
+        <div class="card">
+          <div class="txt">今天下午 3:00，我们在公园见面，请记得带一瓶水。</div>
+          <div class="row">
+            <div class="kcap" style="width:44px"><svg><use href="#i-del"/></svg></div>
+            <div class="kcap ins">插入</div>
+          </div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>C4 · 待命失效（浅色）</b></div>
+      <div class="panel l c">
+        <div class="top"><span class="pill"><i class="dot gray"></i>待命已停止</span></div>
+        <div class="stage">
+          <div class="orb off"><svg><use href="#i-mic"/></svg></div>
+          <div class="caption">待命已停止 · 可能被其他小窗取代</div>
+          <div class="linkunder"><svg style="width:16px;height:16px;stroke:var(--blue);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="#i-out"/></svg>打开 Utter 启用语音输入</div>
+        </div>
+        <div class="bottom">
+          <div class="kcap"><svg><use href="#i-del"/></svg></div>
+          <div class="kcap sp">空格</div>
+          <div class="kcap"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>C1 · 就绪（深色）</b></div>
+      <div class="panel d c">
+        <div class="top"><span class="pill"><i class="dot"></i>待命中 · 可以开始</span></div>
+        <div class="stage">
+          <div class="orb"><svg><use href="#i-mic"/></svg></div>
+          <div class="caption">点按麦克风，开始说话</div>
+        </div>
+        <div class="bottom">
+          <div class="kcap"><svg><use href="#i-del"/></svg></div>
+          <div class="kcap sp">空格</div>
+          <div class="kcap"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+    <div class="item"><div class="tag"><b>C2 · 录音中（深色）</b></div>
+      <div class="panel d c">
+        <div class="top"><span class="pill"><i class="dot rec"></i>正在录音</span></div>
+        <div class="stage">
+          <div style="position:relative">
+            <div class="orb rec"><svg><use href="#i-stop"/></svg></div>
+            <div class="cancel"><svg><use href="#i-x"/></svg></div>
+          </div>
+          <div class="caption">说完点按停止 · ✕ 取消</div>
+        </div>
+        <div class="bottom">
+          <div class="kcap"><svg><use href="#i-del"/></svg></div>
+          <div class="kcap sp">空格</div>
+          <div class="kcap"><svg><use href="#i-ret"/></svg></div>
+        </div>
+        <div class="globe"><svg><use href="#i-globe"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>选中方向后我会：</b> 写 spec（各状态、颜色、键帽规格、无障碍标注映射）→ 你批准 → 实现 → 真机验证：浅色/深色 × 四态截图、最大动态类型、VoiceOver 元素清单、三条既有流程回归（KeyboardSpeech / AfterIdle / DisplacedByVideoRecovers），全部证据进 verification.md。<br>
+    <b>不变项：</b> 桥接协议、租约/代次语义、「keyboard.*」无障碍标识符、录音与插入行为、右下角 globe 键。
+  </div>
+</div>
+<script>
+  const darkCopies = ["A3","A4","B3","B4","C3","C4"];
+  const grids = [...document.querySelectorAll(".grid")];
+  for (const id of darkCopies) {
+    const source = [...document.querySelectorAll(".item")].find(item => item.querySelector(".tag b")?.textContent.startsWith(id + " ·") && item.querySelector(".panel.l"));
+    if (!source) continue;
+    const copy = source.cloneNode(true);
+    copy.querySelector(".tag b").textContent = copy.querySelector(".tag b").textContent.replace("浅色", "深色");
+    copy.querySelectorAll(".panel.l").forEach(panel => { panel.classList.remove("l"); panel.classList.add("d"); });
+    const section = source.closest("section") || source.parentElement.parentElement;
+    const grid = source.closest(".grid");
+    grid.append(copy);
+  }
+  document.querySelectorAll(".panel").forEach(panel => {
+    let frame = panel.parentElement;
+    if (!frame.classList.contains("panel-frame")) {
+      frame = document.createElement("div"); frame.className = "panel-frame";
+      panel.before(frame); frame.append(panel);
+    }
+    const fit = () => { panel.style.transform = `scale(${frame.clientWidth / 744})`; };
+    new ResizeObserver(fit).observe(frame); fit();
+  });
+  const controls = [...document.querySelectorAll("[data-filter]")];
+  controls.forEach(button => button.addEventListener("click", () => {
+    const filter = button.dataset.filter;
+    controls.forEach(control => control.setAttribute("aria-pressed", String(control === button)));
+    document.querySelectorAll(".item").forEach(item => {
+      const dark = item.querySelector(".tag b")?.textContent.includes("深色");
+      item.hidden = filter === "dark" ? !dark : filter === "light" ? dark : false;
+    });
+  }));
+  console.info(`mockup: ${document.querySelectorAll('.item').length} panels ready`);
+</script>
+</body>
+</html>

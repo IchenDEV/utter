@@ -1,0 +1,699 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		04D188425067F867FA457F76 /* UITests/UtterSimulatorFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE61AAC4EB6A04B44E07A7D6 /* UITests/UtterSimulatorFlow.swift */; };
+		16BDD079B6CD4E493FAB769C /* LiveActivity/UtterLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D571936431A66D1C7684FEE /* LiveActivity/UtterLiveActivity.swift */; };
+		25BF4FDB7A66BA3DEA60CEA3 /* UtterMobile in Frameworks */ = {isa = PBXBuildFile; productRef = E47FB5B6FA3C7EC5190988B9 /* UtterMobile */; };
+		29E528EC66776EC1FCD17C4E /* App/DictionaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8159DB2461F003EC92EAC319 /* App/DictionaryView.swift */; };
+		2F38FEA05F2CB4D106DEC2AB /* Shared/VoiceActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5955D1F153EDD25040CCDEE /* Shared/VoiceActivity.swift */; };
+		4255FC34908BA81C60FF09D6 /* UtterLiveActivity.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = FC79171DFD18CFC963050233 /* UtterLiveActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		439CB50DD54FE08D0BB42C63 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = E6FADD6F1D2EA8148EAB2FE9 /* Localizable.strings */; };
+		4C5A432BC8427A9B07F1CF70 /* Shared/VoiceIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D270264412B4C1AEBEB1FF /* Shared/VoiceIntents.swift */; };
+		4EB23242C620CF4C5D91ABD3 /* Shared/VoiceIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D270264412B4C1AEBEB1FF /* Shared/VoiceIntents.swift */; };
+		581DA5437A679458B0A6EA9E /* UtterKeyboardBridge in Frameworks */ = {isa = PBXBuildFile; productRef = 10EEB4C278EFA7AAFBE8D668 /* UtterKeyboardBridge */; };
+		68E5526E1000000000000004 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 68E5526E1000000000000003 /* InfoPlist.strings */; };
+		6A395776620B4C98A13CB104 /* UITests/UtterSimulatorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A395776620B4C98A13CB103 /* UITests/UtterSimulatorSettings.swift */; };
+		B202610060000000000000036 /* UITests/UtterSimulatorKeyboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000035; };
+		B202610060000000000000073 /* UITests/UtterSimulatorKeyboardStreaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000072; };
+		B202610070000000000000006 /* UITests/UtterSimulatorSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610070000000000000005; };
+		B202610060000000000000075 /* UITests/UtterKeyboardScreenshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000074; };
+		B202610060000000000000077 /* UITests/UtterSimulatorKeyboardTranslucency.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000076; };
+		71113B1E7025CB5E6660554F /* App/VoiceHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF2B501631894DEAA543CB5 /* App/VoiceHost.swift */; };
+		7180091C94A9475A8027D0E2 /* ../Sources/UtterPresentation/Resources/AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7180091C94A9475A8027D0E1 /* ../Sources/UtterPresentation/Resources/AppIcon.icon */; };
+		73DA32C922900021A1E83A15 /* UtterKeyboardBridge in Frameworks */ = {isa = PBXBuildFile; productRef = E69D3589ECFC6962D149B10D /* UtterKeyboardBridge */; };
+		832E1206F8DBCCF45D2B963F /* Shared/VoiceActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5955D1F153EDD25040CCDEE /* Shared/VoiceActivity.swift */; };
+		8C678C9A98FA5E7DC48E7CC1 /* Keyboard/KeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D65EBBCCF8145D31DFE5AB /* Keyboard/KeyboardView.swift */; };
+		B202610060000000000000030 /* Keyboard/KeyboardController+Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000029; };
+		B202610060000000000000071 /* Keyboard/KeyboardController+Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000070; };
+		B202610060000000000000028 /* Keyboard/KeyboardState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000027; };
+		B202610060000000000000026 /* Keyboard/KeyboardVoiceKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000025; };
+		B202610060000000000000024 /* Keyboard/KeyboardKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000023; };
+		B202610060000000000000022 /* Keyboard/KeyboardMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000021; };
+		A004E2FCD2816FFBC378C2E1 /* App/UtterPhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6BE0C4B002989A3AE6FAD1F /* App/UtterPhoneApp.swift */; };
+		B2CA18841BB06FAAEA605065 /* Keyboard/KeyboardController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D0CFAEE60501EC8EF0E1CD /* Keyboard/KeyboardController.swift */; };
+		B57DA201E37D617AC7459423 /* UtterKeyboardBridge in Frameworks */ = {isa = PBXBuildFile; productRef = E9AEB49D67AEA7E0886961B2 /* UtterKeyboardBridge */; };
+		B74A804C87E8F8AC664396DB /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = E6FADD6F1D2EA8148EAB2FE9 /* Localizable.strings */; };
+		C4C10A83362935A40A769213 /* Shared/VoiceConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE2D352E6B174FF7CB61983 /* Shared/VoiceConfiguration.swift */; };
+		D69972F7565F48111674EFB0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = E6FADD6F1D2EA8148EAB2FE9 /* Localizable.strings */; };
+		EE71D2263391939F8247C961 /* Shared/VoiceIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D270264412B4C1AEBEB1FF /* Shared/VoiceIntents.swift */; };
+		F217FB9F8598831DC6CBC909 /* UtterKeyboard.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 0824DCA3C9658C0F072CF127 /* UtterKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F7E271E8C9651BB2AB654580 /* Shared/VoiceConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE2D352E6B174FF7CB61983 /* Shared/VoiceConfiguration.swift */; };
+		F87F4BF5F0724E2622B039CF /* Shared/VoiceConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE2D352E6B174FF7CB61983 /* Shared/VoiceConfiguration.swift */; };
+		F958B45B329177FC5EDE58D2 /* Shared/VoiceActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5955D1F153EDD25040CCDEE /* Shared/VoiceActivity.swift */; };
+		B202610050000000000000002 /* App/MobileModelsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610050000000000000001; };
+		B202610070000000000000002 /* App/MobileModelRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610070000000000000001; };
+		B202610070000000000000004 /* App/ModelProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610070000000000000003; };
+		B202610050000000000000012 /* App/MobileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610050000000000000011; };
+		B202610060000000000000002 /* App/StandbyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000001; };
+		B202610050000000000000022 /* UITests/UtterDeviceChecks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610050000000000000021; };
+		B202610050000000000000032 /* UITests/UtterDeviceSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610050000000000000031; };
+		B202610060000000000000004 /* UITests/UtterDeviceStandby.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000003; };
+		B202610060000000000000012 /* UITests/UtterDeviceKeyboardReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000011; };
+		B202610060000000000000034 /* UITests/UtterDeviceKeyboardHold.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000033; };
+		B202610060000000000000032 /* UITests/UtterDeviceKeyboardAlignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000031; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		24562AFD9EDD57CD28DA71B4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 244210E48437B6556980A702 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9D7A4D21F5AC17845B78B5E7;
+			remoteInfo = Utter;
+		};
+		AA57B7B7115602A21F87F312 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 244210E48437B6556980A702 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1B99729D8F1A2C750DDB677A;
+			remoteInfo = UtterLiveActivity;
+		};
+		D2544B3CE5D49DC4AF6DB03C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 244210E48437B6556980A702 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2D8B6D49DAF5DEB6B027FDB2;
+			remoteInfo = UtterKeyboard;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DD615B768CF8ACFE2ED53E52 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F217FB9F8598831DC6CBC909 /* UtterKeyboard.appex in Embed App Extensions */,
+				4255FC34908BA81C60FF09D6 /* UtterLiveActivity.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0824DCA3C9658C0F072CF127 /* UtterKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; path = UtterKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		0C27582190548E78179C8DA3 /* UtterSimulatorFlow.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = UtterSimulatorFlow.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3CE2D352E6B174FF7CB61983 /* Shared/VoiceConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/VoiceConfiguration.swift; sourceTree = "<group>"; };
+		51D0CFAEE60501EC8EF0E1CD /* Keyboard/KeyboardController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keyboard/KeyboardController.swift; sourceTree = "<group>"; };
+		68E5526E1000000000000001 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		68E5526E1000000000000002 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		6A395776620B4C98A13CB103 /* UITests/UtterSimulatorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorSettings.swift; sourceTree = "<group>"; };
+		B202610060000000000000035 /* UITests/UtterSimulatorKeyboardLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorKeyboardLayout.swift; sourceTree = "<group>"; };
+		B202610060000000000000072 /* UITests/UtterSimulatorKeyboardStreaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorKeyboardStreaming.swift; sourceTree = "<group>"; };
+		B202610070000000000000005 /* UITests/UtterSimulatorSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorSetup.swift; sourceTree = "<group>"; };
+		B202610060000000000000074 /* UITests/UtterKeyboardScreenshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterKeyboardScreenshot.swift; sourceTree = "<group>"; };
+		B202610060000000000000076 /* UITests/UtterSimulatorKeyboardTranslucency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorKeyboardTranslucency.swift; sourceTree = "<group>"; };
+		6D571936431A66D1C7684FEE /* LiveActivity/UtterLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity/UtterLiveActivity.swift; sourceTree = "<group>"; };
+		7180091C94A9475A8027D0E1 /* ../Sources/UtterPresentation/Resources/AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = ../Sources/UtterPresentation/Resources/AppIcon.icon; sourceTree = "<group>"; };
+		8159DB2461F003EC92EAC319 /* App/DictionaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/DictionaryView.swift; sourceTree = "<group>"; };
+		8FF9CE74EC87CE4EA734BAC9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = ../Sources/UtterContracts/Resources/en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		92D270264412B4C1AEBEB1FF /* Shared/VoiceIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/VoiceIntents.swift; sourceTree = "<group>"; };
+		B722EB9DB9B553BBD5A4C9E3 /* Utter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = Utter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9D65EBBCCF8145D31DFE5AB /* Keyboard/KeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keyboard/KeyboardView.swift; sourceTree = "<group>"; };
+		B202610060000000000000029 /* Keyboard/KeyboardController+Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Keyboard/KeyboardController+Layout.swift"; sourceTree = "<group>"; };
+		B202610060000000000000070 /* Keyboard/KeyboardController+Dictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Keyboard/KeyboardController+Dictation.swift"; sourceTree = "<group>"; };
+		B202610060000000000000027 /* Keyboard/KeyboardState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keyboard/KeyboardState.swift; sourceTree = "<group>"; };
+		B202610060000000000000025 /* Keyboard/KeyboardVoiceKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keyboard/KeyboardVoiceKey.swift; sourceTree = "<group>"; };
+		B202610060000000000000023 /* Keyboard/KeyboardKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keyboard/KeyboardKeys.swift; sourceTree = "<group>"; };
+		B202610060000000000000021 /* Keyboard/KeyboardMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keyboard/KeyboardMetrics.swift; sourceTree = "<group>"; };
+		DBBE158B78183E3EA132D8C0 /* Configuration/Common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration/Common.xcconfig; sourceTree = "<group>"; };
+		DE61AAC4EB6A04B44E07A7D6 /* UITests/UtterSimulatorFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorFlow.swift; sourceTree = "<group>"; };
+		E5955D1F153EDD25040CCDEE /* Shared/VoiceActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/VoiceActivity.swift; sourceTree = "<group>"; };
+		E68EBF00E6B6C5FAC6CFA94A /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "../Sources/UtterContracts/Resources/zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		E6BE0C4B002989A3AE6FAD1F /* App/UtterPhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/UtterPhoneApp.swift; sourceTree = "<group>"; };
+		EEF2B501631894DEAA543CB5 /* App/VoiceHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/VoiceHost.swift; sourceTree = "<group>"; };
+		FC79171DFD18CFC963050233 /* UtterLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; path = UtterLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B202610050000000000000001 /* App/MobileModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileModelsView.swift; sourceTree = "<group>"; };
+		B202610070000000000000001 /* App/MobileModelRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileModelRow.swift; sourceTree = "<group>"; };
+		B202610070000000000000003 /* App/ModelProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/ModelProbe.swift; sourceTree = "<group>"; };
+		B202610050000000000000011 /* App/MobileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileSettingsView.swift; sourceTree = "<group>"; };
+		B202610060000000000000001 /* App/StandbyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/StandbyService.swift; sourceTree = "<group>"; };
+		B202610050000000000000021 /* UITests/UtterDeviceChecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceChecks.swift; sourceTree = "<group>"; };
+		B202610050000000000000031 /* UITests/UtterDeviceSpeech.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceSpeech.swift; sourceTree = "<group>"; };
+		B202610060000000000000003 /* UITests/UtterDeviceStandby.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceStandby.swift; sourceTree = "<group>"; };
+		B202610060000000000000011 /* UITests/UtterDeviceKeyboardReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceKeyboardReference.swift; sourceTree = "<group>"; };
+		B202610060000000000000033 /* UITests/UtterDeviceKeyboardHold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceKeyboardHold.swift; sourceTree = "<group>"; };
+		B202610060000000000000031 /* UITests/UtterDeviceKeyboardAlignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceKeyboardAlignment.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1FFE4CCE680F362F6F9BADDB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				73DA32C922900021A1E83A15 /* UtterKeyboardBridge in Frameworks */,
+				25BF4FDB7A66BA3DEA60CEA3 /* UtterMobile in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		851F49CFEE747F7339F92FEA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F391222226CAE0C69521CEA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				581DA5437A679458B0A6EA9E /* UtterKeyboardBridge in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D32EA87E7A02B367F77DD686 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B57DA201E37D617AC7459423 /* UtterKeyboardBridge in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0A3E27B8CA818264D75C8D81 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0C27582190548E78179C8DA3 /* UtterSimulatorFlow.xctest */,
+				B722EB9DB9B553BBD5A4C9E3 /* Utter.app */,
+				0824DCA3C9658C0F072CF127 /* UtterKeyboard.appex */,
+				FC79171DFD18CFC963050233 /* UtterLiveActivity.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AD936FCBED631FA67E05C3EA = {
+			isa = PBXGroup;
+			children = (
+				7180091C94A9475A8027D0E1 /* ../Sources/UtterPresentation/Resources/AppIcon.icon */,
+				DE61AAC4EB6A04B44E07A7D6 /* UITests/UtterSimulatorFlow.swift */,
+				6A395776620B4C98A13CB103 /* UITests/UtterSimulatorSettings.swift */,
+				B202610060000000000000035 /* UITests/UtterSimulatorKeyboardLayout.swift */,
+				B202610060000000000000072 /* UITests/UtterSimulatorKeyboardStreaming.swift */,
+				B202610070000000000000005 /* UITests/UtterSimulatorSetup.swift */,
+				B202610060000000000000074 /* UITests/UtterKeyboardScreenshot.swift */,
+				B202610060000000000000076 /* UITests/UtterSimulatorKeyboardTranslucency.swift */,
+				B202610050000000000000031 /* UITests/UtterDeviceSpeech.swift */,
+				B202610060000000000000003 /* UITests/UtterDeviceStandby.swift */,
+				B202610060000000000000011 /* UITests/UtterDeviceKeyboardReference.swift */,
+				B202610060000000000000033 /* UITests/UtterDeviceKeyboardHold.swift */,
+				B202610060000000000000031 /* UITests/UtterDeviceKeyboardAlignment.swift */,
+				B202610050000000000000021 /* UITests/UtterDeviceChecks.swift */,
+				68E5526E1000000000000003 /* InfoPlist.strings */,
+				E5955D1F153EDD25040CCDEE /* Shared/VoiceActivity.swift */,
+				3CE2D352E6B174FF7CB61983 /* Shared/VoiceConfiguration.swift */,
+				92D270264412B4C1AEBEB1FF /* Shared/VoiceIntents.swift */,
+				DBBE158B78183E3EA132D8C0 /* Configuration/Common.xcconfig */,
+				E6FADD6F1D2EA8148EAB2FE9 /* Localizable.strings */,
+				8159DB2461F003EC92EAC319 /* App/DictionaryView.swift */,
+				B202610050000000000000001 /* App/MobileModelsView.swift */,
+				B202610070000000000000001 /* App/MobileModelRow.swift */,
+				B202610070000000000000003 /* App/ModelProbe.swift */,
+				B202610050000000000000011 /* App/MobileSettingsView.swift */,
+				B202610060000000000000001 /* App/StandbyService.swift */,
+				E6BE0C4B002989A3AE6FAD1F /* App/UtterPhoneApp.swift */,
+				EEF2B501631894DEAA543CB5 /* App/VoiceHost.swift */,
+				51D0CFAEE60501EC8EF0E1CD /* Keyboard/KeyboardController.swift */,
+				B9D65EBBCCF8145D31DFE5AB /* Keyboard/KeyboardView.swift */,
+				B202610060000000000000029 /* Keyboard/KeyboardController+Layout.swift */,
+				B202610060000000000000070 /* Keyboard/KeyboardController+Dictation.swift */,
+				B202610060000000000000027 /* Keyboard/KeyboardState.swift */,
+				B202610060000000000000025 /* Keyboard/KeyboardVoiceKey.swift */,
+				B202610060000000000000023 /* Keyboard/KeyboardKeys.swift */,
+				B202610060000000000000021 /* Keyboard/KeyboardMetrics.swift */,
+				6D571936431A66D1C7684FEE /* LiveActivity/UtterLiveActivity.swift */,
+				0A3E27B8CA818264D75C8D81 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1B99729D8F1A2C750DDB677A /* UtterLiveActivity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7765406E173A029C4002DBD8 /* Build configuration list for PBXNativeTarget "UtterLiveActivity" */;
+			buildPhases = (
+				CD1C4B5433A45CB8CDD98705 /* Sources */,
+				8F391222226CAE0C69521CEA /* Frameworks */,
+				09209BD5872FF0C8B7854654 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UtterLiveActivity;
+			packageProductDependencies = (
+				10EEB4C278EFA7AAFBE8D668 /* UtterKeyboardBridge */,
+			);
+			productName = UtterLiveActivity;
+			productReference = FC79171DFD18CFC963050233 /* UtterLiveActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		2D8B6D49DAF5DEB6B027FDB2 /* UtterKeyboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC7F2CB8F1A5BC1799F1D469 /* Build configuration list for PBXNativeTarget "UtterKeyboard" */;
+			buildPhases = (
+				2A388D38355F086503BA7D43 /* Sources */,
+				D32EA87E7A02B367F77DD686 /* Frameworks */,
+				108C8E6C77A9100D0CFC6043 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UtterKeyboard;
+			packageProductDependencies = (
+				E9AEB49D67AEA7E0886961B2 /* UtterKeyboardBridge */,
+			);
+			productName = UtterKeyboard;
+			productReference = 0824DCA3C9658C0F072CF127 /* UtterKeyboard.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		9D7A4D21F5AC17845B78B5E7 /* Utter */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EF4B9C8CF855DB52828B2DE8 /* Build configuration list for PBXNativeTarget "Utter" */;
+			buildPhases = (
+				373508A6F27A213FC69486C6 /* Sources */,
+				1FFE4CCE680F362F6F9BADDB /* Frameworks */,
+				2E46D6C77F2C2D1B28C618FE /* Resources */,
+				DD615B768CF8ACFE2ED53E52 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8970FC81A63978FEEEFE2751 /* PBXTargetDependency */,
+				7F1FEC5117F712A2B3EEEF7B /* PBXTargetDependency */,
+			);
+			name = Utter;
+			packageProductDependencies = (
+				E69D3589ECFC6962D149B10D /* UtterKeyboardBridge */,
+				E47FB5B6FA3C7EC5190988B9 /* UtterMobile */,
+			);
+			productName = Utter;
+			productReference = B722EB9DB9B553BBD5A4C9E3 /* Utter.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D068D273E75AE50FAFB35AD0 /* UtterSimulatorFlow */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F09F121B14B36E6FC3871198 /* Build configuration list for PBXNativeTarget "UtterSimulatorFlow" */;
+			buildPhases = (
+				DFC7280FA97D8B34F45AC49A /* Sources */,
+				851F49CFEE747F7339F92FEA /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8C4A27EF5624FE96E491419F /* PBXTargetDependency */,
+			);
+			name = UtterSimulatorFlow;
+			productName = UtterSimulatorFlow;
+			productReference = 0C27582190548E78179C8DA3 /* UtterSimulatorFlow.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		244210E48437B6556980A702 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 2700;
+			};
+			buildConfigurationList = 76F8DEC3DFE0BDB465198890 /* Build configuration list for PBXProject "Utter" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = AD936FCBED631FA67E05C3EA;
+			packageReferences = (
+				BC4A71180870F7945155FBB0 /* XCLocalSwiftPackageReference ".." */,
+			);
+			productRefGroup = 0A3E27B8CA818264D75C8D81 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D068D273E75AE50FAFB35AD0 /* UtterSimulatorFlow */,
+				9D7A4D21F5AC17845B78B5E7 /* Utter */,
+				2D8B6D49DAF5DEB6B027FDB2 /* UtterKeyboard */,
+				1B99729D8F1A2C750DDB677A /* UtterLiveActivity */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		09209BD5872FF0C8B7854654 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				439CB50DD54FE08D0BB42C63 /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		108C8E6C77A9100D0CFC6043 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D69972F7565F48111674EFB0 /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2E46D6C77F2C2D1B28C618FE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B74A804C87E8F8AC664396DB /* Localizable.strings in Resources */,
+				68E5526E1000000000000004 /* InfoPlist.strings in Resources */,
+				7180091C94A9475A8027D0E2 /* ../Sources/UtterPresentation/Resources/AppIcon.icon in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2A388D38355F086503BA7D43 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B2CA18841BB06FAAEA605065 /* Keyboard/KeyboardController.swift in Sources */,
+				8C678C9A98FA5E7DC48E7CC1 /* Keyboard/KeyboardView.swift in Sources */,
+				B202610060000000000000030 /* Keyboard/KeyboardController+Layout.swift in Sources */,
+				B202610060000000000000071 /* Keyboard/KeyboardController+Dictation.swift in Sources */,
+				B202610060000000000000028 /* Keyboard/KeyboardState.swift in Sources */,
+				B202610060000000000000026 /* Keyboard/KeyboardVoiceKey.swift in Sources */,
+				B202610060000000000000024 /* Keyboard/KeyboardKeys.swift in Sources */,
+				B202610060000000000000022 /* Keyboard/KeyboardMetrics.swift in Sources */,
+				2F38FEA05F2CB4D106DEC2AB /* Shared/VoiceActivity.swift in Sources */,
+				F87F4BF5F0724E2622B039CF /* Shared/VoiceConfiguration.swift in Sources */,
+				EE71D2263391939F8247C961 /* Shared/VoiceIntents.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		373508A6F27A213FC69486C6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				29E528EC66776EC1FCD17C4E /* App/DictionaryView.swift in Sources */,
+				B202610050000000000000002 /* App/MobileModelsView.swift in Sources */,
+				B202610070000000000000002 /* App/MobileModelRow.swift in Sources */,
+				B202610070000000000000004 /* App/ModelProbe.swift in Sources */,
+				B202610050000000000000012 /* App/MobileSettingsView.swift in Sources */,
+				B202610060000000000000002 /* App/StandbyService.swift in Sources */,
+				A004E2FCD2816FFBC378C2E1 /* App/UtterPhoneApp.swift in Sources */,
+				71113B1E7025CB5E6660554F /* App/VoiceHost.swift in Sources */,
+				832E1206F8DBCCF45D2B963F /* Shared/VoiceActivity.swift in Sources */,
+				C4C10A83362935A40A769213 /* Shared/VoiceConfiguration.swift in Sources */,
+				4C5A432BC8427A9B07F1CF70 /* Shared/VoiceIntents.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CD1C4B5433A45CB8CDD98705 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16BDD079B6CD4E493FAB769C /* LiveActivity/UtterLiveActivity.swift in Sources */,
+				F958B45B329177FC5EDE58D2 /* Shared/VoiceActivity.swift in Sources */,
+				F7E271E8C9651BB2AB654580 /* Shared/VoiceConfiguration.swift in Sources */,
+				4EB23242C620CF4C5D91ABD3 /* Shared/VoiceIntents.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DFC7280FA97D8B34F45AC49A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				04D188425067F867FA457F76 /* UITests/UtterSimulatorFlow.swift in Sources */,
+				6A395776620B4C98A13CB104 /* UITests/UtterSimulatorSettings.swift in Sources */,
+				B202610060000000000000036 /* UITests/UtterSimulatorKeyboardLayout.swift in Sources */,
+				B202610060000000000000073 /* UITests/UtterSimulatorKeyboardStreaming.swift in Sources */,
+				B202610070000000000000006 /* UITests/UtterSimulatorSetup.swift in Sources */,
+				B202610060000000000000075 /* UITests/UtterKeyboardScreenshot.swift in Sources */,
+				B202610060000000000000077 /* UITests/UtterSimulatorKeyboardTranslucency.swift in Sources */,
+				B202610050000000000000032 /* UITests/UtterDeviceSpeech.swift in Sources */,
+				B202610060000000000000004 /* UITests/UtterDeviceStandby.swift in Sources */,
+				B202610060000000000000012 /* UITests/UtterDeviceKeyboardReference.swift in Sources */,
+				B202610060000000000000034 /* UITests/UtterDeviceKeyboardHold.swift in Sources */,
+				B202610060000000000000032 /* UITests/UtterDeviceKeyboardAlignment.swift in Sources */,
+				B202610050000000000000022 /* UITests/UtterDeviceChecks.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7F1FEC5117F712A2B3EEEF7B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1B99729D8F1A2C750DDB677A /* UtterLiveActivity */;
+			targetProxy = AA57B7B7115602A21F87F312 /* PBXContainerItemProxy */;
+		};
+		8970FC81A63978FEEEFE2751 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2D8B6D49DAF5DEB6B027FDB2 /* UtterKeyboard */;
+			targetProxy = D2544B3CE5D49DC4AF6DB03C /* PBXContainerItemProxy */;
+		};
+		8C4A27EF5624FE96E491419F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9D7A4D21F5AC17845B78B5E7 /* Utter */;
+			targetProxy = 24562AFD9EDD57CD28DA71B4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		68E5526E1000000000000003 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				68E5526E1000000000000001 /* en */,
+				68E5526E1000000000000002 /* zh-Hans */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		E6FADD6F1D2EA8148EAB2FE9 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8FF9CE74EC87CE4EA734BAC9 /* en */,
+				E68EBF00E6B6C5FAC6CFA94A /* zh-Hans */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		3CCE7051BAA1B8E65CDEECD3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+			};
+			name = Debug;
+		};
+		7818FDC62CCB666EE963665B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = DBBE158B78183E3EA132D8C0 /* Configuration/Common.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				INFOPLIST_FILE = "Configuration/LiveActivity-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(UTTER_BUNDLE_PREFIX).liveactivity";
+				PRODUCT_NAME = UtterLiveActivity;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG ";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A4CBEC892439AB86ABE0AF94 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = DBBE158B78183E3EA132D8C0 /* Configuration/Common.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = "Configuration/App-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(UTTER_BUNDLE_PREFIX)";
+				PRODUCT_NAME = Utter;
+				SKIP_INSTALL = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) UTTER_MAIN";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		ABF069C6DA694800DB96E3E5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = DBBE158B78183E3EA132D8C0 /* Configuration/Common.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				INFOPLIST_FILE = "Configuration/LiveActivity-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(UTTER_BUNDLE_PREFIX).liveactivity";
+				PRODUCT_NAME = UtterLiveActivity;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		BB7425817B5AAC3BD89FF19A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = DBBE158B78183E3EA132D8C0 /* Configuration/Common.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = "Configuration/App-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(UTTER_BUNDLE_PREFIX)";
+				PRODUCT_NAME = Utter;
+				SKIP_INSTALL = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG UTTER_MAIN";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		C3E44FB23695387A09F4697D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = DBBE158B78183E3EA132D8C0 /* Configuration/Common.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(UTTER_BUNDLE_PREFIX).uitests";
+				PRODUCT_NAME = UtterSimulatorFlow;
+				TEST_TARGET_NAME = Utter;
+			};
+			name = Debug;
+		};
+		C6138587E42AAE5C953F91BD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = DBBE158B78183E3EA132D8C0 /* Configuration/Common.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				INFOPLIST_FILE = "Configuration/Keyboard-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(UTTER_BUNDLE_PREFIX).keyboard";
+				PRODUCT_NAME = UtterKeyboard;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG ";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		EB9B6A82A6FECD10C0E43155 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+			};
+			name = Release;
+		};
+		F06F705F03C9FD980B40BAFF /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = DBBE158B78183E3EA132D8C0 /* Configuration/Common.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(UTTER_BUNDLE_PREFIX).uitests";
+				PRODUCT_NAME = UtterSimulatorFlow;
+				TEST_TARGET_NAME = Utter;
+			};
+			name = Release;
+		};
+		F24512F0695FAC0B9D4FBC1E /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = DBBE158B78183E3EA132D8C0 /* Configuration/Common.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				INFOPLIST_FILE = "Configuration/Keyboard-Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(UTTER_BUNDLE_PREFIX).keyboard";
+				PRODUCT_NAME = UtterKeyboard;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		76F8DEC3DFE0BDB465198890 /* Build configuration list for PBXProject "Utter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3CCE7051BAA1B8E65CDEECD3 /* Debug */,
+				EB9B6A82A6FECD10C0E43155 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7765406E173A029C4002DBD8 /* Build configuration list for PBXNativeTarget "UtterLiveActivity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7818FDC62CCB666EE963665B /* Debug */,
+				ABF069C6DA694800DB96E3E5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DC7F2CB8F1A5BC1799F1D469 /* Build configuration list for PBXNativeTarget "UtterKeyboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C6138587E42AAE5C953F91BD /* Debug */,
+				F24512F0695FAC0B9D4FBC1E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EF4B9C8CF855DB52828B2DE8 /* Build configuration list for PBXNativeTarget "Utter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB7425817B5AAC3BD89FF19A /* Debug */,
+				A4CBEC892439AB86ABE0AF94 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F09F121B14B36E6FC3871198 /* Build configuration list for PBXNativeTarget "UtterSimulatorFlow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C3E44FB23695387A09F4697D /* Debug */,
+				F06F705F03C9FD980B40BAFF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		BC4A71180870F7945155FBB0 /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		10EEB4C278EFA7AAFBE8D668 /* UtterKeyboardBridge */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BC4A71180870F7945155FBB0 /* XCLocalSwiftPackageReference ".." */;
+			productName = UtterKeyboardBridge;
+		};
+		E47FB5B6FA3C7EC5190988B9 /* UtterMobile */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BC4A71180870F7945155FBB0 /* XCLocalSwiftPackageReference ".." */;
+			productName = UtterMobile;
+		};
+		E69D3589ECFC6962D149B10D /* UtterKeyboardBridge */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BC4A71180870F7945155FBB0 /* XCLocalSwiftPackageReference ".." */;
+			productName = UtterKeyboardBridge;
+		};
+		E9AEB49D67AEA7E0886961B2 /* UtterKeyboardBridge */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BC4A71180870F7945155FBB0 /* XCLocalSwiftPackageReference ".." */;
+			productName = UtterKeyboardBridge;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 244210E48437B6556980A702 /* Project object */;
+}

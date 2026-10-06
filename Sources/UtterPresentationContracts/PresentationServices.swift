@@ -1,4 +1,6 @@
+#if canImport(AppKit)
 import AppKit
+#endif
 import SwiftUI
 import UtterContracts
 import UtterRuntime
@@ -52,6 +54,7 @@ package protocol DesktopPresentationService: AnyObject {
     func openSettings()
 }
 
+#if canImport(AppKit)
 @MainActor
 package protocol OverlayPresentationService: AnyObject {
     func show(context: PresentationContext, targetApp: NSRunningApplication?)
@@ -63,10 +66,13 @@ package protocol IconPresentationService: AnyObject {
     func install(appearance: AppIconAppearance)
     func menuIcon(_ icon: MenuBarIcon, phase: AppPhase) -> NSImage?
 }
+#endif
 
 package enum PresentationServices {
     package static let catalog = ServiceKey<any PresentationCatalog>("presentation.catalog")
     package static let desktop = ServiceKey<any DesktopPresentationService>("presentation.desktop")
+    #if canImport(AppKit)
     package static let overlay = ServiceKey<any OverlayPresentationService>("presentation.overlay")
     package static let icons = ServiceKey<any IconPresentationService>("presentation.icons")
+    #endif
 }

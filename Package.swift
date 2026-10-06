@@ -182,12 +182,14 @@ let package = Package(
     name: "OpenType",
     defaultLocalization: "en",
     platforms: [
-        .macOS("26.0")
+        .macOS("26.0"), .iOS("27.0")
     ],
     products: [
         .executable(name: "OpenType", targets: ["OpenType"]),
         .executable(name: "OpenTypeCLI", targets: ["OpenTypeCLI"]),
         .executable(name: "UtterVoiceEval", targets: ["UtterVoiceEval"]),
+        .library(name: "UtterMobile", targets: ["UtterMobile"]),
+        .library(name: "UtterKeyboardBridge", targets: ["UtterKeyboardBridge"]),
     ],
     dependencies: dependencies,
     targets: [
@@ -195,6 +197,12 @@ let package = Package(
             dependencies: ["UtterEvaluation", "UtterRuntime", "UtterContracts", "UtterData", "UtterModels",
                            "UtterMediaContracts", "UtterProcessing", "UtterMLX", "UtterWhisper", "UtterAudio"],
             path: "scripts/evaluate-voice", swiftSettings: [.swiftLanguageMode(.v5)]),
+        .target(name: "UtterKeyboardBridge", swiftSettings: [.swiftLanguageMode(.v5)]),
+        .testTarget(
+            name: "UtterKeyboardBridgeTests", dependencies: ["UtterKeyboardBridge"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .target(name: "UtterMobile", dependencies: ["UtterKeyboardBridge", "UtterRuntime", "UtterContracts", "UtterData", "UtterProcessing", "UtterSession", "UtterMediaContracts", "UtterAppleSpeech", "UtterModels", "UtterWhisper", "UtterMLX"], swiftSettings: [.swiftLanguageMode(.v5)]),
         .target(
             name: "UtterWhisper",
             dependencies: [

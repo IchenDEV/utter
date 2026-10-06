@@ -8,6 +8,20 @@ package enum ModelDownloadFailureMessage {
         if errors.contains(where: { isTimeout($0) }) {
             return L("model.download_failed_timeout")
         }
+        for error in errors where error.domain == NSURLErrorDomain {
+            switch URLError.Code(rawValue: error.code) {
+            case .notConnectedToInternet, .dataNotAllowed, .internationalRoamingOff:
+                return L("model.download_failed_offline")
+            case .cannotFindHost, .dnsLookupFailed, .cannotConnectToHost:
+                return L("model.download_failed_host")
+            case .secureConnectionFailed, .serverCertificateHasBadDate,
+                 .serverCertificateUntrusted, .serverCertificateHasUnknownRoot,
+                 .serverCertificateNotYetValid, .clientCertificateRejected,
+                 .clientCertificateRequired, .appTransportSecurityRequiresSecureConnection:
+                return L("model.download_failed_secure")
+            default: break
+            }
+        }
         if errors.contains(where: { isNetworkFailure($0) }) {
             return L("model.download_failed_network")
         }

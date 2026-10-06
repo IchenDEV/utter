@@ -8,12 +8,14 @@ import subprocess
 import sys
 
 CONTRACT_IMPORTS = {
+    "UtterKeyboardBridge": {"Foundation"},
     "UtterRuntime": {"Foundation"},
     "UtterContracts": {"Foundation", "UtterRuntime"},
     "UtterMediaContracts": {"Foundation", "AVFoundation", "CoreGraphics", "UtterRuntime", "UtterContracts"},
     "UtterPresentationContracts": {"Foundation", "AppKit", "SwiftUI", "Combine", "UtterRuntime", "UtterContracts", "UtterMediaContracts"},
 }
 CONTRACTS = set(CONTRACT_IMPORTS)
+COMPOSITION_IMPORTS = {"UtterMobile": CONTRACTS | {"UtterData", "UtterProcessing", "UtterSession", "UtterAppleSpeech", "UtterModels", "UtterWhisper", "UtterMLX"}}
 IMPORT = re.compile(r"^\s*(?:@\w+\s+)*import\s+(?:(?:struct|class|enum|protocol|func|var|let|typealias)\s+)?(\w+)", re.MULTILINE)
 
 
@@ -41,7 +43,9 @@ def violations(root, description):
             for imported in IMPORT.findall(path.read_text()):
                 if name in CONTRACT_IMPORTS and imported not in CONTRACT_IMPORTS[name]:
                     errors.append(f"{path}: {name} cannot import {imported}")
-                elif name not in CONTRACTS and name != "UtterBuiltins" and imported.startswith("Utter") and imported not in CONTRACTS:
+                elif name in COMPOSITION_IMPORTS and imported.startswith("Utter") and imported not in COMPOSITION_IMPORTS[name]:
+                    errors.append(f"{path}: {name} cannot compose {imported}")
+                elif name not in CONTRACTS and name not in COMPOSITION_IMPORTS and name != "UtterBuiltins" and imported.startswith("Utter") and imported not in CONTRACTS:
                     errors.append(f"{path}: {name} cannot import sibling implementation {imported}")
     return errors
 
