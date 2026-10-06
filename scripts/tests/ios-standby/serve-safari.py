@@ -4,6 +4,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import re
 import sys
+from urllib.parse import urlsplit
 
 root = Path(__file__).resolve().parents[3]
 files = {
@@ -19,10 +20,11 @@ class Handler(BaseHTTPRequestHandler):
         self.serve(True)
 
     def serve(self, body):
-        if self.path not in files:
+        request_path = urlsplit(self.path).path
+        if request_path not in files:
             self.send_error(404)
             return
-        path, content_type = files[self.path]
+        path, content_type = files[request_path]
         length = path.stat().st_size
         start, end = 0, length - 1
         requested = self.headers.get("Range")

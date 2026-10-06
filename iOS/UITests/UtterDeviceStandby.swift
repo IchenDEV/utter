@@ -2,9 +2,9 @@ import XCTest
 
 /// Physical-device checks for background voice standby. Fixed speech is played by scripts/test-ios-device-audio.py.
 extension UtterSimulatorFlow {
-    private var settings: XCUIApplication { XCUIApplication(bundleIdentifier: "com.apple.Preferences") }
+    var settings: XCUIApplication { XCUIApplication(bundleIdentifier: "com.apple.Preferences") }
     private var safari: XCUIApplication { XCUIApplication(bundleIdentifier: "com.apple.mobilesafari") }
-    private var searchField: XCUIElement { settings.searchFields.firstMatch }
+    var searchField: XCUIElement { settings.searchFields.firstMatch }
 
     func testDeviceStandbyKeyboardSpeech() throws {
         addTeardownBlock { self.settings.terminate(); self.app.activate(); self.tapIfPresent("voice.disable"); self.app.terminate() }
@@ -33,14 +33,12 @@ extension UtterSimulatorFlow {
         guard let fixture = ProcessInfo.processInfo.environment["UTTER_FIXTURE_URL"] else {
             throw XCTSkip("Set TEST_RUNNER_UTTER_FIXTURE_URL to the LAN fixture served by scripts/tests/ios-standby/serve-safari.py")
         }
-        var tab: String?
         addTeardownBlock {
-            if let tab { self.closeFixtureTab(tab) }
             self.settings.terminate(); self.app.activate(); self.tapIfPresent("voice.disable"); self.app.terminate()
         }
         launchDeviceRelease()
         try enableStandby()
-        tab = try playFixtureInPiP(fixture)
+        try playFixtureInPiP(fixture)
         parkVideoPiP()
         try openSettingsSearch()
         selectStandbyKeyboard(expectingLive: false)
@@ -56,7 +54,62 @@ extension UtterSimulatorFlow {
         try dictateFixedSpeech()
     }
 
-    private func enableStandby() throws {
+    func testDeviceKeyboardAppearanceAndVoiceOver() throws {
+        let device = XCUIDevice.shared
+        let originalAppearance = device.appearance
+        let voiceOver = device.voiceOverService
+        let originalVoiceOver = voiceOver.isEnabled
+        addTeardownBlock {
+            if !originalVoiceOver { try voiceOver.disable() }
+            self.settings.terminate(); self.app.activate(); self.tapIfPresent("voice.disable"); self.app.terminate()
+            device.appearance = originalAppearance
+        }
+        try voiceOver.disable()
+        for appearance in [XCUIDevice.Appearance.light, .dark] {
+            device.appearance = appearance
+            launchDeviceRelease()
+            tapIfPresent("voice.disable")
+            try openSettingsSearch()
+            selectStandbyKeyboard(expectingLive: false)
+            capture("Keyboard unavailable appearance \(appearance.rawValue)")
+            XCTAssertTrue(settings.buttons["keyboard.delete"].isHittable)
+            XCTAssertTrue(settings.buttons["keyboard.space"].isHittable)
+            XCTAssertTrue(settings.buttons["keyboard.return"].isHittable)
+            settings.buttons["keyboard.space"].tap()
+            settings.buttons["keyboard.delete"].tap()
+            settings.descendants(matching: .any)["keyboard.activate"].firstMatch.tap()
+            XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
+            waitForStandby("active")
+            settings.activate(); selectStandbyKeyboard()
+            try dictateFixedSpeech()
+        }
+        try voiceOver.enable()
+        settings.staticTexts["keyboard.status"].tap()
+        var spoken: [String] = []
+        for _ in 0..<50 {
+            let speech = try voiceOver.moveForward()
+            spoken.append(speech.utterance)
+            print("KEYBOARD_VOICEOVER \(speech.utterance)")
+            if spoken.contains(where: { $0.contains("Next keyboard") || $0.contains("切换键盘") }) { break }
+        }
+        XCTAssertTrue(spoken.contains { $0.contains("Record") || $0.contains("录音") })
+        XCTAssertTrue(spoken.contains { $0.contains("Space") || $0.contains("空格") })
+        XCTAssertTrue(spoken.contains { $0.contains("Next keyboard") || $0.contains("切换键盘") })
+        capture("Keyboard real VoiceOver traversal")
+        settings.buttons["keyboard.start"].tap(); settings.buttons["keyboard.start"].doubleTap()
+        let recording = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == 'recording'"), object: settings.staticTexts["keyboard.status"])
+        XCTAssertEqual(XCTWaiter.wait(for: [recording], timeout: 15), .completed)
+        settings.buttons["keyboard.cancel"].tap(); settings.buttons["keyboard.cancel"].doubleTap()
+        let cancelled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == 'cancelled'"), object: settings.staticTexts["keyboard.status"])
+        XCTAssertEqual(XCTWaiter.wait(for: [cancelled], timeout: 10), .completed)
+        capture("Keyboard real VoiceOver recording cancellation")
+        if !originalVoiceOver { try voiceOver.disable() }
+        settings.buttons["keyboard.globe"].press(forDuration: 1)
+        XCTAssertTrue(settings.tables["InputSwitcherTable"].waitForExistence(timeout: 5))
+        capture("Keyboard native globe long press")
+    }
+
+    func enableStandby() throws {
         openProductPage("Voice")
         tapButton("voice.enable", down: true)
         let alert = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch
@@ -68,7 +121,39 @@ extension UtterSimulatorFlow {
         capture("Physical standby active")
     }
 
-    private func waitForStandby(_ value: String) {
+    func testDeviceKeyboardReduceMotion() throws {
+        try XCUIDevice.shared.voiceOverService.disable()
+        launchDeviceRelease()
+        try openAccessibilitySettings()
+        let motion = settings.staticTexts.matching(NSPredicate(format: "label IN %@", ["Motion", "动态效果"])).firstMatch
+        XCTAssertTrue(motion.waitForExistence(timeout: 5)); motion.tap()
+        let reduce = settings.switches.matching(NSPredicate(format: "label CONTAINS 'Reduce Motion' OR label CONTAINS '减弱动态效果'")).firstMatch
+        XCTAssertTrue(reduce.waitForExistence(timeout: 5))
+        let original = reduce.value as? String
+        addTeardownBlock {
+            try self.openAccessibilitySettings()
+            motion.tap()
+            if reduce.value as? String != original { reduce.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap() }
+            self.capture("Device Reduce Motion restored")
+            self.settings.terminate(); self.app.activate(); self.tapIfPresent("voice.disable"); self.app.terminate()
+        }
+        if original == "0" { reduce.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap() }
+        waitForValue(reduce, "1")
+        capture("Device Reduce Motion enabled")
+        app.activate(); try enableStandby()
+        try openSettingsSearch(); selectStandbyKeyboard()
+        settings.buttons["keyboard.start"].tap()
+        let recording = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == 'recording'"), object: settings.staticTexts["keyboard.status"])
+        XCTAssertEqual(XCTWaiter.wait(for: [recording], timeout: 15), .completed)
+        capture("Keyboard Reduce Motion recording frame one")
+        Thread.sleep(forTimeInterval: 2)
+        capture("Keyboard Reduce Motion recording frame two")
+        settings.buttons["keyboard.cancel"].tap()
+        let cancelled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == 'cancelled'"), object: settings.staticTexts["keyboard.status"])
+        XCTAssertEqual(XCTWaiter.wait(for: [cancelled], timeout: 10), .completed)
+    }
+
+    func waitForStandby(_ value: String) {
         let footer = app.staticTexts["voice.standby"]
         // A failed start reports its diagnostic in the value; stop waiting as soon as it appears.
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@ OR value BEGINSWITH 'failed'", value), object: footer)
@@ -76,7 +161,7 @@ extension UtterSimulatorFlow {
         XCTAssertEqual(footer.value as? String, value, "Standby must reach \(value)")
     }
 
-    private func openSettingsSearch() throws {
+    func openSettingsSearch() throws {
         settings.launch()
         for _ in 0..<4 where !searchField.exists {
             let back = settings.navigationBars.buttons.matching(NSPredicate(format: "label IN %@", ["Settings", "设置", "Apps", "App", "应用"])).firstMatch
@@ -85,10 +170,10 @@ extension UtterSimulatorFlow {
         XCTAssertTrue(searchField.waitForExistence(timeout: 5), "Settings search field must be visible")
     }
 
-    private func selectStandbyKeyboard(expectingLive: Bool = true) {
+    func selectStandbyKeyboard(expectingLive: Bool = true) {
         searchField.tap()
         if !settings.staticTexts["keyboard.status"].exists {
-            let globe = settings.buttons.matching(NSPredicate(format: "label IN %@", ["Next keyboard", "下一个键盘"])).firstMatch
+            let globe = settings.buttons.matching(NSPredicate(format: "label IN %@", ["Next keyboard", "下一个键盘", "切换键盘"])).firstMatch
             XCTAssertTrue(globe.waitForExistence(timeout: 5))
             globe.press(forDuration: 1)
             let utter = settings.tables["InputSwitcherTable"].cells.matching(NSPredicate(format: "label BEGINSWITH %@", "Utter")).firstMatch
@@ -99,23 +184,38 @@ extension UtterSimulatorFlow {
         XCTAssertTrue(settings.descendants(matching: .any)[target].firstMatch.waitForExistence(timeout: 10), "Keyboard must show \(target)")
     }
 
-    private func dictateFixedSpeech() throws {
+    func dictateFixedSpeech(scrollResult: Bool = false, rejectAfterDocumentChange: Bool = false) throws {
         let field = searchField
         let original = field.value as? String ?? ""
         let before = original == field.placeholderValue ? "" : original
+        capture("Keyboard ready for fixed speech")
         settings.buttons["keyboard.start"].tap()
         let recording = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == 'recording'"),
                                                   object: settings.staticTexts["keyboard.status"])
         XCTAssertEqual(XCTWaiter.wait(for: [recording], timeout: 15), .completed, "Recording must start without leaving the host app")
         XCTAssertEqual(settings.state, .runningForeground)
+        capture("Keyboard recording fixed speech")
         FileHandle.standardOutput.write(Data("UTTER_AUDIO_READY zh \(Date().timeIntervalSince1970)\n".utf8))
         Thread.sleep(forTimeInterval: 12)
         settings.buttons["keyboard.stop"].tap()
+        capture("Keyboard immediately after stop request")
         XCTAssertTrue(settings.buttons["keyboard.insert"].waitForExistence(timeout: 100))
         XCTAssertEqual(settings.state, .runningForeground)
         let recognized = settings.staticTexts["keyboard.result"].label
         print("DEVICE_STANDBY_RESULT \(recognized)")
         XCTAssertTrue(recognized.contains("公园") && recognized.contains("水"))
+        capture("Keyboard result before single insertion")
+        if rejectAfterDocumentChange {
+            settings.buttons["keyboard.space"].tap()
+            XCTAssertFalse(settings.buttons["keyboard.insert"].exists, "Document editing must invalidate the old result")
+            XCTAssertEqual(field.value as? String, before + " ")
+            capture("Keyboard old speech result rejected after document edit")
+            return
+        }
+        if scrollResult {
+            settings.scrollViews.containing(.staticText, identifier: "keyboard.status").firstMatch.swipeUp()
+            capture("Keyboard maximum text result scrolled to end")
+        }
         settings.buttons["keyboard.insert"].tap()
         capture("Real background speech inserted into Settings")
         let inserted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", before + recognized), object: field)
@@ -123,12 +223,12 @@ extension UtterSimulatorFlow {
         XCTAssertFalse(settings.buttons["keyboard.insert"].exists, "A result must be inserted once")
     }
 
-    private func tapIfPresent(_ id: String) {
+    func tapIfPresent(_ id: String) {
         let button = app.buttons[id]
         if button.waitForExistence(timeout: 3) { button.tap() }
     }
 
-    private func playFixtureInPiP(_ url: String) throws -> String {
+    private func playFixtureInPiP(_ url: String) throws {
         safari.activate()
         XCTAssertTrue(safari.wait(for: .runningForeground, timeout: 5))
         Thread.sleep(forTimeInterval: 2)
@@ -136,18 +236,25 @@ extension UtterSimulatorFlow {
             "identifier BEGINSWITH %@ OR identifier BEGINSWITH %@", "TabBarTab?", "TabDocument?"))
         let existing = Set(tabs.allElementsBoundByIndex.compactMap(tabID))
         let active = safari.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "TabBarTab?isActive=true")).firstMatch
-        for _ in 0..<2 {
-            safari.buttons["NewTabButton"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-            Thread.sleep(forTimeInterval: 1)
-            if active.exists, let created = tabID(active), !existing.contains(created) { break }
-        }
-        let created = try XCTUnwrap(tabID(active))
-        XCTAssertFalse(existing.contains(created), "The fixture needs its own tab; existing tabs are never edited")
-        active.textFields.firstMatch.tap()
-        safari.typeText(url + "\n")
+        var fixture = try XCTUnwrap(URLComponents(string: url))
+        fixture.queryItems = (fixture.queryItems ?? []) + [URLQueryItem(name: "utter-test", value: UUID().uuidString)]
+        XCUIDevice.shared.system.open(try XCTUnwrap(fixture.url))
         Thread.sleep(forTimeInterval: 3)
-        if safari.staticTexts["此连接不安全"].waitForExistence(timeout: 5), safari.buttons["继续"].exists { safari.buttons["继续"].tap() }
-        XCTAssertTrue(safari.buttons["Play video"].waitForExistence(timeout: 30))
+        let created = try XCTUnwrap(tabID(active))
+        guard !existing.contains(created) else {
+            XCTFail("The fixture needs its own tab; existing tabs are never edited")
+            return
+        }
+        addTeardownBlock { self.closeFixtureTab(created) }
+        let warning = safari.staticTexts["此连接不安全"].waitForExistence(timeout: 5)
+        if warning {
+            capture("Safari security warning awaiting manual user action")
+            print("UTTER_BROWSER_USER_ACTION_REQUIRED")
+        }
+        guard safari.buttons["Play video"].waitForExistence(timeout: warning ? 120 : 30) else {
+            XCTFail("Fixture did not load; Safari security warnings require manual user action")
+            return
+        }
         safari.buttons["Play video"].tap()
         Thread.sleep(forTimeInterval: 3)
         safari.buttons["Start video PiP"].tap()
@@ -155,7 +262,6 @@ extension UtterSimulatorFlow {
         let state = safari.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Video:'")).firstMatch.label
         XCTAssertTrue(state.contains("picture-in-picture") && state.contains("paused=false"), state)
         capture("External video Picture in Picture started")
-        return created
     }
 
     /// The system video window starts at the top-left covering the Settings sidebar; park it by the right edge,

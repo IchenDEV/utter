@@ -621,6 +621,8 @@
 "ios.keyboard" = "Voice keyboard";
 "ios.keyboard_setup" = "In Settings → General → Keyboard → Keyboards, add Utter and allow Full Access so the keyboard can communicate with this app.";
 "ios.keyboard_enable_notice" = "Enable voice input in Utter, then return to this keyboard.";
+"ios.keyboard.record_hint" = "Tap the microphone to start speaking";
+"ios.keyboard.stop_hint" = "Tap stop when you finish speaking";
 "ios.try_keyboard" = "Try the keyboard";
 "ios.field.first" = "First field";
 "ios.field.second" = "Second field";

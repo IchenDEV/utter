@@ -28,11 +28,12 @@ final class KeyboardController: UIInputViewController, UIInputViewAudioFeedback 
         let host = UIHostingController(rootView: content)
         addChild(host); view.addSubview(host.view); host.didMove(toParent: self)
         host.view.translatesAutoresizingMaskIntoConstraints = false
-        host.view.backgroundColor = .systemBackground
-        view.backgroundColor = .systemBackground
+        host.view.backgroundColor = KeyboardView.surfaceColor
+        view.backgroundColor = KeyboardView.surfaceColor
         globe.addTarget(self, action: #selector(keyFeedback), for: .touchDown)
         globe.tintColor = .label
         globe.setImage(UIImage(systemName: "globe"), for: .normal)
+        globe.setPreferredSymbolConfiguration(UIImage.SymbolConfiguration(pointSize: 20), forImageIn: .normal)
         globe.accessibilityLabel = L("ios.action.next_keyboard")
         globe.accessibilityIdentifier = "keyboard.globe"
         globe.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
@@ -51,7 +52,11 @@ final class KeyboardController: UIInputViewController, UIInputViewAudioFeedback 
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        visible = true; globe.isHidden = false
+        globe.isHidden = false
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        visible = true
         refresh(); watchStandby()
     }
     override func viewWillDisappear(_ animated: Bool) {

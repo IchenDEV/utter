@@ -621,6 +621,8 @@
 "ios.keyboard" = "语音键盘";
 "ios.keyboard_setup" = "在设置 → 通用 → 键盘 → 键盘中添加 Utter，并开启完全访问，让键盘与此 App 通信。";
 "ios.keyboard_enable_notice" = "请在 Utter 中启用语音输入，再返回此键盘。";
+"ios.keyboard.record_hint" = "点按麦克风，开始说话";
+"ios.keyboard.stop_hint" = "说完后点按停止";
 "ios.try_keyboard" = "试用键盘";
 "ios.field.first" = "第一个输入框";
 "ios.field.second" = "第二个输入框";

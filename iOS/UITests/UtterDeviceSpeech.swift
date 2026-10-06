@@ -1,6 +1,49 @@
 import XCTest
 
 extension UtterSimulatorFlow {
+    func testDeviceKeyboardFullAccessOff() throws {
+        try XCUIDevice.shared.voiceOverService.disable()
+        launchDeviceRelease()
+        tapIfPresent("voice.disable")
+        func openKeyboardPermission() {
+            app.activate(); openProductPage("Voice"); tapButton("voice.settings")
+            XCTAssertTrue(settings.wait(for: .runningForeground, timeout: 5))
+            let keyboards = settings.staticTexts.matching(NSPredicate(format: "label IN %@", ["Keyboards", "键盘"])).firstMatch
+            XCTAssertTrue(keyboards.waitForExistence(timeout: 5)); keyboards.tap()
+        }
+        openKeyboardPermission()
+        let full = settings.switches.matching(NSPredicate(format: "label CONTAINS 'Full Access' OR label CONTAINS '完全访问'")).firstMatch
+        XCTAssertTrue(full.waitForExistence(timeout: 5))
+        let original = full.value as? String
+        addTeardownBlock {
+            self.settings.terminate(); openKeyboardPermission()
+            if full.value as? String != original {
+                full.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+                let allow = self.settings.alerts.buttons.matching(NSPredicate(format: "label IN %@", ["Allow", "允许"])).firstMatch
+                if allow.waitForExistence(timeout: 2) { allow.tap() }
+            }
+            XCTAssertEqual(full.value as? String, original)
+            self.capture("Keyboard Full Access restored")
+            self.settings.terminate(); self.app.activate(); self.app.terminate()
+        }
+        if original == "1" { full.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap() }
+        waitForValue(full, "0")
+        capture("Keyboard Full Access disabled")
+        launchDeviceRelease()
+        let field = app.textFields["field.first"]
+        reveal(field); field.tap(); selectUtterKeyboard()
+        let status = app.staticTexts["keyboard.status"].label
+        XCTAssertTrue(status.contains("Full Access") || status.contains("完全访问"), status)
+        XCTAssertFalse(app.buttons["keyboard.start"].exists)
+        XCTAssertFalse(app.buttons["keyboard.activate"].exists)
+        app.buttons["keyboard.space"].tap(); waitForValue(field, " ")
+        app.buttons["keyboard.delete"].tap()
+        XCTAssertTrue(["", "First field"].contains(field.value as? String ?? ""))
+        capture("Keyboard Full Access error and editing")
+        app.buttons["keyboard.return"].tap()
+        XCTAssertFalse(app.buttons["keyboard.return"].exists)
+    }
+
     func testDeviceAppleChineseSpeech() throws {
         launchDeviceRelease()
         try preserveSpeechConfiguration()
