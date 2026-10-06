@@ -125,7 +125,7 @@ private final class MobileJob: SessionJob {
         try await control.waitForStop()
     }
 
-    func revoke() { revoked = true; timeout?.cancel(); speech?.cancelListening() }
+    func revoke() { revoked = true; timeout?.cancel(); recording?.revoke(); speech?.cancelListening() }
     func close() async {
         timeout?.cancel(); await recording?.close(); recording = nil
         if let speech { await Task { await speech.shutdown() }.value }; speech = nil

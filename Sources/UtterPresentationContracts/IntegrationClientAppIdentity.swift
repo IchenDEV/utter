@@ -1,8 +1,11 @@
 import UtterContracts
-import AppKit
 import Foundation
+#if canImport(AppKit)
+import AppKit
+#endif
 
 extension IntegrationClient {
+    #if canImport(AppKit)
     package static func appIdentity(for app: NSRunningApplication, transport: Transport) -> IntegrationClient {
         let displayName = app.localizedName ?? app.bundleIdentifier ?? "Local App"
         let codeIdentity = app.executableURL?.path
@@ -14,6 +17,7 @@ extension IntegrationClient {
             transport: transport
         )
     }
+    #endif
 
     package static func appIdentity(url: URL, transport: Transport) -> IntegrationClient {
         let bundle = Bundle(url: url)

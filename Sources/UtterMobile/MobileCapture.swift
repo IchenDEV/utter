@@ -35,6 +35,7 @@ private final class MobileRecording: OwnedRecording {
     private let writer: RecordingWriter
     private let release: () -> Void
     private var stopped = false
+    private var revoked = false
     private var observers: [NSObjectProtocol] = []
     private let callbacks: CaptureCallbacks
 
@@ -75,7 +76,7 @@ private final class MobileRecording: OwnedRecording {
             observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] notification in
                 let reason = (notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? NSNumber)?.uintValue
                 Task { @MainActor [weak self] in
-                    guard let self, !self.stopped else { return }
+                    guard let self, !self.stopped, !self.revoked else { return }
                     // Our own category activation can arrive after the input tap starts.
                     if name == AVAudioSession.routeChangeNotification,
                        reason == AVAudioSession.RouteChangeReason.categoryChange.rawValue,
@@ -87,14 +88,31 @@ private final class MobileRecording: OwnedRecording {
     }
 
     func finish() async throws -> CapturedAudio {
+        try Task.checkCancellation()
+        guard !revoked else { throw CancellationError() }
         let result = stop()
         if let error = result.error { throw error }
         return CapturedAudio(url: writer.url, activity: result.activity)
     }
 
-    func close() async {
+    func revoke() {
+        revoked = true
+        removeObservers()
+    }
+
+    func stopCapture() async {
+        revoke()
         _ = stop()
+    }
+
+    func close() async {
+        await stopCapture()
         try? FileManager.default.removeItem(at: writer.url)
+    }
+
+    private func removeObservers() {
+        observers.forEach(NotificationCenter.default.removeObserver)
+        observers.removeAll()
     }
 
     private func stop() -> (activity: AudioCaptureActivity, error: Error?) {
@@ -102,8 +120,7 @@ private final class MobileRecording: OwnedRecording {
             stopped = true
             engine.inputNode.removeTap(onBus: 0)
             engine.stop()
-            observers.forEach(NotificationCenter.default.removeObserver)
-            observers.removeAll()
+            removeObservers()
             release()
         }
         let result = writer.finish()

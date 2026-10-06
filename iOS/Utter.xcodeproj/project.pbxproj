@@ -20,7 +20,7 @@
 		68E5526E1000000000000004 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 68E5526E1000000000000003 /* InfoPlist.strings */; };
 		6A395776620B4C98A13CB104 /* UITests/UtterSimulatorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A395776620B4C98A13CB103 /* UITests/UtterSimulatorSettings.swift */; };
 		71113B1E7025CB5E6660554F /* App/VoiceHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF2B501631894DEAA543CB5 /* App/VoiceHost.swift */; };
-		7180091C94A9475A8027D0E2 /* ../Sources/Resources/AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7180091C94A9475A8027D0E1 /* ../Sources/Resources/AppIcon.icon */; };
+		7180091C94A9475A8027D0E2 /* ../Sources/UtterPresentation/Resources/AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7180091C94A9475A8027D0E1 /* ../Sources/UtterPresentation/Resources/AppIcon.icon */; };
 		73DA32C922900021A1E83A15 /* UtterKeyboardBridge in Frameworks */ = {isa = PBXBuildFile; productRef = E69D3589ECFC6962D149B10D /* UtterKeyboardBridge */; };
 		832E1206F8DBCCF45D2B963F /* Shared/VoiceActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5955D1F153EDD25040CCDEE /* Shared/VoiceActivity.swift */; };
 		8C678C9A98FA5E7DC48E7CC1 /* Keyboard/KeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D65EBBCCF8145D31DFE5AB /* Keyboard/KeyboardView.swift */; };
@@ -91,7 +91,7 @@
 		68E5526E1000000000000002 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		6A395776620B4C98A13CB103 /* UITests/UtterSimulatorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterSimulatorSettings.swift; sourceTree = "<group>"; };
 		6D571936431A66D1C7684FEE /* LiveActivity/UtterLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity/UtterLiveActivity.swift; sourceTree = "<group>"; };
-		7180091C94A9475A8027D0E1 /* ../Sources/Resources/AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = ../Sources/Resources/AppIcon.icon; sourceTree = "<group>"; };
+		7180091C94A9475A8027D0E1 /* ../Sources/UtterPresentation/Resources/AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = ../Sources/UtterPresentation/Resources/AppIcon.icon; sourceTree = "<group>"; };
 		8159DB2461F003EC92EAC319 /* App/DictionaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/DictionaryView.swift; sourceTree = "<group>"; };
 		8FF9CE74EC87CE4EA734BAC9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = ../Sources/UtterContracts/Resources/en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		92D270264412B4C1AEBEB1FF /* Shared/VoiceIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/VoiceIntents.swift; sourceTree = "<group>"; };
@@ -162,7 +162,7 @@
 		AD936FCBED631FA67E05C3EA = {
 			isa = PBXGroup;
 			children = (
-				7180091C94A9475A8027D0E1 /* ../Sources/Resources/AppIcon.icon */,
+				7180091C94A9475A8027D0E1 /* ../Sources/UtterPresentation/Resources/AppIcon.icon */,
 				DE61AAC4EB6A04B44E07A7D6 /* UITests/UtterSimulatorFlow.swift */,
 				6A395776620B4C98A13CB103 /* UITests/UtterSimulatorSettings.swift */,
 				B202610050000000000000031 /* UITests/UtterDeviceSpeech.swift */,
@@ -327,7 +327,7 @@
 			files = (
 				B74A804C87E8F8AC664396DB /* Localizable.strings in Resources */,
 				68E5526E1000000000000004 /* InfoPlist.strings in Resources */,
-				7180091C94A9475A8027D0E2 /* ../Sources/Resources/AppIcon.icon in Resources */,
+				7180091C94A9475A8027D0E2 /* ../Sources/UtterPresentation/Resources/AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
