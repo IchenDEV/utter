@@ -44,7 +44,7 @@ extension VoiceEvaluationCase {
             guard let selected = IndustryLexiconID(rawValue: lexicon) else { throw VoiceEvaluationError.invalidCase(id) }
             lexiconID = selected
         } else { lexiconID = SettingsValues().industryLexicon }
-        let dictionary = PersonalDictionarySnapshot(entries: [], editRules: [],
+        let dictionary = PersonalDictionarySnapshot(entries: [], editRules: (edit_rules ?? []).map { EditRule(description: $0) },
             industryLexicon: try runtime.service(DataServices.lexicons).snapshot(for: lexiconID))
         return ProcessingRequest(mode: processingMode, text: transcript ?? text, options: options, dictionary: dictionary,
             screenContext: screen_context ?? "", collectsDiagnostics: true)

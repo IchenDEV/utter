@@ -14,6 +14,7 @@ package struct VoiceEvaluationCase: Codable, Sendable {
     package let target_language: String?
     package let lexicon: String?
     package let screen_context: String?
+    package let edit_rules: [String]?
     package let supplied_candidate: String?
     package let terms: [String]?
     package let forbidden_terms: [String]?
