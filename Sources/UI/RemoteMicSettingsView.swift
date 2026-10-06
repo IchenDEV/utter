@@ -16,8 +16,8 @@ enum RemoteMicSettingsText {
     static func captureKey(_ source: RemoteMicCaptureSource?) -> String {
         switch source {
         case .remote: return "remote_mic.capture.remote"
-        case .systemNoRemoteSession: return "remote_mic.capture.system_no_session"
         case .systemRemoteUnavailable: return "remote_mic.capture.system_unavailable"
+        case .systemRemoteSilent: return "remote_mic.capture.system_silent"
         case nil: return "remote_mic.capture.none"
         }
     }

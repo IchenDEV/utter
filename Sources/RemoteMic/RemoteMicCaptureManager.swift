@@ -27,6 +27,8 @@ final class RemoteMicCaptureManager {
     private var levelCallback: ((Float) -> Void)?
     private var bufferCallback: ((AVAudioPCMBuffer) -> Void)?
     private(set) var isRunning = false
+    /// True once the current capture has produced at least one sample.
+    private(set) var hasReceivedSamples = false
 
     init(bridge: XiaomiRemoteMicBridge = .shared) {
         self.bridge = bridge
@@ -39,6 +41,12 @@ final class RemoteMicCaptureManager {
 
     func activate() {
         bridge.activate()
+    }
+
+    /// Latches a recording that the app (not the remote's voice key) started,
+    /// and returns its token. Nil when the remote is not ready or busy.
+    func beginHostSession() -> UInt64? {
+        bridge.beginHostSession()
     }
 
     func noteCapture(_ source: RemoteMicCaptureSource) {
@@ -110,6 +118,7 @@ final class RemoteMicCaptureManager {
         lastActivity = AudioCaptureActivity(thresholds: thresholds)
         levelCallback = levelUpdate
         bufferCallback = bufferUpdate
+        hasReceivedSamples = false
 
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("opentype_remotemic_\(UUID().uuidString).wav")
@@ -171,11 +180,12 @@ final class RemoteMicCaptureManager {
     var hasRecordedActivity: Bool { lastActivity.frameCount > 0 }
 
     private func ingest(_ samples: [Int16]) {
-        guard isRunning, !samples.isEmpty,
-              let buffer = AVAudioPCMBuffer(
-                  pcmFormat: format,
-                  frameCapacity: AVAudioFrameCount(samples.count)
-              ) else { return }
+        guard isRunning, !samples.isEmpty else { return }
+        hasReceivedSamples = true
+        guard let buffer = AVAudioPCMBuffer(
+            pcmFormat: format,
+            frameCapacity: AVAudioFrameCount(samples.count)
+        ) else { return }
         buffer.frameLength = AVAudioFrameCount(samples.count)
         if let channel = buffer.floatChannelData?[0] {
             for index in samples.indices {

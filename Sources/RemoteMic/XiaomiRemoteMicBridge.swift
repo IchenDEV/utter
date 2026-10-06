@@ -432,6 +432,15 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     /// Audio that arrives before the capture pipeline is ready, so the opening
     /// word is not clipped.
     private var preRoll = RemoteMicPreRoll()
+    /// True when the app, not the remote's voice key, opened the current
+    /// session; its `AUDIO_START` then joins the session instead of latching a
+    /// new one.
+    private var hostInitiated = false
+    /// Whether the current session's own `AUDIO_START` has arrived. A host
+    /// session ignores an `AUDIO_STOP` before that, which belongs to the stream
+    /// the previous session just closed.
+    private var streamAnnounced = false
+    private var extendTask: Task<Void, Never>?
     private var reconnectAttempts = 0
     private var reconnectTask: Task<Void, Never>?
     private var timeoutTask: Task<Void, Never>?
@@ -490,6 +499,7 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         cancelReconnect()
         cancelTimeout()
         generation &+= 1
+        cancelExtend()
         closeMicrophoneIfNeeded()
         resetStream()
         retireCurrentCentral()
@@ -516,6 +526,32 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         if !microphoneOpened { openMicrophoneIfNeeded() }
         let buffered = preRoll.drain().flatMap { $0 }
         return buffered
+    }
+
+    /// Latches a recording the app starts itself, so the remote's microphone can
+    /// serve shortcut, menu, and API recordings and not only its voice key.
+    /// `beginCapture` then opens the remote's microphone. Returns nil when the
+    /// remote is not ready or a session is already live.
+    func beginHostSession() -> UInt64? {
+        guard isActive, peripheral?.state == .connected, handshake.isReady else { return nil }
+        return latchHostSession()
+    }
+
+    private func latchHostSession() -> UInt64? {
+        guard !session.isLive else { return nil }
+        hostInitiated = true
+        streamAnnounced = false
+        return session.press()
+    }
+
+    /// Test-only: let control frames be handled without a central transport.
+    func markActiveForTesting() {
+        isActive = true
+    }
+
+    /// Test-only: latch a host session without a real peripheral.
+    func beginHostSessionForTesting() -> UInt64? {
+        latchHostSession()
     }
 
     /// True while a voice-key session is latched or recording.
@@ -694,6 +730,7 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         // must still close a microphone this bridge may have opened, and must
         // not leave `microphoneOpened` set for the next attempt.
         let wasLive = session.release()
+        cancelExtend()
         if microphoneOpened || wasLive {
             closeMicrophoneIfNeeded()
         }
@@ -715,6 +752,26 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         )
         guard write(command) else { return }
         microphoneOpened = true
+    }
+
+    private func startExtending() {
+        extendTask?.cancel()
+        extendTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(RemoteMicProtocol.extendInterval * 1_000_000_000))
+                guard let self, !Task.isCancelled, self.session.isLive, self.microphoneOpened,
+                      let command = RemoteMicProtocol.microphoneExtend(
+                          version: self.capabilities.version,
+                          sessionID: self.streamID
+                      ) else { return }
+                _ = self.write(command)
+            }
+        }
+    }
+
+    private func cancelExtend() {
+        extendTask?.cancel()
+        extendTask = nil
     }
 
     private func closeMicrophoneIfNeeded() {
@@ -1038,11 +1095,22 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
                 failAttempt(reason: L("remote_mic.error.unsupported_codec"))
                 return
             }
+            if session.isLive {
+                // The app already opened this session; the remote is now
+                // streaming it, so keep it alive past the remote's timeout.
+                streamAnnounced = true
+                if hostInitiated { startExtending() }
+                return
+            }
             // Latch synchronously: the pipeline start is asynchronous, and a
             // stop or disconnect may arrive before it commits.
+            hostInitiated = false
+            streamAnnounced = true
             let token = session.press()
             onVoiceKeyPressed?(token)
         case .streamStop:
+            if hostInitiated, session.isLive, !streamAnnounced { return }
+            cancelExtend()
             // Release before clearing state so endCapture can still close the
             // microphone; previously the reset ran first and made that
             // unreachable, leaving microphoneOpened set.

@@ -57,3 +57,30 @@ Device Information model `2A24`, and decodes `ARN9` low-nibble-first.
 
 Revert the change. The setting key and stored values are unchanged, so no
 migration is needed.
+
+## Revision 2026-10-07: host-initiated sessions
+
+- `XiaomiRemoteMicBridge.beginHostSession()` latches a session (`session.press()`)
+  when the bridge is active, the peripheral is connected, the handshake is ready,
+  and no session is live. `beginCapture` then sends `MIC_OPEN`.
+- `handleControl(.streamStart)`: if a session is already live, mark the stream
+  announced (and start `MIC_EXTEND` for host sessions) and return; otherwise latch
+  as before. `.streamStop` is ignored for a host session whose own stream has not
+  started, so the close of the previous stream cannot end a new session.
+- `MIC_EXTEND` (`0x0E, sessionID`, v1.0+) is written every 5 s on the main actor
+  while a host session is live and the microphone is open; it is cancelled on
+  capture end, stop, and deactivate.
+- `AudioCaptureManager.start` is split into the remote attempt
+  (`AudioCaptureManager+Remote.swift`) and `startLocal`. The remote attempt adopts
+  a voice-key session if latched, else asks the bridge for a host session. A
+  3 s watchdog (`remoteSilenceTimeout`) cancels a host session that produced no
+  samples and calls `startLocal`; success reports `onAutoSwitch`, failure reports
+  `onInputUnavailable` (the existing "no usable input" error).
+- Diagnostics: `RemoteMicCaptureSource` is now `remote`, `systemRemoteUnavailable`,
+  or `systemRemoteSilent`.
+
+Failure analysis additions: a host request to a sleeping remote is covered by the
+watchdog; a late `AUDIO_STOP` by the announced-stream gate; a remote-side timeout
+by `MIC_EXTEND` and, failing that, by the release callback stopping the pipeline.
+Whether the Remote 2 Pro honours a host `MIC_OPEN` without a key press is
+unverified (the reference app issues the same request) and needs the real device.

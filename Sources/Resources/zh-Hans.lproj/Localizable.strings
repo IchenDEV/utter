@@ -167,7 +167,7 @@
 "settings.microphone" = "麦克风";
 "settings.system_default" = "系统默认";
 "settings.remote_mic" = "小米遥控器无线麦";
-"settings.remote_mic_help" = "按住遥控器语音键时使用遥控器自带的麦克风录音。";
+"settings.remote_mic_help" = "所有录音都使用遥控器自带的麦克风，因此合上 Mac 盖子也能听写。遥控器未连接时改用 Mac 麦克风。";
 "settings.remote_mic_status" = "连接状态";
 "settings.remote_mic_gain" = "音量增益";
 "remote_mic.state.idle" = "未连接";
@@ -185,7 +185,7 @@
 "remote_mic.error.initialization_timeout" = "遥控器语音通道初始化超时，正在重试";
 "remote_mic.error.connect_failed" = "无法连接遥控器，正在重试";
 "tab.remote" = "遥控器";
-"remote_mic.page.usage" = "请先在系统设置 → 蓝牙中配对遥控器（同时长按主页键和菜单键）。之后按住语音键说话，松开即结束。键盘快捷键仍使用「通用」中选择的 Mac 麦克风。";
+"remote_mic.page.usage" = "请先在系统设置 → 蓝牙中配对遥控器（同时长按主页键和菜单键）。连接后，快捷键、菜单和遥控器语音键都会通过遥控器麦克风录音。";
 "remote_mic.page.connection" = "连接";
 "remote_mic.page.model" = "遥控器型号";
 "remote_mic.page.not_reported" = "尚未读取";
@@ -193,7 +193,7 @@
 "remote_mic.page.decoding" = "语音解码";
 "remote_mic.page.reconnect" = "重新连接";
 "remote_mic.page.open_bluetooth" = "打开蓝牙设置";
-"remote_mic.page.troubleshooting" = "一直停在搜索？请确认遥控器已在系统设置 → 蓝牙中配对并显示已连接，然后点击「重新连接」。如果录音仍使用 Mac 麦克风，请查看下方「最近一次录音」。";
+"remote_mic.page.troubleshooting" = "一直停在搜索？请确认遥控器已在系统设置 → 蓝牙中配对并显示已连接，然后点击「重新连接」。如果录音仍使用 Mac 麦克风，请查看下方「最近一次录音」。休眠的遥控器可能需要先按一下按键。";
 "remote_mic.page.audio" = "音频";
 "remote_mic.page.last_recording" = "最近一次录音";
 "remote_mic.page.audio_help" = "增益作用于解码后的遥控器麦克风音频。音频仅在内存中处理，不会上传。";
@@ -205,8 +205,8 @@
 "remote_mic.decoder.low" = "遥控器 2 / 2 Pro（低半字节在前）";
 "remote_mic.capture.none" = "尚无录音";
 "remote_mic.capture.remote" = "遥控器麦克风";
-"remote_mic.capture.system_no_session" = "Mac 麦克风（由快捷键触发，而非遥控器语音键）";
-"remote_mic.capture.system_unavailable" = "Mac 麦克风（遥控器当时未就绪）";
+"remote_mic.capture.system_silent" = "Mac 麦克风（遥控器没有响应）";
+"remote_mic.capture.system_unavailable" = "Mac 麦克风（遥控器未连接）";
 "settings.permissions" = "权限管理";
 "settings.history_retention" = "历史保留时长";
 "settings.developer_interface" = "开发者接口";

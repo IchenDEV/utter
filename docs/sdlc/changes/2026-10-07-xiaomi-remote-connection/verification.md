@@ -18,6 +18,7 @@ using `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`.
 | New and neighbouring unit tests | Pass | `RemoteMicDeviceMatcherTests` (7), `RemoteMicKnownRemoteTests` (6), `RemoteMicCallbackRoutingTests` (7), and the other non-pipeline `RemoteMic*` suites: 0 failures |
 | Full `swift test` | Not run to completion | The sandbox aborts the xctest process in unrelated suites (`RemoteMicPipelineIntegrationTests` and `ConfigurationTests` abort with malloc/`String.init(cString:)` fatal errors from CoreAudio/AppKit use). CI runs the full suite |
 | Release-style app build | Not run | `xcodebuild` cannot evaluate the package manifest inside the sandbox; the PR's `Release-style App Build` job covers it |
+| Host-session tests | Pass | `RemoteMicHostSessionTests` (6): latch once, join without re-latching, stale stop ignored, own stop ends it, voice key still latches, `MIC_EXTEND` bytes |
 | Real remote check | Not run | Requires the physical remote |
 
 ## Acceptance criteria
@@ -34,8 +35,12 @@ using `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`.
 - Not verified on real hardware: whether this unit reports `ARN9`, and whether
   macOS returns it from `retrieveConnectedPeripherals`. The Remote tab shows the
   model, discovery route, and last recording source so a tester can report them.
-- Keyboard-shortcut recordings still use the Mac microphone by design; the tab
-  says so when the last recording came from a shortcut.
+- Unverified on hardware: whether the remote streams after a host `MIC_OPEN`
+  with no key press, how long it streams before its own timeout, and whether
+  `MIC_EXTEND` is honoured. The 3 s silence fallback bounds the failure, and
+  the tab's "Last recording" shows which microphone was used.
+- The silence fallback with the lid closed ends in the existing no-usable-input
+  error, since no other microphone exists.
 - `XiaomiRemoteMicBridge.swift` remains far above the 300-line guideline; this
   change adds ~100 lines there and does not split it.
 - The licensing question for the earlier remote-mic work is still open.

@@ -167,7 +167,7 @@
 "settings.microphone" = "Microphone";
 "settings.system_default" = "System Default";
 "settings.remote_mic" = "Xiaomi remote wireless mic";
-"settings.remote_mic_help" = "Record from the remote's microphone while you hold its voice key.";
+"settings.remote_mic_help" = "Use the remote's built-in microphone for every recording, so dictation works even with the Mac lid closed. If the remote is not connected, the Mac microphone is used.";
 "settings.remote_mic_status" = "Connection";
 "settings.remote_mic_gain" = "Gain";
 "remote_mic.state.idle" = "Not connected";
@@ -185,7 +185,7 @@
 "remote_mic.error.initialization_timeout" = "The remote voice channel did not finish initializing; retrying";
 "remote_mic.error.connect_failed" = "Could not connect to the remote; retrying";
 "tab.remote" = "Remote";
-"remote_mic.page.usage" = "Pair the remote first in System Settings → Bluetooth (hold Home + Menu). Then hold its voice key and speak; release to finish. Keyboard shortcuts keep using the Mac microphone selected in General.";
+"remote_mic.page.usage" = "Pair the remote first in System Settings → Bluetooth (hold Home + Menu). Once connected, your shortcut, the menu, and the remote's voice key all record through the remote's microphone.";
 "remote_mic.page.connection" = "Connection";
 "remote_mic.page.model" = "Remote model";
 "remote_mic.page.not_reported" = "Not reported yet";
@@ -193,7 +193,7 @@
 "remote_mic.page.decoding" = "Voice decoding";
 "remote_mic.page.reconnect" = "Reconnect";
 "remote_mic.page.open_bluetooth" = "Open Bluetooth Settings";
-"remote_mic.page.troubleshooting" = "Stuck on searching? Make sure the remote is paired and connected in System Settings → Bluetooth, then choose Reconnect. If recordings still use the Mac microphone, check “Last recording” below.";
+"remote_mic.page.troubleshooting" = "Stuck on searching? Make sure the remote is paired and connected in System Settings → Bluetooth, then choose Reconnect. If recordings still use the Mac microphone, check “Last recording” below. A sleeping remote may need a button press first.";
 "remote_mic.page.audio" = "Audio";
 "remote_mic.page.last_recording" = "Last recording";
 "remote_mic.page.audio_help" = "Gain applies to the remote's microphone after decoding. Audio is processed in memory and never uploaded.";
@@ -205,8 +205,8 @@
 "remote_mic.decoder.low" = "Remote 2 / 2 Pro (low nibble first)";
 "remote_mic.capture.none" = "No recording yet";
 "remote_mic.capture.remote" = "Remote microphone";
-"remote_mic.capture.system_no_session" = "Mac microphone (started by a shortcut, not the remote's voice key)";
-"remote_mic.capture.system_unavailable" = "Mac microphone (the remote was not ready)";
+"remote_mic.capture.system_silent" = "Mac microphone (the remote did not respond)";
+"remote_mic.capture.system_unavailable" = "Mac microphone (the remote was not connected)";
 "settings.permissions" = "Permissions";
 "settings.history_retention" = "History retention";
 "settings.developer_interface" = "Developer interface";

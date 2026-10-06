@@ -66,11 +66,13 @@ final class AudioCaptureManager {
     /// Called on the main run loop when the active input was lost and no other
     /// usable input exists.
     var onInputUnavailable: (() -> Void)?
-    private var usesRemoteMic = false
-    private var levelCallback: ((Float) -> Void)?
-    private var bufferCallback: ((AVAudioPCMBuffer) -> Void)?
+    var usesRemoteMic = false
+    var levelCallback: ((Float) -> Void)?
+    var bufferCallback: ((AVAudioPCMBuffer) -> Void)?
+    var requestedDeviceID: String?
+    var remoteSilenceTask: Task<Void, Never>?
 
-    private var isRunning = false
+    var isRunning = false
     private var preferredInputUID: String?
     private var activeInputUID: String?
     private var failoverTimer: Timer?
@@ -110,24 +112,14 @@ final class AudioCaptureManager {
         localLastActivity = AudioCaptureActivity(thresholds: thresholds)
         levelCallback = levelUpdate
         bufferCallback = bufferUpdate
+        requestedDeviceID = deviceID
 
-        // Only a session latched by the remote's voice key adopts its audio.
-        if AppSettings.shared.remoteMicEnabled, let remoteMicSource {
-            var source = RemoteMicCaptureSource.systemNoRemoteSession
-            if let token = remoteMicSource.currentSessionToken {
-                remoteMicSource.thresholds = thresholds
-                if remoteMicSource.start(token: token, levelUpdate: levelUpdate, bufferUpdate: bufferUpdate) {
-                    usesRemoteMic = true
-                    isRunning = true
-                    remoteMicSource.noteCapture(.remote)
-                    return nil
-                }
-                Log.info("[AudioCapture] wireless remote unavailable; using the system input")
-                source = .systemRemoteUnavailable
-            }
-            remoteMicSource.noteCapture(source)
-        }
+        if AppSettings.shared.remoteMicEnabled, startRemoteCapture() { return nil }
+        return startLocal(deviceID: deviceID)
+    }
 
+    /// The system-input path: resolve a CoreAudio device and tap the engine.
+    func startLocal(deviceID: String?) -> AudioCaptureStartFailure? {
         let authStatus = AVCaptureDevice.authorizationStatus(for: .audio)
         guard authStatus == .authorized else {
             Log.error("[AudioCapture] microphone not authorized (status: \(authStatus.rawValue))")
@@ -198,6 +190,8 @@ final class AudioCaptureManager {
 
     func stop() {
         guard isRunning else { return }
+        remoteSilenceTask?.cancel()
+        remoteSilenceTask = nil
         stopFailoverMonitor()
         if usesRemoteMic {
             remoteMicSource?.stop()

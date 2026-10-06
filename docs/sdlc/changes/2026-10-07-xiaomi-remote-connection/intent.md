@@ -75,3 +75,26 @@ any change to the ATVV session or release logic.
   the real device. The settings page exposes both so the tester can report them.
 - Licensing for the earlier remote-mic work is unchanged and still open in
   `2026-09-21-remote-mic-integration`.
+
+## Revision 2026-10-07: the remote's microphone is the input
+
+**Direction from the user:** use the remote's built-in microphone as Utter's
+input, so dictation still works with the Mac lid closed (clamshell), where the
+Mac's own microphone is unreachable. The earlier scope limited the remote to
+recordings started by its own voice key and left shortcut recordings on the Mac
+microphone; that non-goal is withdrawn.
+
+Added outcome: with the feature on and the remote ready, every recording
+(shortcut, menu, developer API, or the remote's voice key) records through the
+remote's microphone. Added acceptance criteria:
+
+- A recording that the remote's voice key did not start latches a host session,
+  opens the remote's microphone, and the remote's `AUDIO_START` joins that
+  session instead of latching a new one.
+- An `AUDIO_STOP` that arrives before the host session's own `AUDIO_START`
+  (the previous stream closing) does not end it.
+- A host-opened stream is extended periodically (ATVV v1.0 `MIC_EXTEND`).
+- A remote that accepts the request but sends no audio within 3 s is abandoned
+  and the recording continues on the system input (or reports no usable input
+  when the lid is closed).
+- Remote not connected: the system input is used, as before.

@@ -15,6 +15,8 @@
 - [x] Add the Remote settings tab, move controls out of General, localize.
 - [x] Add unit tests for matching, nibble order, discovery routing, stale model
       reads, and settings text.
+- [x] Revision: host-initiated sessions, `MIC_EXTEND`, silence fallback, and the
+      updated Remote tab text and diagnostics.
 - [ ] Run SDLC/CI checks, `swift test`, and a release-style app build.
 - [ ] Open the PR and publish a downloadable test build.
 

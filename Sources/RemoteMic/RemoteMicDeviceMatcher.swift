@@ -61,10 +61,10 @@ enum RemoteMicDiscoverySource: Equatable {
 /// Where the most recent recording got its audio, for the configuration page.
 enum RemoteMicCaptureSource: Equatable {
     case remote
-    /// The recording was not started by the remote's voice key.
-    case systemNoRemoteSession
-    /// The voice key started it but the remote could not supply audio.
+    /// The remote was not connected and ready, so the Mac's input was used.
     case systemRemoteUnavailable
+    /// The remote accepted the request but sent no audio in time.
+    case systemRemoteSilent
 }
 
 /// Read-only facts about the current connection, shown on the settings page.

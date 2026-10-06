@@ -30,6 +30,15 @@ enum RemoteMicProtocol {
     static func microphoneClose(version: UInt16, sessionID: UInt8) -> Data {
         version >= 0x0100 ? Data([0x0D, sessionID]) : Data([0x0D])
     }
+
+    /// Keeps a host-opened microphone streaming past the remote's own timeout.
+    /// Only ATVV v1.0 and later define it.
+    static func microphoneExtend(version: UInt16, sessionID: UInt8) -> Data? {
+        version >= 0x0100 ? Data([0x0E, sessionID]) : nil
+    }
+
+    /// How often a host-opened session is extended.
+    static let extendInterval: TimeInterval = 5
 }
 
 /// Remote capabilities reported by the `0x0B` control response.

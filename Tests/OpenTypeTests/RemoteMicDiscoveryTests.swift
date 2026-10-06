@@ -53,8 +53,8 @@ final class RemoteMicDeviceMatcherTests: XCTestCase {
             RemoteMicSettingsText.discoveryKey(.scan),
             RemoteMicSettingsText.captureKey(nil),
             RemoteMicSettingsText.captureKey(.remote),
-            RemoteMicSettingsText.captureKey(.systemNoRemoteSession),
             RemoteMicSettingsText.captureKey(.systemRemoteUnavailable),
+            RemoteMicSettingsText.captureKey(.systemRemoteSilent),
             RemoteMicSettingsText.decoderKey(lowNibbleFirst: true),
             RemoteMicSettingsText.decoderKey(lowNibbleFirst: false),
         ]
@@ -181,7 +181,7 @@ final class RemoteMicKnownRemoteTests: XCTestCase {
 
     func testNoteCaptureRecordsTheLatestSource() {
         let bridge = XiaomiRemoteMicBridge()
-        bridge.noteCapture(.systemNoRemoteSession)
+        bridge.noteCapture(.systemRemoteUnavailable)
         bridge.noteCapture(.remote)
         XCTAssertEqual(bridge.diagnostics.lastCapture, .remote)
     }
