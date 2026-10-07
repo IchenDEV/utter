@@ -178,6 +178,7 @@
 "remote_mic.state.ready" = "Connected: %@";
 "remote_mic.state.failed" = "Connection failed: %@";
 "remote_mic.error.invalid_response" = "The remote returned an unrecognized voice protocol response";
+"remote_mic.error.model_unreadable" = "The remote's model could not be read. Reconnect and try again.";
 "remote_mic.error.service_missing" = "The remote does not expose the wireless-mic service";
 "remote_mic.error.characteristic_missing" = "The remote is missing a wireless-mic channel";
 "remote_mic.error.unsupported_codec" = "The remote did not offer 16 kHz voice audio";
@@ -196,7 +197,7 @@
 "remote_mic.page.troubleshooting" = "Stuck on searching? Make sure the remote is paired and connected in System Settings → Bluetooth, then choose Reconnect. If recordings still use the Mac microphone, check “Last recording” below. A sleeping remote may need a button press first.";
 "remote_mic.page.audio" = "Audio";
 "remote_mic.page.last_recording" = "Last recording";
-"remote_mic.page.audio_help" = "Gain applies to the remote's microphone after decoding. Audio is processed in memory and never uploaded.";
+"remote_mic.page.audio_help" = "Gain applies after decoding. Recordings are saved temporarily. Cloud speech engines upload audio; local engines process it on this Mac.";
 "remote_mic.discovery.none" = "—";
 "remote_mic.discovery.connected_voice" = "System Bluetooth connection";
 "remote_mic.discovery.connected_hid" = "System Bluetooth connection (keyboard)";

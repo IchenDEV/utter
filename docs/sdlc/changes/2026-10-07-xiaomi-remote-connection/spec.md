@@ -29,10 +29,14 @@ Device Information model `2A24`, and decodes `ARN9` low-nibble-first.
    gate as an advertisement (unbound `sourceAttempt`, same state/lifecycle
    guards), so no new lifecycle path exists. If none, scan with no service
    filter; the delegate proxy drops non-candidates before routing.
-4. Model read: connect discovers ATVV plus Device Information; after ATVV
-   characteristics, `2A24` is read. `handleModelNumber` is gated by
-   `handshake.accepts(attempt)` and sets `decoder.lowNibbleFirst`. `beginScan`
-   resets it so a different remote never inherits the order.
+4. Model read: connect discovers ATVV plus Device Information in parallel, then
+   reads `2A24` from the latter. `handleModelNumber` is gated by
+   the current attempt and resolves `decoder.lowNibbleFirst` once per attempt.
+   Readiness requires both this resolution and valid capabilities, in either
+   callback order. The initialization timeout remains active until both finish.
+   A missing optional service/characteristic explicitly chooses the legacy
+   order. Discovery/read errors, empty data, and invalid UTF-8 fail the attempt.
+   `beginScan` resets the order so a different remote never inherits it.
 5. `RemoteMicDiagnostics` (`@Published` on the bridge): discovery source, model,
    nibble order, and last capture source. `AudioCaptureManager.start` records
    `.remote`, `.systemNoRemoteSession`, or `.systemRemoteUnavailable` when the
@@ -49,8 +53,8 @@ Device Information model `2A24`, and decodes `ARN9` low-nibble-first.
 - Retrieved peripheral is stale or lacks the service: the existing attempt
   fails with `service_missing`, backs off, and retries with a fresh manager.
 - Late model read after a reconnect: rejected by the handshake attempt gate.
-- Name collision with another ATVV remote: exact names only; advertising the
-  ATVV service was already accepted before this change.
+- An ATVV service identifies a voice peripheral even when its name is missing
+  or changed. HID-only devices still require an approved exact name.
 - Unfiltered scan noise: filtered in the proxy before any bridge state changes.
 
 ## Rollback
@@ -84,3 +88,6 @@ watchdog; a late `AUDIO_STOP` by the announced-stream gate; a remote-side timeou
 by `MIC_EXTEND` and, failing that, by the release callback stopping the pipeline.
 Whether the Remote 2 Pro honours a host `MIC_OPEN` without a key press is
 unverified (the reference app issues the same request) and needs the real device.
+
+The audio section explains temporary recording storage and the selected speech
+engine's local/cloud processing. It does not claim that cloud ASR stays offline.

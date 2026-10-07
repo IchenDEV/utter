@@ -51,7 +51,9 @@ any change to the ATVV session or release logic.
 - No new dependency; CoreBluetooth only; no new entitlement or Info.plist key.
 - Matching stays exact-name based so other vendors' ATVV remotes are never
   adopted by name alone.
-- Audio stays in memory; no upload.
+- Remote audio follows the selected speech engine: recordings use temporary
+  WAV files, local engines process them on the Mac, and cloud engines upload
+  audio for recognition. The settings page describes this accurately.
 - The existing session-token and fallback-to-system-mic behavior is unchanged.
 
 ## Acceptance criteria
@@ -62,6 +64,9 @@ any change to the ATVV session or release logic.
   unfiltered scan.
 - A model number containing `ARN9` switches the decoder to low-nibble-first for
   that attempt only; a late model read from a superseded attempt is ignored.
+- Recording cannot start until capabilities and decoder configuration are both
+  complete, regardless of callback order. Missing optional model information
+  uses the legacy order; unreadable model data fails the attempt.
 - Discovered peripherals are filtered by voice service or approved name.
 - The Remote tab renders the diagnostics and every key it uses exists in both
   localizations; General no longer contains the remote controls.
@@ -98,3 +103,10 @@ remote's microphone. Added acceptance criteria:
   and the recording continues on the system input (or reports no usable input
   when the lid is closed).
 - Remote not connected: the system input is used, as before.
+
+## Review corrections 2026-10-07
+
+User direction: "ok fix it" for the three review findings. Gate readiness on
+model resolution, accept already-connected ATVV peripherals without requiring
+a name, and correct the audio privacy copy in both languages. The original
+authorization to implement without stage approvals continues to apply.

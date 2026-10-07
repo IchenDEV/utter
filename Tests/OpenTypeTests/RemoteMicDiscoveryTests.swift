@@ -131,6 +131,20 @@ final class RemoteMicKnownRemoteTests: XCTestCase {
         XCTAssertEqual(bridge.diagnostics.discovery, .connectedVoiceService)
     }
 
+    func testConnectedVoiceServiceDoesNotRequireAnApprovedName() {
+        for name in [nil, "Renamed remote"] {
+            let (bridge, transport) = makeBridge { transport in
+                transport.known[CBUUID(string: RemoteMicProtocol.serviceUUID)] = [
+                    RemoteMicKnownPeripheral(identity: NSObject(), name: name),
+                ]
+            }
+            XCTAssertEqual(transport.connectCount, 1)
+            XCTAssertTrue(transport.scannedServices.isEmpty)
+            XCTAssertEqual(bridge.diagnostics.discovery, .connectedVoiceService)
+            bridge.configureForTesting()
+        }
+    }
+
     func testRemoteConnectedAsHIDKeyboardIsFoundByName() {
         let (bridge, transport) = makeBridge { transport in
             transport.known[RemoteMicDeviceMatcher.hidServiceUUID] = [
@@ -175,6 +189,72 @@ final class RemoteMicKnownRemoteTests: XCTestCase {
 
         oldProxy.deliverForTesting(.modelNumber(Data("ARN9".utf8)))
 
+        XCTAssertNil(bridge.diagnostics.modelNumber)
+        XCTAssertFalse(bridge.diagnostics.lowNibbleFirst)
+    }
+
+    func testRecordingWaitsForModelAndCapabilitiesInEitherCallbackOrder() throws {
+        let capabilities = Data([0x0B, 0x01, 0x00, 0x02, 0x03, 0x00, 0x78])
+        let start = Data([0x04, 0x00, 0x02, 0x07])
+        for modelFirst in [false, true] {
+            let bridge = XiaomiRemoteMicBridge()
+            bridge.configureForTesting()
+            _ = bridge.simulateConnectForTesting()
+            bridge.markActiveForTesting()
+            bridge.simulateCapabilitiesRequestedForTesting()
+            let proxy = try XCTUnwrap(bridge.callbackProxyForTesting())
+            let model = XiaomiRemoteMicTestCallback.modelNumber(Data("ARN9".utf8))
+            let capability = XiaomiRemoteMicTestCallback.control(capabilities)
+
+            proxy.deliverForTesting(modelFirst ? model : capability)
+            XCTAssertEqual(bridge.state, .connecting)
+            proxy.deliverForTesting(.control(start))
+            proxy.deliverForTesting(.audio(Data(repeating: 0x1F, count: 120)))
+            XCTAssertFalse(bridge.isSessionLive, "audio cannot start before the decoder is configured")
+
+            proxy.deliverForTesting(modelFirst ? capability : model)
+            XCTAssertTrue(bridge.state.isReady)
+            XCTAssertTrue(bridge.diagnostics.lowNibbleFirst)
+            proxy.deliverForTesting(.control(start))
+            XCTAssertTrue(bridge.isSessionLive)
+            bridge.configureForTesting()
+        }
+    }
+
+    func testModelCannotChangeDecoderOrderAfterInitialization() throws {
+        let bridge = XiaomiRemoteMicBridge()
+        bridge.configureForTesting()
+        _ = bridge.simulateConnectForTesting()
+        let proxy = try XCTUnwrap(bridge.callbackProxyForTesting())
+        proxy.deliverForTesting(.modelNumber(Data("ARN9".utf8)))
+        proxy.deliverForTesting(.modelNumber(Data("RC003".utf8)))
+        XCTAssertEqual(bridge.diagnostics.modelNumber, "ARN9")
+        XCTAssertTrue(bridge.diagnostics.lowNibbleFirst)
+    }
+
+    func testInvalidModelDoesNotAllowRecording() throws {
+        for data in [Data(), Data([0xFF])] {
+            let bridge = XiaomiRemoteMicBridge()
+            bridge.configureForTesting()
+            _ = bridge.simulateConnectForTesting()
+            let proxy = try XCTUnwrap(bridge.callbackProxyForTesting())
+            proxy.deliverForTesting(.modelNumber(data))
+            guard case .failed = bridge.state else {
+                XCTFail("an unreadable model must fail rather than guess the decoder order")
+                continue
+            }
+        }
+    }
+
+    func testMissingOptionalModelUsesTheLegacyDecoder() throws {
+        let bridge = XiaomiRemoteMicBridge()
+        bridge.configureForTesting()
+        _ = bridge.simulateConnectForTesting()
+        bridge.simulateCapabilitiesRequestedForTesting()
+        let proxy = try XCTUnwrap(bridge.callbackProxyForTesting())
+        proxy.deliverForTesting(.control(Data([0x0B, 0x01, 0x00, 0x02, 0x03, 0x00, 0x78])))
+        proxy.deliverForTesting(.modelNumber(nil))
+        XCTAssertTrue(bridge.state.isReady)
         XCTAssertNil(bridge.diagnostics.modelNumber)
         XCTAssertFalse(bridge.diagnostics.lowNibbleFirst)
     }

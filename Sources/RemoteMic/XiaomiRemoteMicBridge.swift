@@ -44,7 +44,7 @@ enum XiaomiRemoteMicTestCallback: Equatable {
     case disconnect
     case control(Data)
     case audio(Data)
-    case modelNumber(Data)
+    case modelNumber(Data?)
 }
 
 /// Central callbacks have the same source problem as peripheral callbacks:
@@ -847,7 +847,8 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
         ]
         for (service, source) in lookups {
             guard let known = transport.connectedPeripherals(withServices: [service])
-                .first(where: { RemoteMicDeviceMatcher.matches(name: $0.name) }) else { continue }
+                .first(where: { service == serviceUUID || RemoteMicDeviceMatcher.matches(name: $0.name) })
+            else { continue }
             transport.delegateProxy.bindPeripheralIdentity(known.identity)
             pendingDiscoverySource = source
             routeCentralDidDiscover(
@@ -1074,10 +1075,7 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
                 failAttempt(reason: L("remote_mic.error.unsupported_codec"))
                 return
             }
-            cancelTimeout()
-            reconnectAttempts = 0
-            state = .ready(deviceName: peripheral?.name ?? "MI RC")
-            if session.isLive { openMicrophoneIfNeeded() }
+            finishInitializationIfReady()
         case .startSearch:
             guard handshake.isReady, isActive else { return }
             // `START_SEARCH` (0x08) is the device announcing itself, not a
@@ -1166,6 +1164,14 @@ final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
             isSatisfied: { [weak self] in self?.handshake.isReady ?? false }
         )
         _ = write(RemoteMicProtocol.getCapabilities)
+    }
+
+    private func finishInitializationIfReady() {
+        guard handshake.isReady else { return }
+        cancelTimeout()
+        reconnectAttempts = 0
+        state = .ready(deviceName: peripheral?.name ?? "MI RC")
+        if session.isLive { openMicrophoneIfNeeded() }
     }
 }
 
@@ -1490,6 +1496,8 @@ extension XiaomiRemoteMicBridge {
             $0.uuid == RemoteMicDeviceMatcher.deviceInformationServiceUUID
         }) {
             peripheral.discoverCharacteristics([RemoteMicDeviceMatcher.modelNumberUUID], for: info)
+        } else {
+            handleModelNumber(nil, attempt: attempt)
         }
     }
 
@@ -1499,15 +1507,22 @@ extension XiaomiRemoteMicBridge {
         error: Error?,
         attempt: UInt64
     ) {
-        guard acceptsPeripheralCallback(peripheral, attempt: attempt), error == nil else { return }
+        guard acceptsPeripheralCallback(peripheral, attempt: attempt) else { return }
         if service.uuid == RemoteMicDeviceMatcher.deviceInformationServiceUUID {
+            guard error == nil else {
+                failAttempt(reason: L("remote_mic.error.model_unreadable"))
+                return
+            }
             if let model = service.characteristics?.first(where: {
                 $0.uuid == RemoteMicDeviceMatcher.modelNumberUUID
             }) {
                 peripheral.readValue(for: model)
+            } else {
+                handleModelNumber(nil, attempt: attempt)
             }
             return
         }
+        guard error == nil else { return }
         let transmit = RemoteMicProtocol.transmitUUID.uppercased()
         let audio = RemoteMicProtocol.audioUUID.uppercased()
         let control = RemoteMicProtocol.controlUUID.uppercased()
@@ -1564,31 +1579,48 @@ extension XiaomiRemoteMicBridge {
         // A reused CBPeripheral object can deliver a late value from a previous
         // attempt; attribute it to the attempt that raised it and drop it when
         // this handshake no longer tracks that attempt.
-        guard acceptsPeripheralCallback(peripheral, attempt: attempt), error == nil,
-              let data = characteristic.value else { return }
+        guard acceptsPeripheralCallback(peripheral, attempt: attempt) else { return }
+        if characteristic.uuid == RemoteMicDeviceMatcher.modelNumberUUID {
+            guard !handshake.decoderConfigured else { return }
+            guard error == nil, let data = characteristic.value else {
+                failAttempt(reason: L("remote_mic.error.model_unreadable"))
+                return
+            }
+            handleModelNumber(data, attempt: attempt)
+            return
+        }
+        guard error == nil, let data = characteristic.value else { return }
         switch characteristic.uuid.uuidString.uppercased() {
         case RemoteMicProtocol.controlUUID.uppercased():
             handleControl(data, attempt: attempt)
         case RemoteMicProtocol.audioUUID.uppercased():
             handleAudio(data, attempt: attempt)
-        case RemoteMicDeviceMatcher.modelNumberUUID.uuidString.uppercased():
-            handleModelNumber(data, attempt: attempt)
         default:
             break
         }
     }
 
     /// The model decides the ADPCM nibble order, which must be known before the
-    /// first audio frame; the read is issued right after the connection.
-    fileprivate func handleModelNumber(_ data: Data, attempt: UInt64) {
-        guard handshake.accepts(attempt),
-              let text = String(data: data, encoding: .utf8) else { return }
-        let model = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    /// first audio frame. Missing optional model information keeps the legacy
+    /// order; an unreadable model must not silently guess the order.
+    fileprivate func handleModelNumber(_ data: Data?, attempt: UInt64) {
+        guard handshake.accepts(attempt), !handshake.decoderConfigured else { return }
+        var model: String?
+        if let data {
+            guard let text = String(data: data, encoding: .utf8),
+                  !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                failAttempt(reason: L("remote_mic.error.model_unreadable"))
+                return
+            }
+            model = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
         let lowFirst = RemoteMicDeviceMatcher.usesLowNibbleFirst(modelNumber: model)
         decoder.lowNibbleFirst = lowFirst
         diagnostics.modelNumber = model
         diagnostics.lowNibbleFirst = lowFirst
-        Log.info("[RemoteMic] model=\(model) adpcm=\(lowFirst ? "low" : "high")-nibble-first")
+        handshake.markDecoderConfigured()
+        finishInitializationIfReady()
+        Log.info("[RemoteMic] model=\(model ?? "unknown") adpcm=\(lowFirst ? "low" : "high")-nibble-first")
     }
 
     /// The common gate for every CBPeripheralDelegate callback. Unlike the old

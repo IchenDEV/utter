@@ -178,6 +178,7 @@
 "remote_mic.state.ready" = "已连接：%@";
 "remote_mic.state.failed" = "连接失败：%@";
 "remote_mic.error.invalid_response" = "遥控器返回了无法识别的语音协议数据";
+"remote_mic.error.model_unreadable" = "无法读取遥控器型号，请重新连接后重试。";
 "remote_mic.error.service_missing" = "遥控器缺少无线麦服务";
 "remote_mic.error.characteristic_missing" = "遥控器缺少无线麦通道";
 "remote_mic.error.unsupported_codec" = "遥控器未提供 16 kHz 语音编码";
@@ -196,7 +197,7 @@
 "remote_mic.page.troubleshooting" = "一直停在搜索？请确认遥控器已在系统设置 → 蓝牙中配对并显示已连接，然后点击「重新连接」。如果录音仍使用 Mac 麦克风，请查看下方「最近一次录音」。休眠的遥控器可能需要先按一下按键。";
 "remote_mic.page.audio" = "音频";
 "remote_mic.page.last_recording" = "最近一次录音";
-"remote_mic.page.audio_help" = "增益作用于解码后的遥控器麦克风音频。音频仅在内存中处理，不会上传。";
+"remote_mic.page.audio_help" = "增益作用于解码后的音频。录音会临时保存；云端语音引擎会上传音频，本地引擎在这台 Mac 上处理。";
 "remote_mic.discovery.none" = "—";
 "remote_mic.discovery.connected_voice" = "系统蓝牙连接";
 "remote_mic.discovery.connected_hid" = "系统蓝牙连接（键盘设备）";

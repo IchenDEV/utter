@@ -17,8 +17,11 @@
       reads, and settings text.
 - [x] Revision: host-initiated sessions, `MIC_EXTEND`, silence fallback, and the
       updated Remote tab text and diagnostics.
-- [ ] Run SDLC/CI checks, `swift test`, and a release-style app build.
-- [ ] Open the PR and publish a downloadable test build.
+- [x] Review corrections: model/capability readiness gate, unnamed connected
+      ATVV devices, truthful local/cloud audio copy, and callback regressions.
+- [x] Run SDLC/CI checks, `swift test`, and a release-style app build.
+- [x] Open PR #122 and build the local downloadable test DMG; final hosted CI and
+      real-device verification remain separate acceptance steps.
 
 ## Verification plan
 

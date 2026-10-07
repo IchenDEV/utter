@@ -14,6 +14,7 @@ final class RemoteMicHostSessionTests: XCTestCase {
         bridge.markActiveForTesting()
         bridge.simulateCapabilitiesRequestedForTesting()
         let proxy = try XCTUnwrap(bridge.callbackProxyForTesting())
+        proxy.deliverForTesting(.modelNumber(Data("ARN9".utf8)))
         proxy.deliverForTesting(.control(capabilities))
         return (bridge, proxy)
     }

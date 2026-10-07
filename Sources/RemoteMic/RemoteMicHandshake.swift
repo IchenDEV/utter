@@ -6,7 +6,7 @@ import Foundation
 /// Kept free of CoreBluetooth so the ordering rules are unit-testable: the host
 /// must not request capabilities before **both** the audio and control
 /// notifications are confirmed, and readiness requires a parsed 16 kHz
-/// capability response.
+/// capability response and a configured decoder.
 struct RemoteMicHandshake: Equatable {
     /// Identity of the connection attempt this handshake belongs to. CoreBluetooth
     /// may deliver a queued callback for a previous attempt on the same
@@ -18,6 +18,7 @@ struct RemoteMicHandshake: Equatable {
     private(set) var subscriptions: Set<RemoteMicSubscription> = []
     private(set) var capabilitiesRequested = false
     private(set) var capabilitiesConfirmed = false
+    private(set) var decoderConfigured = false
 
     var hasAllCharacteristics: Bool {
         hasTransmit && subscriptionsReady
@@ -79,7 +80,11 @@ struct RemoteMicHandshake: Equatable {
         return true
     }
 
-    var isReady: Bool { capabilitiesConfirmed }
+    mutating func markDecoderConfigured() {
+        decoderConfigured = true
+    }
+
+    var isReady: Bool { capabilitiesConfirmed && decoderConfigured }
 
     mutating func reset() {
         self = RemoteMicHandshake(attempt: attempt)
