@@ -1,6 +1,22 @@
+import UtterContracts
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import XCTest
 import Tokenizers
-@testable import OpenType
+@testable import UtterPresentation
 
 /// Verifies what the Swift tokenizer stack actually renders for Qwen3.5's chat
 /// template (thinking block on/off), using the locally downloaded model.

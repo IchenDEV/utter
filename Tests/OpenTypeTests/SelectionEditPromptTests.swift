@@ -1,5 +1,21 @@
+import UtterMediaContracts
+import UtterData
+import UtterModels
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+import UtterProcessing
+import UtterPresentationContracts
+import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class SelectionEditPromptTests: XCTestCase {
     private func withCleanDictionary(_ body: () throws -> Void) rethrows {

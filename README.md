@@ -156,35 +156,30 @@ Utter supports both **OpenAI-compatible** and **Anthropic** API formats:
 
 ## Project Structure
 
-```
+Built-in features are replaceable plugins assembled by `UtterBuiltins`.
+See [plugin composition](docs/plugin-composition.md) and
+[local voice evaluation](docs/voice-evaluation.md).
+
+```text
 Sources/
-├── App/          # Entry point, AppDelegate, AppState, VoicePipeline, AppIcon
-├── Audio/        # Microphone capture (AVAudioEngine), sound playback
-├── Config/       # AppSettings, ModelCatalog, RemoteModelConfig, Localization
-├── Hotkey/       # Global hotkey via CGEvent tap
-├── LLM/          # LLMEngine (MLX), RemoteLLMClient (OpenAI/Anthropic)
-├── Output/       # Text insertion (clipboard + simulated ⌘V; Accessibility for selection and context)
-├── Processing/   # TextProcessor, InputHistory, MemoryStore, personal and industry vocabulary
-├── Prompts/      # PromptBuilder, prompt catalogs, style prompt presets
-├── Screen/       # Screen OCR (ScreenCaptureKit + Vision)
-├── Speech/       # SpeechEngine protocol, WhisperKit, Apple Speech, Doubao ASR, local ASR engines
-├── UI/           # SwiftUI: MenuBar, Settings, Onboarding, Overlay, History, Models
-└── Resources/    # Localization strings (en/zh-Hans), sounds, app icon
-docs/             # Website (GitHub Pages) incl. demo videos, SDLC artifacts, research
-marketing/        # Promo video sources, render engine, voice-over scripts
-scripts/
-├── build-and-run.sh        # Build, sign, and launch a development .app bundle
-├── build-app.sh            # Build release .app bundle and .dmg installer
-├── ci-basic-checks.sh      # CI guardrails for linked files and resources
-├── create-signing-cert.sh  # Generate self-signed code signing certificate
-├── evaluate-voice-quality.py # Score ASR / formatting output (CER, terms, numbers, latency)
-├── generate-icon.swift     # Generate AppIcon.icns from source PNG
-├── render-promo.sh         # Render a promo video from marketing/<promo>/
-├── sdlc-checks.sh          # Validate SDLC artifact stages and approvals
-├── test-industry-lexicons.sh # Validate vocabulary recall and non-target preservation
-├── unit-test-coverage.sh   # Run unit tests with coverage thresholds
-└── validate-volc-asr.swift # Validate Volcengine ASR configuration manually
+├── App/                       # Application startup and shutdown
+├── UtterRuntime/              # Plugin dependency graph and lifecycle
+├── UtterContracts/            # Shared services, values, localization
+├── UtterMediaContracts/       # Speech, processing, image contracts
+├── UtterPresentationContracts/ # UI projections and contributions
+├── UtterData/                 # Settings, history, vocabulary, composition
+├── UtterModels/               # Asset leases, downloads, model lifecycle
+├── UtterProcessing/           # Prompts, processing and fidelity checks
+├── UtterSession/              # Shared workflow and delivery coordination
+├── UtterIngress/              # Fn, remote microphone, HTTP and XPC
+├── UtterPresentation/         # Menu, settings, onboarding, HUD and assets
+├── UtterBuiltins/             # Built-in registrations and application assembly
+└── Utter*/                    # Audio, macOS, speech and inference providers
 ```
+
+Build and validation scripts live under `scripts/`. `build-app.sh` builds the
+release app and installer; `evaluate-voice.sh` runs installed local models
+through production processing without writing to the cursor.
 
 ## Tech Stack
 

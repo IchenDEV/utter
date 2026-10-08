@@ -1,7 +1,23 @@
+import UtterMediaContracts
+import UtterData
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+import UtterModels
+import UtterMLX
+import UtterPresentationContracts
+import UtterContracts
 import AVFoundation
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 @MainActor
 final class ConfuciusASRTests: XCTestCase {

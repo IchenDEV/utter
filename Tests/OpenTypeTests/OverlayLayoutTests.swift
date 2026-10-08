@@ -1,13 +1,28 @@
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+import UtterMediaContracts
+import UtterContracts
 import AppKit
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 @MainActor
 final class OverlayLayoutTests: XCTestCase {
     func testRecordingOverlayUsesCompactCapsuleShape() {
         let appState = AppState()
-        appState.phase = .recording
-        appState.rawTranscription = ""
+        appState.project(SessionExecutionSnapshot(phase: .recording, isBusy: true))
 
         let layout = OverlayLayout(appState: appState)
 
@@ -24,8 +39,7 @@ final class OverlayLayoutTests: XCTestCase {
 
     func testLivePreviewExpandsWithoutReturningToTheLargeCard() {
         let appState = AppState()
-        appState.phase = .recording
-        appState.rawTranscription = "A live transcription preview"
+        appState.project(SessionExecutionSnapshot(phase: .recording, transcript: "A live transcription preview", isBusy: true))
 
         let layout = OverlayLayout(appState: appState)
 
@@ -37,8 +51,8 @@ final class OverlayLayoutTests: XCTestCase {
     func testWorkingOverlaysKeepTheRecordingCapsuleHeight() {
         let appState = AppState()
 
-        for phase in [AppPhase.transcribing, .processing, .inserting] {
-            appState.phase = phase
+        for phase in [SessionExecutionPhase.transcribing, .processing, .delivering] {
+            appState.project(SessionExecutionSnapshot(phase: phase, isBusy: true))
             let layout = OverlayLayout(appState: appState)
 
             XCTAssertEqual(layout.width, 216)
@@ -48,27 +62,7 @@ final class OverlayLayoutTests: XCTestCase {
         }
     }
 
-    func testEspressoFallbackCompletionMakesRoomForTwoLineStatus() {
-        let appState = AppState()
-        appState.phase = .done
-        appState.statusMessage = L("status.espresso_fell_back_to_mlx")
-        appState.completionKind = .espressoFallback
 
-        let layout = OverlayLayout(appState: appState)
-
-        XCTAssertEqual(layout.width, 288)
-        XCTAssertEqual(layout.height, 56)
-        XCTAssertFalse(layout.isInteractive)
-    }
-
-    func testFallbackLayoutDoesNotDependOnLocalizedMessageText() {
-        let appState = AppState()
-        appState.phase = .done
-        appState.statusMessage = "Changed copy"
-        appState.completionKind = .espressoFallback
-
-        XCTAssertEqual(OverlayLayout(appState: appState).height, 56)
-    }
 
     func testOverlayPlacementCentersAboveVisibleScreenBottom() {
         let visibleFrame = CGRect(x: 100, y: 80, width: 1_200, height: 760)
@@ -123,27 +117,6 @@ final class OverlayLayoutTests: XCTestCase {
         XCTAssertNil(index)
     }
 
-    func testCancellingRecordingResetsStateWithoutProcessing() async {
-        let appState = AppState()
-        let pipeline = VoicePipeline(appState: appState)
-        let capture = CaptureSpySource()
-        capture.currentToken = 1
-        pipeline.remoteCaptureSpy = capture
-        pipeline.engineOverride = OverlaySpeechEngine()
-        await pipeline.start()
-        XCTAssertEqual(appState.phase, .recording)
-        appState.rawTranscription = "Discard me"
 
-        pipeline.cancel()
-        await pipeline.processingTask?.value
-
-        XCTAssertEqual(appState.phase, .idle)
-        XCTAssertEqual(appState.rawTranscription, "")
-        XCTAssertFalse(pipeline.ownership.isBusy)
-    }
-}
-
-private final class OverlaySpeechEngine: SpeechEngine {
-    var isReady: Bool { true }
     func transcribe(audioURL: URL?, language: String?) async throws -> String { "" }
 }

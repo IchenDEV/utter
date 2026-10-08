@@ -1,5 +1,21 @@
+import UtterMediaContracts
+import UtterModels
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+import UtterProcessing
+import UtterPresentationContracts
+import UtterData
+import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class IndustryLexiconTests: XCTestCase {
     private let catalog = IndustryLexiconCatalog.shared
@@ -18,10 +34,11 @@ final class IndustryLexiconTests: XCTestCase {
     }
 
     func testImportedPacksHaveLicensedTermsWithoutAutomaticRewrites() throws {
-        let license = try XCTUnwrap(AppResources.bundle.url(forResource: "THUOCL-LICENSE", withExtension: "txt"))
+        let license = try XCTUnwrap(DataResources.bundle.url(forResource: "THUOCL-LICENSE", withExtension: "txt"))
         XCTAssertTrue(try String(contentsOf: license).contains("Copyright (c) 2018 THUNLP"))
         for pack in catalog.packs {
-            XCTAssertEqual(pack.terms.count, 2030)
+            let curatedCount = pack.id == .technology ? 32 : 30
+            XCTAssertEqual(pack.terms.count, 2000 + curatedCount)
             let imported = pack.terms.filter { $0.category == "thuocl-common" }
             XCTAssertEqual(imported.count, 2000)
             XCTAssertTrue(imported.allSatisfy { $0.corrections.isEmpty && $0.aliases.isEmpty })
@@ -29,7 +46,7 @@ final class IndustryLexiconTests: XCTestCase {
             XCTAssertEqual(source.redistribution, "MIT")
             XCTAssertTrue(source.url.contains("a30ce79d895d01ab5132a5c74c29703ff7efb4cc"))
             let snapshot = IndustryLexiconSnapshot(pack: pack)
-            XCTAssertEqual(snapshot.protectedTerms.count, 30)
+            XCTAssertEqual(snapshot.protectedTerms.count, curatedCount)
             XCTAssertLessThanOrEqual(snapshot.recognitionPhrases.count, 100)
         }
     }

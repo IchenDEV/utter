@@ -22,7 +22,7 @@ fail() {
 
 field() {
     # field <output> <key>
-    printf '%s\n' "$1" | sed -n "s/^$2=//p" | head -1
+    sed -n "s/^$2=//p" <<<"$1"
 }
 
 git -C "$FIXTURE" init -q -b main
@@ -40,7 +40,7 @@ git -C "$FIXTURE" tag v0.0.45
 out="$("$PLANNER" "$FIXTURE" main)"
 [ "$(field "$out" changed)" = "false" ] || fail "expected changed=false at the tagged tip"
 [ "$(field "$out" commit_count)" = "0" ] || fail "expected commit_count=0"
-printf '%s\n' "$out" | grep -q '^reason=' || fail "skipped runs must state a reason"
+grep -q '^reason=' <<<"$out" || fail "skipped runs must state a reason"
 
 # One new commit -> patch bump.
 git -C "$FIXTURE" -c user.name=Test -c user.email=test@example.com \
@@ -52,7 +52,7 @@ out="$("$PLANNER" "$FIXTURE" main)"
 [ "$(field "$out" commit_count)" = "1" ] || fail "expected commit_count=1"
 [ "$(field "$out" head_sha)" = "$(git -C "$FIXTURE" rev-parse HEAD)" ] \
     || fail "head_sha must be the branch tip"
-printf '%s\n' "$out" | grep -q '^commit_summary=.*feat: nightly' \
+grep -q '^commit_summary=.*feat: nightly' <<<"$out" \
     || fail "commit_summary must list the new commit"
 
 # Patch bump keeps major/minor and rolls over 9 -> 10.

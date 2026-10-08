@@ -1,0 +1,229 @@
+import UtterPresentationContracts
+import UtterContracts
+import Foundation
+import Hub
+
+extension ModelCatalog {
+
+    package func asrModels(for engine: SpeechEngineType) -> [ModelEntry] {
+        guard let descriptor = speechDescriptors().first(where: { $0.legacyIDs.contains(engine.rawValue) }) else { return [] }
+        return asrModels.filter { descriptor.modelIDs.contains($0.id) }
+    }
+
+    package func asrModelPath(for id: String) -> String {
+        asrRepoIsComplete(id) ? storage.asrRepoDir(id)?.path ?? "" : ""
+    }
+
+    package func refreshASRStatus(recheckingErrors: Bool = false) {
+        guard !closed else { return }
+        for i in asrModels.indices where !asrModels[i].status.isBusy {
+            let id = asrModels[i].id
+            let size = asrRepoSize(id)
+            asrModels[i].cacheSize = size
+            if recheckingErrors || (asrModels[i].status != .ready && !asrModels[i].status.isError) {
+                asrModels[i].status = asrRepoIsComplete(id)
+                    ? .downloaded
+                    : asrMissingStatus(size: size)
+            }
+        }
+    }
+
+    package func downloadASR(_ id: String, onProgress: ((DownloadProgressInfo) -> Void)? = nil) async {
+        await awaitStartupCleanup()
+        guard !closed, !Task.isCancelled else { return }
+        await downloadTasks.run(key: ModelDownloadKey(kind: .asr, modelID: id)) { [weak self] token in
+            await self?.performASRDownload(id, token: token, onProgress: onProgress)
+        }
+    }
+
+    private func performASRDownload(
+        _ id: String,
+        token: UUID,
+        onProgress: ((DownloadProgressInfo) -> Void)?
+    ) async {
+        let key = ModelDownloadKey(kind: .asr, modelID: id)
+        guard let idx = asrModels.firstIndex(where: { $0.id == id }),
+              !asrModels[idx].status.isDownloading,
+              downloadTasks.isCurrent(key, token: token) else { return }
+
+        if asrRepoIsComplete(id) {
+            asrModels[idx].status = .downloaded
+            asrModels[idx].cacheSize = asrRepoSize(id)
+            asrModels[idx].downloadDetail = ""
+            return
+        }
+
+        prepareCacheForRetry(kind: .asr, modelID: id, status: asrModels[idx].status)
+
+        asrModels[idx].status = .downloading
+        asrModels[idx].downloadProgress = 0
+        asrModels[idx].downloadDetail = ""
+
+        let watchdog = makeStallWatchdog(key: key, token: token, kind: .asr, modelID: id)
+        let signal = DownloadProgressSignal()
+        let staging = storage.generationStaging(for: token)
+        defer { ModelStorage.removeGenerationStaging(staging) }
+
+        do {
+            try ModelStorage.prepareGeneration(staging)
+            let tracker = DownloadProgressTracker(
+                startDate: Date(),
+                initialBytes: asrRepoSize(id, downloadBase: staging.downloadBase)
+            )
+            let estimatedTotalBytes = estimatedASRDownloadBytes(id) ?? 0
+            let repositories = asrRequiredRepoIDs(for: id)
+            for (repositoryIndex, repositoryID) in repositories.enumerated() {
+                if repositoryID == QwenASRModel.confuciusR2T2ID {
+                    let directory = ModelStorage.asrRepoDir(repositoryID, downloadBase: staging.downloadBase)
+                    try await ConfuciusModelDownloader.downloadRepository(to: directory) { [weak self, progressTasks] bytes in
+                        progressTasks.enqueue {
+                            guard let self,
+                                  self.downloadTasks.isCurrent(key, token: token),
+                                  let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
+                            let info = tracker.update(
+                                completedBytes: bytes,
+                                totalBytes: estimatedTotalBytes
+                            )
+                            if signal.advanced(completedBytes: bytes, fraction: info.fraction) {
+                                watchdog.noteProgress()
+                            }
+                            self.asrModels[i].downloadProgress = info.fraction
+                            self.asrModels[i].downloadDetail = info.detailText
+                            onProgress?(info)
+                        }
+                    }
+                } else {
+                    let api = HubApi(downloadBase: staging.downloadBase, cache: staging.hubCache)
+                    _ = try await api.snapshot(from: ModelStorage.hubModelRepo(repositoryID)) { [weak self, progressTasks] progress in
+                        progressTasks.enqueue {
+                            guard let self,
+                                  self.downloadTasks.isCurrent(key, token: token),
+                                  let i = self.asrModels.firstIndex(where: { $0.id == id }) else { return }
+                            let repositoryFraction =
+                                (Double(repositoryIndex) + progress.fractionCompleted) / Double(repositories.count)
+                            let downloadedBytes = self.asrRepoSize(id, downloadBase: staging.downloadBase)
+                            let info = tracker.update(
+                                completedBytes: downloadedBytes,
+                                totalBytes: estimatedTotalBytes,
+                                fraction: repositoryFraction
+                            )
+                            if signal.advanced(
+                                completedBytes: max(downloadedBytes, progress.completedUnitCount),
+                                fraction: info.fraction
+                            ) {
+                                watchdog.noteProgress()
+                            }
+                            self.asrModels[i].downloadProgress = info.fraction
+                            self.asrModels[i].downloadDetail = info.detailText
+                            onProgress?(info)
+                        }
+                    }
+                }
+            }
+            watchdog.stop()
+            try Task.checkCancellation()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
+            guard asrRepoIsComplete(id, downloadBase: staging.downloadBase) else {
+                if let i = asrModels.firstIndex(where: { $0.id == id }) {
+                    asrModels[i].status = .error(L("model.asr_incomplete"))
+                    asrModels[i].cacheSize = asrRepoSize(id)
+                    asrModels[i].downloadDetail = ""
+                }
+                return
+            }
+            var preparedGenerations: [PreparedModelGeneration] = []
+            do {
+                for repositoryID in repositories {
+                    let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
+                        kind: .asr,
+                        modelID: repositoryID,
+                        staging: staging
+                    )
+                    preparedGenerations.append(prepared)
+                }
+            } catch {
+                await ModelStorage.discardPreparedGenerationsOffMainActor(preparedGenerations)
+                throw error
+            }
+            let published: Bool
+            do {
+                published = try await publish(preparedGenerations, key: key, token: token)
+            } catch {
+                await ModelStorage.discardPreparedGenerationsOffMainActor(preparedGenerations)
+                throw error
+            }
+            await ModelStorage.discardPreparedGenerationsOffMainActor(preparedGenerations)
+            guard published, downloadTasks.isCurrent(key, token: token) else { return }
+            if let i = asrModels.firstIndex(where: { $0.id == id }) {
+                let complete = asrRepoIsComplete(id)
+                asrModels[i].status = complete ? .downloaded : .error(L("model.asr_incomplete"))
+                asrModels[i].cacheSize = asrRepoSize(id)
+                asrModels[i].downloadDetail = ""
+            }
+        } catch is CancellationError {
+            watchdog.stop()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
+            if let i = asrModels.firstIndex(where: { $0.id == id }) {
+                asrModels[i].status = .error(L("model.download_paused"))
+                asrModels[i].cacheSize = asrRepoSize(id)
+                asrModels[i].downloadProgress = 0
+                asrModels[i].downloadDetail = ""
+            }
+        } catch {
+            watchdog.stop()
+            guard downloadTasks.isCurrent(key, token: token) else { return }
+            if let i = asrModels.firstIndex(where: { $0.id == id }) {
+                log.error("[ModelCatalog] ASR download failed: \(error.localizedDescription)")
+                asrModels[i].status = .error(ModelDownloadFailureMessage.userFacing(error))
+                asrModels[i].cacheSize = asrRepoSize(id)
+                asrModels[i].downloadDetail = ""
+            }
+        }
+    }
+
+    /// Removes a local ASR model. Serialized against any download for it.
+    package func deleteASR(_ id: String) async {
+        guard !closed else { return }
+        let requested = settings.snapshot
+        let storage = ConfiguredModelStorage(settings: { requested })
+        guard asrModels.contains(where: { $0.id == id }) else { return }
+        await downloadTasks.runExclusive(key: ModelDownloadKey(kind: .asr, modelID: id)) { [weak self] _ in
+            guard let self else { return }
+            await self.removeFiles { self.removeASRFiles(id, storage: storage, requested: requested) }
+        }
+    }
+
+    private func removeASRFiles(_ id: String, storage: ConfiguredModelStorage, requested: SettingsValues) {
+        guard let idx = asrModels.firstIndex(where: { $0.id == id }) else { return }
+        for repositoryID in asrRequiredRepoIDs(for: id) {
+            try? FileManager.default.removeItem(at: storage.hubModelRepoDir(repositoryID))
+        }
+        ModelDownloadRecovery.purgePartialArtifacts(kind: .asr, modelID: id, storageRoot: storage.root)
+        asrModels[idx].cacheSize = 0
+        asrModels[idx].status = .notDownloaded
+        asrModels[idx].downloadDetail = ""
+
+        refreshASRStatus()
+        let settings = self.settings
+        if id == QwenASRModel.defaultID, settings.qwenASRModel == id {
+            settings.qwenASRModel = QwenASRModel.defaultID
+        }
+    }
+
+    private func asrRepoIsComplete(_ id: String) -> Bool {
+        asrRepoIsComplete(id, downloadBase: nil)
+    }
+
+    private func asrRepoIsComplete(_ id: String, downloadBase: URL?) -> Bool {
+        asrRequiredRepoIDs(for: id).allSatisfy { repositoryID in
+            let directory = downloadBase.map { base in
+                ModelStorage.asrRepoDir(repositoryID, downloadBase: base)
+            } ?? storage.asrRepoDir(repositoryID)
+            return asrRepoContainsRequiredFiles(repositoryID, at: directory)
+        }
+    }
+
+    package func asrRequiredRepoIDs(for id: String) -> [String] {
+        artifactsByID[id]?.repositories ?? [id]
+    }
+}

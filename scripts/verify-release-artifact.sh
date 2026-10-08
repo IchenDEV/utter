@@ -80,20 +80,13 @@ verify_app() {
     local executable="$app/Contents/MacOS/Utter"
     local helper="$app/Contents/MacOS/opentype-cli"
     local resources="$app/Contents/Resources"
-    local product_resources="$resources/OpenType_OpenType.bundle/Contents/Resources"
 
     [ -f "$plist" ] || fail "missing Info.plist in $app"
     [ -x "$executable" ] || fail "missing executable in $app"
     [ -x "$helper" ] || fail "missing CLI helper in $app"
     [ -s "$resources/Assets.car" ] || fail "missing compiled AppIcon asset catalog in $app"
-    find "$resources" -name default.metallib -type f -size +0 -print -quit | grep -q . \
-        || fail "missing compiled MLX Metal library in $app"
-    [ -s "$product_resources/en.lproj/Localizable.strings" ] \
-        || fail "missing English localization in $app"
-    [ -s "$product_resources/zh-Hans.lproj/Localizable.strings" ] \
-        || fail "missing Simplified Chinese localization in $app"
-    [ -f "$product_resources/Sounds/start.caf" ] || fail "missing start sound in $app"
-    [ -f "$product_resources/Sounds/stop.caf" ] || fail "missing stop sound in $app"
+    python3 "$(dirname "$0")/check-resource-bundles.py" --app "$app" \
+        || fail "owned resource verification failed in $app"
     [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist")" = "com.opentype.voiceinput" ] \
         || fail "unexpected bundle identifier in $app"
     [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$plist")" = "$EXPECTED_VERSION" ] \

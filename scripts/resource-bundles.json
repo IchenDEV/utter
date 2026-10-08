@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "bundles": [
+    {
+      "target": "UtterContracts",
+      "bundle": "OpenType_UtterContracts.bundle",
+      "source": "Sources/UtterContracts/Resources",
+      "files": [
+        "en.lproj/Localizable.strings",
+        "zh-Hans.lproj/Localizable.strings"
+      ]
+    },
+    {
+      "target": "UtterData",
+      "bundle": "OpenType_UtterData.bundle",
+      "source": "Sources/UtterData/Resources",
+      "files": [
+        "IndustryLexicons.json",
+        "THUOCL-LICENSE.txt"
+      ]
+    },
+    {
+      "target": "UtterMacServices",
+      "bundle": "OpenType_UtterMacServices.bundle",
+      "source": "Sources/UtterMacServices/Resources",
+      "files": [
+        "Sounds/start.caf",
+        "Sounds/stop.caf"
+      ],
+      "allowEmpty": [
+        "Sounds/start.caf",
+        "Sounds/stop.caf"
+      ]
+    },
+    {
+      "target": "UtterPresentation",
+      "bundle": "OpenType_UtterPresentation.bundle",
+      "source": "Sources/UtterPresentation/Resources",
+      "files": [
+        "AppIcon.png",
+        "AppIcon.icns",
+        "AppIconDark.png",
+        "AppIconLight.png",
+        "SettingsActivityIllustration.png",
+        "SettingsVoiceIllustration.png",
+        "SettingsModelsIllustration.png",
+        "SettingsStyleIllustration.png",
+        "SettingsIntegrationsIllustration.png",
+        "SettingsAboutIllustration.png"
+      ],
+      "sourceFiles": [
+        "AppIcon.icon/icon.json",
+        "AppIcon.icon/Assets/AppIconDarkForeground.png",
+        "AppIcon.icon/Assets/AppIconLightForeground.png"
+      ]
+    }
+  ],
+  "appFiles": [
+    "Contents/Resources/Assets.car"
+  ],
+  "executables": [
+    "Contents/MacOS/Utter",
+    "Contents/MacOS/opentype-cli"
+  ],
+  "appGlobs": [
+    "Contents/Resources/**/default.metallib"
+  ]
+}

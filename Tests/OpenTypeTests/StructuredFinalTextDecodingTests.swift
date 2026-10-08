@@ -1,5 +1,21 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterIngress
+import UtterRemoteInference
+import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 /// Structured payload extraction lives at the remote-API boundary
 /// (`LLMFinalTextOutput` via `RemoteLLMResponseText`), not in the text cleaner.

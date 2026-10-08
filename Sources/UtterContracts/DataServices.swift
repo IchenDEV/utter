@@ -1,0 +1,32 @@
+import Foundation
+import UtterRuntime
+
+package protocol LexiconService: Sendable {
+    var version: String { get }
+    var sources: [IndustryLexiconSource] { get }
+    var packs: [IndustryLexiconPack] { get }
+    func snapshot(for id: IndustryLexiconID) -> IndustryLexiconSnapshot
+}
+
+@MainActor
+package protocol ConfigurationService: AnyObject {
+    var document: CompositionDocument? { get }
+    var mounted: EffectiveComposition? { get }
+    var pending: EffectiveComposition? { get }
+    var restartRequired: Bool { get }
+    var sessionSnapshot: EffectiveComposition { get throws }
+    func save(_ proposed: CompositionDocument) throws
+    func resetToShipped() throws -> URL?
+}
+
+package enum DataServices {
+    package static let notifications = ServiceKey<StateNotifications>("data.notifications")
+    package static let settings = ServiceKey<any SettingsService>("data.settings")
+    package static let credentials = ServiceKey<any CredentialsService>("data.credentials")
+    package static let history = ServiceKey<any HistoryService>("data.history")
+    package static let memory = ServiceKey<any MemoryService>("data.memory")
+    package static let dictionary = ServiceKey<any DictionaryService>("data.dictionary")
+    package static let dictionarySnapshot = ServiceKey<any DictionarySnapshotService>("data.dictionary-snapshot")
+    package static let lexicons = ServiceKey<any LexiconService>("data.lexicons")
+    package static let configuration = ServiceKey<any ConfigurationService>("data.configuration")
+}

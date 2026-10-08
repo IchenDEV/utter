@@ -19,8 +19,8 @@ CODECOV_PATH="$(swift test --show-codecov-path)"
 THRESHOLD="${UNIT_COVERAGE_THRESHOLD:-80}"
 
 UNIT_FILES_JSON='[
-  "Sources/Config/Loc.swift",
-  "Sources/Config/RemoteModelConfig.swift",
+  "Sources/UtterContracts/Loc.swift",
+  "Sources/UtterContracts/RemoteModelConfig.swift",
   "Sources/Prompts/PromptBuilder.swift",
   "Sources/Speech/GzipCompression.swift"
 ]'

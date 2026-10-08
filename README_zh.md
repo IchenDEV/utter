@@ -154,37 +154,39 @@ Utter 同时支持 **OpenAI 兼容** 和 **Anthropic** 两种 API 格式：
 | MiniMax（国内） | OpenAI | `https://api.minimax.chat/v1` |
 | MiniMax（海外） | OpenAI | `https://api.minimaxi.chat/v1` |
 
+## 本地语音识别服务商
+
+| 服务商 | 本地运行方式 | 默认模型 |
+| --- | --- | --- |
+| Qwen3-ASR | Apple Silicon 上的原生 Swift 与 MLX | `mlx-community/Qwen3-ASR-1.7B-bf16` |
+
+Qwen3-ASR 不调用托管识别 API。应用将模型下载到共享模型存储目录，
+通过原生 Swift 与 MLX 在本机运行。
+
 ## 项目结构
 
-```
+全部内置功能通过插件装配，可替换契约提供者并按配置组合。
+参见[插件组合](docs/plugin-composition.md)和[本地语音评测](docs/voice-evaluation.md)。
+
+```text
 Sources/
-├── App/          # 应用入口、AppDelegate、状态管理、语音管道、应用图标
-├── Audio/        # 麦克风录音（AVAudioEngine）、音效播放
-├── Config/       # 用户设置、模型目录、远程模型配置、多语言
-├── Hotkey/       # 全局快捷键（CGEvent tap）
-├── LLM/          # 本地推理引擎（MLX）、远程客户端（OpenAI/Anthropic）
-├── Output/       # 文本写入（剪贴板 + 模拟 ⌘V；辅助功能用于读取选区和上下文）
-├── Processing/   # 文本处理器、输入历史、记忆系统、个人与行业词库
-├── Prompts/      # 提示词构建、固定提示词目录、风格提示词预设
-├── Screen/       # 屏幕 OCR（ScreenCaptureKit + Vision）
-├── Speech/       # 语音识别协议、WhisperKit 引擎、Apple Speech 引擎、豆包语音识别引擎、本地语音识别引擎
-├── UI/           # SwiftUI：菜单栏、设置面板、新手引导、浮动 HUD、历史、模型管理
-└── Resources/    # 本地化字符串（中/英）、音效、应用图标
-docs/             # 官网（GitHub Pages，含演示视频）、SDLC 文档、调研
-marketing/        # 宣传片源工程、渲染引擎、配音脚本
-scripts/
-├── build-and-run.sh        # 构建、签名并启动开发用 .app 包
-├── build-app.sh            # 构建发布用 .app 包和 .dmg 安装器
-├── ci-basic-checks.sh      # CI 文件关联和资源检查
-├── create-signing-cert.sh  # 生成自签名代码签名证书
-├── evaluate-voice-quality.py # 评估识别与整理结果（字错率、术语、数字、延迟）
-├── generate-icon.swift     # 从源 PNG 生成 AppIcon.icns
-├── render-promo.sh         # 渲染 marketing/<promo>/ 下的宣传片
-├── sdlc-checks.sh          # 校验 SDLC 文档阶段与审批
-├── test-industry-lexicons.sh # 验证行业词库、术语召回和非目标文本保真
-├── unit-test-coverage.sh   # 运行单元测试并检查覆盖率
-└── validate-volc-asr.swift # 手动验证火山引擎 ASR 配置
+├── App/                       # 应用启动与退出
+├── UtterRuntime/              # 插件依赖图与生命周期
+├── UtterContracts/            # 共享服务、值与本地化
+├── UtterMediaContracts/       # 识别、处理与图像契约
+├── UtterPresentationContracts/ # UI 投影与界面贡献
+├── UtterData/                 # 设置、历史、词库与组合配置
+├── UtterModels/               # 资产租约、下载与模型生命周期
+├── UtterProcessing/           # 提示词、处理与保真检查
+├── UtterSession/              # 共享会话与交付协调
+├── UtterIngress/              # Fn、遥控麦克风、HTTP 与 XPC
+├── UtterPresentation/         # 菜单、设置、引导、HUD 与界面资源
+├── UtterBuiltins/             # 内置插件注册与应用装配
+└── Utter*/                    # 音频、macOS、识别与推理提供者
 ```
+
+构建与验证脚本统一放在 `scripts/`。`build-app.sh` 构建发布应用与安装包；
+`evaluate-voice.sh` 使用已安装模型运行生产处理路径，不向光标写入结果。
 
 ## 技术栈
 

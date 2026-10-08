@@ -1,5 +1,21 @@
+import UtterContracts
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+import UtterProcessing
+@testable import UtterModels
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class LocalModelAccessTests: XCTestCase {
     private actor EventRecorder {
@@ -28,7 +44,7 @@ final class LocalModelAccessTests: XCTestCase {
         XCTAssertEqual(events, ["nested"])
     }
 
-    func testUnloadWaitsForActiveLocalModelOperation() async {
+    func testUnloadWaitsForActiveLocalModelOperation() async throws {
         let processor = TextProcessor()
         let recorder = EventRecorder()
         let operationStarted = expectation(description: "Local model operation started")
@@ -47,7 +63,7 @@ final class LocalModelAccessTests: XCTestCase {
 
         let unload = Task {
             unloadStarted.fulfill()
-            await processor.unloadLLM()
+            try await processor.resetModels()
             await recorder.append("unload-end")
         }
         await fulfillment(of: [unloadStarted], timeout: 1)
@@ -58,14 +74,15 @@ final class LocalModelAccessTests: XCTestCase {
         releaseContinuation.yield()
         releaseContinuation.finish()
         try? await operation.value
-        await unload.value
+        try await unload.value
 
         let finalEvents = await recorder.snapshot()
         XCTAssertEqual(finalEvents, ["operation-start", "operation-end", "unload-end"])
     }
 
     func testCancelledLocalModelWaiterDoesNotRunAfterGateOpens() async {
-        let processor = TextProcessor()
+        let gate = LocalModelAccessGate()
+        let processor = TextProcessor(access: gate)
         let recorder = EventRecorder()
         let holderStarted = expectation(description: "Gate holder started")
         let (releaseStream, releaseContinuation) = AsyncStream<Void>.makeStream()
@@ -84,10 +101,10 @@ final class LocalModelAccessTests: XCTestCase {
             }
         }
         for _ in 0..<1_000 {
-            if await processor.localModelAccessGate.waitingTaskCount == 1 { break }
+            if await gate.waitingTaskCount == 1 { break }
             await Task.yield()
         }
-        let queuedWaiters = await processor.localModelAccessGate.waitingTaskCount
+        let queuedWaiters = await gate.waitingTaskCount
         XCTAssertEqual(queuedWaiters, 1)
         waiter.cancel()
 
@@ -98,7 +115,7 @@ final class LocalModelAccessTests: XCTestCase {
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
-        let remainingWaiters = await processor.localModelAccessGate.waitingTaskCount
+        let remainingWaiters = await gate.waitingTaskCount
         XCTAssertEqual(remainingWaiters, 0)
 
         releaseContinuation.yield()

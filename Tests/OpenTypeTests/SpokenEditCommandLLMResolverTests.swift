@@ -1,5 +1,21 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+import UtterProcessing
+import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class SpokenEditCommandLLMResolverTests: XCTestCase {
     func testDecodesSelectionRewriteIntent() {

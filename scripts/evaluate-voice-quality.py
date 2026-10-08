@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from voice_quality_metrics import evaluate
+from voice_quality_acceptance import acceptance_report
 
 
 REQUIRED_FIELDS = ("id", "language", "faithful_reference", "asr_text")
@@ -56,6 +57,21 @@ def validate_record(value: Any, line_number: int) -> dict[str, Any]:
             f"line {line_number}: terms must be an array of non-empty strings"
         )
     record["terms"] = terms
+    for field in ("constraints_pass", "cold"):
+        if field in record and not isinstance(record[field], bool):
+            raise CorpusError(f"line {line_number}: {field} must be a boolean")
+    if "case_id" in record and (not isinstance(record["case_id"], str) or not record["case_id"]):
+        raise CorpusError(f"line {line_number}: case_id must be a non-empty string")
+    if "semantic_review" in record and record["semantic_review"] not in ("required", "approved", "rejected"):
+        raise CorpusError(f"line {line_number}: semantic_review must be required, approved, or rejected")
+    if "fact_review" in record:
+        review = record["fact_review"]
+        if not isinstance(review, dict) or any(
+            not isinstance(review.get(field), list)
+            or any(not isinstance(item, str) or not item for item in review[field])
+            for field in ("added_facts", "object_mismatches")
+        ):
+            raise CorpusError(f"line {line_number}: fact_review requires added_facts and object_mismatches arrays")
     for field in LATENCY_FIELDS:
         if field not in record:
             continue
@@ -159,6 +175,9 @@ def render_text(report: dict[str, Any]) -> str:
         lines.append(
             f"  {phase}: p50={p50}, p95={p95} ({metric['records']} records)"
         )
+    if "acceptance" in report:
+        result = report["acceptance"]
+        lines.append(f"Acceptance: complete={result['complete']}, engineering={result['engineering_criteria_pass']}, semantic review={result['semantic_review_complete']}, passed={result['acceptance_pass']}")
     return "\n".join(lines)
 
 
@@ -194,6 +213,7 @@ Example:
   cat corpus.jsonl | scripts/evaluate-voice-quality.py --format json -""",
     )
     parser.add_argument("corpus", help="UTF-8 JSONL corpus path, or - for stdin")
+    parser.add_argument("--manifest", help="Evaluation run manifest; missing or partial runs cannot pass acceptance")
     parser.add_argument(
         "--format",
         choices=("text", "json"),
@@ -206,8 +226,15 @@ Example:
 def main(argv: list[str] | None = None) -> int:
     arguments = parse_arguments(argv)
     try:
-        report = evaluate(load_records(arguments.corpus))
-    except (CorpusError, OSError) as error:
+        records = load_records(arguments.corpus)
+        report = evaluate(records)
+        if any("case_id" in row for row in records):
+            manifest_path = Path(arguments.manifest) if arguments.manifest else Path(arguments.corpus + ".manifest.json")
+            manifest = json.loads(manifest_path.read_text()) if manifest_path.is_file() else None
+            if manifest is not None and not isinstance(manifest, dict):
+                raise CorpusError("manifest must be an object")
+            report["acceptance"] = acceptance_report(records, manifest)
+    except (CorpusError, OSError, json.JSONDecodeError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
     if arguments.format == "json":

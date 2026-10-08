@@ -19,6 +19,11 @@ step() {
 
 step "Checking Package.swift"
 swift package describe >/dev/null
+python3 scripts/check-module-boundaries.py
+python3 scripts/tests/test_module_boundaries.py
+python3 scripts/check-resource-bundles.py
+python3 scripts/tests/test_resource_bundles.py
+python3 -m unittest discover -s scripts/tests
 
 step "Checking SDLC artifacts and harness regression tests"
 bash scripts/sdlc-checks.sh
@@ -30,8 +35,8 @@ bash scripts/tests/test_release_workflow_contract.sh
 step "Linting property lists and localized strings"
 plutil -lint Resources/Info.plist
 plutil -lint Resources/OpenType.entitlements
-plutil -lint Sources/Resources/en.lproj/Localizable.strings
-plutil -lint Sources/Resources/zh-Hans.lproj/Localizable.strings
+plutil -lint Sources/UtterContracts/Resources/en.lproj/Localizable.strings
+plutil -lint Sources/UtterContracts/Resources/zh-Hans.lproj/Localizable.strings
 
 step "Checking brand and compatibility identifiers"
 test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' Resources/Info.plist)" = "Utter" \
@@ -48,10 +53,10 @@ en_keys="$(mktemp)"
 zh_keys="$(mktemp)"
 trap 'rm -f "$en_keys" "$zh_keys"' EXIT
 
-grep -E '^"[^"]+"\s*=' Sources/Resources/en.lproj/Localizable.strings \
+grep -E '^"[^"]+"\s*=' Sources/UtterContracts/Resources/en.lproj/Localizable.strings \
     | sed -E 's/^"([^"]+)".*/\1/' \
     | sort >"$en_keys"
-grep -E '^"[^"]+"\s*=' Sources/Resources/zh-Hans.lproj/Localizable.strings \
+grep -E '^"[^"]+"\s*=' Sources/UtterContracts/Resources/zh-Hans.lproj/Localizable.strings \
     | sed -E 's/^"([^"]+)".*/\1/' \
     | sort >"$zh_keys"
 
@@ -63,15 +68,13 @@ step "Checking industry vocabulary"
 ./scripts/test-industry-lexicons.sh
 
 step "Checking required app resources"
-test -f Sources/Resources/Sounds/start.caf || fail "missing start sound"
-test -f Sources/Resources/Sounds/stop.caf || fail "missing stop sound"
 test -s Resources/Info.plist || fail "missing Info.plist"
 test -s Resources/OpenType.entitlements || fail "missing entitlements"
-test -s Sources/Resources/AppIconLight.png || fail "missing light app icon"
-test -s Sources/Resources/AppIconDark.png || fail "missing dark app icon"
-test -s Sources/Resources/AppIcon.icon/Assets/AppIconLightForeground.png \
+test -s Sources/UtterPresentation/Resources/AppIconLight.png || fail "missing light app icon"
+test -s Sources/UtterPresentation/Resources/AppIconDark.png || fail "missing dark app icon"
+test -s Sources/UtterPresentation/Resources/AppIcon.icon/Assets/AppIconLightForeground.png \
     || fail "missing light Icon Composer foreground"
-test -s Sources/Resources/AppIcon.icon/Assets/AppIconDarkForeground.png \
+test -s Sources/UtterPresentation/Resources/AppIcon.icon/Assets/AppIconDarkForeground.png \
     || fail "missing dark Icon Composer foreground"
 
 step "Checking bundled helper names"
