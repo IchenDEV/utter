@@ -5,6 +5,59 @@
 **Approved-date:** —
 **Upstream:** `plan.md` (approved 2026-10-07)
 
+## Continuation: 2026-10-10
+
+This section supersedes the earlier local OCR failure and app-only artifact
+status. Production and test sources remain at
+`0dc31b90d279a9688bc303a44604a1176e8b5a8b`; this update records verification
+without changing implementation or adding a test exclusion.
+
+| Check | Result | Evidence |
+|---|---|---|
+| GitHub PR CI | Pass | [Run 38049101239](https://github.com/IchenDEV/utter/actions/runs/38049101239): Contract & Tests, Release-style App Build, and SDLC Gate all succeeded on `0dc31b9`. GitHub reports `MERGEABLE` and `CLEAN` |
+| GitHub complete Swift suite | Pass | 1,143 XCTest cases, 18 conditional skips, 0 failures; 1 Swift Testing case passes. The previously failing synthetic Chinese/English OCR test passes |
+| Local complete Swift suite | Pass | Same 1,143 XCTest cases, 18 conditional skips, 0 failures, plus 1 Swift Testing case. No test excluded; synthetic OCR passes |
+| Local repository guardrails | Pass | `sdlc-checks.sh` and `ci-basic-checks.sh` rerun successfully, including module boundaries, resource ownership, script regressions, localization parity, and conflict-marker checks |
+| Current signed test package | Pass | Full `build-app.sh` generates the current app and DMG. Apple Development signing, hardened runtime, owned resources, DMG checksum, mounted signature, and byte-for-byte mounted-app comparison pass. Not Apple-notarized |
+| Settings and physical remote | Not verified | The UI attempt below does not establish settings interactions or appearances. No real remote capture was run |
+
+Local tests used `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`
+and `swift test --build-system native --disable-index-store
+-debug-info-format none -j 4`. Packaging used the same developer directory and
+`SIGN_IDENTITY='Apple Development' bash scripts/build-app.sh`.
+The OCR pass followed recovery of disk capacity; no root cause for the earlier
+Vision failure is asserted.
+
+- Current package: `dist/Utter-0.0.50.dmg`, built from `0dc31b9`.
+- SHA-256: `2158ddaf575ebca4574f5d2615bf906dd29a6f3ba0f74bd213ea0d4f96903450`.
+- Previous package preserved as `dist/archive/Utter-0.0.50-3b063ecc.dmg`, with
+  its original SHA-256 `8b4be9ab9f1ebad41b381610f069b6a576e4a643ba26576f8b645c99be02ebc0`.
+- Logs: `/private/tmp/utter-pr122-continuation-tests.log`,
+  `/private/tmp/utter-pr122-continuation-package.log`, and
+  `/private/tmp/utter-pr122-ci-success.log`; local guardrail logs are
+  `/private/tmp/utter-pr122-continuation-{sdlc,ci}.log`.
+
+### Interface audit during continuation
+
+Read and reread all 1,599 lines of `/Users/chenli/.codex/ANTI_SLOP.md` and
+checked every point for applicability. No interface source changed during this
+continuation. The source audit below remains applicable, including native
+controls, visible content, semantic typography/colors, truthful localized
+copy, and the absence of new decorative motion or containers. Marketing-page
+composition and bespoke display-art rules do not apply to this native settings
+verification.
+
+The exact rebuilt app launched as QA PID 58104. Accessibility exposed its menu
+bar but returned no windows after status-item activation. CoreGraphics found
+its popover window, and a window-only capture was inspected at
+`.build/pr122-qa/menu.png`. It shows the menu content, not the Remote settings
+page. A later coordinate click reached another window after the transient
+popover disappeared; no settings action was confirmed. The coordinate route
+was stopped. The QA process was terminated and its absence confirmed before
+packaging. No settings value or system appearance was intentionally changed.
+Toggle, slider, reconnect, keyboard navigation, wrapping, contrast, and
+light/dark acceptance remain pending; the menu capture does not satisfy them.
+
 ## Main integration: 2026-10-10
 
 Merged `main` at `64817558dc1e50911a198e0025bee6d6cafdea6d` into
@@ -155,4 +208,5 @@ change and again before delivery; audited every rule for applicability.
 
 ## Decision
 
-Ready for review pending CI and a real-device pass.
+Ready for review with passing CI and the complete local test suite.
+Real-device and settings-window acceptance remain pending.
