@@ -1,0 +1,70 @@
+import Foundation
+import UtterContracts
+import UtterMediaContracts
+import UtterRuntime
+
+@MainActor
+package enum WhisperPlugins {
+    package static func speech() -> PluginRegistration {
+        PluginRegistration(descriptor: PluginDescriptor(
+            id: "speech.whisper",
+            requires: [SpeechServices.providers.required, ModelServices.files.required, ModelServices.resourceAccess.required, IntegrationServices.diagnostics.required],
+            provides: [SpeechServices.whisper.reference]
+        )) { context, _ in
+            let registry = try context.require(SpeechServices.providers)
+            let cache = WhisperProviderCache(
+                files: try context.require(ModelServices.files), access: try context.require(ModelServices.resourceAccess),
+                log: Log(service: try context.require(IntegrationServices.diagnostics))
+            )
+            try context.scope.onDispose { await cache.close() }
+            let descriptor = ProviderDescriptor(id: "speech.whisper", legacyIDs: [SpeechEngineType.whisper.rawValue], displayName: L("engine.whisper_short"))
+            try registry.register(ProviderDefinition(descriptor: descriptor, reset: { await cache.reset() }) { request in try await cache.engine(request) }, scope: context.scope)
+            try context.provide(SpeechServices.whisper, value: descriptor)
+        }
+    }
+}
+
+@MainActor
+private final class WhisperProviderCache {
+    private let files: any ModelFilesService
+    private let access: any ModelResourceAccess
+    private let log: Log
+    private var cached: (String, WhisperEngine)?
+    private var closed = false
+
+    init(files: any ModelFilesService, access: any ModelResourceAccess, log: Log) {
+        self.files = files
+        self.access = access
+        self.log = log
+    }
+
+    func engine(_ request: SpeechProviderRequest) async throws -> any SpeechEngine {
+        try Task.checkCancellation()
+        guard !closed else { throw ProviderCatalogError.closed }
+        let identity = request.selection.model + ":" + (request.modelFiles?.revision ?? "live")
+        if let cached, cached.0 == identity {
+            cached.1.preparationProgress = request.progress
+            return cached.1
+        }
+        let previous = cached
+        cached = nil
+        if let previous { await previous.1.shutdown() }
+        try Task.checkCancellation()
+        guard !closed else { throw ProviderCatalogError.closed }
+        let engine = WhisperEngine(modelName: request.selection.model, files: request.modelFiles.map { $0 as any ModelFilesService } ?? files, access: access, log: log)
+        engine.preparationProgress = request.progress
+        cached = (identity, engine)
+        return engine
+    }
+
+    func reset() async {
+        let previous = cached
+        cached = nil
+        if let cached = previous { await cached.1.shutdown() }
+    }
+
+    func close() async {
+        closed = true
+        await reset()
+    }
+}

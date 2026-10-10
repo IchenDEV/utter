@@ -1,6 +1,22 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+import UtterContracts
 import AppKit
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 @MainActor
 final class DeferredReplacementPolicyTests: XCTestCase {
@@ -23,42 +39,10 @@ final class DeferredReplacementPolicyTests: XCTestCase {
         ))
     }
 
-    func testFormattingKeepsFocusedTextFromQuickContext() {
-        let quickContext = InputContext(
-            appName: "Notes",
-            bundleIdentifier: "com.apple.Notes",
-            windowTitle: "Planning",
-            screenContext: nil,
-            textBeforeSelection: "before cursor",
-            selectedText: "selected phrase",
-            textAfterSelection: "after cursor",
-            outputMode: .processed,
-            inputLanguage: .english,
-            source: .menuBar
-        )
-        let replacement = DeferredReplacement(
-            rawText: "raw",
-            insertedText: "quick",
-            targetApp: nil,
-            message: "formatting",
-            context: quickContext
-        )
-
-        let deferredContext = VoicePipeline.deferredInputContext(
-            for: replacement,
-            screenContext: "fresh OCR",
-            inputLanguage: .english
-        )
-
-        XCTAssertEqual(deferredContext.windowTitle, "Planning")
-        XCTAssertEqual(deferredContext.screenContext, "fresh OCR")
-        XCTAssertEqual(deferredContext.textBeforeSelection, "before cursor")
-        XCTAssertEqual(deferredContext.selectedText, "selected phrase")
-        XCTAssertEqual(deferredContext.textAfterSelection, "after cursor")
-    }
 
     func testFailedStateIsNotReplaceable() {
         var replacement = DeferredReplacement(
+            historyRecordID: UUID(),
             rawText: "raw",
             insertedText: "quick",
             targetApp: nil,
@@ -80,6 +64,7 @@ final class DeferredReplacementPolicyTests: XCTestCase {
 
     func testDecisionRequiresSameFrontmostApp() throws {
         var replacement = DeferredReplacement(
+            historyRecordID: UUID(),
             rawText: "raw",
             insertedText: "quick",
             targetApp: nil,
@@ -104,6 +89,7 @@ final class DeferredReplacementPolicyTests: XCTestCase {
         }
 
         replacement = DeferredReplacement(
+            historyRecordID: UUID(),
             rawText: "raw",
             insertedText: "quick",
             targetApp: NSRunningApplication.current,

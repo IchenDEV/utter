@@ -1,7 +1,23 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+@testable import UtterModels
+import UtterContracts
 import CryptoKit
 import Foundation
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class ConfuciusModelDownloaderTests: XCTestCase {
     func testParallelRangesReassembleExactWeightAndReportProgress() async throws {

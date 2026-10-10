@@ -1,7 +1,23 @@
+import UtterContracts
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
 import AppKit
 import SwiftUI
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 /// Verifies the settings surfaces through the SwiftUI `Color` values the app
 /// actually renders, so swapping `page` and `card` (or recoloring either) fails.

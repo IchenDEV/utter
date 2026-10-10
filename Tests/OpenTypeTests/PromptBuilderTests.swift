@@ -1,5 +1,21 @@
+import UtterMediaContracts
+import UtterData
+import UtterModels
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+import UtterProcessing
+import UtterPresentationContracts
+import UtterContracts
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 @MainActor
 final class PromptBuilderTests: XCTestCase {
@@ -94,7 +110,7 @@ final class PromptBuilderTests: XCTestCase {
             XCTAssertTrue(prompt.contains("输出标签、开场白、备注、引号说明或代码围栏"))
             XCTAssertTrue(prompt.contains("final_text"))
             XCTAssertTrue(prompt.contains("普通说明、状态同步和判断句不要强行改成编号列表"))
-            XCTAssertTrue(prompt.contains("无序清单用项目符号，只有明确顺序或步骤时才使用 1. 2. 3."))
+            XCTAssertTrue(prompt.contains("保持用户原有用词，不换同义说法。无序清单用项目符号；说话人用“第一/第一个、首先/其次、一、二、三、问题一/二”逐项说明时，整理成 1. 2. 3."))
             XCTAssertTrue(prompt.contains("专业整理补充示例："))
             XCTAssertTrue(prompt.contains("原文：今天主要是把登录问题修掉然后回归一遍没问题的话明天发版"))
             XCTAssertTrue(prompt.contains("专业整理强纠错示例："))
@@ -207,7 +223,9 @@ final class PromptBuilderTests: XCTestCase {
                 stylePrompt: "ignored",
                 screenContext: "visible text",
                 memoryContext: "",
-                inputLanguage: .english
+                inputLanguage: .english,
+                useCustomSystemPrompt: AppSettings.shared.snapshot.useCustomSystemPrompt,
+                customSystemPrompt: AppSettings.shared.snapshot.customSystemPrompt
             )
 
             XCTAssertTrue(prompt.hasPrefix("Only normalize names."))

@@ -5,7 +5,77 @@
 **Approved-date:** —
 **Upstream:** `plan.md` (approved 2026-10-07)
 
-## Evidence
+## Main integration: 2026-10-10
+
+Merged `main` at `64817558dc1e50911a198e0025bee6d6cafdea6d` into
+`t3/xiaomi-remote-mic` using the repository's merge-commit convention. The
+feature now follows main's plugin modules rather than restoring deleted
+monolithic files:
+
+- `UtterRemoteMic` retains main's scoped transports, callback identities, task
+  draining, frozen stream gain, and file cleanup. It adds connected-device
+  discovery, model-gated ARN9 decoding, host sessions, and `MIC_EXTEND`.
+- `UtterAudio` receives the remote preference through the session's immutable
+  capture request. Shortcut/menu/API capture can open the remote microphone and
+  fall back after 3 seconds of silence. Closing capture cancels and drains its
+  silence task.
+- The Remote tab is a `UtterPresentation` contribution. Its state, diagnostics,
+  and reconnect action use contracts and `PlatformProjection`; the view imports
+  no provider implementation. General retains main's login/device services.
+- Main's capture-before-model-preparation behavior and numeral/list processing
+  remain intact. New regressions cover host capture ownership, shutdown callback
+  rejection, settings diagnostics disposal, and remote preference propagation
+  while the model resource lease is held.
+
+| Check | Result | Evidence |
+|---|---|---|
+| SDLC and basic CI | Pass | Both required scripts pass, including module boundaries, owned resources, localization parity, and harness tests |
+| Complete Swift suite | One failure | 1,142 XCTest cases, 17 conditional skips, 1 failure; the additional Swift Testing case passes |
+| OCR failure recheck | Fail | `ScreenReliabilityTests.testAccurateOCRReadsSyntheticChineseAndEnglishMailInOrder` reports Vision `e5rtError` in the full run and `unknownError` alone. Both the test and OCR production source are unchanged from main; no baseline main run is claimed |
+| Remaining full suite | Pass | Explicitly excluding only that OCR test: 1,141 XCTest cases, 17 conditional skips, 0 failures; 1 Swift Testing case passes |
+| Final remote/model-queue regressions | Pass | 97 cases, including the added settings projection observation/disposal test, 0 failures |
+| Release app | Pass | `SIGN_IDENTITY='Apple Development' bash scripts/build-app.sh --app-only`; Metal/resource bundles, hardened-runtime signature, and release artifact verification pass. Not Apple-notarized |
+| Native app launch | Pass | Exact rebuilt `dist/Utter.app` launched as a separate process; that QA process exited afterward and the installed `/Applications/Utter.app` process was preserved |
+| Real settings interactions and appearances | Not verified | Accessibility automation could inspect and invoke the rebuilt app's menus, but no settings window was returned. No toggle, slider, reconnect, light/dark screenshot, contrast, or wrapping pass is claimed |
+| Physical remote | Not run | Requires the real device |
+
+Commands used `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`.
+Swift tests used `--build-system native --disable-index-store
+-debug-info-format none -j 4`. The default Swift build engine initially failed
+while signing a test bundle; the first native attempt exhausted disk space.
+Only this run's generated `.build/out` cache was removed before retrying.
+No signing failure was bypassed in the release app build.
+
+Current logs: `/private/tmp/utter-main-merge-{ci,tests-native,ocr-retry,
+remote-final,build}.log` and `.build/merge-tests-excluding-ocr.log`.
+The rebuilt artifact is `dist/Utter.app`; the DMG listed below is the older
+2026-10-07 artifact and was not regenerated for this merge.
+
+### Interface audit after the merge
+
+Reread all 1,599 lines of `/Users/chenli/.codex/ANTI_SLOP.md` before handoff
+and checked each rule for applicability to this native settings migration.
+
+- Visibility and hierarchy: native grouped Form sections and localized footer
+  text remain visible without animation gates. No new fixed content height,
+  clipping, overlays, or ornamental containers were added.
+- Controls: native toggle/slider bindings write through the settings service;
+  reconnect calls the scoped control service. The toggle is disabled when the
+  remote provider is absent. Automated tests prove diagnostics propagation and
+  disposal, not pointer/keyboard interaction.
+- Typography and color: system typography, semantic surfaces, and secondary
+  text remain in use. Monospaced digits are limited to the dB value. The status
+  dot has accompanying readable state text. Real-window contrast, spacing,
+  clipping, and appearance checks remain pending.
+- Specific and truthful copy: both languages retain the actual discovery,
+  decoding, fallback, temporary-file, and local/cloud processing descriptions.
+  Localization lint and key parity pass.
+- Cohesion and decoration: the tab reuses main's settings contribution and
+  surface system. No gradient, glow, custom shadow, novelty font, entrance
+  reveal, fake product UI, or hover motion was introduced. Website-only rules
+  about heroes, pricing, logos, illustrations, and footers do not apply here.
+
+## 2026-10-07 review evidence
 
 Updated after the review corrections on 2026-10-07, using
 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`. Focused checks used
@@ -79,8 +149,8 @@ change and again before delivery; audited every rule for applicability.
   the tab's "Last recording" shows which microphone was used.
 - The silence fallback with the lid closed ends in the existing no-usable-input
   error, since no other microphone exists.
-- `XiaomiRemoteMicBridge.swift` remains far above the 300-line guideline; this
-  change adds ~100 lines there and does not split it.
+- The original oversized bridge is now split across main's native module
+  extensions; all remote-mic source files are below the 300-line guideline.
 - The licensing question for the earlier remote-mic work is still open.
 
 ## Decision

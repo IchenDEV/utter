@@ -1,5 +1,8 @@
 import Foundation
 import XCTest
+import UtterContracts
+import UtterRemoteMic
+import UtterPresentation
 @testable import OpenType
 
 @MainActor

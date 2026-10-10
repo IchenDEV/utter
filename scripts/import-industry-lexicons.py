@@ -55,7 +55,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-dir", type=Path, help="Use already downloaded originals; checksums still required")
     args = parser.parse_args()
-    resource = ROOT / "Sources/Resources"
+    resource = ROOT / "Sources/UtterData/Resources"
     target = resource / "IndustryLexicons.json"
     document = json.loads(target.read_text())
     license_data = read_verified("LICENSE", LICENSE_SHA, args.source_dir)

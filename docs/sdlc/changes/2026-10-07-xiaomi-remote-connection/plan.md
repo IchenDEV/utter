@@ -22,6 +22,10 @@
 - [x] Run SDLC/CI checks, `swift test`, and a release-style app build.
 - [x] Open PR #122 and build the local downloadable test DMG; final hosted CI and
       real-device verification remain separate acceptance steps.
+- [x] 2026-10-10: merge main, migrate the feature into its scoped plugin modules,
+      resolve all conflicts, and verify the signed release app before pushing.
+      The unchanged OCR test failure and pending UI/hardware checks are recorded
+      separately in verification.md.
 
 ## Verification plan
 

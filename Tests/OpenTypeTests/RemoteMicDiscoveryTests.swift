@@ -1,6 +1,9 @@
 import CoreBluetooth
 import Foundation
 import XCTest
+import UtterContracts
+import UtterRemoteMic
+import UtterPresentation
 @testable import OpenType
 
 final class RemoteMicDeviceMatcherTests: XCTestCase {

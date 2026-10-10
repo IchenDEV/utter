@@ -1,6 +1,22 @@
+import UtterContracts
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterProcessing
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+import UtterMLX
 import AVFoundation
 import XCTest
-@testable import OpenType
+@testable import UtterPresentation
 
 final class QwenAudioPreprocessorTests: XCTestCase {
     func testPreparedAudioIs16kMonoPCMAndIsRemovedAfterUse() async throws {

@@ -1,5 +1,21 @@
+import UtterMediaContracts
+import UtterPresentationContracts
+import UtterData
+import UtterModels
+import UtterMacServices
+import UtterAudio
+import UtterRemoteMic
+import UtterSession
+import UtterWhisper
+import UtterAppleSpeech
+import UtterMLX
+import UtterANE
+import UtterRemoteInference
+import UtterIngress
+import UtterProcessing
 import XCTest
-@testable import OpenType
+import UtterContracts
+@testable import UtterPresentation
 
 /// End-to-end regression cases distilled from previously observed failures.
 final class QualityProbeTests: XCTestCase {

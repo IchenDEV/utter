@@ -7,34 +7,40 @@ Utter is a macOS menu bar voice input app built with Swift 6 / SwiftUI / AppKit.
 ## Architecture
 
 - **Pure Swift Package** (no .xcodeproj) — everything is driven by `Package.swift`
-- **Single executable target** named `OpenType` under `Sources/`
+- **Composition root**: executable `OpenType` under `Sources/App/`; implementation lives in independently owned SwiftPM targets. `UtterBuiltins` assembles registrations.
 - **Functional style preferred** — avoid unnecessary classes; use enums, structs, and free functions where possible
 - **File size**: each file should stay under 300 lines (ideally ~100 lines); split when growing
 
 ## Module Map
 
-| Directory | Responsibility |
+| Directory / target | Responsibility |
 |---|---|
-| `App/` | Entry point (`OpenTypeApp`), `AppState` (observable), `VoicePipeline` (coordinator), `AppIcon` |
-| `Audio/` | `AudioCaptureManager` (AVAudioEngine), `SoundPlayer` |
-| `Config/` | `AppSettings` (UserDefaults-backed), `ModelCatalog`, `RemoteModelConfig`, `Loc` (localization helper), `Log` |
-| `Hotkey/` | `HotkeyManager` — CGEvent tap for global keyboard shortcuts |
-| `LLM/` | `LLMEngine` (MLX local), `RemoteLLMClient` (OpenAI + Anthropic formats) |
-| `Output/` | `TextInserter` — Accessibility API text injection with clipboard fallback |
-| `Processing/` | `TextProcessor`, `InputHistory`, `MemoryStore`, `PersonalDictionary` |
-| `Prompts/` | `PromptBuilder`, prompt catalogs, style prompt presets |
-| `Screen/` | `ScreenOCR` — ScreenCaptureKit + Vision framework |
-| `Speech/` | `SpeechEngineProtocol`, `AppleSpeechEngine`, `WhisperEngine`, Volc/Qwen/MiMo local ASR support |
-| `UI/` | All SwiftUI views: MenuBar, Settings (tabbed), Onboarding, Overlay HUD, History, Models, About |
-| `Resources/` | `en.lproj/` and `zh-Hans.lproj/` Localizable.strings, Sounds/ |
+| `App/` / `OpenType` | Start and drain `BuiltinApplication`; no processing or UI feature owners |
+| `UtterRuntime/` | Plugin graph, scoped services, tasks, revocation and disposal |
+| `UtterContracts/` | Portable settings, data, providers, processing evidence and session contracts; localization |
+| `UtterMediaContracts/`, `UtterPresentationContracts/` | Native media contracts and observable UI projections |
+| `UtterBuiltins/` | Built-in registrations, replacement policy, desktop/recovery compositions |
+| `UtterData/` | Settings, credentials, composition persistence, dictionary, lexicons, history and memory |
+| `UtterModels/` | Artifact catalog, storage, downloads, frozen model locations and resource access |
+| `UtterProcessing/` | Prompt assembly, fidelity checks and replaceable mode recipes |
+| `UtterSession/` | Shared session execution, API, follow-up formatting and receipt settlement |
+| `UtterIngress/` | Hotkey/remote session bindings and HTTP/XPC transports |
+| `UtterAudio/`, `UtterRemoteMic/`, `UtterMacServices/` | Capture, remote device control, OCR, target leases and transactional output |
+| `UtterAppleSpeech/`, `UtterWhisper/`, `UtterMLX/`, `UtterANE/`, `UtterRemoteInference/` | Independently registered inference providers |
+| `UtterPresentation/` | Menu, onboarding, overlay, icons and settings contributions |
+| `UtterEvaluation/` | Headless evaluation schema and finite budgets |
+
+Resources belong to their owner targets; `scripts/resource-bundles.json` is the packaging manifest.
+UI and ingress depend on contracts and the runtime; only `UtterBuiltins` imports sibling implementations.
+Tests use owner modules directly. Construction fixtures under `Tests/OpenTypeTests/Support/` are excluded from production.
 
 ## Key Patterns
 
 - **`@MainActor`** is used for all UI-touching code; background work uses `Task { }` and `actor`
 - **Localization**: all user-facing strings go through `L("key")` (defined in `Loc.swift`), with entries in both `en.lproj` and `zh-Hans.lproj`
-- **Settings persistence**: `AppSettings` uses `@Published` + Combine `sink` to auto-persist to `UserDefaults`
+- **Settings persistence**: `SettingsStore` owns `UserDefaults` through `SettingsService`; `AppSettings` observes that service and projects values for SwiftUI. Credentials have a separate service.
 - **Remote LLM**: `RemoteLLMClient` dispatches to OpenAI-format (`/chat/completions`) or Anthropic-format (`/messages`) based on `provider.apiFormat`
-- **Prompt management**: `Sources/Prompts/PromptBuilder.swift` assembles prompts; fixed prompt text belongs in `PromptCatalog.swift` and style presets belong in `PromptStylePrompts.swift`
+- **Prompt management**: `Sources/UtterProcessing/PromptBuilder.swift` assembles prompts; fixed prompt text belongs in `PromptCatalog.swift` and style presets belong in `PromptStylePrompts.swift`
 - **Text processing**: no hardcoded filler-word removal — the LLM handles all contextual cleanup via the system prompt
 
 ## Build & Release
@@ -43,7 +49,7 @@ Utter is a macOS menu bar voice input app built with Swift 6 / SwiftUI / AppKit.
 - **Release build**: `bash scripts/build-app.sh` — uses `xcodebuild` (required for Metal shader bundling), then assembles .app and .dmg
 - **PR CI**: `.github/workflows/pr.yml` — validates SDLC artifacts, runs linked checks and unit tests, builds a release-style app, and exposes the stable `SDLC Gate` check
 - **Release CI**: `.github/workflows/release.yml` — accepts a SemVer tag on `main`, verifies either the existing self-signed identity or Developer ID, requires Apple notarization for Developer ID, and publishes the mounted-DMG-verified artifact with a checksum
-- **Icon**: `scripts/generate-icon.swift` programmatically renders the icon and generates `.icns`; `Sources/App/AppIcon.swift` renders the same icon at runtime for the Dock
+- **Icon**: `scripts/generate-icon.swift` programmatically renders the icon and generates `.icns`; `Sources/UtterPresentation/App/AppIcon.swift` renders the same icon at runtime for the Dock
 
 ## SDLC Operating Contract
 
