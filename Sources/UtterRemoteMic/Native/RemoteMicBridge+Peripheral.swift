@@ -20,6 +20,13 @@ extension XiaomiRemoteMicBridge {
              CBUUID(string: RemoteMicProtocol.controlUUID)],
             for: service
         )
+        if let info = peripheral.services?.first(where: {
+            $0.uuid == RemoteMicDeviceMatcher.deviceInformationServiceUUID
+        }) {
+            peripheral.discoverCharacteristics([RemoteMicDeviceMatcher.modelNumberUUID], for: info)
+        } else {
+            handleModelNumber(nil, attempt: attempt)
+        }
     }
 
     func routeDidDiscoverCharacteristics(
@@ -28,7 +35,22 @@ extension XiaomiRemoteMicBridge {
         error: Error?,
         attempt: UInt64
     ) {
-        guard acceptsPeripheralCallback(peripheral, attempt: attempt), error == nil else { return }
+        guard acceptsPeripheralCallback(peripheral, attempt: attempt) else { return }
+        if service.uuid == RemoteMicDeviceMatcher.deviceInformationServiceUUID {
+            guard error == nil else {
+                failAttempt(reason: L("remote_mic.error.model_unreadable"))
+                return
+            }
+            if let model = service.characteristics?.first(where: {
+                $0.uuid == RemoteMicDeviceMatcher.modelNumberUUID
+            }) {
+                peripheral.readValue(for: model)
+            } else {
+                handleModelNumber(nil, attempt: attempt)
+            }
+            return
+        }
+        guard error == nil else { return }
         let transmit = RemoteMicProtocol.transmitUUID.uppercased()
         let audio = RemoteMicProtocol.audioUUID.uppercased()
         let control = RemoteMicProtocol.controlUUID.uppercased()
@@ -85,8 +107,17 @@ extension XiaomiRemoteMicBridge {
         // A reused CBPeripheral object can deliver a late value from a previous
         // attempt; attribute it to the attempt that raised it and drop it when
         // this handshake no longer tracks that attempt.
-        guard acceptsPeripheralCallback(peripheral, attempt: attempt), error == nil,
-              let data = characteristic.value else { return }
+        guard acceptsPeripheralCallback(peripheral, attempt: attempt) else { return }
+        if characteristic.uuid == RemoteMicDeviceMatcher.modelNumberUUID {
+            guard !handshake.decoderConfigured else { return }
+            guard error == nil, let data = characteristic.value else {
+                failAttempt(reason: L("remote_mic.error.model_unreadable"))
+                return
+            }
+            handleModelNumber(data, attempt: attempt)
+            return
+        }
+        guard error == nil, let data = characteristic.value else { return }
         switch characteristic.uuid.uuidString.uppercased() {
         case RemoteMicProtocol.controlUUID.uppercased():
             handleControl(data, attempt: attempt)
@@ -125,6 +156,8 @@ extension XiaomiRemoteMicBridge {
             handleControl(data, attempt: attempt)
         case let .audio(data):
             handleAudio(data, attempt: attempt)
+        case let .modelNumber(data):
+            handleModelNumber(data, attempt: attempt)
         }
     }
 }

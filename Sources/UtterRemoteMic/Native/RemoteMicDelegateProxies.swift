@@ -12,6 +12,7 @@ package enum XiaomiRemoteMicTestCallback: Equatable {
     case disconnect
     case control(Data)
     case audio(Data)
+    case modelNumber(Data?)
 }
 
 /// Central callbacks have the same source problem as peripheral callbacks:
@@ -132,6 +133,11 @@ package final class XiaomiRemoteMicCentralDelegateProxy: NSObject, CBCentralMana
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
+        guard RemoteMicDeviceMatcher.isCandidate(
+            peripheralName: peripheral.name,
+            advertisedName: advertisementData[CBAdvertisementDataLocalNameKey] as? String,
+            advertisedServiceUUIDs: advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID]
+        ) else { return }
         bindManagerIdentity(central)
         bindPeripheralIdentity(peripheral)
         bridge?.routeCentralDidDiscover(

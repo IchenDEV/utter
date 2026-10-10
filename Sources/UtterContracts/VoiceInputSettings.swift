@@ -13,6 +13,7 @@ package struct VoiceInputSettings {
     package let memoryWindowMinutes: Int
     package let useScreenContext: Bool
     package let streamingEnabled: Bool
+    package let remoteMicEnabled: Bool
     package let microphoneID: String?
     package let audioActivityThresholds: AudioActivityThresholds
 
@@ -33,6 +34,7 @@ package struct VoiceInputSettings {
         memoryWindowMinutes = settings.memoryWindowMinutes
         useScreenContext = settings.useScreenContext
         streamingEnabled = settings.enableStreamingRecognitionBeta
+        remoteMicEnabled = settings.remoteMicEnabled
         microphoneID = settings.microphoneID
         audioActivityThresholds = settings.audioActivityThresholds
     }

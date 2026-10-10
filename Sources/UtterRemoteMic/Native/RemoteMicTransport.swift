@@ -14,8 +14,19 @@ package protocol XiaomiRemoteMicCentralTransport: AnyObject {
 
     func stopScan()
     func scanForPeripherals(withServices services: [CBUUID], options: [String: Any]?)
+    func connectedPeripherals(withServices services: [CBUUID]) -> [RemoteMicKnownPeripheral]
     func connect(to peripheral: AnyObject)
     func cancel(peripheral: AnyObject)
+}
+
+extension XiaomiRemoteMicCentralTransport {
+    package func connectedPeripherals(withServices services: [CBUUID]) -> [RemoteMicKnownPeripheral] { [] }
+}
+
+package struct RemoteMicKnownPeripheral {
+    package let identity: AnyObject
+    package let name: String?
+    package init(identity: AnyObject, name: String?) { self.identity = identity; self.name = name }
 }
 
 /// Production transport. The manager and its weak delegate are held together
@@ -45,6 +56,11 @@ final class XiaomiRemoteMicCoreBluetoothCentralTransport: XiaomiRemoteMicCentral
 
     func scanForPeripherals(withServices services: [CBUUID], options: [String: Any]?) {
         manager.scanForPeripherals(withServices: services, options: options)
+    }
+
+    func connectedPeripherals(withServices services: [CBUUID]) -> [RemoteMicKnownPeripheral] {
+        manager.retrieveConnectedPeripherals(withServices: services)
+            .map { RemoteMicKnownPeripheral(identity: $0, name: $0.name) }
     }
 
     func connect(to peripheral: AnyObject) {

@@ -31,6 +31,7 @@ package final class RemoteMicCaptureManager: RemoteCaptureSource {
     private var levelCallback: ((Float) -> Void)?
     private var bufferCallback: ((AVAudioPCMBuffer) -> Void)?
     package private(set) var isRunning = false
+    package private(set) var hasReceivedSamples = false
 
     package init(bridge: XiaomiRemoteMicBridge, log: UtterContracts.Log, temporaryDirectory: URL = FileManager.default.temporaryDirectory) {
         self.bridge = bridge
@@ -46,6 +47,16 @@ package final class RemoteMicCaptureManager: RemoteCaptureSource {
     package func activate() {
         guard !isClosed else { return }
         bridge.activate()
+    }
+
+    package func beginHostSession() -> UInt64? {
+        guard !isClosed else { return nil }
+        return bridge.beginHostSession()
+    }
+
+    package func noteCapture(_ source: RemoteMicCaptureSource) {
+        guard !isClosed else { return }
+        bridge.noteCapture(source)
     }
 
     package func deactivate() {
@@ -115,6 +126,7 @@ package final class RemoteMicCaptureManager: RemoteCaptureSource {
         lastActivity = AudioCaptureActivity(thresholds: thresholds)
         levelCallback = levelUpdate
         bufferCallback = bufferUpdate
+        hasReceivedSamples = false
 
         let url = temporaryDirectory
             .appendingPathComponent("opentype_remotemic_\(UUID().uuidString).wav")
@@ -192,11 +204,12 @@ package final class RemoteMicCaptureManager: RemoteCaptureSource {
     package var hasRecordedActivity: Bool { lastActivity.frameCount > 0 }
 
     private func ingest(_ samples: [Int16]) {
-        guard isRunning, !samples.isEmpty,
-              let buffer = AVAudioPCMBuffer(
-                  pcmFormat: format,
-                  frameCapacity: AVAudioFrameCount(samples.count)
-              ) else { return }
+        guard isRunning, !samples.isEmpty else { return }
+        hasReceivedSamples = true
+        guard let buffer = AVAudioPCMBuffer(
+            pcmFormat: format,
+            frameCapacity: AVAudioFrameCount(samples.count)
+        ) else { return }
         buffer.frameLength = AVAudioFrameCount(samples.count)
         if let channel = buffer.floatChannelData?[0] {
             for index in samples.indices {

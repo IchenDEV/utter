@@ -85,6 +85,7 @@ extension XiaomiRemoteMicBridge {
         // must still close a microphone this bridge may have opened, and must
         // not leave `microphoneOpened` set for the next attempt.
         let wasLive = session.release()
+        cancelExtend()
         if microphoneOpened || wasLive {
             closeMicrophoneIfNeeded()
         }
@@ -94,5 +95,27 @@ extension XiaomiRemoteMicBridge {
             pendingSync = nil
             decoder.reset()
         }
+    }
+
+    package func reconnectNow() {
+        if isActive { deactivate() }
+        activate()
+    }
+
+    package func noteCapture(_ source: RemoteMicCaptureSource) {
+        diagnostics.lastCapture = source
+    }
+
+    package func beginHostSession() -> UInt64? {
+        guard !isClosed, isActive, peripheral?.state == .connected, handshake.isReady else { return nil }
+        return latchHostSession()
+    }
+
+    func latchHostSession() -> UInt64? {
+        guard !session.isLive else { return nil }
+        streamGainDB = gainDB()
+        hostInitiated = true
+        streamAnnounced = false
+        return session.press()
     }
 }

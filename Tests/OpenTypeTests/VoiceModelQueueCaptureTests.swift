@@ -22,6 +22,7 @@ final class VoiceModelQueueCaptureTests: XCTestCase {
     func testCaptureAndReleaseDoNotWaitForTheModelResourceLease() async throws {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }
+        fixture.defaults.set(true, forKey: "remoteMicEnabled")
         try await fixture.start()
         let access = try fixture.runtime.service(ModelServices.resourceAccess)
         var leased = false
@@ -41,6 +42,7 @@ final class VoiceModelQueueCaptureTests: XCTestCase {
             await Task.yield()
         }
         XCTAssertEqual(fixture.capture.requests.count, 1)
+        XCTAssertEqual(fixture.capture.requests.first?.preferRemoteMic, true)
         XCTAssertTrue(fixture.speechRequests.isEmpty)
         XCTAssertFalse(fixture.engine.preparing)
         XCTAssertTrue(driver.requestStop(intent.id, at: nil))

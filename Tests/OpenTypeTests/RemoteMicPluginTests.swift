@@ -97,6 +97,21 @@ final class RemoteMicPluginTests: XCTestCase {
         XCTAssertNil(bridge.centralTransportForTesting())
     }
 
+    func testSettingsProjectionReceivesDiagnosticsAndDisposesItsObservers() async throws {
+        let (runtime, bridge, _, _) = try fixture()
+        try await runtime.start([PluginSelection("fixture.data"), PluginSelection("remote-mic.xiaomi")])
+        let control = try runtime.service(RemoteMicServices.control)
+        let platform = PlatformProjection(remote: control, login: nil, devices: nil, screen: nil,
+            diagnostics: RemotePluginDiagnostics())
+        XCTAssertNil(platform.remoteDiagnostics.lastCapture)
+        bridge.noteCapture(.remote)
+        XCTAssertEqual(platform.remoteDiagnostics.lastCapture, .remote)
+        platform.dispose()
+        bridge.noteCapture(.systemRemoteSilent)
+        XCTAssertEqual(platform.remoteDiagnostics.lastCapture, .remote)
+        try await runtime.stop()
+    }
+
     func testCloseDrainsNonCooperativeOwnedTask() async {
         let bridge = XiaomiRemoteMicBridge(gainDB: { 0 })
         let entered = RemoteLifetimeSignal()
@@ -127,6 +142,7 @@ final class RemoteMicPluginTests: XCTestCase {
         var gain: Double = 6
         let bridge = XiaomiRemoteMicBridge(gainDB: { gain })
         bridge.isActive = true
+        bridge.handshake.markDecoderConfigured()
         bridge.handshake.markCapabilitiesRequested()
         XCTAssertTrue(bridge.handshake.confirmCapabilities(.default))
         let start = Data([0x04, 0, 0x02, 1])

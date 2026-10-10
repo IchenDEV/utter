@@ -78,6 +78,9 @@ final class RemoteSessionIngressTests: XCTestCase {
 
 @MainActor
 private final class IngressRemote: RemoteMicControlService {
+    var diagnostics = RemoteMicDiagnostics()
+    func reconnect() {}
+    func observeDiagnostics(_ callback: @escaping (RemoteMicDiagnostics) -> Void) -> UUID { UUID() }
     var state: RemoteMicBridgeState = .idle
     var pressed: ((UInt64) -> Void)?
     var released: (() -> Void)?
