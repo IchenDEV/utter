@@ -15,6 +15,8 @@ final class RemoteMicController: RemoteMicControlService {
     private var stopped: (() -> Void)?
     private var observers: [UUID: (RemoteMicBridgeState) -> Void] = [:]
     private var subscription: AnyCancellable?
+    private var diagnosticsSubscription: AnyCancellable?
+    private var diagnosticsObservers: [UUID: (RemoteMicDiagnostics) -> Void] = [:]
 
     init(bridge: XiaomiRemoteMicBridge, isReady: @escaping () -> Bool) {
         self.bridge = bridge
@@ -31,6 +33,10 @@ final class RemoteMicController: RemoteMicControlService {
             guard let self, !self.closed, self.isReady() else { return }
             self.stopped?()
         }
+        diagnosticsSubscription = bridge.$diagnostics.sink { [weak self] diagnostics in
+            guard let self, !self.closed else { return }
+            for observer in Array(self.diagnosticsObservers.values) { observer(diagnostics) }
+        }
         subscription = bridge.$state.sink { [weak self] state in
             guard let self, !self.closed else { return }
             for observer in Array(self.observers.values) { observer(state) }
@@ -38,6 +44,20 @@ final class RemoteMicController: RemoteMicControlService {
     }
 
     var state: RemoteMicBridgeState { bridge.state }
+    var diagnostics: RemoteMicDiagnostics { bridge.diagnostics }
+
+    func reconnect() {
+        guard !closed, prepared, enabled else { return }
+        bridge.reconnectNow()
+    }
+
+    func observeDiagnostics(_ callback: @escaping (RemoteMicDiagnostics) -> Void) -> UUID {
+        let id = UUID()
+        guard !closed else { return id }
+        diagnosticsObservers[id] = callback
+        callback(diagnostics)
+        return id
+    }
 
     func setEnabled(_ enabled: Bool) {
         guard !closed else { return }
@@ -67,12 +87,17 @@ final class RemoteMicController: RemoteMicControlService {
         return id
     }
 
-    func removeObserver(_ id: UUID) { observers.removeValue(forKey: id) }
+    func removeObserver(_ id: UUID) {
+        observers.removeValue(forKey: id)
+        diagnosticsObservers.removeValue(forKey: id)
+    }
 
     func revoke() {
         guard !closed else { return }
         closed = true
         subscription = nil
+        diagnosticsSubscription = nil
+        diagnosticsObservers.removeAll()
         observers.removeAll()
         pressed = nil
         released = nil

@@ -8,6 +8,7 @@ extension XiaomiRemoteMicBridge {
 
     /// Test-only: reset to a clean state for routing tests.
     package func configureForTesting() {
+        cancelExtend()
         cancelReconnect()
         cancelTimeout()
         if let transport = centralTransport {
@@ -149,5 +150,13 @@ extension XiaomiRemoteMicBridge {
     /// Test-only: send the capability request for the current attempt.
     package func simulateCapabilitiesRequestedForTesting() {
         handshake.markCapabilitiesRequested()
+    }
+
+    package func markActiveForTesting() {
+        isActive = true
+    }
+
+    package func beginHostSessionForTesting() -> UInt64? {
+        latchHostSession()
     }
 }

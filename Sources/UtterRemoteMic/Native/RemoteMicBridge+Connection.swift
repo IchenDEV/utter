@@ -31,8 +31,11 @@ extension XiaomiRemoteMicBridge {
         capabilities = .default
         centralLifecycle = .scanning(generation)
         state = .scanning
+        diagnostics = RemoteMicDiagnostics(lastCapture: diagnostics.lastCapture)
+        decoder.lowNibbleFirst = false
+        if connectToKnownRemote(using: transport) { return }
         transport.scanForPeripherals(
-            withServices: [serviceUUID],
+            withServices: [],
             options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
         )
     }

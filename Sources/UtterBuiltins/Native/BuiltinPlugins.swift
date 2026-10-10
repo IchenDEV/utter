@@ -46,7 +46,7 @@ package enum BuiltinPlugins {
         let session = [SessionPlugins.outputs(), SessionPlugins.voiceWorkflows(), SessionPlugins.execution(), SessionPlugins.api(), SessionPlugins.metrics()]
         let ingress = [IngressPlugins.hotkeySessions(), IngressPlugins.remoteSessions(), IngressPlugins.http(), IngressPlugins.xpc()]
         let presentation = [PresentationPlugins.catalog(), PresentationPlugins.icons(), PresentationPlugins.menu(),
-            PresentationPlugins.overlay(), PresentationPlugins.desktop(), PresentationPlugins.general(), PresentationPlugins.history(),
+            PresentationPlugins.overlay(), PresentationPlugins.desktop(), PresentationPlugins.general(), PresentationPlugins.remote(), PresentationPlugins.history(),
             PresentationPlugins.models(), PresentationPlugins.style(), PresentationPlugins.integrations(), PresentationPlugins.about(),
             PresentationPlugins.onboarding(), PresentationPlugins.configuration()]
         return try BuiltinRegistrationPolicy.replacing(data + models + inference + processing + platform + session + ingress + presentation + additional,

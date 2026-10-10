@@ -23,6 +23,8 @@ package final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     package static let initializationTimeout: TimeInterval = 8
 
     @Published package internal(set) var state: RemoteMicBridgeState = .idle
+    @Published package internal(set) var diagnostics = RemoteMicDiagnostics()
+    var pendingDiscoverySource: RemoteMicDiscoverySource?
 
     /// Decoded 16 kHz mono samples while a voice session is streaming.
     package var onSamples: (([Int16]) -> Void)?
@@ -80,6 +82,9 @@ package final class XiaomiRemoteMicBridge: NSObject, ObservableObject {
     /// Audio that arrives before the capture pipeline is ready, so the opening
     /// word is not clipped.
     var preRoll = RemoteMicPreRoll()
+    var hostInitiated = false
+    var streamAnnounced = false
+    var extendTask: Task<Void, Never>?
     var reconnectAttempts = 0
     var reconnectTask: Task<Void, Never>?
     var timeoutTask: Task<Void, Never>?

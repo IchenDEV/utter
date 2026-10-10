@@ -51,6 +51,8 @@ extension XiaomiRemoteMicBridge {
               case .scanning(_) = centralLifecycle else { return }
         transport.stopScan()
         state = .connecting
+        diagnostics.discovery = pendingDiscoverySource ?? .scan
+        pendingDiscoverySource = nil
         // Bind this central manager to a fresh lifecycle before issuing the
         // connect. Every later central callback from this manager carries the
         // captured attempt through its proxy.
@@ -95,6 +97,6 @@ extension XiaomiRemoteMicBridge {
             reason: L("remote_mic.error.initialization_timeout"),
             isSatisfied: { [weak self] in self?.handshake.isReady ?? false }
         )
-        peripheral?.discoverServices([serviceUUID])
+        peripheral?.discoverServices([serviceUUID, RemoteMicDeviceMatcher.deviceInformationServiceUUID])
     }
 }
