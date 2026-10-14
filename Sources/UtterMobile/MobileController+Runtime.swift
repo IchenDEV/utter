@@ -58,6 +58,7 @@ extension MobileController {
 
     private func project(_ snapshot: SessionExecutionSnapshot) {
         guard snapshot.id == status.requestID else { return }
+        if status.selectionMode == true { projectSelection(snapshot); return }
         switch snapshot.phase {
         case .created, .preparing: status.phase = .preparing
         case .recording: status.phase = .recording; showDraft(snapshot.transcript)

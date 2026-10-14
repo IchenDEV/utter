@@ -11,11 +11,11 @@ struct Dictation: Equatable {
 /// only deletes text it wrote itself; as soon as the field no longer looks the way the keyboard left it,
 /// writing stops and the recording is cancelled.
 extension KeyboardController {
-    func poll(lease: KeyboardLease, action: VoiceAction) {
+    func poll(lease: KeyboardLease, action: VoiceAction, captureRequestID: UUID? = nil) {
         polling?.cancel()
         polling = Task { [weak self] in
             let deadline = Date().addingTimeInterval(12)
-            var observedBusy = action != .start
+            var observedBusy = action != .start && action != .attach
             var mismatches = 0
             while let self, self.visible, !Task.isCancelled {
                 do {
@@ -32,12 +32,18 @@ extension KeyboardController {
                     var renewed = lease; renewed.expiresAt = Date().addingTimeInterval(5)
                     try bridge.renew(renewed); self.state.lease = renewed
                     self.state.status = status
+                    if let request = captureRequestID {
+                        guard status.captureFromApp == true, status.requestID == request else { self.abandonDictation(); return }
+                        if status.canAttachKeyboardTarget && Date() < deadline {
+                            try await Task.sleep(for: .milliseconds(300)); continue
+                        }
+                    }
                     if status.isBusy && (status.leaseID != lease.id || status.documentID != lease.documentID) {
                         self.abandonDictation(); return
                     }
                     if status.isBusy {
                         observedBusy = true; self.state.pending = false
-                        self.beginStreamingIfNeeded(); self.write(status.text)
+                        if status.captureFromApp != true { self.beginStreamingIfNeeded(); self.write(status.text) }
                     }
                     if !status.isBusy && observedBusy {
                         self.state.pending = false

@@ -21,6 +21,7 @@ struct KeyboardView: View {
     private var showsActivate: Bool { !state.standbyLive && state.errorKey != "ios.error.full_access" }
     private var showsCancel: Bool { busy && state.lease != nil }
     private var showsUndo: Bool { !busy && state.undoable }
+    private var restoreOwnsStatus: Bool { state.selectionRestoration?.isValid(at: Date()) == true }
     private var statusKey: String {
         if let key = state.errorKey ?? state.status?.errorKey { return key }
         if polishing { return "ios.phase.polishing" }
@@ -56,8 +57,10 @@ struct KeyboardView: View {
         let returnX = m.width - m.sideMargin - m.sideKeyWidth
         let spaceX = m.sideMargin + m.unitKeyWidth + m.gap
         return ZStack(alignment: .topLeading) {
-            place(m.sideMargin, m.rowTop(0), statusWidth, m.keyHeight) {
-                statusPill.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            if !restoreOwnsStatus {
+                place(m.sideMargin, m.rowTop(0), statusWidth, m.keyHeight) {
+                    statusPill.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                }
             }
             if showsCancel { place(cancelX, m.rowTop(0), m.unitKeyWidth, m.keyHeight) { cancelKey } }
             else if showsUndo { place(cancelX, m.rowTop(0), m.unitKeyWidth, m.keyHeight) { undoKey } }

@@ -32,6 +32,25 @@ final class LocalPolisher {
         try await service.prepare(TextGenerationRequest(prompt: "", modelID: modelID))
     }
 
+    func generate(prompt: String, system: String, options: GenerationOptions, modelID: String) async throws -> String {
+        idle?.cancel()
+        defer { scheduleUnload() }
+        let service = self.service
+        return try await withThrowingTaskGroup(of: String.self) { group in
+            group.addTask {
+                if modelID == "system" { return try await MobilePolisher.generate(prompt: prompt, system: system, options: options) }
+                guard let service else { throw MobileError.localUnavailable }
+                return try await service.generate(TextGenerationRequest(prompt: prompt, systemPrompt: system,
+                    modelID: modelID, maxTokens: options.maxTokens, temperature: options.temperature))
+            }
+            group.addTask { try await Task.sleep(for: .seconds(30)); throw MobileError.localUnavailable }
+            defer { group.cancelAll() }
+            guard let value = try await group.next() else { throw MobileError.emptyResult }
+            try Task.checkCancellation()
+            return value
+        }
+    }
+
     func polish(_ text: String, language: String, protectedTerms: [String], modelID: String) async -> String? {
         guard let service, !text.isEmpty else { return nil }
         idle?.cancel()

@@ -1,0 +1,12 @@
+"ios.selection.instruction" = "Instruction";
+"ios.selection.original" = "Original";
+"ios.selection.candidate" = "Revised";
+"ios.selection.apply" = "Apply";
+"ios.selection.cancel" = "Cancel";
+"ios.selection.restore" = "Restore original";
+"ios.selection.waiting" = "Working";
+"ios.selection.expired" = "Expired. Select the text and try again.";
+"ios.selection.uncertain" = "Could not confirm the change. Check the text before editing again.";
+"ios.selection.model_unavailable" = "The editing model is unavailable. Open Utter to check models.";
+"ios.selection.cancelled" = "Cancelled.";
+"ios.selection.failure" = "Editing failed.";

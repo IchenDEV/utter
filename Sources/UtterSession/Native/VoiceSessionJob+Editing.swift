@@ -3,6 +3,16 @@ import UtterContracts
 import UtterMediaContracts
 
 extension VoiceSessionJob {
+    func performSelectedRewrite(_ request: ProcessingRequest, control: any SessionJobControl) async throws -> SessionCompletion {
+        let selectedTarget = try selectionTarget()
+        let (text, outcome) = try await rewrite(selectedTarget.selectedText ?? "", instruction: .custom(request.text),
+            request: request, control: control)
+        try await reviewSelectionEdit(text, instruction: request.text, target: selectedTarget, control: control)
+        let acceptance = try await deliver(.replaceSelection(text), target: selectedTarget, control: control)
+        return SessionCompletion(transcript: request.text, text: text, acceptance: acceptance,
+            outputMutation: selectedOutputMutation(acceptance), generationOutcome: outcome)
+    }
+
     func performSpokenEdit(_ request: ProcessingRequest, recipe: any ModeRecipeService,
                           control: any SessionJobControl) async throws -> SessionCompletion? {
         let selected = target?.selectedText
@@ -39,13 +49,13 @@ extension VoiceSessionJob {
             outputTarget = try selectionTarget()
             text = try replacementText(recipe.cleanReplacement(replacement, language: settings.inputLanguage))
             outputCommand = .replaceSelection(text)
-            recordsHistory = true
+            recordsHistory = false
         case .rewriteSelection(let instruction):
             let selectedTarget = try selectionTarget()
             (text, generationOutcome) = try await rewrite(selectedTarget.selectedText ?? "", instruction: instruction, request: request, control: control)
             outputCommand = .replaceSelection(text)
             outputTarget = selectedTarget
-            recordsHistory = true
+            recordsHistory = false
         case .deleteSelection:
             outputTarget = try selectionTarget()
             text = ""
@@ -54,15 +64,29 @@ extension VoiceSessionJob {
         case .undoLastInsertion:
             let anchor = try recentAnchor()
             text = ""
-            outputCommand = .undoAnchor(anchor)
+            if let edit = recentOutput?.selectionEdit {
+                guard edit.anchor === anchor, edit.replacement == anchor.text,
+                      dependencies.outputs?.consumeSelectionEdit(edit.operationID) == true else {
+                    throw DeliveryError.invalidTarget
+                }
+                outputCommand = .replaceAnchor(edit.originalSelection, anchor)
+            } else {
+                outputCommand = .undoAnchor(anchor)
+            }
             outputTarget = anchor.target
             recordsHistory = false
         }
+        if case .replaceSelection = outputCommand {
+            try await reviewSelectionEdit(text, instruction: request.text, target: outputTarget, control: control)
+        }
         control.update(phase: .delivering, transcript: request.text)
         let acceptance = try await deliver(outputCommand, target: outputTarget, control: control)
+        let isSelection: Bool
+        if case .replaceSelection = outputCommand { isSelection = true } else { isSelection = false }
         return SessionCompletion(transcript: request.text, text: text, acceptance: acceptance,
-            record: recordsHistory || !acceptance.isAccepted ? InputRecord(id: intent.id, date: Date(), rawText: request.text,
-                processedText: text, wasProcessed: true, context: request.inputContext) : nil, generationOutcome: generationOutcome)
+            record: !isSelection && (recordsHistory || !acceptance.isAccepted) ? InputRecord(id: intent.id, date: Date(), rawText: request.text,
+                processedText: text, wasProcessed: true, context: request.inputContext) : nil,
+            outputMutation: isSelection ? selectedOutputMutation(acceptance) : .remember, generationOutcome: generationOutcome)
     }
 
     private func recentAnchor() throws -> any OutputAnchor {

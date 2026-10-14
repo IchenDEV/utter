@@ -51,12 +51,18 @@
 		B202610070000000000000004 /* App/ModelProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610070000000000000003; };
 		B202610050000000000000012 /* App/MobileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610050000000000000011; };
 		B202610060000000000000002 /* App/StandbyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000001; };
+		B202610140000000000000004 /* Keyboard/KeyboardSelectionOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610140000000000000003; };
 		B202610050000000000000022 /* UITests/UtterDeviceChecks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610050000000000000021; };
 		B202610050000000000000032 /* UITests/UtterDeviceSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610050000000000000031; };
 		B202610060000000000000004 /* UITests/UtterDeviceStandby.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000003; };
 		B202610060000000000000012 /* UITests/UtterDeviceKeyboardReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000011; };
 		B202610060000000000000034 /* UITests/UtterDeviceKeyboardHold.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000033; };
 		B202610060000000000000032 /* UITests/UtterDeviceKeyboardAlignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610060000000000000031; };
+		B202610140000000000000102 /* Keyboard/KeyboardController+Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610140000000000000101; };
+		B202610140000000000000104 /* Keyboard/KeyboardSelectionSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = B202610140000000000000103; };
+		B202610140000000000000108 /* SelectionEdit.strings in Resources */ = {isa = PBXBuildFile; fileRef = B202610140000000000000107; };
+		B202610140000000000000109 /* SelectionEdit.strings in Resources */ = {isa = PBXBuildFile; fileRef = B202610140000000000000107; };
+		B202610140000000000000110 /* SelectionEdit.strings in Resources */ = {isa = PBXBuildFile; fileRef = B202610140000000000000107; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -136,12 +142,17 @@
 		B202610070000000000000003 /* App/ModelProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/ModelProbe.swift; sourceTree = "<group>"; };
 		B202610050000000000000011 /* App/MobileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MobileSettingsView.swift; sourceTree = "<group>"; };
 		B202610060000000000000001 /* App/StandbyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/StandbyService.swift; sourceTree = "<group>"; };
+		B202610140000000000000003 /* Keyboard/KeyboardSelectionOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keyboard/KeyboardSelectionOutput.swift; sourceTree = "<group>"; };
 		B202610050000000000000021 /* UITests/UtterDeviceChecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceChecks.swift; sourceTree = "<group>"; };
 		B202610050000000000000031 /* UITests/UtterDeviceSpeech.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceSpeech.swift; sourceTree = "<group>"; };
 		B202610060000000000000003 /* UITests/UtterDeviceStandby.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceStandby.swift; sourceTree = "<group>"; };
 		B202610060000000000000011 /* UITests/UtterDeviceKeyboardReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceKeyboardReference.swift; sourceTree = "<group>"; };
 		B202610060000000000000033 /* UITests/UtterDeviceKeyboardHold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceKeyboardHold.swift; sourceTree = "<group>"; };
 		B202610060000000000000031 /* UITests/UtterDeviceKeyboardAlignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/UtterDeviceKeyboardAlignment.swift; sourceTree = "<group>"; };
+		B202610140000000000000101 /* Keyboard/KeyboardController+Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Keyboard/KeyboardController+Selection.swift"; sourceTree = "<group>"; };
+		B202610140000000000000103 /* Keyboard/KeyboardSelectionSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Keyboard/KeyboardSelectionSurface.swift"; sourceTree = "<group>"; };
+		B202610140000000000000105 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/SelectionEdit.strings; sourceTree = "<group>"; };
+		B202610140000000000000106 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = Resources/zh-Hans.lproj/SelectionEdit.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -194,6 +205,9 @@
 		AD936FCBED631FA67E05C3EA = {
 			isa = PBXGroup;
 			children = (
+				B202610140000000000000101 /* Keyboard/KeyboardController+Selection.swift */,
+				B202610140000000000000103 /* Keyboard/KeyboardSelectionSurface.swift */,
+				B202610140000000000000107 /* SelectionEdit.strings */,
 				7180091C94A9475A8027D0E1 /* ../Sources/UtterPresentation/Resources/AppIcon.icon */,
 				DE61AAC4EB6A04B44E07A7D6 /* UITests/UtterSimulatorFlow.swift */,
 				6A395776620B4C98A13CB103 /* UITests/UtterSimulatorSettings.swift */,
@@ -223,6 +237,7 @@
 				E6BE0C4B002989A3AE6FAD1F /* App/UtterPhoneApp.swift */,
 				EEF2B501631894DEAA543CB5 /* App/VoiceHost.swift */,
 				51D0CFAEE60501EC8EF0E1CD /* Keyboard/KeyboardController.swift */,
+				B202610140000000000000003 /* Keyboard/KeyboardSelectionOutput.swift */,
 				B9D65EBBCCF8145D31DFE5AB /* Keyboard/KeyboardView.swift */,
 				B202610060000000000000029 /* Keyboard/KeyboardController+Layout.swift */,
 				B202610060000000000000070 /* Keyboard/KeyboardController+Dictation.swift */,
@@ -357,6 +372,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B202610140000000000000110 /* SelectionEdit.strings in Resources */,
 				439CB50DD54FE08D0BB42C63 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -365,6 +381,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B202610140000000000000109 /* SelectionEdit.strings in Resources */,
 				D69972F7565F48111674EFB0 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -373,6 +390,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B202610140000000000000108 /* SelectionEdit.strings in Resources */,
 				B74A804C87E8F8AC664396DB /* Localizable.strings in Resources */,
 				68E5526E1000000000000004 /* InfoPlist.strings in Resources */,
 				7180091C94A9475A8027D0E2 /* ../Sources/UtterPresentation/Resources/AppIcon.icon in Resources */,
@@ -386,7 +404,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B202610140000000000000102 /* Keyboard/KeyboardController+Selection.swift in Sources */,
+				B202610140000000000000104 /* Keyboard/KeyboardSelectionSurface.swift in Sources */,
 				B2CA18841BB06FAAEA605065 /* Keyboard/KeyboardController.swift in Sources */,
+				B202610140000000000000004 /* Keyboard/KeyboardSelectionOutput.swift in Sources */,
 				8C678C9A98FA5E7DC48E7CC1 /* Keyboard/KeyboardView.swift in Sources */,
 				B202610060000000000000030 /* Keyboard/KeyboardController+Layout.swift in Sources */,
 				B202610060000000000000071 /* Keyboard/KeyboardController+Dictation.swift in Sources */,
@@ -488,6 +509,7 @@
 			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
+		B202610140000000000000107 /* SelectionEdit.strings */ = {isa = PBXVariantGroup; children = (B202610140000000000000105 /* en */, B202610140000000000000106 /* zh-Hans */, ); name = SelectionEdit.strings; sourceTree = "<group>"; };
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */

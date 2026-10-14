@@ -22,6 +22,11 @@ final class KeyboardController: UIInputViewController, UIInputViewAudioFeedback 
     var signature: [String?] = []
     var stream = StreamingInsertion()
     var lastDictation: Dictation?
+    var selectionTarget: KeyboardSelectionTarget?
+    var selectionOutput: KeyboardSelectionOutput?
+    var selectionSessionID: UUID?
+    var selectionAwaitingSettlement = false
+    var selectionExpectedCallbacks = Set<SelectionInputChange>()
     private lazy var feedback = UIImpactFeedbackGenerator(style: .light, view: view)
     var enableInputClicksWhenVisible: Bool { visible && keyboardPreferences()?.bool(forKey: "keyboard.sounds") == true }
 
@@ -39,7 +44,10 @@ final class KeyboardController: UIInputViewController, UIInputViewAudioFeedback 
                                    voice: voiceHandlers,
                                    undo: { [weak self] in self?.undoDictation() }, leaveForApp: { [weak self] in self?.postDictationIntent() },
                                    edit: { [weak self] in self?.edit($0) })
-        let host = UIHostingController(rootView: content)
+        let surface = KeyboardSelectionSurface(state: state, content: content,
+            apply: { [weak self] in self?.applySelectionEdit() }, cancel: { [weak self] in self?.cancelSelectionEdit() },
+            restore: { [weak self] in self?.restoreSelectionEdit() })
+        let host = UIHostingController(rootView: surface)
         addChild(host); view.addSubview(host.view); host.didMove(toParent: self)
         host.view.translatesAutoresizingMaskIntoConstraints = false
         // Keys sit on absolute grid coordinates; the keyboard's own safe area must not move them.
@@ -78,6 +86,7 @@ final class KeyboardController: UIInputViewController, UIInputViewAudioFeedback 
         refresh(); watchStandby()
     }
     override func viewWillDisappear(_ animated: Bool) {
+        invalidateSelection()
         visible = false; watching?.cancel(); watching = nil; invalidate(); super.viewWillDisappear(animated)
         state.keyDown = false; voiceGesture.reset()
         endDictation(keepUndo: false)
@@ -89,6 +98,7 @@ final class KeyboardController: UIInputViewController, UIInputViewAudioFeedback 
         watching = Task { [weak self] in
             while let self, self.visible, !Task.isCancelled {
                 do { try await Task.sleep(for: .seconds(2)) } catch { return }
+                self.expireSelectionRestoration()
                 guard self.hasFullAccess, !self.state.pending, self.state.status?.isBusy != true,
                       let live = try? self.bridge?.status()?.isStandbyLive else { continue }
                 if live != self.state.standbyLive { self.refresh() }
@@ -98,15 +108,21 @@ final class KeyboardController: UIInputViewController, UIInputViewAudioFeedback 
     }
     override func textDidChange(_ textInput: (any UITextInput)?) {
         super.textDidChange(textInput)
+        if observeOwnedSelectionChange(.text) { return }
+        invalidateSelection()
         guard visible, !state.streaming else { return }
         if currentSignature() != signature { invalidate(); refresh() }
     }
     override func selectionWillChange(_ textInput: (any UITextInput)?) {
+        if observeOwnedSelectionChange(.selectionWill) { super.selectionWillChange(textInput); return }
+        invalidateSelection()
         if !state.streaming { invalidate() }
         super.selectionWillChange(textInput)
     }
     override func selectionDidChange(_ textInput: (any UITextInput)?) {
         super.selectionDidChange(textInput)
+        if observeOwnedSelectionChange(.selectionDid) { return }
+        invalidateSelection()
         if !state.streaming { refresh() }
     }
 
@@ -139,6 +155,14 @@ final class KeyboardController: UIInputViewController, UIInputViewAudioFeedback 
             state.lease = nil
             state.standbyLive = state.status?.isStandbyLive == true
             if let status = state.status, status.isStandbyLive {
+                #if DEBUG
+                if status.canAttachKeyboardTarget {
+                    let lease = KeyboardLease(generation: status.generation, documentID: document)
+                    state.lease = lease
+                    _ = prepare(id: UUID(), action: .attach, lease: lease)
+                    return
+                }
+                #endif
                 if status.isBusy { state.errorKey = "ios.error.session"; waitForInvalidatedSession() }
                 else { state.lease = KeyboardLease(generation: status.generation, documentID: document) }
             }
@@ -179,6 +203,7 @@ final class KeyboardController: UIInputViewController, UIInputViewAudioFeedback 
             return false
         }
         do {
+            if action == .start, textDocumentProxy.selectedText?.isEmpty == false { return try prepareSelection(id: id, lease: lease) }
             var renewed = lease; renewed.expiresAt = Date().addingTimeInterval(5)
             if action == .start {
                 // Every recording gets its own lease so an old stop/cancel cannot affect the next one.
@@ -186,14 +211,17 @@ final class KeyboardController: UIInputViewController, UIInputViewAudioFeedback 
                 renewed = KeyboardLease(generation: lease.generation, documentID: lease.documentID)
             }
             try bridge.renew(renewed)
-            try bridge.post(VoiceCommand(id: id, lease: renewed, action: action))
+            try bridge.post(VoiceCommand(id: id, lease: renewed, action: action,
+                                        captureRequestID: action == .attach ? state.status?.requestID : nil))
             state.lease = renewed; state.errorKey = nil; state.pending = true
-            poll(lease: renewed, action: action)
+            if let session = selectionSessionID { pollSelection(lease: renewed, sessionID: session) }
+            else { poll(lease: renewed, action: action, captureRequestID: action == .attach ? state.status?.requestID : nil) }
             return true
         } catch { state.errorKey = "ios.error.bridge"; return false }
     }
 
     private func edit(_ text: String?) {
+        invalidateSelection()
         keyFeedback()
         endDictation(keepUndo: false)
         invalidate()

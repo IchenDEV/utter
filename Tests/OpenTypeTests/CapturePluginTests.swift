@@ -200,6 +200,11 @@ private actor CaptureFixtureBarrier {
 }
 
 private final class FixtureRemoteSource: RemoteCaptureSource {
+    var isAvailable: Bool { true }
+    var hasReceivedSamples: Bool { true }
+    func beginHostSession() -> UInt64? { nil }
+    func cancelSession() {}
+    func noteCapture(_ source: RemoteMicCaptureSource) {}
     var currentSessionToken: UInt64? { 5 }
     var thresholds = AudioActivityThresholds.default
     var lastRecordingURL: URL? { URL(fileURLWithPath: "/current-recording.wav") }

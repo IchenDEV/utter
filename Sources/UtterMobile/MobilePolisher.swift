@@ -11,6 +11,16 @@ enum MobilePolisher {
 
     static var isAvailable: Bool { SystemLanguageModel.default.availability == .available }
 
+    static func generate(prompt: String, system: String, options: UtterContracts.GenerationOptions) async throws -> String {
+        guard isAvailable else { throw MobileError.localUnavailable }
+        try Task.checkCancellation()
+        let session = LanguageModelSession(instructions: system)
+        let response = try await session.respond(to: prompt, options: FoundationModels.GenerationOptions(
+            temperature: options.temperature, maximumResponseTokens: options.maxTokens))
+        try Task.checkCancellation()
+        return response.content
+    }
+
     static func polish(_ text: String, language: String, protectedTerms: [String]) async -> String? {
         guard isAvailable, !text.isEmpty else { return nil }
         let inputLanguage: InputLanguage = language == "en" ? .english : .chinese

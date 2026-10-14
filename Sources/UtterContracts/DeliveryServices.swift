@@ -2,7 +2,7 @@ import Foundation
 import UtterRuntime
 
 package enum DeliveryDisposition: Equatable { case notCommitted, accepted, uncertain }
-package enum DeliveryEffect: Hashable { case none, clipboard, paste, keyPress, accessibility }
+package enum DeliveryEffect: Hashable { case none, clipboard, paste, keyPress, accessibility, keyboardInsertion }
 package enum DeliveryConfirmation: String, Codable, Sendable { case none, clipboardValue, targetValue }
 package enum DeliveryStatus: String, Codable, Sendable { case inserted, copied, uncertain, notDelivered }
 
@@ -48,17 +48,28 @@ package struct DeliveryRequest {
     }
 }
 
+package struct SelectionEditReceipt {
+    package let operationID: UUID
+    package let originalSelection: String
+    package let replacement: String
+    package let anchor: any OutputAnchor
+    package init(operationID: UUID, originalSelection: String, replacement: String, anchor: any OutputAnchor) {
+        self.operationID = operationID; self.originalSelection = originalSelection
+        self.replacement = replacement; self.anchor = anchor
+    }
+}
+
 package struct DeliveryReceipt {
     package let operationID: UUID
     package let disposition: DeliveryDisposition
     package let effects: Set<DeliveryEffect>
     package let confirmation: DeliveryConfirmation
     package var effect: DeliveryEffect {
-        [.accessibility, .paste, .keyPress, .clipboard].first { effects.contains($0) } ?? .none
+        [.accessibility, .paste, .keyPress, .keyboardInsertion, .clipboard].first { effects.contains($0) } ?? .none
     }
     package var isConfirmedInsertion: Bool {
         disposition == .accepted && confirmation == .targetValue
-            && !effects.isDisjoint(with: [.accessibility, .paste, .keyPress])
+            && !effects.isDisjoint(with: [.accessibility, .paste, .keyPress, .keyboardInsertion])
     }
     package var status: DeliveryStatus {
         if isConfirmedInsertion { return .inserted }
@@ -67,13 +78,15 @@ package struct DeliveryReceipt {
     }
     package let reason: String?
     package let anchor: (any OutputAnchor)?
+    package let selectionEdit: SelectionEditReceipt?
 
     package init(operationID: UUID, disposition: DeliveryDisposition, effect: DeliveryEffect,
                  reason: String? = nil, anchor: (any OutputAnchor)? = nil,
-                 effects: Set<DeliveryEffect>? = nil, confirmation: DeliveryConfirmation = .none) {
+                 effects: Set<DeliveryEffect>? = nil, confirmation: DeliveryConfirmation = .none,
+                 selectionEdit: SelectionEditReceipt? = nil) {
         self.operationID = operationID
         let committed = (effects ?? (effect == .none ? [] : [effect])).subtracting([.none])
-        let insertionConfirmed = confirmation == .targetValue && !committed.isDisjoint(with: [.accessibility, .paste, .keyPress])
+        let insertionConfirmed = confirmation == .targetValue && !committed.isDisjoint(with: [.accessibility, .paste, .keyPress, .keyboardInsertion])
         let copyConfirmed = confirmation == .clipboardValue && committed == [.clipboard]
         self.disposition = committed.isEmpty ? .notCommitted
             : disposition == .accepted && (insertionConfirmed || copyConfirmed) ? .accepted : .uncertain
@@ -81,6 +94,11 @@ package struct DeliveryReceipt {
         self.confirmation = self.disposition == .accepted ? confirmation : .none
         self.reason = reason
         self.anchor = self.disposition == .accepted && insertionConfirmed ? anchor : nil
+        self.selectionEdit = self.anchor != nil && selectionEdit?.operationID == operationID
+            && selectionEdit?.anchor === self.anchor
+            && selectionEdit?.originalSelection.isEmpty == false
+            && selectionEdit?.replacement.isEmpty == false
+            ? selectionEdit : nil
     }
 }
 

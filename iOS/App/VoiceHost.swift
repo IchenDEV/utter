@@ -32,18 +32,18 @@ final class VoiceHost {
         // Inspect before taking; the controller owns single-use command admission.
         let command: VoiceCommand = try bridge.command(id)
         guard status.generation == command.lease.generation else { throw BridgeError.invalidTarget }
-        if command.action == .start {
+        if command.action == .start || command.action == .startSelection {
             guard !starting, !controller.status.isBusy else { throw BridgeError.invalidTarget }
             starting = true
         }
-        defer { if command.action == .start { starting = false } }
-        if command.action == .start {
+        defer { if command.action == .start || command.action == .startSelection { starting = false } }
+        if command.action == .start || command.action == .startSelection {
             await endActivity()
             try beginActivity(id)
         }
         do { try await controller.perform(id) }
         catch {
-            if command.action == .start { await endActivity() }
+            if command.action == .start || command.action == .startSelection { await endActivity() }
             throw error
         }
     }

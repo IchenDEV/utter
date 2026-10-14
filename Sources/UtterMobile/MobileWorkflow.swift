@@ -7,6 +7,7 @@ import UtterAppleSpeech
 import UtterData
 import UtterWhisper
 import UtterMLX
+import UtterKeyboardBridge
 
 enum MobileError: Error { case microphoneDenied, localUnavailable, notEnabled, invalidInput, emptyResult }
 
@@ -23,6 +24,7 @@ final class MobileWorkflowFactory: SessionWorkflowFactory {
     var sensitivity = "standard"
     let files: any ModelFilesService
     let access: any ModelResourceAccess
+    var selectionRequest: MobileSelectionRequest?
 
     init(capture: any CaptureService, dictionary: any DictionaryService, preparation: any TextPreparationService, files: any ModelFilesService, access: any ModelResourceAccess, lexicons: any LexiconService) {
         self.capture = capture; self.dictionary = dictionary; self.preparation = preparation
@@ -30,18 +32,27 @@ final class MobileWorkflowFactory: SessionWorkflowFactory {
     }
 
     func make(_ intent: SessionIntent) throws -> any SessionJob {
-        guard intent.input == .local || { if case .text = intent.input { return true }; return false }() else { throw MobileError.invalidInput }
+        let selection = selectionRequest?.sessionID == intent.id ? selectionRequest : nil
+        if case .selectionEdit = intent.mode { guard selection != nil else { throw MobileError.invalidInput } }
+        if case .restoreSelectionEdit(let operationID) = intent.operation {
+            guard let selection, case .restore(let restoration) = selection.operation,
+                  restoration.operationID == operationID else { throw MobileError.invalidInput }
+        } else {
+            guard intent.operation == .input, intent.input == .local || { if case .text = intent.input { return true }; return false }() else { throw MobileError.invalidInput }
+        }
         let frozen = dictionary.snapshot(industryLexicon: lexicons.snapshot(for: IndustryLexiconID(rawValue: industry) ?? .general), bundleIdentifier: nil, languageCode: language)
         return MobileJob(input: intent.input, language: language, dictionary: frozen,
                          preparation: preparation, capture: capture, modelID: modelID,
                          files: FrozenModelFiles(modelID: modelID, using: files), access: access,
-                         maximumDuration: maximumDuration, sensitivity: sensitivity)
+                         maximumDuration: maximumDuration, sensitivity: sensitivity, selection: selection)
     }
-    func settle(_ intent: SessionIntent, result: Result<SessionCompletion, Error>) {}
+    func settle(_ intent: SessionIntent, result: Result<SessionCompletion, Error>) {
+        if selectionRequest?.sessionID == intent.id { selectionRequest = nil }
+    }
 }
 
 @MainActor
-private final class MobileJob: SessionJob {
+final class MobileJob: SessionJob {
     let input: SessionInput
     let language: String
     let dictionary: PersonalDictionarySnapshot
@@ -57,17 +68,23 @@ private final class MobileJob: SessionJob {
     var timeout: Task<Void, Never>?
     var live: MobileLiveSpeech?
     var revoked = false
+    let selection: MobileSelectionRequest?
+    var selectionOutput: KeyboardSelectionOperation?
+    var presentationMode: TextProcessingMode? { selection == nil ? nil : .selectionEdit(.custom(""), spokenCommand: "") }
 
     init(input: SessionInput, language: String, dictionary: PersonalDictionarySnapshot,
          preparation: any TextPreparationService, capture: any CaptureService, modelID: String,
-         files: FrozenModelFiles, access: any ModelResourceAccess, maximumDuration: Int, sensitivity: String) {
+         files: FrozenModelFiles, access: any ModelResourceAccess, maximumDuration: Int, sensitivity: String,
+         selection: MobileSelectionRequest? = nil) {
         self.input = input; self.language = language; self.dictionary = dictionary
         self.preparation = preparation; self.capture = capture
         self.modelID = modelID; self.files = files; self.access = access
         self.maximumDuration = maximumDuration; self.sensitivity = sensitivity
+        self.selection = selection
     }
 
     func run(control: any SessionJobControl) async throws -> SessionCompletion {
+        if let selection, case .restore = selection.operation { return try await restoreSelection(control: control) }
         let transcript: String
         var activity: AudioCaptureActivity?
         if case .text(let text) = input {
@@ -138,6 +155,7 @@ private final class MobileJob: SessionJob {
         }
         try check(control)
         control.update(phase: .processing, transcript: transcript)
+        if selection != nil { return try await finishSelection(transcript, control: control) }
         guard let cleaned = preparation.transcript(transcript, activity: activity, recognitionPhrases: dictionary.recognitionPhrases) else { throw MobileError.emptyResult }
         let text = dictionary.applyReplacements(to: cleaned)
         guard !text.isEmpty else { throw MobileError.emptyResult }
@@ -148,19 +166,20 @@ private final class MobileJob: SessionJob {
         timeout = Task {
             do {
                 try await Task.sleep(for: .seconds(maximumDuration))
-                if control.isCurrent { control.stop() }
+                if control.isCurrent { control.finalizeCapture(reason: .durationLimit) }
             } catch {}
         }
         defer { timeout?.cancel() }
         try await control.waitForStop()
     }
 
-    func revoke() { revoked = true; timeout?.cancel(); recording?.revoke(); speech?.cancelListening(); live?.cancel() }
+    func revoke() { revoked = true; timeout?.cancel(); recording?.revoke(); speech?.cancelListening(); live?.cancel(); clearSelectionPayload() }
     func close() async {
         timeout?.cancel(); live?.cancel(); live = nil; await recording?.close(); recording = nil
         if let speech { await Task { await speech.shutdown() }.value }; speech = nil
+        clearSelectionPayload()
     }
-    private func check(_ control: any SessionJobControl) throws {
+    func check(_ control: any SessionJobControl) throws {
         try Task.checkCancellation()
         guard !revoked, control.isCurrent else { throw CancellationError() }
     }

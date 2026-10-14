@@ -60,6 +60,7 @@ public final class MobileController: ObservableObject {
     var activation: Task<Void, Error>?
     #if DEBUG
     var diagnosticText: String?
+    var keyboardCaptureDocumentID: UUID?
     #endif
 
     public init(bridge: SharedVoiceBridge?) {
@@ -121,13 +122,17 @@ public final class MobileController: ObservableObject {
         isEnabled = false; activeLease = nil; standbyActive = false
         #if DEBUG
         diagnosticText = nil
+        keyboardCaptureDocumentID = nil
         #endif
         status = VoiceStatus(); publish()
         try? bridge?.reset()
     }
 
     public func beginLocal(id: UUID) throws { try begin(id: id, lease: nil) }
-    public func stop() async { await execution?.stop() }
+    public func stop() async {
+        if status.selectionMode == true, let id = status.requestID { _ = execution?.requestStop(id, at: nil) }
+        else { await execution?.stop() }
+    }
     public func cancel() async {
         if let activation {
             activation.cancel()
@@ -205,22 +210,30 @@ public final class MobileController: ObservableObject {
         let command = try bridge.take(requestID, generation: status.generation)
         switch command.action {
         case .start: try begin(id: command.id, lease: command.lease)
+        case .startSelection: try beginSelection(command)
+        case .applySelection: try applySelection(command)
+        case .restoreSelection: try beginRestoration(command)
+        case .attach: try attachKeyboardTarget(command)
         case .stop, .cancel:
             guard status.leaseID == command.lease.id, status.documentID == command.lease.documentID else { throw BridgeError.invalidTarget }
             if command.action == .cancel { execution?.cancel() }
-            await execution?.stop()
+            if command.action == .stop { await stop() }
+            else { await execution?.stop() }
         }
     }
 
-    func begin(id: UUID, lease: KeyboardLease?) throws {
+    func begin(id: UUID, lease: KeyboardLease?, selection: MobileSelectionRequest? = nil) throws {
         guard isEnabled, !disabling, !clearing, modelMutation == nil, let execution else { throw MobileError.notEnabled }
         guard !status.isBusy else { throw BridgeError.invalidTarget }
         let previous = status
         activeLease = lease
         status.requestID = id; status.leaseID = lease?.id; status.documentID = lease?.documentID
         status.text = ""; status.errorKey = nil; status.expiresAt = nil; status.polish = nil; status.polished = nil
+        status.captureFromApp = nil
+        status.selectionMode = selection != nil
         polishTask?.cancel(); polishTask = nil
-        if polishEnabled, polishModel != "system", polishAvailable { polishService.warmUp(modelID: polishModel) }
+        if selection == nil, polishEnabled, polishModel != "system", polishAvailable { polishService.warmUp(modelID: polishModel) }
+        factory?.selectionRequest = selection
         factory?.language = language
         factory?.modelID = selectedModel
         factory?.maximumDuration = recordingLimit
@@ -228,22 +241,16 @@ public final class MobileController: ObservableObject {
         factory?.industry = industryLexicon
         var input: SessionInput = .local
         #if DEBUG
+        keyboardCaptureDocumentID = nil
         if let diagnosticText { input = .text(diagnosticText) }
         #endif
-        do { try execution.start(SessionIntent(id: id, input: input)) }
-        catch { status = previous; activeLease = nil; throw error }
-        watchdog?.cancel()
-        if let lease {
-            watchdog = Task { [weak self] in
-                while let self, self.status.isBusy, !Task.isCancelled {
-                    do {
-                        guard let current = try self.bridge?.lease(lease.id), current.generation == lease.generation,
-                              current.documentID == lease.documentID else { await self.cancel(); break }
-                        try await Task.sleep(for: .seconds(1))
-                    } catch { await self.cancel(); break }
-                }
-            }
-        }
+        let operation: SessionOperation
+        if let selection, case .restore(let restoration) = selection.operation { operation = .restoreSelectionEdit(operationID: restoration.operationID) }
+        else { operation = .input }
+        do { try execution.start(SessionIntent(id: id, input: input,
+            mode: selection == nil ? nil : .selectionEdit(.custom(""), spokenCommand: ""), operation: operation)) }
+        catch { status = previous; activeLease = nil; factory?.selectionRequest = nil; throw error }
+        watchLease(lease)
     }
 
     public func setStandby(_ active: Bool) {
@@ -251,11 +258,11 @@ public final class MobileController: ObservableObject {
         publish()
     }
 
-    public func beat() { if standbyActive { publish() } }
+    public func beat() { if standbyActive || keyboardCaptureRunning { publish() } }
 
     func publish() {
         status.updatedAt = Date()
-        status.heartbeat = standbyActive && isEnabled ? Date() : nil
+        status.heartbeat = isEnabled && (standbyActive || keyboardCaptureRunning) ? Date() : nil
         do { try bridge?.publish(status) }
         catch {
             execution?.cancel()

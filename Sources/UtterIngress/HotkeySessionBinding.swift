@@ -31,7 +31,7 @@ package final class HotkeySessionBinding {
         let mode: TextProcessingMode? = action == .translation ? .translation(settings.values.translationTargetLanguage) : nil
         do {
             try execution.start(SessionIntent(id: id, input: .local, mode: mode))
-            ownedID = id
+            if execution.snapshot.id == id, execution.snapshot.isBusy { ownedID = id }
         } catch { log.error("Hotkey session could not start: \(error.localizedDescription)") }
     }
 

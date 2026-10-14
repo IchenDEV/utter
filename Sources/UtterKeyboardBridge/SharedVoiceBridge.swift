@@ -13,6 +13,8 @@ public final class SharedVoiceBridge {
         #if os(iOS)
         try files.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: root.path)
         #endif
+        _ = try pendingCommandIDs()
+        try pruneSelectionReview()
     }
 
     public func status() throws -> VoiceStatus? {
@@ -32,6 +34,7 @@ public final class SharedVoiceBridge {
     public func publish(_ status: VoiceStatus) throws {
         guard status.version == 1 else { throw BridgeError.invalidMessage }
         try write(status, name: "status.json", limit: 32 * 1024)
+        try pruneSelectionReview(status: status)
     }
 
     public func renew(_ lease: KeyboardLease) throws {
@@ -47,24 +50,36 @@ public final class SharedVoiceBridge {
     public func revoke(_ id: UUID) throws { try remove("lease-\(id).json") }
 
     public func post(_ command: VoiceCommand) throws {
-        guard command.version == 1, command.expiresAt > Date() else { throw BridgeError.invalidMessage }
-        try write(command, name: "command-\(command.id).json", limit: 4096)
+        guard command.isValid(at: Date()) else { throw BridgeError.invalidMessage }
+        try write(command, name: "command-\(command.id).json", limit: Self.selectionPayloadLimit)
     }
 
     public func command(_ id: UUID) throws -> VoiceCommand {
-        guard let value: VoiceCommand = try read("command-\(id).json", limit: 4096), value.id == id else { throw BridgeError.invalidMessage }
-        return value
+        try coordinated("command-\(id).json", writing: true) { url in
+            guard let value: VoiceCommand = try self.decode(url, limit: Self.selectionPayloadLimit), value.id == id else { throw BridgeError.invalidMessage }
+            guard value.isValid(at: Date()) else { try self.retireCommand(value, at: url); throw BridgeError.expired }
+            return value
+        }
     }
 
     public func take(_ id: UUID, generation: UUID) throws -> VoiceCommand {
         try coordinated("command-\(id).json", writing: true) { url in
             let accepted = self.root.appendingPathComponent("accepted-\(id).json")
-            guard !self.files.fileExists(atPath: accepted.path) else { throw BridgeError.alreadyConsumed }
-            guard let command: VoiceCommand = try self.decode(url, limit: 4096) else { throw BridgeError.expired }
-            guard command.id == id, command.version == 1, command.lease.generation == generation,
-                  command.expiresAt > Date(), command.expiresAt.timeIntervalSinceNow <= 10 else { throw BridgeError.invalidMessage }
+            guard !self.files.fileExists(atPath: accepted.path) else {
+                if self.files.fileExists(atPath: url.path) { try self.files.removeItem(at: url) }
+                throw BridgeError.alreadyConsumed
+            }
+            guard let command: VoiceCommand = try self.decode(url, limit: Self.selectionPayloadLimit) else { throw BridgeError.expired }
+            guard command.id == id else { throw BridgeError.invalidMessage }
+            guard command.isValid(at: Date()), command.lease.generation == generation else {
+                try self.retireCommand(command, at: url)
+                throw BridgeError.invalidMessage
+            }
             guard let lease = try self.lease(command.lease.id), lease.documentID == command.lease.documentID,
-                  lease.generation == generation else { throw BridgeError.invalidTarget }
+                  lease.generation == generation else {
+                try self.retireCommand(command, at: url)
+                throw BridgeError.invalidTarget
+            }
             try self.writeData(Data([1]), to: accepted)
             try self.files.removeItem(at: url)
             return command
@@ -98,6 +113,14 @@ public final class SharedVoiceBridge {
 
     public func clearDictationIntent() throws { try remove(Self.intentFile) }
 
+    public func clearDictationIntent(ifMatching intent: DictationIntent) throws {
+        try coordinated(Self.intentFile, writing: true) { url in
+            guard let current: DictationIntent = try self.decode(url, limit: 1024),
+                  current == intent, current.expiresAt > Date() else { throw BridgeError.invalidTarget }
+            try self.files.removeItem(at: url)
+        }
+    }
+
     public func isConsumed(_ id: UUID) -> Bool { files.fileExists(atPath: root.appendingPathComponent("consumed-\(id).json").path) }
 
     public func reset() throws {
@@ -110,9 +133,15 @@ public final class SharedVoiceBridge {
 
     /// The keyboard cannot wake the main app, so a standby main app polls for posted commands.
     public func pendingCommandIDs() throws -> [UUID] {
-        try files.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
+        let candidates = try files.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             .filter { $0.lastPathComponent.hasPrefix("command-") && $0.pathExtension == "json" }
             .prefix(64)
             .compactMap { UUID(uuidString: String($0.deletingPathExtension().lastPathComponent.dropFirst(8))) }
+        var pending: [UUID] = []
+        for id in candidates {
+            do { _ = try command(id); pending.append(id) }
+            catch let error as BridgeError where [.expired, .invalidMessage, .alreadyConsumed].contains(error) { continue }
+        }
+        return pending
     }
 }

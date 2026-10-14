@@ -26,9 +26,11 @@ struct AXTargetState {
     }
 
     static func focusedIdentity() -> (Int32, AXUIElement)? {
-        guard AXIsProcessTrusted(), let app = NSWorkspace.shared.frontmostApplication else { return nil }
+        guard !NativeDeliveryKeys.isSecureInput, AXIsProcessTrusted(),
+              let app = NSWorkspace.shared.frontmostApplication else { return nil }
         var focused: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(AXUIElementCreateApplication(app.processIdentifier),
+        guard !NativeDeliveryKeys.isSecureInput,
+              AXUIElementCopyAttributeValue(AXUIElementCreateApplication(app.processIdentifier),
             kAXFocusedUIElementAttribute as CFString, &focused) == .success,
             let focused, CFGetTypeID(focused) == AXUIElementGetTypeID() else { return nil }
         return (app.processIdentifier, focused as! AXUIElement)
@@ -48,13 +50,14 @@ struct AXTargetState {
 
     static func setRange(_ range: NSRange, of element: AXUIElement) -> Bool {
         var value = CFRange(location: range.location, length: range.length)
-        guard let encoded = AXValueCreate(.cfRange, &value) else { return false }
+        guard let encoded = AXValueCreate(.cfRange, &value), !NativeDeliveryKeys.isSecureInput else { return false }
         return AXUIElementSetAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, encoded) == .success
     }
 
     static func range(of element: AXUIElement) -> NSRange? {
         var encoded: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &encoded) == .success,
+        guard !NativeDeliveryKeys.isSecureInput,
+              AXUIElementCopyAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, &encoded) == .success,
               let encoded, CFGetTypeID(encoded) == AXValueGetTypeID() else { return nil }
         var range = CFRange()
         guard AXValueGetValue(encoded as! AXValue, .cfRange, &range), range.location >= 0, range.length >= 0 else { return nil }
@@ -63,7 +66,8 @@ struct AXTargetState {
 
     static func value(of element: AXUIElement) -> String? {
         var value: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &value) == .success else { return nil }
+        guard !NativeDeliveryKeys.isSecureInput,
+              AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &value) == .success else { return nil }
         return value as? String
     }
 }

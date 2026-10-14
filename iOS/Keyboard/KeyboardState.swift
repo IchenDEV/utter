@@ -17,4 +17,7 @@ final class KeyboardState: ObservableObject {
     @Published var metrics = KeyboardMetrics.initial
     /// Extra height for accessibility text sizes, where the status and result need more room.
     @Published var extraHeight: CGFloat = 0
+    @Published var selectionReview: KeyboardSelectionReview?
+    @Published var selectionRestoration: KeyboardSelectionRestoration?
+    @Published var selectionPending = false
 }

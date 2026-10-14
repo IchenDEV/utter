@@ -41,7 +41,7 @@ extension VoiceSessionJob {
         }
         let callbackTasks = callbacks
         let streamingCapture = streamingCapture
-        recording = try await dependencies.capture.begin(CaptureRequest(source: source, thresholds: settings.audioActivityThresholds),
+        recording = try await dependencies.capture.begin(CaptureRequest(source: source, thresholds: settings.audioActivityThresholds, preferRemoteMic: settings.remoteMicEnabled),
             callbacks: CaptureCallbacks(level: { [weak self, weak control] level in
                 callbackTasks.enqueue {
                     guard let self, let control, self.capturing, (try? self.check(control)) != nil else { return }
@@ -97,8 +97,8 @@ extension VoiceSessionJob {
         let shouldCapture: Bool
         switch mode {
         case .formatting: shouldCapture = settings.useScreenContext
-        case .command, .selectionEdit: shouldCapture = true
-        case .direct, .translation: shouldCapture = false
+        case .command: shouldCapture = target?.selectedText?.isEmpty != false
+        case .direct, .translation, .selectionEdit: shouldCapture = false
         }
         guard shouldCapture else { return }
         guard let screen = dependencies.screen else {

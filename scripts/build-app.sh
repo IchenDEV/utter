@@ -35,8 +35,9 @@ if [ -z "${VERSION:-}" ]; then
 fi
 
 DERIVED_DATA="${PROJECT_DIR}/.build/xcode"
-BUILD_DIR="${DERIVED_DATA}/Build/Products/Release"
 DIST_DIR="${PROJECT_DIR}/dist"
+ICON_WORK_DIR="${PROJECT_DIR}/.build/AppIcon.work"
+OFFLINE_CACHE=""
 APP_ONLY=false
 SIGN_IDENTITY="${SIGN_IDENTITY:-}"
 
@@ -47,6 +48,12 @@ for arg in "$@"; do
         --app-only)  APP_ONLY=true ;;
         --version=*) VERSION="${arg#*=}" ;;
         --sign=*)    SIGN_IDENTITY="${arg#*=}" ;;
+        --derived-data=*)
+            DERIVED_DATA="${arg#*=}"
+            ICON_WORK_DIR="${DERIVED_DATA}/AppIcon.work"
+            ;;
+        --dist-dir=*) DIST_DIR="${arg#*=}" ;;
+        --offline-cache=*) OFFLINE_CACHE="${arg#*=}" ;;
         --help|-h)
             echo "Usage: $0 [--version=X.Y.Z] [--app-only] [--sign=IDENTITY] [--help]"
             echo ""
@@ -54,6 +61,9 @@ for arg in "$@"; do
             echo "  --app-only         Build .app bundle only, skip DMG creation"
             echo "  --sign=IDENTITY    Code signing identity (default: auto-detect)"
             echo "                     Use '--sign=-' to force ad-hoc signing"
+            echo "  --derived-data=PATH  Override Xcode and icon build directories"
+            echo "  --dist-dir=PATH      Override the assembled artifact directory"
+            echo "  --offline-cache=PATH Use prepared scratch/packagecache/config/security directories"
             echo "  --help             Show this help"
             exit 0
             ;;
@@ -64,6 +74,7 @@ for arg in "$@"; do
     esac
 done
 
+BUILD_DIR="${DERIVED_DATA}/Build/Products/Release"
 APP_BUNDLE="${DIST_DIR}/${APP_NAME}.app"
 DMG_PATH="${DIST_DIR}/${APP_NAME}-${VERSION}.dmg"
 DMG_VOLUME_NAME="${APP_NAME} ${VERSION}"
@@ -84,20 +95,37 @@ fi
 
 step "Building ${APP_NAME} (Release, arm64)…"
 cd "${PROJECT_DIR}"
-xcodebuild \
-    -scheme "${SCHEME_NAME}" \
-    -configuration Release \
-    -derivedDataPath "${DERIVED_DATA}" \
-    -destination 'platform=macOS' \
-    ARCHS="arm64" \
-    ONLY_ACTIVE_ARCH=NO \
-    build \
-    -quiet
+XCODE_FLAGS=(-scheme "${SCHEME_NAME}" -configuration Release
+    -derivedDataPath "${DERIVED_DATA}" -destination 'platform=macOS'
+    ARCHS=arm64 ONLY_ACTIVE_ARCH=NO build -quiet)
+CLI_FLAGS=(-c release --product OpenTypeCLI --arch arm64)
+if [ -n "$OFFLINE_CACHE" ]; then
+    for directory in scratch packagecache config security; do
+        [ -d "$OFFLINE_CACHE/$directory" ] || {
+            echo "error: missing prepared offline cache directory: $OFFLINE_CACHE/$directory" >&2
+            exit 1
+        }
+    done
+    [ -s "$OFFLINE_CACHE/config/mirrors.json" ] || {
+        echo "error: missing offline package mirrors" >&2
+        exit 1
+    }
+    export SWIFTPM_MIRROR_CONFIG="$OFFLINE_CACHE/config/mirrors.json"
+    export GIT_ALLOW_PROTOCOL=file GIT_TERMINAL_PROMPT=0
+    XCODE_FLAGS+=(-clonedSourcePackagesDirPath "$OFFLINE_CACHE/scratch"
+        -packageCachePath "$OFFLINE_CACHE/packagecache"
+        -disableAutomaticPackageResolution -onlyUsePackageVersionsFromResolvedFile -skipPackageUpdates)
+    CLI_FLAGS+=(--scratch-path "$OFFLINE_CACHE/scratch" --cache-path "$OFFLINE_CACHE/packagecache"
+        --config-path "$OFFLINE_CACHE/config" --security-path "$OFFLINE_CACHE/security"
+        --disable-netrc --disable-keychain --skip-update --disable-prefetching
+        --disable-experimental-prebuilts --force-resolved-versions --manifest-cache shared)
+fi
+xcodebuild "${XCODE_FLAGS[@]}"
 done_msg "Build succeeded"
 
 step "Building Utter CLI helper (Release, arm64)…"
-swift build -c release --product OpenTypeCLI --arch arm64
-CLI_BUILD_DIR="$(swift build -c release --product OpenTypeCLI --arch arm64 --show-bin-path)"
+swift build "${CLI_FLAGS[@]}"
+CLI_BUILD_DIR="$(swift build "${CLI_FLAGS[@]}" --show-bin-path)"
 done_msg "CLI helper built"
 
 # ─── Step 2: Assemble .app bundle ───────────────────────────────────────────────
@@ -133,7 +161,6 @@ done_msg "App bundle assembled"
 step "Building AppIcon asset catalog (system appearances)…"
 
 ICON_RESOURCE_DIR="${PROJECT_DIR}/Sources/UtterPresentation/Resources"
-ICON_WORK_DIR="${PROJECT_DIR}/.build/AppIcon.work"
 ICON_COMPOSER_DIR="${ICON_RESOURCE_DIR}/AppIcon.icon"
 ACTOOL_OUT_DIR="${ICON_WORK_DIR}/compiled"
 

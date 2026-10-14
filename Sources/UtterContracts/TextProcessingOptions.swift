@@ -1,6 +1,6 @@
 import Foundation
 
-package struct GenerationOptions {
+package struct GenerationOptions: Sendable {
     package let maxTokens: Int
     package let temperature: Double
     package init(maxTokens: Int, temperature: Double) { self.maxTokens = maxTokens; self.temperature = temperature }

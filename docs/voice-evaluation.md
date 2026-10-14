@@ -6,8 +6,8 @@
 
 ## 整理、术语和事实保护
 
-固定语料 [voice-reliability.jsonl](evals/voice-reliability.jsonl) 包含 56 个用例、
-88 次运行：8 个宣传片示例各运行 5 次，另有清单、叙事、回复、翻译，以及
+固定语料 [voice-reliability.jsonl](evals/voice-reliability.jsonl) 包含 61 个用例、
+93 次运行：8 个宣传片示例各运行 5 次，另有清单、叙事、回复、翻译、5 个数字规则/序号列表/自我纠正/口头禅用例，以及
 20 个合法删减和 20 个固定新增事实候选。固定候选用于验证防线，报告会与
 完整模型生成区分。
 

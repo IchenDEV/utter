@@ -1,6 +1,6 @@
 import Foundation
 
-public enum VoiceAction: String, Codable, Sendable { case start, stop, cancel }
+public enum VoiceAction: String, Codable, Sendable { case start, stop, cancel, attach, startSelection, applySelection, restoreSelection }
 public enum VoicePhase: String, Codable, Sendable { case disabled, ready, preparing, recording, processing, result, cancelled, failed }
 
 public struct KeyboardLease: Codable, Equatable, Sendable {
@@ -20,10 +20,33 @@ public struct VoiceCommand: Codable, Sendable {
     public let lease: KeyboardLease
     public let action: VoiceAction
     public let expiresAt: Date
+    public let captureRequestID: UUID?
+    public let selectionTarget: KeyboardSelectionTarget?
+    public let proposalID: UUID?
+    public let restoreOperationID: UUID?
 
-    public init(id: UUID = UUID(), lease: KeyboardLease, action: VoiceAction) {
-        version = 1; self.id = id; self.lease = lease; self.action = action
+    public init(id: UUID = UUID(), lease: KeyboardLease, action: VoiceAction, captureRequestID: UUID? = nil,
+                selectionTarget: KeyboardSelectionTarget? = nil, proposalID: UUID? = nil, restoreOperationID: UUID? = nil) {
+        version = [.startSelection, .applySelection, .restoreSelection].contains(action) ? 2 : 1
+        self.id = id; self.lease = lease; self.action = action
+        self.captureRequestID = captureRequestID
+        self.selectionTarget = selectionTarget; self.proposalID = proposalID; self.restoreOperationID = restoreOperationID
         expiresAt = Date().addingTimeInterval(10)
+    }
+
+    public func isValid(at now: Date) -> Bool {
+        guard expiresAt > now, expiresAt.timeIntervalSince(now) <= 10 else { return false }
+        switch action {
+        case .startSelection:
+            return version == 2 && captureRequestID == nil && proposalID == nil && restoreOperationID == nil &&
+                selectionTarget?.isValid(at: now) == true && selectionTarget?.documentID == lease.documentID
+        case .applySelection:
+            return version == 2 && proposalID != nil && selectionTarget == nil && captureRequestID == nil && restoreOperationID == nil
+        case .restoreSelection:
+            return version == 2 && restoreOperationID != nil && selectionTarget == nil && proposalID == nil && captureRequestID == nil
+        case .start, .stop, .cancel, .attach:
+            return version == 1 && selectionTarget == nil && proposalID == nil && restoreOperationID == nil
+        }
     }
 }
 
@@ -61,6 +84,9 @@ public struct VoiceStatus: Codable, Equatable, Sendable {
     public var expiresAt: Date?
     /// Set only while the main app can still receive keyboard commands in the background.
     public var heartbeat: Date?
+    /// The bounded Debug trial accepts one target only after real capture starts in the app.
+    public var captureFromApp: Bool?
+    public var selectionMode: Bool?
 
     public init(generation: UUID = UUID(), phase: VoicePhase = .disabled) {
         self.generation = generation; self.phase = phase
@@ -69,6 +95,9 @@ public struct VoiceStatus: Codable, Equatable, Sendable {
     public static let heartbeatTimeout: TimeInterval = 20
     public var isStandbyLive: Bool {
         phase != .disabled && heartbeat.map { Date().timeIntervalSince($0) < Self.heartbeatTimeout } == true
+    }
+    public var canAttachKeyboardTarget: Bool {
+        captureFromApp == true && phase == .recording && requestID != nil && leaseID == nil && documentID == nil && isStandbyLive
     }
 }
 

@@ -28,10 +28,12 @@ final class VoiceWorkflowFixture {
     let output = WorkflowOutput()
     let files = WorkflowFiles()
     let recipe = WorkflowRecipe()
+    var recipeCreations: [String] = []
     let target = WorkflowTarget()
     var targetAvailable = true
     let screen = WorkflowScreen()
     let evidence = WorkflowEvidence()
+    let correction = WorkflowCorrection()
     var speechRequests: [SpeechProviderRequest] = []
     private(set) var runtime: PluginRuntime!
     private var plugins: [PluginRegistration] = []
@@ -46,7 +48,8 @@ final class VoiceWorkflowFixture {
         let capabilities = PluginRegistration(descriptor: PluginDescriptor(id: "fixture.voice-capabilities", provides: [
             ModelServices.files.reference, SpeechServices.providers.reference, GenerationServices.providers.reference,
             ModeServices.recipes.reference, AudioServices.capture.reference, AudioServices.files.reference,
-            AudioServices.evidence.reference, MacServices.output.reference, MacServices.target.reference, MacServices.screen.reference
+            AudioServices.evidence.reference, MacServices.output.reference, MacServices.target.reference, MacServices.screen.reference,
+            MacServices.correction.reference
         ])) { [self] context, _ in
             let speech = ProviderRegistry<SpeechProviderRequest, any SpeechEngine>()
             try speech.register(ProviderDefinition(descriptor: ProviderDescriptor(id: "speech.fixture", legacyIDs: ["apple"], displayName: "Fixture")) { [self] request in
@@ -55,9 +58,13 @@ final class VoiceWorkflowFixture {
             }, scope: context.scope)
             let generation = ProviderRegistry<GenerationPurpose, any TextGenerationService>()
             try generation.register(ProviderDefinition(descriptor: ProviderDescriptor(id: "generation.mlx", displayName: "Fixture")) { _ in WorkflowGeneration() }, scope: context.scope)
+            try generation.register(ProviderDefinition(descriptor: ProviderDescriptor(id: "generation.remote", displayName: "Remote fixture", modelLocation: .remote)) { _ in WorkflowGeneration() }, scope: context.scope)
             let modes = ProviderRegistry<Void, any ModeRecipeService>()
             for id in ["mode.direct", "mode.formatting", "mode.command", "mode.translation", "mode.edit"] {
-                try modes.register(ProviderDefinition(descriptor: ProviderDescriptor(id: id, displayName: id)) { [recipe] _ in recipe }, scope: context.scope)
+                try modes.register(ProviderDefinition(descriptor: ProviderDescriptor(id: id, displayName: id)) { [self] _ in
+                    recipeCreations.append(id)
+                    return recipe
+                }, scope: context.scope)
             }
             try context.provide(ModelServices.files, value: files)
             try context.provide(SpeechServices.providers, value: speech)
@@ -69,6 +76,7 @@ final class VoiceWorkflowFixture {
             try context.provide(MacServices.output, value: output)
             try context.provide(MacServices.target, value: WorkflowTargets(target: target, isAvailable: { [self] in targetAvailable }))
             try context.provide(MacServices.screen, value: screen)
+            try context.provide(MacServices.correction, value: correction)
         }
         plugins = [DataPlugins.settings(defaults: defaults), DataPlugins.credentials(), DataPlugins.notifications(),
                    DataPlugins.integrationClients(defaults: defaults), DataPlugins.dictionary(directoryURL: directory),
@@ -167,6 +175,11 @@ final class WorkflowOutput: OutputService {
     func prepare(_ request: DeliveryRequest, isSessionCurrent: @escaping () -> Bool) throws -> any PreparedDelivery {
         requests.append(request)
         guard isSessionCurrent() else { throw CancellationError() }
+        delivery.operationID = request.id
+        if case .replaceSelection(let text) = request.command, let anchor = delivery.anchor,
+           let original = request.target?.selectedText {
+            delivery.selectionEdit = SelectionEditReceipt(operationID: request.id, originalSelection: original, replacement: text, anchor: anchor)
+        } else { delivery.selectionEdit = nil }
         return delivery
     }
 }
@@ -175,6 +188,10 @@ final class WorkflowOutput: OutputService {
 final class WorkflowDelivery: PreparedDelivery {
     var anchor: (any OutputAnchor)?
     var receipt: DeliveryReceipt?
+    var operationID = UUID()
+    var selectionEdit: SelectionEditReceipt?
+    var effect = DeliveryEffect.paste
+    var confirmation = DeliveryConfirmation.targetValue
     var committing = false
     var closing = false
     var heldCommit = false
@@ -184,7 +201,8 @@ final class WorkflowDelivery: PreparedDelivery {
     func commit() async -> DeliveryReceipt {
         committing = true
         if heldCommit { await withCheckedContinuation { commitWaiter = $0 } }
-        let value = DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor, confirmation: .targetValue)
+        let value = DeliveryReceipt(operationID: operationID, disposition: .accepted, effect: effect, anchor: anchor,
+            confirmation: confirmation, selectionEdit: selectionEdit)
         receipt = value
         return value
     }
@@ -194,40 +212,6 @@ final class WorkflowDelivery: PreparedDelivery {
     }
     func releaseCommit() { commitWaiter?.resume(); commitWaiter = nil }
     func releaseClose() { closeWaiter?.resume(); closeWaiter = nil }
-}
-
-@MainActor
-final class WorkflowRecipe: ModeRecipeService {
-    var generationOutcome: EspressoGenerationOutcome?
-    var requests: [ProcessingRequest] = []
-    var resolution: SpokenEditCommandLLMResolution?
-    var resolutionContexts: [SpokenEditCommandResolutionContext] = []
-    var holdFormatting = false
-    var confirmsTranslation = true
-    var translationProofTarget: TranslationLanguage?
-    var formatting = false
-    private var formattingWaiter: CheckedContinuation<Void, Never>?
-    func resolveEditCommand(_ request: ProcessingRequest, context: SpokenEditCommandResolutionContext) async throws -> SpokenEditCommandLLMResolution? {
-        resolutionContexts.append(context)
-        return resolution
-    }
-    func process(_ request: ProcessingRequest) async throws -> ProcessingResult {
-        requests.append(request)
-        if request.mode == .direct { return ProcessingResult(text: request.text) }
-        if request.mode == .formatting {
-            formatting = true
-            if holdFormatting { await withCheckedContinuation { formattingWaiter = $0 } }
-        }
-        if case .translation(let target) = request.mode, confirmsTranslation {
-            let language = translationProofTarget ?? target
-            let assessment = TranslationAssessment.assess(target: language,
-                hasLinguisticContent: true, scores: [language.rawValue: 1])
-            return ProcessingResult(text: request.text + " Formatted.",
-                decision: ProcessingDecision(.accepted, translation: assessment))
-        }
-        return ProcessingResult(text: request.text + " Formatted.", generationOutcome: generationOutcome)
-    }
-    func releaseFormatting() { formattingWaiter?.resume(); formattingWaiter = nil }
 }
 
 final class WorkflowGeneration: TextGenerationService, @unchecked Sendable {
@@ -263,15 +247,6 @@ private final class WorkflowTargets: TargetCaptureService {
         guard isAvailable() else { throw DeliveryError.invalidTarget }
         return target
     }
-}
-@MainActor
-final class WorkflowTarget: OutputTargetLease {
-    let id = UUID()
-    let processIdentifier: Int32 = 123
-    let context = InputContext(appName: "Editor", bundleIdentifier: "fixture.editor", outputMode: .processed, inputLanguage: .english, source: .menuBar)
-    var selectedText: String?
-    var isValid = true
-    var isCurrent = true
 }
 private struct WorkflowLog: DiagnosticsService {
     func info(_ message: String) {}

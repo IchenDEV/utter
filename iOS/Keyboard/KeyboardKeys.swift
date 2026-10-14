@@ -14,6 +14,7 @@ enum KeyColors {
     }
     /// Filled action key, like the system's blue Search/Go key.
     static let action = UIColor(red: 0, green: 0.34, blue: 0.76, alpha: 1)
+    static let actionDisabled = UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 1, alpha: 0.40) : UIColor(white: 0, alpha: 0.15) }
     static let recording = UIColor(red: 0.78, green: 0.14, blue: 0.12, alpha: 1)
 }
 

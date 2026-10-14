@@ -2,85 +2,12 @@ import UtterContracts
 import UtterPresentationContracts
 import SwiftUI
 
-struct OverlayLayout: Equatable {
-    let width: CGFloat
-    let height: CGFloat
-    let outerCornerRadius: CGFloat
-    let isInteractive: Bool
-    let horizontalPadding: CGFloat
-    let topPadding: CGFloat
-    let bottomPadding: CGFloat
-    let stackSpacing: CGFloat
-
-    var panelSize: CGSize {
-        CGSize(width: width, height: height)
-    }
-
-    @MainActor
-    init(appState: AppState) {
-        let hasPreview = appState.phase == .recording && !appState.rawTranscription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        let showsEspressoFallback = appState.phase == .done
-            && appState.completionKind == .espressoFallback
-        isInteractive = appState.isRecording || appState.presentation.keepsVisible
-
-        switch appState.phase {
-        case .recording where hasPreview:
-            width = 304
-            height = 80
-            outerCornerRadius = 22
-            horizontalPadding = 14
-            topPadding = 8
-            bottomPadding = 8
-            stackSpacing = 6
-        case .recording:
-            width = 148
-            height = 40
-            outerCornerRadius = 20
-            horizontalPadding = 7
-            topPadding = 7
-            bottomPadding = 7
-            stackSpacing = 6
-        case .transcribing, .processing, .inserting:
-            width = 216
-            height = 40
-            outerCornerRadius = 20
-            horizontalPadding = 12
-            topPadding = 10
-            bottomPadding = 10
-            stackSpacing = 6
-        case .error, .uncertain:
-            width = 360
-            height = 96
-            outerCornerRadius = 18
-            horizontalPadding = 12
-            topPadding = 8
-            bottomPadding = 8
-            stackSpacing = 6
-        case .done where showsEspressoFallback:
-            width = 288
-            height = 56
-            outerCornerRadius = 18
-            horizontalPadding = 12
-            topPadding = 8
-            bottomPadding = 8
-            stackSpacing = 6
-        default:
-            width = 192
-            height = 40
-            outerCornerRadius = 20
-            horizontalPadding = 12
-            topPadding = 10
-            bottomPadding = 10
-            stackSpacing = 6
-        }
-    }
-}
-
 struct OverlayContentView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+    @Environment(\.colorScheme) private var systemScheme
 
     let onLayoutChange: (OverlayLayout) -> Void
     let onCancel: () -> Void
@@ -88,6 +15,8 @@ struct OverlayContentView: View {
     let onCopy: () -> Void
     let onRecover: () -> Void
     let onDismiss: () -> Void
+    var review = SelectionReviewCallbacks.none
+    @ObservedObject var notice = ReviewNotice()
 
     private var livePreview: String? {
         guard appState.isRecording else { return nil }
@@ -96,7 +25,7 @@ struct OverlayContentView: View {
     }
 
     private var layout: OverlayLayout {
-        OverlayLayout(appState: appState)
+        OverlayLayout(appState: appState, notice: notice.key)
     }
 
     private var isError: Bool {
@@ -110,6 +39,37 @@ struct OverlayContentView: View {
     }
 
     var body: some View {
+        content
+            .frame(width: layout.width, height: layout.height, alignment: .center)
+            .background(panelBackground)
+            .clipShape(RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous))
+            .compositingGroup()
+            .environment(\.colorScheme, layout.content == .status ? .dark : systemScheme)
+            .onAppear {
+                onLayoutChange(layout)
+            }
+            .onChange(of: layout) { _, newLayout in
+                onLayoutChange(newLayout)
+            }
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: layout)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if let consent = appState.remoteDisclosure, let intentID = appState.snapshot.id {
+            RemoteDisclosureView(consent: consent, intentID: intentID, callbacks: review).id(intentID)
+        } else if let proposal = appState.selectionEditProposal {
+            SelectionReviewView(proposal: proposal, callbacks: review).id(proposal.id)
+        } else if appState.offersRestore, let restoration = appState.selectionEditRestoration {
+            RestoreOfferView(restoration: restoration, callbacks: review, onClose: onDismiss).id(restoration.operationID)
+        } else if layout.content == .notice, let key = notice.key {
+            ReviewNoticeView(key: key, onClose: onDismiss)
+        } else {
+            hud
+        }
+    }
+
+    private var hud: some View {
         VStack(spacing: layout.stackSpacing) {
             if appState.isRecording {
                 recordingControls
@@ -126,18 +86,6 @@ struct OverlayContentView: View {
         }
         .padding(.horizontal, layout.horizontalPadding)
         .padding(.bottom, layout.bottomPadding)
-        .frame(width: layout.width, height: layout.height, alignment: .center)
-        .background(panelBackground)
-        .clipShape(RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous))
-        .compositingGroup()
-        .environment(\.colorScheme, .dark)
-        .onAppear {
-            onLayoutChange(layout)
-        }
-        .onChange(of: layout) { _, newLayout in
-            onLayoutChange(newLayout)
-        }
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.18), value: layout)
     }
 
     private var statusRow: some View {
@@ -202,9 +150,12 @@ struct OverlayContentView: View {
 
     private var panelBackground: some View {
         let shape = RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous)
+        let review = layout.content != .status
         return ZStack {
             if reduceTransparency {
-                shape.fill(Color.black.opacity(0.92))
+                shape.fill(review ? Color(nsColor: .windowBackgroundColor) : Color.black.opacity(0.92))
+            } else if review {
+                shape.fill(.regularMaterial)
             } else {
                 shape.fill(.ultraThinMaterial)
                 shape.fill(Color.black.opacity(0.22))
@@ -212,7 +163,7 @@ struct OverlayContentView: View {
         }
         .overlay {
             shape.strokeBorder(
-                .white.opacity(colorSchemeContrast == .increased ? 0.28 : 0.12),
+                (review ? Color.primary : Color.white).opacity(colorSchemeContrast == .increased ? 0.28 : 0.12),
                 lineWidth: colorSchemeContrast == .increased ? 1 : 0.5
             )
         }

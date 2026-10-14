@@ -30,6 +30,15 @@ package enum RemoteMicProtocol {
     package static func microphoneClose(version: UInt16, sessionID: UInt8) -> Data {
         version >= 0x0100 ? Data([0x0D, sessionID]) : Data([0x0D])
     }
+
+    /// Keeps a host-opened microphone streaming past the remote's own timeout.
+    /// Only ATVV v1.0 and later define it.
+    package static func microphoneExtend(version: UInt16, sessionID: UInt8) -> Data? {
+        version >= 0x0100 ? Data([0x0E, sessionID]) : nil
+    }
+
+    /// How often a host-opened session is extended.
+    package static let extendInterval: TimeInterval = 5
 }
 
 /// Remote capabilities reported by the `0x0B` control response.
@@ -147,19 +156,23 @@ package final class RemoteMicADPCMDecoder {
 
     package private(set) var predictor = 0
     package private(set) var stepIndex = 0
+    /// ARN9 firmware packs the earlier sample in the low nibble.
+    package var lowNibbleFirst = false
 
     package func reset(predictor: Int = 0, stepIndex: Int = 0) {
         self.predictor = min(32_767, max(-32_768, predictor))
         self.stepIndex = min(88, max(0, stepIndex))
     }
 
-    /// Decodes high-nibble-first, the RC003/`MI RC` ordering.
+    /// Decodes high-nibble-first unless ARN9 model information selects low-first.
     package func decode(_ data: Data) -> [Int16] {
         var samples: [Int16] = []
         samples.reserveCapacity(data.count * 2)
         for byte in data {
-            samples.append(decodeNibble(Int(byte >> 4)))
-            samples.append(decodeNibble(Int(byte & 0x0F)))
+            let high = Int(byte >> 4)
+            let low = Int(byte & 0x0F)
+            samples.append(decodeNibble(lowNibbleFirst ? low : high))
+            samples.append(decodeNibble(lowNibbleFirst ? high : low))
         }
         return samples
     }

@@ -1,7 +1,9 @@
 import Foundation
 import UtterKeyboardBridge
 
-func L(_ key: String) -> String { NSLocalizedString(key, comment: "") }
+func L(_ key: String) -> String {
+    NSLocalizedString(key, tableName: key.hasPrefix("ios.selection.") ? "SelectionEdit" : nil, comment: "")
+}
 
 @MainActor
 func voiceBridge() throws -> SharedVoiceBridge {

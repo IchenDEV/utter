@@ -29,9 +29,9 @@ private extension PromptCatalog {
         case .orderedSteps:
             rule = "保留原文明说的总述句，再输出有序步骤；每一步独立一行并使用“1. 2. 3.”。保持原文顺序，不新增步骤。"
         case .email:
-            rule = "按邮件排版：称呼、正文自然段、结束语、署名之间换行；原文没说的称呼、结束语或署名不得补写。"
+            rule = "按邮件排版：称呼、正文自然段、结束语、署名之间换行；原文没说的称呼、结束语或署名不得补写。语气正式、礼貌，用完整句子，但不改用户的用词。"
         case .chat:
-            rule = "按聊天消息排版：短句、短段、自然语气；不要套用邮件格式，不要添加标题。"
+            rule = "按聊天消息排版：短句、短段、自然随意的语气；不要套用邮件格式，不要添加标题。"
         case .codeOrTerminal:
             rule = "按代码或终端文本处理：逐字保护命令、路径、URL、大小写、符号和换行；不要使用智能引号或自然语言列表改写。"
         }
@@ -52,9 +52,9 @@ private extension PromptCatalog {
         case .orderedSteps:
             rule = "Keep any dictated introductory statement, then use ordered steps with one '1. 2. 3.' item per line. Preserve the dictated order and add no steps."
         case .email:
-            rule = "Use email layout with separate greeting, body paragraphs, closing, and signature. Never invent a missing greeting, closing, or signature."
+            rule = "Use email layout with separate greeting, body paragraphs, closing, and signature. Never invent a missing greeting, closing, or signature. Keep a polite, formal tone in complete sentences without swapping the speaker's wording."
         case .chat:
-            rule = "Use compact chat layout with short natural paragraphs. Do not add email conventions or a heading."
+            rule = "Use compact chat layout with short natural paragraphs. Keep a casual, conversational tone; do not add email conventions or a heading."
         case .codeOrTerminal:
             rule = "Preserve commands, paths, URLs, casing, symbols, and line breaks exactly. Do not use smart quotes or rewrite code as prose."
         }

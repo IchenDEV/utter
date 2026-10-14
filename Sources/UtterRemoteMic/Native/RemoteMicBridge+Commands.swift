@@ -17,6 +17,7 @@ extension XiaomiRemoteMicBridge {
     }
 
     func closeMicrophoneIfNeeded() {
+        cancelExtend()
         guard microphoneOpened else { return }
         _ = write(RemoteMicProtocol.microphoneClose(
             version: capabilities.version,
@@ -35,9 +36,32 @@ extension XiaomiRemoteMicBridge {
     }
 
     func resetStream() {
+        cancelExtend()
+        hostInitiated = false
+        streamAnnounced = false
         preRoll.reset()
         accumulator.reset()
         pendingSync = nil
         decoder.reset()
+    }
+
+    func startExtending() {
+        extendTask?.cancel()
+        extendTask = ownedTask { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(RemoteMicProtocol.extendInterval * 1_000_000_000))
+                guard let self, !Task.isCancelled, self.session.isLive, self.microphoneOpened,
+                      let command = RemoteMicProtocol.microphoneExtend(
+                          version: self.capabilities.version,
+                          sessionID: self.streamID
+                      ) else { return }
+                _ = self.write(command)
+            }
+        }
+    }
+
+    func cancelExtend() {
+        extendTask?.cancel()
+        extendTask = nil
     }
 }
