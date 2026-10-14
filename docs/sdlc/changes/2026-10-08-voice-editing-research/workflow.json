@@ -344,7 +344,7 @@
         "iPhone/iPad only after T0 capture+auto-return+focus+cancel pass; no manual switch counted",
         "light/dark/accessibility and final ANTI_SLOP audit"
       ],
-      "status": "partial; same-guard9canaries +1selected +1isolation passed;70focused37pass33fixture failures;SwiftTesting0loader; final combined tests/build/UI/host/mobileT0 pending",
+      "status": "partial scoped acceptance:fourTestSupport fixes,9canaries+1regression+70focused passed;full new CI/nativeUI/host/mobileT0 pending",
       "gate": "整体授权覆盖普通阶段推进；独立验收与共享设备窗口"
     },
     {
@@ -366,7 +366,7 @@
         "store submission states accurately recorded",
         "rollback and residual risk explicit"
       ],
-      "status": "not started; exact signed candidate required",
+      "status": "PR124 Draft open and linked;normal corrective commit/push pending;human/production signing/device acceptance unverified",
       "gate": "整体授权覆盖普通阶段推进；确切候选签名/隐私/权限/提交验证"
     },
     {
@@ -1735,6 +1735,30 @@
       "mobileOwnedImport": "exact38 result hashes +1340otherfiles/indexunchanged;shared/Modelsnotreapplied",
       "candidateGates": "combined build/tests/basic/nativeUI/host/mobileT0/Release/human acceptance pending",
       "next": "normal commit/push/create/link combined Draft; continue exact fixes on same PR"
+    },
+    "pullRequest": {
+      "number": 124,
+      "url": "https://github.com/IchenDEV/utter/pull/124",
+      "state": "Draft;ongoing",
+      "creationHead": "de895347d5fe4671db90f6c7aa4d3bbe9cb9b1d2",
+      "creationCI": "basic/compile/Release-styleAppBuild/1SwiftTesting pass;XCTestaborted;aggregateGatefailed",
+      "fixtureFix": "four TestSupport-only files accepted;9canaries+1regression+70focused pass;zero skip;new CI head pending",
+      "localSwiftTesting": "unrun;2/2 exhausted;static census does not grant dynamic pass",
+      "hostDevices": "deferred,not passed",
+      "next": "normal commit/push same PR,exact new CI;then native review and remaining local/platform gates"
+    },
+    "fixtureFixAcceptance": {
+      "nativeStartedAt": "2026-10-14T07:58:41.047Z",
+      "nativeCompletedAt": "2026-10-14T08:21:54.864Z",
+      "activeRunId": null,
+      "pendingRequestCount": 0,
+      "hasPendingChildRuns": false,
+      "sourceMatched": 906,
+      "productFilesMatched": 8976,
+      "contextFilesMatched": 23,
+      "all27OwnedPGIDsAbsent": true,
+      "sourceHash": "5e112f73ceb81242cf6f6217fbd77458c8cc4fcc0a91a6b75caf7c17f4dbbec9",
+      "reportSHA256": "332c32fd40d3fbb218136b72e5eadcae66e5f5026ee345f55866498b1c9f660b"
     }
   },
   "reportingRoute": "Latest user: report directly in this thread, no root progress/terminal notifications"

@@ -34,5 +34,38 @@ final class TestFixtureIsolationTests: XCTestCase {
         XCTAssertEqual(records.first(where: { $0.id == id })?.rawText, literal)
         XCTAssertEqual(records.first(where: { $0.id == id })?.processedText, literal)
         XCTAssertTrue(InputHistory.shared.storageAvailable)
+
+        let workflow = try VoiceWorkflowFixture()
+        defer { workflow.remove() }
+        XCTAssertEqual(workflow.directory.deletingLastPathComponent(), TestFixtureRoot.root)
+        let workflowFile = try XCTUnwrap(workflow.files.url).appendingPathComponent("literal.txt")
+        try literal.write(to: workflowFile, atomically: true, encoding: .utf8)
+        XCTAssertEqual(try String(contentsOf: workflowFile, encoding: .utf8), literal)
+
+        let original = "owned-dictionary-source-20261014"
+        let entryID = try XCTUnwrap(PersonalDictionary.shared.addEntry(original: original, replacement: literal))
+        defer { PersonalDictionary.shared.removeEntry(id: entryID) }
+        let dictionaryFile = TestFixtureRoot.root.appendingPathComponent("Dictionary/dictionary.json")
+        let entries = try decoder.decode([DictionaryEntry].self, from: Data(contentsOf: dictionaryFile))
+        XCTAssertEqual(entries.first(where: { $0.id == entryID })?.original, original)
+        XCTAssertEqual(entries.first(where: { $0.id == entryID })?.replacement, literal)
+        XCTAssertEqual(PersonalDictionary.shared.applyReplacements(to: original), literal)
+        XCTAssertTrue(PersonalDictionary.shared.storageAvailable)
+
+        let evidence = try NativeE2EUI.directory(override: nil)
+        XCTAssertEqual(evidence.deletingLastPathComponent(), TestFixtureRoot.root)
+        let evidenceFile = evidence.appendingPathComponent("logs/literal.txt")
+        try literal.write(to: evidenceFile, atomically: true, encoding: .utf8)
+        XCTAssertEqual(try String(contentsOf: evidenceFile, encoding: .utf8), literal)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: evidence.appendingPathComponent("screenshots").path))
+        let explicitEvidence = TestFixtureRoot.root.appendingPathComponent("ExplicitNativeEvidence", isDirectory: true)
+        XCTAssertEqual(try NativeE2EUI.directory(override: explicitEvidence.path), explicitEvidence)
+        try NativeE2EUI.record("fixture-isolation", ["payload": literal])
+        let recordFile = try NativeE2EUI.directory().appendingPathComponent("logs/fixture-isolation.json")
+        let record = try JSONSerialization.jsonObject(with: Data(contentsOf: recordFile)) as? [String: String]
+        XCTAssertEqual(record?["payload"], literal)
+        let blockedEvidence = TestFixtureRoot.root.appendingPathComponent("evidence-is-a-file")
+        try literal.write(to: blockedEvidence, atomically: true, encoding: .utf8)
+        XCTAssertThrowsError(try NativeE2EUI.directory(override: blockedEvidence.path))
     }
 }

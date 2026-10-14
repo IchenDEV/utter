@@ -21,7 +21,7 @@ import UtterRuntime
 @MainActor
 final class VoiceWorkflowFixture {
     let suite = "VoiceWorkflow-" + UUID().uuidString
-    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    let directory = TestFixtureRoot.root.appendingPathComponent(UUID().uuidString, isDirectory: true)
     let defaults: UserDefaults
     let engine = WorkflowSpeech()
     let capture = WorkflowCapture()

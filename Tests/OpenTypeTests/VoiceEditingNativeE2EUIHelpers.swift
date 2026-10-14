@@ -7,8 +7,15 @@ import UtterPresentationContracts
 
 @MainActor
 enum NativeE2EUI {
-    static var directory: URL {
-        URL(fileURLWithPath: ProcessInfo.processInfo.environment["UTTER_NATIVE_EVIDENCE"]!)
+    static func directory(override: String? = ProcessInfo.processInfo.environment["UTTER_NATIVE_EVIDENCE"]) throws -> URL {
+        let directory = override.map { URL(fileURLWithPath: $0, isDirectory: true) }
+            ?? TestFixtureRoot.root.appendingPathComponent("NativeEvidence", isDirectory: true)
+        for name in ["logs", "screenshots"] {
+            try FileManager.default.createDirectory(
+                at: directory.appendingPathComponent(name, isDirectory: true), withIntermediateDirectories: true
+            )
+        }
+        return directory
     }
 
     static func panel() throws -> NSWindow {
@@ -23,7 +30,7 @@ enum NativeE2EUI {
         let bitmap = try XCTUnwrap(view.bitmapImageRepForCachingDisplay(in: view.bounds))
         view.cacheDisplay(in: view.bounds, to: bitmap)
         let png = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
-        try png.write(to: directory.appendingPathComponent("screenshots/" + name + ".png"))
+        try png.write(to: directory().appendingPathComponent("screenshots/" + name + ".png"))
         try record(name, ["windowNumber": window.windowNumber, "frame": NSStringFromRect(window.frame),
             "key": window.isKeyWindow, "active": NSApp.isActive, "accessibility": labels(view)])
     }
@@ -65,7 +72,7 @@ enum NativeE2EUI {
 
     static func ax(_ action: String, label: String) async throws -> [String: Any] {
         let task = Process()
-        task.executableURL = directory.appendingPathComponent("fixtures/owned-ax-client")
+        task.executableURL = try directory().appendingPathComponent("fixtures/owned-ax-client")
         task.arguments = [String(ProcessInfo.processInfo.processIdentifier), action, label]
         let pipe = Pipe()
         task.standardOutput = pipe
@@ -75,7 +82,7 @@ enum NativeE2EUI {
         while task.isRunning, ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(20)) }
         if task.isRunning { task.terminate(); throw NSError(domain: "OwnedAXClientTimeout", code: 1) }
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        try data.write(to: directory.appendingPathComponent("logs/ax-\(action)-\(label).json"))
+        try data.write(to: directory().appendingPathComponent("logs/ax-\(action)-\(label).json"))
         XCTAssertEqual(task.terminationStatus, 0, String(decoding: data, as: UTF8.self))
         return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
     }
@@ -89,7 +96,7 @@ enum NativeE2EUI {
 
     static func record(_ name: String, _ value: [String: Any]) throws {
         let data = try JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys])
-        try data.write(to: directory.appendingPathComponent("logs/" + name + ".json"))
+        try data.write(to: directory().appendingPathComponent("logs/" + name + ".json"))
     }
 }
 
