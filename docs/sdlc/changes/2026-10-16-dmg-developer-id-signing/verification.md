@@ -96,6 +96,12 @@ The runtime-canary witness parser initially expected JSON, while the existing
 canary binaries emit plain text. The parser was corrected before running the
 full suite. Both canaries passed; no private runtime policy was weakened.
 
+The first PR CI attempt rejected unittest separator lines in two newly tracked
+raw evidence logs as conflict markers. The original logs remain unchanged
+locally; lossless JSON copies preserve their contents and SHA-256 in the PR.
+The conflict-marker guard and reviewed production/test code are unchanged.
+`evidence/pr-ci-first-failure.json` preserves the exact run, job, and cause.
+
 ## Remaining gates
 
 Human verification acceptance is complete. The remote PR stage is authorized.

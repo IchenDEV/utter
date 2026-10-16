@@ -1,0 +1,12 @@
+{
+  "recorded_at_utc": "2026-10-16T05:40:11.703734+00:00",
+  "run_id": 38856649852,
+  "job_id": 116829504780,
+  "head_sha": "2b62dbec3f306328098c41d3fdde9894acc98e0f",
+  "url": "https://github.com/IchenDEV/utter/actions/runs/38856649852/job/116829504780",
+  "first_failure": "Repository conflict-marker scan matched unittest separators in two newly tracked raw evidence logs",
+  "unit_test_step": "Skipped after basic-check failure",
+  "raw_log_local_path": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-pr-bot_2ek2/ci-quality-attempt-1.log",
+  "raw_log_sha256": "9df5b899c3aab581380d8533afd2c7b8573e59d8e120447283474713cebb7533",
+  "remedy": "Keep original raw logs locally and commit lossless JSON representations; retain unchanged conflict-marker guard and production/test code"
+}
