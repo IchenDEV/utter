@@ -2,127 +2,127 @@
   "verifier": "/root/signing_verifier",
   "verified_at_utc": "2026-10-16T03:32:07.445817+00:00",
   "success": true,
-  "directory": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx",
+  "directory": "TASK_TMP/utter-dmg-independent-verifier-6rohbzkx",
   "results": [
     {
       "name": "signed-with-expected",
       "command": [
         "bash",
-        "/Users/chenli/projects/utter/scripts/verify-release-artifact.sh",
+        "WORKSPACE/scripts/verify-release-artifact.sh",
         "--app",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
         "--version",
         "0.0.54",
         "--require-developer-id",
         "--expected-cert-sha256",
         "1B499618154DEB0204896CDB199AA65D25EDA2188FEDBB0E29A73063728E4112",
         "--dmg",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg"
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg"
       ],
       "exit": 0,
       "diagnostic": null,
-      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx/signed-with-expected.log"
+      "log": "TASK_TMP/utter-dmg-independent-verifier-6rohbzkx/signed-with-expected.log"
     },
     {
       "name": "signed-without-expected",
       "command": [
         "bash",
-        "/Users/chenli/projects/utter/scripts/verify-release-artifact.sh",
+        "WORKSPACE/scripts/verify-release-artifact.sh",
         "--app",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
         "--version",
         "0.0.54",
         "--require-developer-id",
         "--dmg",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg"
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg"
       ],
       "exit": 0,
       "diagnostic": null,
-      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx/signed-without-expected.log"
+      "log": "TASK_TMP/utter-dmg-independent-verifier-6rohbzkx/signed-without-expected.log"
     },
     {
       "name": "unsigned-rejected",
       "command": [
         "bash",
-        "/Users/chenli/projects/utter/scripts/verify-release-artifact.sh",
+        "WORKSPACE/scripts/verify-release-artifact.sh",
         "--app",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
         "--version",
         "0.0.54",
         "--require-developer-id",
         "--expected-cert-sha256",
         "1B499618154DEB0204896CDB199AA65D25EDA2188FEDBB0E29A73063728E4112",
         "--dmg",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/unsigned.dmg"
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/unsigned.dmg"
       ],
       "exit": 1,
       "diagnostic": "DMG signature is invalid",
-      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx/unsigned-rejected.log"
+      "log": "TASK_TMP/utter-dmg-independent-verifier-6rohbzkx/unsigned-rejected.log"
     },
     {
       "name": "untimestamped-rejected",
       "command": [
         "bash",
-        "/Users/chenli/projects/utter/scripts/verify-release-artifact.sh",
+        "WORKSPACE/scripts/verify-release-artifact.sh",
         "--app",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
         "--version",
         "0.0.54",
         "--require-developer-id",
         "--expected-cert-sha256",
         "1B499618154DEB0204896CDB199AA65D25EDA2188FEDBB0E29A73063728E4112",
         "--dmg",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/no-timestamp.dmg"
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/no-timestamp.dmg"
       ],
       "exit": 1,
       "diagnostic": "DMG signature has no secure timestamp",
-      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx/untimestamped-rejected.log"
+      "log": "TASK_TMP/utter-dmg-independent-verifier-6rohbzkx/untimestamped-rejected.log"
     },
     {
       "name": "dmg-display",
       "command": [
         "/usr/bin/codesign",
         "-dvvv",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg"
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg"
       ],
       "exit": 0,
       "diagnostic": null,
-      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx/dmg-display.log"
+      "log": "TASK_TMP/utter-dmg-independent-verifier-6rohbzkx/dmg-display.log"
     },
     {
       "name": "app-display",
       "command": [
         "/usr/bin/codesign",
         "-dvvv",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app"
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app"
       ],
       "exit": 0,
       "diagnostic": null,
-      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx/app-display.log"
+      "log": "TASK_TMP/utter-dmg-independent-verifier-6rohbzkx/app-display.log"
     },
     {
       "name": "dmg-extract-certificate",
       "command": [
         "/usr/bin/codesign",
         "-d",
-        "--extract-certificates=/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx/dmg-cert-",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg"
+        "--extract-certificates=TASK_TMP/utter-dmg-independent-verifier-6rohbzkx/dmg-cert-",
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg"
       ],
       "exit": 0,
       "diagnostic": null,
-      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx/dmg-extract-certificate.log"
+      "log": "TASK_TMP/utter-dmg-independent-verifier-6rohbzkx/dmg-extract-certificate.log"
     },
     {
       "name": "app-extract-certificate",
       "command": [
         "/usr/bin/codesign",
         "-d",
-        "--extract-certificates=/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx/app-cert-",
-        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app"
+        "--extract-certificates=TASK_TMP/utter-dmg-independent-verifier-6rohbzkx/app-cert-",
+        "TASK_TMP/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app"
       ],
       "exit": 0,
       "diagnostic": null,
-      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx/app-extract-certificate.log"
+      "log": "TASK_TMP/utter-dmg-independent-verifier-6rohbzkx/app-extract-certificate.log"
     }
   ],
   "fixture_file_hashes_unchanged": true,
@@ -137,5 +137,9 @@
   "private_key_access": false,
   "signing_performed": false,
   "app_launched": false,
-  "notarization_submitted": false
+  "notarization_submitted": false,
+  "_public_redaction": {
+    "original_sha256": "fca7c9841ef15f6938cfcb08b5dc1ff186dd3763c768f7d4740d43d4585a466b",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
+  }
 }

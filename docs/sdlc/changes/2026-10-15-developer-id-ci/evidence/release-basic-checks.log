@@ -55,9 +55,9 @@ SDLC checks passed.
 Build version tests passed.
 Release version tests passed.
 Nightly release plan tests passed.
-From /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.o4WLIZxDtn/origin
+From TASK_TMP/tmp.o4WLIZxDtn/origin
  * branch            main       -> FETCH_HEAD
-From /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.o4WLIZxDtn/origin
+From TASK_TMP/tmp.o4WLIZxDtn/origin
  * branch            main       -> FETCH_HEAD
 Release workflow contract tests passed.
 

@@ -10,6 +10,10 @@
   "exit": -15,
   "guard_failure": null,
   "lockfile_unchanged": true,
-  "log": "/Users/chenli/projects/utter/docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/evidence/local-release-build.log",
-  "disk_free_bytes": 21671313408
+  "log": "WORKSPACE/docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/evidence/local-release-build.log",
+  "disk_free_bytes": 21671313408,
+  "_public_redaction": {
+    "original_sha256": "c1cba81b6c8aef2d7dd9a595feb00e10be7ecf03cecb7e028a68051b92dd72a2",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
+  }
 }

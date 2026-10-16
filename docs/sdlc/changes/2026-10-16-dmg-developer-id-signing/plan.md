@@ -16,6 +16,13 @@ artifact verifier. Extend the existing workflow contract test; add a focused
 script under `scripts/tests/` only if needed to keep files below 300 lines.
 Do not change app source, dependencies, credentials, code owners, or protections.
 
+The owner's subsequent direct instructions on 2026-10-16 authorize merge,
+public-evidence redaction, and removal of impossible second-person approval
+requirements for this single-developer repository. That explicit instruction
+supersedes this plan's earlier restriction on protection changes only for the
+review settings described below. Keep all CI, signing, production, no-bypass,
+force-push, and deletion controls.
+
 ## Work items
 
 - [x] Record current HEAD, branch, tracked/index/untracked changes, source and
@@ -114,10 +121,12 @@ verification acceptance, PR approval, or a new production decision.
 
 After human verification acceptance, push the scoped fix branch and open a
 reviewable PR. Attach that PR to this task and verify its remote SHA and CI.
-Main currently has one collaborator/code owner and requires an independent
-approving review. Resolve an eligible human approval route for that concrete
-PR before merge. Do not add collaborators, alter code owners, or bypass rules
-under this plan.
+The owner subsequently authorized merging PR #125 and a single-maintainer
+ruleset. Keep mandatory PRs, strict `SDLC Gate`, resolved conversations,
+blocked deletion/force pushes, and no bypass actors. Set required review count
+to zero and disable mandatory code-owner, last-push, and extra unattributed-
+change approvals. Do not add collaborators or change CODEOWNERS. Verify these
+exact settings and the unchanged production human gate before merging.
 
 After the protected merge, verify the exact merged SHA's `SDLC Gate`, recheck
 tags/releases and main, and select the next unused stable version, expected

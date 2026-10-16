@@ -58,7 +58,7 @@ Tests use owner modules directly. Construction fixtures under `Tests/OpenTypeTes
 - **Every stage requires explicit human approval before the next one starts.** Set the artifact's `Status: pending approval` and stop for the user's decision; never mark a stage `approved` on the user's behalf. `approved` requires `Approved-by` and `Approved-date`. Artifacts without a Status header are legacy merged bundles.
 - Begin implementation only after intent has observable acceptance criteria and medium/high-risk design choices have been reviewed.
 - Always run `bash scripts/sdlc-checks.sh`, `bash scripts/ci-basic-checks.sh`, and `swift test`. Add release-style build, real-window visual QA, permission/privacy paths, or clean-machine checks in proportion to risk.
-- High-risk changes require an independent verifier, explicit rollback, PR approval, and protected production approval.
+- High-risk changes require an independent verifier, explicit rollback, the owner's explicit merge authorization, and protected production approval. This single-maintainer repository requires PRs and passing CI, but not a separate GitHub approving reviewer; see `docs/sdlc/github-controls.md`.
 - A production incident must link a corrective intent and add a regression test, deterministic guardrail, eval case, or explicit reason automation is impossible.
 - Never fall back to ad-hoc signing when configured signing fails. A self-signed release must use the configured identity, pass the same artifact/checksum checks, and be labeled as not Apple-notarized.
 

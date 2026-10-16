@@ -5,7 +5,7 @@
   "canaries": {
     "preferences-canary": {
       "exit": 0,
-      "stdout": "false\n/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-developer-id-ci-evidence-8lm_1sy5/test-home"
+      "stdout": "false\nTASK_TMP/utter-developer-id-ci-evidence-8lm_1sy5/test-home"
     },
     "private-path-canary": {
       "exit": 0,
@@ -13,5 +13,9 @@
     }
   },
   "production_probe_file_absent_before_after": true,
-  "preflight_parser_correction": "Initial witness parser expected JSON; canaries emit plain text. Corrected parser before running tests."
+  "preflight_parser_correction": "Initial witness parser expected JSON; canaries emit plain text. Corrected parser before running tests.",
+  "_public_redaction": {
+    "original_sha256": "4d28f8574a6f2492b3b7f0ce831f55c348071117c64057dcc4d6422562a9bc40",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
+  }
 }

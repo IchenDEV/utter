@@ -106,12 +106,15 @@ fix through a PR and protected main. Verify `SDLC Gate` on the exact merged
 candidate. Recheck remote tags and use the next unused stable version, expected
 to be v0.0.54. Retain the failed v0.0.53 tag and its first-failure evidence.
 
-Current GitHub readback lists only `IchenDEV` as a collaborator and sensitive
-path code owner. Main requires a separate approving review, code-owner review,
-and last-push approval, with no bypass actors. Before merge, the concrete PR
-must have an eligible human approval path. This is a rollout prerequisite;
-changing collaborators, code owners, or protection rules is outside this fix.
-Do not represent an agent review as satisfying that human gate.
+Initial GitHub readback listed only `IchenDEV` as collaborator, sensitive-path
+owner, PR author, and pusher. The owner later explicitly requested merge and
+removal of impossible second-person gates for this single-developer repository.
+The authorized adjustment sets required reviews to zero and disables mandatory
+code-owner, last-push, and extra unattributed-change reviews. Mandatory PRs,
+strict `SDLC Gate`, resolved conversations, blocked deletion/force pushes,
+production human approval, and no bypass actors remain. No collaborator or
+CODEOWNERS change is authorized. Independent technical verification is evidence;
+the owner's separate explicit merge instruction supplies the human PR decision.
 
 The new run requires its own human production decision. Preserve v0.0.52 and
 its assets until the new release is verified. Revert the scoped fix through a
@@ -125,7 +128,8 @@ The user approved intent, design, [implementation plan](plan.md), and
 [local verification](verification.md) on 2026-10-16. Independent design and
 implementation reviews found no blocker. Their reports record technical
 verification; human approvals are recorded in the artifact headers. The PR
-approval and new run-specific production decision remain separate gates.
+authorization was subsequently supplied by the owner. A new run-specific
+production decision remains a separate gate.
 
 ## References
 

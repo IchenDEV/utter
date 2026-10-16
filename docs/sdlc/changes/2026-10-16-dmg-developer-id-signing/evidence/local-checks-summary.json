@@ -16,7 +16,7 @@
     "log_sha256": "9abda60c70729ffcc3d95107783ba5b23ca5f3e695a260697c0c3a82e20923e8"
   },
   "swift": {
-    "native_evidence": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-developer-id-ci-evidence-8lm_1sy5/native-run-f8535155",
+    "native_evidence": "TASK_TMP/utter-developer-id-ci-evidence-8lm_1sy5/native-run-f8535155",
     "xctest_bundles": 14,
     "xctest_executed": 1143,
     "xctest_skipped": 17,
@@ -33,7 +33,7 @@
     "command": [
       "/usr/bin/sandbox-exec",
       "-f",
-      "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-developer-id-ci-evidence-8lm_1sy5/test-runtime-narrow.sb",
+      "TASK_TMP/utter-developer-id-ci-evidence-8lm_1sy5/test-runtime-narrow.sb",
       "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift",
       "test",
       "--skip-build",
@@ -48,5 +48,9 @@
   "native_dmg_result": true,
   "package_resolved_sha256": "3a007c520b8b69aa9a675a42675662d7d272e4808dd3e71e4f12e074150219ad",
   "remote_source_writes_performed": false,
-  "new_release_created": false
+  "new_release_created": false,
+  "_public_redaction": {
+    "original_sha256": "8b85b3c1c2e1202f88cdad68e17740d8b09df91e16cdfc091b67fc195c596c76",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
+  }
 }

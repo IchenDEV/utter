@@ -34,4 +34,7 @@ requires one. The verifier reads the accepted artifacts, inspects the actual
 diff and results, and reruns risk-critical checks. The verifier reports findings
 and evidence gaps; it does not repair the change or approve production.
 
-The author or implementation agent cannot satisfy the human approval gate.
+For this single-maintainer repository, the owner's explicit merge authorization
+is the human PR decision. GitHub does not require a separate approving reviewer.
+An implementation agent cannot supply that human decision or production
+approval. Independent technical verification remains required for high-risk work.

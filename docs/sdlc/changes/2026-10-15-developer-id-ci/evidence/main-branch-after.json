@@ -6,12 +6,12 @@
     "commit": {
       "author": {
         "name": "idevlab",
-        "email": "idevlab@outlook.com",
+        "email": "REDACTED_COMMIT_EMAIL",
         "date": "2026-10-10T21:48:02Z"
       },
       "committer": {
         "name": "GitHub",
-        "email": "noreply@github.com",
+        "email": "REDACTED_COMMIT_EMAIL",
         "date": "2026-10-10T21:48:02Z"
       },
       "message": "Merge pull request #122 from IchenDEV/t3/xiaomi-remote-mic",
@@ -25,7 +25,7 @@
         "verified": true,
         "reason": "valid",
         "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJqyrKSCRC1aQ7uu5UhlAAAWa0QADaPWzjZ+YIRpSdBmaCHTpD1\nzciZRQRFfYUxZdVialOt4ioYTsItCA/jp604fleQLxQ280jyCpfE37uCd0TRYJB7\nryAVh9gh2271Luy35Che25AgB4e/5CQGBYlJ1Ec5v950uTl/kAcFv7DhU019xbBz\niDnD+mrRp32NXcSLesdxlMuVMHg3HXE0lagSQzJR9N0EV6e9cei3BSNGdvMDzRZg\nQQeXdzWCT1veuliv7fnRFzTcZj19WI+TyoX/7ncfTfQ7ZuXzHPmhw/l8w3VVSCkN\n5f7Gyqf+JVNJHlQph0Aqy2meTavvcRs8jbfV1nbphdAZNwtT3aajUJTzjaenvb9n\nWPNYB5cEsmtjs1yeGMS9v9NeerDndahGCLMciYAvN+TAzVjixxeYoQTGAs4QjbCm\nUWqerS2nWVphw+1xOP70S+hsDBZmCfPrmLbXBwITaGi3twmrazIeJu0KIoTrpkWm\n89lkKHl7oHwVnnngKF13iWP4fE6LeXtkCa7BVrd40nDV9o9tGNKQOo0B+WzyPqdJ\n7WtXYbghtg5+mj7eSfIaQOTnW+AKyqWA9/gRFIRnRUupYxM5a/CpI0APg2xK3T2r\nHshdFHa8ItL/QFtzdUKG1rQMsN1tMtVJUPJl6EL0JTTqaLJI55YBzzhsnV3J0PB3\nDCkICq62tK+fBCmJpC3f\n=nBOV\n-----END PGP SIGNATURE-----\n",
-        "payload": "tree 12783f01e00ad57369e15dad78868dbeee761479\nparent 64817558dc1e50911a198e0025bee6d6cafdea6d\nparent 51f7f10ae24d9001911840c826a57211ff41a2dd\nauthor idevlab <idevlab@outlook.com> 1791668882 +0800\ncommitter GitHub <noreply@github.com> 1791668882 +0800\n\nMerge pull request #122 from IchenDEV/t3/xiaomi-remote-mic",
+        "payload": "tree 12783f01e00ad57369e15dad78868dbeee761479\nparent 64817558dc1e50911a198e0025bee6d6cafdea6d\nparent 51f7f10ae24d9001911840c826a57211ff41a2dd\nauthor idevlab <REDACTED_COMMIT_EMAIL> 1791668882 +0800\ncommitter GitHub <REDACTED_COMMIT_EMAIL> 1791668882 +0800\n\nMerge pull request #122 from IchenDEV/t3/xiaomi-remote-mic",
         "verified_at": "2026-10-10T21:48:02Z"
       }
     },
@@ -100,5 +100,9 @@
       "checks": []
     }
   },
-  "protection_url": "https://api.github.com/repos/IchenDEV/utter/branches/main/protection"
+  "protection_url": "https://api.github.com/repos/IchenDEV/utter/branches/main/protection",
+  "_public_redaction": {
+    "original_sha256": "aa5341ddad3af0bc62da6bc4701441786bf3bd91f56d63c9a4ec7ca2d91487f4",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
+  }
 }

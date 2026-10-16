@@ -1,10 +1,10 @@
-From /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.5RrqhVRHzc/origin
+From TASK_TMP/tmp.5RrqhVRHzc/origin
  * branch            main       -> FETCH_HEAD
-From /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.5RrqhVRHzc/origin
+From TASK_TMP/tmp.5RrqhVRHzc/origin
  * branch            main       -> FETCH_HEAD
 Signing mode: developer-id
 unsigned Developer ID DMG reached verification
-FAIL: bash -e /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.5RrqhVRHzc/classify.sh
+FAIL: bash -e TASK_TMP/tmp.5RrqhVRHzc/classify.sh
 FAIL: test verify = sign
 verify
 FAIL: test verify = sign

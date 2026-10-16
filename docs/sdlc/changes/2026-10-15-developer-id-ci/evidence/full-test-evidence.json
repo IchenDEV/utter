@@ -8,6 +8,10 @@
   "empty_swift_testing_bundles": 13,
   "complete": true,
   "test_bundle_hashes_unchanged": true,
-  "native_evidence": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-developer-id-ci-evidence-8lm_1sy5/native-run-9d5cbdd1",
-  "swiftpm_wrapper": "blocked before test execution by nested sandbox_apply; preserved in swift-test.log"
+  "native_evidence": "TASK_TMP/utter-developer-id-ci-evidence-8lm_1sy5/native-run-9d5cbdd1",
+  "swiftpm_wrapper": "blocked before test execution by nested sandbox_apply; preserved in swift-test.log",
+  "_public_redaction": {
+    "original_sha256": "4837b5e5549a9387fb11c26b7c00fc52d776f24a8da111d73888743675e293e0",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
+  }
 }

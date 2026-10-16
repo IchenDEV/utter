@@ -99,12 +99,16 @@
   "failures": 0,
   "unique_swift_testing_passed": 1,
   "expected_empty_swift_testing_invocations": 13,
-  "native_run": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-developer-id-ci-evidence-8lm_1sy5/native-run-f8535155",
+  "native_run": "TASK_TMP/utter-developer-id-ci-evidence-8lm_1sy5/native-run-f8535155",
   "runtime_preflight_canaries_verified_from_record": true,
   "runtime_policy_hash_verified": true,
   "protected_swift_test": "Setup failure retained, not passed.",
   "native_signing_block_matches_current_literal_yaml": true,
   "native_signing_block_sha256": "c1ca7730b16cd04fcd44379832f4bb5d1bd66a2d71b258c5d90e9de68455df79",
   "private_credentials_accessed": false,
-  "test_binaries_rerun_by_verifier": false
+  "test_binaries_rerun_by_verifier": false,
+  "_public_redaction": {
+    "original_sha256": "2631c84bff644e543eadc6d57dfa7e3312823d1125fe070a79c30ead1b41feb8",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
+  }
 }

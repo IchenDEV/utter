@@ -28,7 +28,7 @@
       "fixture_files_hashed": 44,
       "dmg_sha256": "24765f7ce54b07cb7b1c9427d8e67cdbcf9df270e8011bb8d82e7e2049a89101",
       "own_mounts_remaining": [],
-      "probe_directory": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-independent-verifier-6rohbzkx",
+      "probe_directory": "TASK_TMP/utter-dmg-independent-verifier-6rohbzkx",
       "report": "native-independent-rerun.json"
     },
     "native_mismatch_boundary": "Actual verifier controlled-tool fixtures cover mismatch including no expected-fingerprint option. No second real Developer ID identity is claimed.",
@@ -95,5 +95,9 @@
     "protected-swift-test.json",
     "full-test-evidence.json"
   ],
-  "git_status_snapshot": " M .github/workflows/release-artifact.yml\n M scripts/tests/test_release_workflow_contract.sh\n M scripts/verify-release-artifact.sh\n?? docs/sdlc/changes/2026-10-15-developer-id-ci/\n?? docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/\n?? scripts/tests/test_release_artifact.py\n"
+  "git_status_snapshot": " M .github/workflows/release-artifact.yml\n M scripts/tests/test_release_workflow_contract.sh\n M scripts/verify-release-artifact.sh\n?? docs/sdlc/changes/2026-10-15-developer-id-ci/\n?? docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/\n?? scripts/tests/test_release_artifact.py\n",
+  "_public_redaction": {
+    "original_sha256": "0c9ebf7aa8c3098a414cb367d9a6399cc32ffa7d92c6ccc6342f55908bf0c25f",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
+  }
 }

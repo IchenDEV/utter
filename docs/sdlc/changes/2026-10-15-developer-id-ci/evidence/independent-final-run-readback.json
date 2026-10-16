@@ -84,11 +84,11 @@
     "timestamp": "2026-10-10T21:48:02Z",
     "author": {
       "name": "idevlab",
-      "email": "idevlab@outlook.com"
+      "email": "REDACTED_COMMIT_EMAIL"
     },
     "committer": {
       "name": "GitHub",
-      "email": "noreply@github.com"
+      "email": "REDACTED_COMMIT_EMAIL"
     }
   },
   "repository": {
@@ -226,5 +226,9 @@
     "labels_url": "https://api.github.com/repos/IchenDEV/utter/labels{/name}",
     "releases_url": "https://api.github.com/repos/IchenDEV/utter/releases{/id}",
     "deployments_url": "https://api.github.com/repos/IchenDEV/utter/deployments"
+  },
+  "_public_redaction": {
+    "original_sha256": "ee6f284818a79af6946d76ac4a056f4451fc3944f2205ba0a87c9aa476c6fb89",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
   }
 }

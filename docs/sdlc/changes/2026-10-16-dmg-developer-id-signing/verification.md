@@ -98,16 +98,41 @@ full suite. Both canaries passed; no private runtime policy was weakened.
 
 The first PR CI attempt rejected unittest separator lines in two newly tracked
 raw evidence logs as conflict markers. The original logs remain unchanged
-locally; lossless JSON copies preserve their contents and SHA-256 in the PR.
+privately. Public JSON copies preserve the failure diagnostics and original
+hashes, with local paths and redundant commit emails redacted.
 The conflict-marker guard and reviewed production/test code are unchanged.
 `evidence/pr-ci-first-failure.json` preserves the exact run, job, and cause.
 
 ## Remaining gates
 
-Human verification acceptance is complete. The remote PR stage is authorized.
-An eligible human PR approval route and a new run-specific production approval
-remain required.
+Human verification acceptance is complete. The owner subsequently requested
+merge, a public disclosure audit, and removal of impossible second-person gates
+for this single-developer repository. The authorized main rules retain PRs,
+strict `SDLC Gate`, blocked force pushes/deletions, and no bypass actors; required
+review count becomes zero, with mandatory code-owner, last-push, and extra
+unattributed-change reviews disabled. Independent technical review and a new
+run-specific production approval remain required.
 The failed v0.0.53 tag and latest public v0.0.52 are preserved.
+
+## Public disclosure and single-maintainer follow-up
+
+The owner explicitly authorized public disclosure checks, merge, and removal
+of impossible second-person gates. No credential, token, private key, PKCS12,
+or notarization credential was found in the audited tracked tree and PR files;
+GitHub reported no open secret-scanning alerts. Twenty-six evidence files now
+use public path/email redactions while original records remain private.
+Earlier GitHub snapshots are not claimed to have been purged.
+
+The independent [public audit](evidence/public-audit-independent.json) found
+no remaining disclosure or governance blocker in the final publication files.
+It independently read the actual ruleset and confirmed that PRs, strict CI,
+resolved conversations, blocked force pushes/deletions, and no bypass actors
+remain. The production environment is byte-for-byte unchanged in the readbacks.
+
+Standard CI on the unchanged production/test code passed in run `38857155983`,
+with 1,143 XCTest cases, 18 conditional skips, zero failures, and one Swift
+Testing case. The final exact-head CI after these evidence/documentation changes
+must pass before the already-authorized squash merge.
 
 ## Rollback
 

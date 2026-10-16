@@ -120,7 +120,7 @@ environments. Token rotation has not been performed by this task.
 ## Evidence location
 
 Public task evidence is at
-`/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-developer-id-ci-evidence-8lm_1sy5/`.
+`TASK_TMP/utter-developer-id-ci-evidence-8lm_1sy5/`.
 The complete passing run is `native-run-9d5cbdd1/`, with per-bundle discovery,
 commands, completion records, and logs. No credential values belong in this
 verification document.
