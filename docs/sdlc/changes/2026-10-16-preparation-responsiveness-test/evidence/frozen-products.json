@@ -1,0 +1,17 @@
+{
+  "product_files": 702,
+  "test_bundle_files": 300,
+  "bundle_count": 14,
+  "product_manifest_sha256": "9340bac14b9b2329a31103896738978df6cda0240a9ca35d8f99474ae451e9e2",
+  "bundle_manifest_sha256": "1c72801ee85740db6e07ddb4abdf134e765f648d07ac6ae576a2510c117f700e",
+  "runtime_policy_sha256": "1c3ccabadb90565b1ddf23d4de039713845ba7d0f32970fa043456b8acdbcf67",
+  "source_sha256": {
+    "Sources/UtterModels/ModelGenerations.swift": "9b6f2235d32495e4ec0ae4621cf984f71a388286f27d022283b8a887bf166f19",
+    "Sources/UtterModels/Native/ModelStorage.swift": "31bc929a9ca496349504260b980766ef6c11db8085541f8bca81839dd714a04b",
+    "Tests/OpenTypeTests/UtilityTests.swift": "de82594de0a80ac8510a84bf1b31b636265bec04ddc367f67cd2cb9707c10da0",
+    "Tests/OpenTypeTests/ModelPreparationResponsivenessTests.swift": "968d10c120a11e3fd8472ab325ca33f9bb9c3351454b2d3d4fffe83990613707",
+    "Package.resolved": "3a007c520b8b69aa9a675a42675662d7d272e4808dd3e71e4f12e074150219ad"
+  },
+  "fixed_dependency_pins": 19,
+  "all_resources_and_metadata_preserved": true
+}

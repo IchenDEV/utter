@@ -1,0 +1,70 @@
+{
+  "controlled_mutation": {
+    "mutation": "Force the entire preparation worker closure onto MainActor",
+    "source_sha256_before": "9b6f2235d32495e4ec0ae4621cf984f71a388286f27d022283b8a887bf166f19",
+    "build_exit": 0,
+    "focused_exit": 0,
+    "source_sha256_restored": "9b6f2235d32495e4ec0ae4621cf984f71a388286f27d022283b8a887bf166f19",
+    "exact_source_restored": true
+  },
+  "mutant_xctest": {
+    "command": [
+      "sandbox-exec",
+      "-f",
+      "TASK_WORK/test-runtime-narrow.sb",
+      "/usr/bin/env",
+      "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+      "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+      "-XCTest",
+      "OpenTypeTests.ModelPreparationResponsivenessTests/testGenerationPreparationKeepsMainActorResponsive",
+      "WORKSPACE/.build/out/Products/Debug/OpenTypeTests.xctest"
+    ],
+    "started_at_utc": "2026-10-16T07:03:13.458437+00:00",
+    "finished_at_utc": "2026-10-16T07:03:22.794731+00:00",
+    "exit": 1,
+    "expected_failure": true,
+    "intended_result": true
+  },
+  "positive": {
+    "command": [
+      "sandbox-exec",
+      "-f",
+      "TASK_WORK/test-runtime-narrow.sb",
+      "/usr/bin/env",
+      "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+      "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+      "-XCTest",
+      "OpenTypeTests.ModelPreparationResponsivenessTests/testGenerationPreparationKeepsMainActorResponsive",
+      "WORKSPACE/.build/out/Products/Debug/OpenTypeTests.xctest"
+    ],
+    "started_at_utc": "2026-10-16T07:02:45.927690+00:00",
+    "finished_at_utc": "2026-10-16T07:02:47.513602+00:00",
+    "exit": 0,
+    "expected_failure": false,
+    "intended_result": true
+  },
+  "restored_positive": {
+    "command": [
+      "sandbox-exec",
+      "-f",
+      "TASK_WORK/test-runtime-narrow.sb",
+      "/usr/bin/env",
+      "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+      "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+      "-XCTest",
+      "OpenTypeTests.ModelPreparationResponsivenessTests/testGenerationPreparationKeepsMainActorResponsive",
+      "WORKSPACE/.build/out/Products/Debug/OpenTypeTests.xctest"
+    ],
+    "started_at_utc": "2026-10-16T07:12:13.432608+00:00",
+    "finished_at_utc": "2026-10-16T07:12:14.251705+00:00",
+    "exit": 0,
+    "expected_failure": false,
+    "intended_result": true
+  },
+  "mutant_assertion": "XCTAssertFalse: MainActor must respond between worker entry and exit",
+  "mutant_duration_seconds": 8.535,
+  "harness_exit_zero_means_expected_xctest_failure_confirmed": true
+}

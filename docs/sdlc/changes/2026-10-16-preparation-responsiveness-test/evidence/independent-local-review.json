@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "verified_at_utc": "2026-10-16T07:21:55.651587+00:00",
+  "result": "pass_local",
+  "blockers": [],
+  "scope": "Independent read-only source and actual local validation evidence review; only this report was written. No tests, builds, credential access, app launch, remote mutation or production approval by verifier.",
+  "source_review": {
+    "result": "pass",
+    "files_sha256": {
+      "Sources/UtterModels/ModelGenerations.swift": "9b6f2235d32495e4ec0ae4621cf984f71a388286f27d022283b8a887bf166f19",
+      "Sources/UtterModels/Native/ModelStorage.swift": "31bc929a9ca496349504260b980766ef6c11db8085541f8bca81839dd714a04b",
+      "Tests/OpenTypeTests/UtilityTests.swift": "de82594de0a80ac8510a84bf1b31b636265bec04ddc367f67cd2cb9707c10da0",
+      "Tests/OpenTypeTests/ModelPreparationResponsivenessTests.swift": "968d10c120a11e3fd8472ab325ca33f9bb9c3351454b2d3d4fffe83990613707"
+    },
+    "callbacks_bracket_real_detached_work": true,
+    "production_callers_retain_nil_defaults": true,
+    "mainactor_observes_entry_before_exit_before_release": true,
+    "copied_bytes_and_background_cleanup_asserted": true,
+    "watchdog_started_before_first_suspension": true,
+    "exact_source_restored_after_mutation": true
+  },
+  "focused_regression": {
+    "positive_exit": 0,
+    "whole_worker_explicit_mainactor_mutation_test_exit": 1,
+    "mutation_harness_exit": 0,
+    "distinction": "The harness exits zero because the actual XCTest process failed its intended responsiveness assertion. This is not a passing mutant test.",
+    "failure_assertion": "MainActor must respond between worker entry and exit",
+    "mutation_test_completed_seconds": 8.535,
+    "restored_positive_exit": 0,
+    "evidence": [
+      "<local-verification>/focused-positive.json",
+      "<local-verification>/focused-mainactor-mutation.json",
+      "<local-verification>/mutation.json",
+      "<local-verification>/focused-restored-positive.json"
+    ]
+  },
+  "native_complete_suite": {
+    "bundle_count": 14,
+    "xctest_unique": 1143,
+    "xctest_skipped": 17,
+    "xctest_failures": 0,
+    "swift_testing_unique": 1,
+    "expected_empty_swift_testing_invocations": 13,
+    "empty_engine_exit": 69,
+    "discovery_started_finished_exact_unique_identity_sets_match": true,
+    "frozen_product_files": 702,
+    "bundle_files": 300,
+    "frozen_and_live_debug_hashes_match_after_wrapper": true,
+    "evidence": "<local-verification>/native-run-cea7d6ab/"
+  },
+  "swift_test_wrapper_attempts": [
+    {
+      "attempt": 1,
+      "exit": 1,
+      "classification": "Real assertion failure in an incorrectly configured isolated runtime",
+      "failed_test": "ModelDownloadTasksTests.testApplicationCatalogResumeEntryStartsBeforeOldDependencyReturns",
+      "assertion_failures": 4,
+      "diagnosis": "CFFIXED_USER_HOME was omitted. The existing facade uses default Application Support storage, which the runtime policy denies before the injected dependency. Source, environment and zero dependency-call assertions support this diagnosis; the log does not directly print a staging mkdir errno.",
+      "raw_evidence_preserved": "<local-verification>/protected-swift-test.log"
+    },
+    {
+      "attempt": 2,
+      "exit": 1,
+      "classification": "Setup failure before test execution",
+      "diagnosis": "Correct isolated CFFIXED_USER_HOME selected an uncached manifest. Compiling it under the outer runtime policy failed with nested sandbox_apply Operation not permitted.",
+      "raw_evidence_preserved": "<local-verification>/protected-swift-test-isolated.log"
+    },
+    {
+      "attempt": 3,
+      "exit": 0,
+      "classification": "Complete guarded swift test success",
+      "resolution": "Precompiled the isolated-home manifest with native SwiftPM build sandboxing outside the test runtime policy, then ran swift test --skip-build --skip-update --disable-automatic-resolution under the unchanged runtime policy and isolated home. No product repair or sandbox disabling.",
+      "xctest_unique": 1143,
+      "xctest_skipped": 17,
+      "xctest_failures": 0,
+      "swift_testing_unique": 1,
+      "bundle_final_pass_summaries": 14,
+      "discovery_started_finished_exact_unique_identity_sets_match": true,
+      "log_sha256": "b3e564c39430161757ad829724998094d73e9fd01443bb754ce585daeb7e8ad1",
+      "evidence": [
+        "<local-verification>/isolated-manifest-build.json",
+        "<local-verification>/protected-swift-test-prewarmed.json",
+        "<local-verification>/protected-swift-test-complete-audit.json"
+      ]
+    }
+  ],
+  "environment_protection": {
+    "minimal_runner_environments": true,
+    "runtime_policy_sha256": "1c3ccabadb90565b1ddf23d4de039713845ba7d0f32970fa043456b8acdbcf67",
+    "real_private_paths_and_preferences_daemons_denied": true,
+    "fresh_preference_canary_failed_to_sync_and_real_probe_absent": true,
+    "keychain_path_open_canary_errno": 1,
+    "native_swiftpm_build_sandbox_preserved": true,
+    "automatic_dependency_resolution_disabled": true,
+    "package_resolved_sha256": "3a007c520b8b69aa9a675a42675662d7d272e4808dd3e71e4f12e074150219ad",
+    "all_recorded_build_check_endpoints_above_10_gib": true
+  },
+  "checks": {
+    "sdlc_exit": 0,
+    "basic_checks_exit": 0,
+    "release_style_build_exit": 0,
+    "release_style_version": "0.0.55",
+    "release_style_build_number": "0.0.55",
+    "local_app_strict_deep_codesign_verified_by_independent_verifier": true,
+    "app_identity": "Developer ID Application: Chen Li (G9L7H3T3D5)",
+    "app_team": "G9L7H3T3D5",
+    "app_hardened_runtime": true,
+    "app_secure_timestamp_present": true,
+    "assembled_dmg_sha256": "e1fd29277cc9f7fd4183c81f08f6b249386ddabafa47245c436a4d3bc8a83b73",
+    "build_log_contains_hdiutil_checksum_and_mounted_app_signature_verification": true,
+    "release_build_log_sha256": "8c89f6da558fbb0cd5f9e25a8a82740b5d44e6b31542aa7d367ebb86215b3351"
+  },
+  "remaining_delivery_gates": [
+    "Publish sanitized evidence and pass exact PR-head CI before owner-authorized merge.",
+    "Verify exact merged-main CI before a new immutable release tag.",
+    "A future concrete release run requires separate human production approval."
+  ],
+  "limits": [
+    "This local packaging result is not Apple notarization, Gatekeeper acceptance or a published release.",
+    "Failed v0.0.53 and v0.0.54 release histories remain preserved.",
+    "Original local logs and paths remain outside this report; public evidence must be sanitized before publication."
+  ],
+  "rollback": "Revert only the scoped preparation test and callback plumbing through a PR; retain responsiveness assertions and existing signing, CI and production controls."
+}

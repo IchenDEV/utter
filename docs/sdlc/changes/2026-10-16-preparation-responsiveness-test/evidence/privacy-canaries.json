@@ -1,0 +1,14 @@
+{
+  "policy_sha256": "1c3ccabadb90565b1ddf23d4de039713845ba7d0f32970fa043456b8acdbcf67",
+  "canaries": {
+    "preferences-canary": {
+      "exit": 0,
+      "stdout": "false\nTASK_WORK/test-home"
+    },
+    "private-path-canary": {
+      "exit": 0,
+      "stdout": "errno=1"
+    }
+  },
+  "real_probe_absent_before_after": true
+}

@@ -1,0 +1,18 @@
+{
+  "release_v0054": "Complete CI failed the old timing-based preparation test; signing and production were skipped. Original failure retained in the upstream signing bundle.",
+  "disk_floor": "Local release build guard refused to start while system free disk was below 10 GiB. After active test processes ended, space recovered above the floor; no user apps/data/history were removed.",
+  "first_protected_wrapper": {
+    "exit": 1,
+    "xctest_assertions_failed": 4,
+    "affected_test": "ModelDownloadTasksTests.testApplicationCatalogResumeEntryStartsBeforeOldDependencyReturns",
+    "diagnosis": "Driver omitted CFFIXED_USER_HOME. ModelStorage.defaultRoot resolved into the real Utter Application Support path denied by the privacy policy. Preparation precedes the injected dependency. This diagnosis follows environment, policy and source; the log did not print the underlying mkdir errno.",
+    "runtime_log_sha256": "636880f2c605a624f2ca9d387c0b1d7b022d94e71e5c6186383a3439de21673b"
+  },
+  "second_protected_wrapper": {
+    "exit": 1,
+    "tests_started": 0,
+    "diagnosis": "Correct isolated user directory required an uncached SwiftPM manifest. Native nested sandbox_apply was refused before tests.",
+    "runtime_log_sha256": "8b07fd611c833dfa4a3b026868e42951611c4d218d8a83698d555d6ca52d4037"
+  },
+  "resolution": "Compile the same isolated-home manifest and tests outside the private runtime policy with native SwiftPM sandboxing preserved. Run protected swift test --skip-build using that same CFFIXED_USER_HOME. Full execution then passed without product code changes or a weakened policy."
+}

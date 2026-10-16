@@ -1,0 +1,7 @@
+{
+  "scope": "All four changed Swift files and both new/updated SDLC bundles for this correction; public diff before push",
+  "files_scanned": 21,
+  "findings": [],
+  "raw_logs_not_included": true,
+  "public_certificate_metadata_is_expected": true
+}
