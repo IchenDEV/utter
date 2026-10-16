@@ -1,0 +1,104 @@
+{
+  "name": "main",
+  "commit": {
+    "sha": "f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+    "node_id": "C_kwDORZD8nNoAKGYwZWYyYWE4ODI5NmRhMDE3ZTI5Y2VkMmI3YmM5MjcxYWY5NmU0ZmI",
+    "commit": {
+      "author": {
+        "name": "idevlab",
+        "email": "idevlab@outlook.com",
+        "date": "2026-10-10T21:48:02Z"
+      },
+      "committer": {
+        "name": "GitHub",
+        "email": "noreply@github.com",
+        "date": "2026-10-10T21:48:02Z"
+      },
+      "message": "Merge pull request #122 from IchenDEV/t3/xiaomi-remote-mic",
+      "tree": {
+        "sha": "12783f01e00ad57369e15dad78868dbeee761479",
+        "url": "https://api.github.com/repos/IchenDEV/utter/git/trees/12783f01e00ad57369e15dad78868dbeee761479"
+      },
+      "url": "https://api.github.com/repos/IchenDEV/utter/git/commits/f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+      "comment_count": 0,
+      "verification": {
+        "verified": true,
+        "reason": "valid",
+        "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJqyrKSCRC1aQ7uu5UhlAAAWa0QADaPWzjZ+YIRpSdBmaCHTpD1\nzciZRQRFfYUxZdVialOt4ioYTsItCA/jp604fleQLxQ280jyCpfE37uCd0TRYJB7\nryAVh9gh2271Luy35Che25AgB4e/5CQGBYlJ1Ec5v950uTl/kAcFv7DhU019xbBz\niDnD+mrRp32NXcSLesdxlMuVMHg3HXE0lagSQzJR9N0EV6e9cei3BSNGdvMDzRZg\nQQeXdzWCT1veuliv7fnRFzTcZj19WI+TyoX/7ncfTfQ7ZuXzHPmhw/l8w3VVSCkN\n5f7Gyqf+JVNJHlQph0Aqy2meTavvcRs8jbfV1nbphdAZNwtT3aajUJTzjaenvb9n\nWPNYB5cEsmtjs1yeGMS9v9NeerDndahGCLMciYAvN+TAzVjixxeYoQTGAs4QjbCm\nUWqerS2nWVphw+1xOP70S+hsDBZmCfPrmLbXBwITaGi3twmrazIeJu0KIoTrpkWm\n89lkKHl7oHwVnnngKF13iWP4fE6LeXtkCa7BVrd40nDV9o9tGNKQOo0B+WzyPqdJ\n7WtXYbghtg5+mj7eSfIaQOTnW+AKyqWA9/gRFIRnRUupYxM5a/CpI0APg2xK3T2r\nHshdFHa8ItL/QFtzdUKG1rQMsN1tMtVJUPJl6EL0JTTqaLJI55YBzzhsnV3J0PB3\nDCkICq62tK+fBCmJpC3f\n=nBOV\n-----END PGP SIGNATURE-----\n",
+        "payload": "tree 12783f01e00ad57369e15dad78868dbeee761479\nparent 64817558dc1e50911a198e0025bee6d6cafdea6d\nparent 51f7f10ae24d9001911840c826a57211ff41a2dd\nauthor idevlab <idevlab@outlook.com> 1791668882 +0800\ncommitter GitHub <noreply@github.com> 1791668882 +0800\n\nMerge pull request #122 from IchenDEV/t3/xiaomi-remote-mic",
+        "verified_at": "2026-10-10T21:48:02Z"
+      }
+    },
+    "url": "https://api.github.com/repos/IchenDEV/utter/commits/f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+    "html_url": "https://github.com/IchenDEV/utter/commit/f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+    "comments_url": "https://api.github.com/repos/IchenDEV/utter/commits/f0ef2aa88296da017e29ced2b7bc9271af96e4fb/comments",
+    "author": {
+      "login": "IchenDEV",
+      "id": 34794972,
+      "node_id": "MDQ6VXNlcjM0Nzk0OTcy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/34794972?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/IchenDEV",
+      "html_url": "https://github.com/IchenDEV",
+      "followers_url": "https://api.github.com/users/IchenDEV/followers",
+      "following_url": "https://api.github.com/users/IchenDEV/following{/other_user}",
+      "gists_url": "https://api.github.com/users/IchenDEV/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/IchenDEV/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/IchenDEV/subscriptions",
+      "organizations_url": "https://api.github.com/users/IchenDEV/orgs",
+      "repos_url": "https://api.github.com/users/IchenDEV/repos",
+      "events_url": "https://api.github.com/users/IchenDEV/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/IchenDEV/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "web-flow",
+      "id": 19864447,
+      "node_id": "MDQ6VXNlcjE5ODY0NDQ3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19864447?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/web-flow",
+      "html_url": "https://github.com/web-flow",
+      "followers_url": "https://api.github.com/users/web-flow/followers",
+      "following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+      "gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+      "organizations_url": "https://api.github.com/users/web-flow/orgs",
+      "repos_url": "https://api.github.com/users/web-flow/repos",
+      "events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/web-flow/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "64817558dc1e50911a198e0025bee6d6cafdea6d",
+        "url": "https://api.github.com/repos/IchenDEV/utter/commits/64817558dc1e50911a198e0025bee6d6cafdea6d",
+        "html_url": "https://github.com/IchenDEV/utter/commit/64817558dc1e50911a198e0025bee6d6cafdea6d"
+      },
+      {
+        "sha": "51f7f10ae24d9001911840c826a57211ff41a2dd",
+        "url": "https://api.github.com/repos/IchenDEV/utter/commits/51f7f10ae24d9001911840c826a57211ff41a2dd",
+        "html_url": "https://github.com/IchenDEV/utter/commit/51f7f10ae24d9001911840c826a57211ff41a2dd"
+      }
+    ]
+  },
+  "_links": {
+    "self": "https://api.github.com/repos/IchenDEV/utter/branches/main",
+    "html": "https://github.com/IchenDEV/utter/tree/main"
+  },
+  "protected": true,
+  "protection": {
+    "enabled": false,
+    "required_status_checks": {
+      "enforcement_level": "off",
+      "contexts": [],
+      "checks": []
+    }
+  },
+  "protection_url": "https://api.github.com/repos/IchenDEV/utter/branches/main/protection"
+}

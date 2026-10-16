@@ -1,0 +1,107 @@
+
+==> Checking Package.swift
+Swift module boundaries passed.
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.002s
+
+OK
+Owned resources passed.
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.031s
+
+OK
+FFFFFF...................E
+======================================================================
+ERROR: test_voice_quality_acceptance (unittest.loader._FailedTest)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_voice_quality_acceptance
+Traceback (most recent call last):
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py", line 436, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py", line 377, in _get_module_from_name
+    __import__(name)
+  File "/Users/chenli/projects/utter/scripts/tests/test_voice_quality_acceptance.py", line 6, in <module>
+    from voice_quality_acceptance import REQUIRED_DEMOS, acceptance_report
+  File "/Users/chenli/projects/utter/scripts/voice_quality_acceptance.py", line 8, in <module>
+    def acceptance_report(records: list[dict[str, Any]], manifest: dict[str, Any] | None) -> dict[str, Any]:
+TypeError: unsupported operand type(s) for |: 'types.GenericAlias' and 'NoneType'
+
+
+======================================================================
+FAIL: test_fidelity_preserves_sentence_email_opaque_paths_and_quotes (test_evaluate_voice_quality.VoiceQualityEvaluatorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/chenli/projects/utter/scripts/tests/test_evaluate_voice_quality.py", line 145, in test_fidelity_preserves_sentence_email_opaque_paths_and_quotes
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "/Users/chenli/projects/utter/scripts/evaluate-voice-quality.py", line 14, in <module>
+    from voice_quality_acceptance import acceptance_report
+  File "/Users/chenli/projects/utter/scripts/voice_quality_acceptance.py", line 8, in <module>
+    def acceptance_report(records: list[dict[str, Any]], manifest: dict[str, Any] | None) -> dict[str, Any]:
+TypeError: unsupported operand type(s) for |: 'types.GenericAlias' and 'NoneType'
+
+
+======================================================================
+FAIL: test_fidelity_rejects_added_numbers_and_changed_unicode_space_path (test_evaluate_voice_quality.VoiceQualityEvaluatorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/chenli/projects/utter/scripts/tests/test_evaluate_voice_quality.py", line 103, in test_fidelity_rejects_added_numbers_and_changed_unicode_space_path
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "/Users/chenli/projects/utter/scripts/evaluate-voice-quality.py", line 14, in <module>
+    from voice_quality_acceptance import acceptance_report
+  File "/Users/chenli/projects/utter/scripts/voice_quality_acceptance.py", line 8, in <module>
+    def acceptance_report(records: list[dict[str, Any]], manifest: dict[str, Any] | None) -> dict[str, Any]:
+TypeError: unsupported operand type(s) for |: 'types.GenericAlias' and 'NoneType'
+
+
+======================================================================
+FAIL: test_fidelity_rejects_reordered_number_ownership (test_evaluate_voice_quality.VoiceQualityEvaluatorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/chenli/projects/utter/scripts/tests/test_evaluate_voice_quality.py", line 169, in test_fidelity_rejects_reordered_number_ownership
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "/Users/chenli/projects/utter/scripts/evaluate-voice-quality.py", line 14, in <module>
+    from voice_quality_acceptance import acceptance_report
+  File "/Users/chenli/projects/utter/scripts/voice_quality_acceptance.py", line 8, in <module>
+    def acceptance_report(records: list[dict[str, Any]], manifest: dict[str, Any] | None) -> dict[str, Any]:
+TypeError: unsupported operand type(s) for |: 'types.GenericAlias' and 'NoneType'
+
+
+======================================================================
+FAIL: test_help_documents_schema (test_evaluate_voice_quality.VoiceQualityEvaluatorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/chenli/projects/utter/scripts/tests/test_evaluate_voice_quality.py", line 189, in test_help_documents_schema
+    self.assertEqual(result.returncode, 0)
+AssertionError: 1 != 0
+
+======================================================================
+FAIL: test_rejects_missing_required_field_with_line_number (test_evaluate_voice_quality.VoiceQualityEvaluatorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/chenli/projects/utter/scripts/tests/test_evaluate_voice_quality.py", line 178, in test_rejects_missing_required_field_with_line_number
+    self.assertEqual(result.returncode, 2)
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_reports_asr_processed_fidelity_hallucination_and_latency (test_evaluate_voice_quality.VoiceQualityEvaluatorTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/chenli/projects/utter/scripts/tests/test_evaluate_voice_quality.py", line 61, in test_reports_asr_processed_fidelity_hallucination_and_latency
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "/Users/chenli/projects/utter/scripts/evaluate-voice-quality.py", line 14, in <module>
+    from voice_quality_acceptance import acceptance_report
+  File "/Users/chenli/projects/utter/scripts/voice_quality_acceptance.py", line 8, in <module>
+    def acceptance_report(records: list[dict[str, Any]], manifest: dict[str, Any] | None) -> dict[str, Any]:
+TypeError: unsupported operand type(s) for |: 'types.GenericAlias' and 'NoneType'
+
+
+----------------------------------------------------------------------
+Ran 26 tests in 17.409s
+
+FAILED (failures=6, errors=1)

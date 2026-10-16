@@ -1,0 +1,132 @@
+{
+  "verified_at_utc": "2026-10-16T03:30:17.184449+00:00",
+  "native_directory": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b",
+  "app": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
+  "signed_dmg": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg",
+  "unsigned_dmg": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/unsigned.dmg",
+  "untimestamped_dmg": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/no-timestamp.dmg",
+  "certificate_sha256": "1B499618154DEB0204896CDB199AA65D25EDA2188FEDBB0E29A73063728E4112",
+  "identity": "Developer ID Application: Chen Li (G9L7H3T3D5)",
+  "team": "G9L7H3T3D5",
+  "dmg_sha256": "24765f7ce54b07cb7b1c9427d8e67cdbcf9df270e8011bb8d82e7e2049a89101",
+  "actual_shared_workflow_block_sha256": "c1ca7730b16cd04fcd44379832f4bb5d1bd66a2d71b258c5d90e9de68455df79",
+  "results": [
+    {
+      "name": "unsigned-rejected",
+      "command": [
+        "bash",
+        "/Users/chenli/projects/utter/scripts/verify-release-artifact.sh",
+        "--app",
+        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
+        "--version",
+        "0.0.54",
+        "--require-developer-id",
+        "--expected-cert-sha256",
+        "1B499618154DEB0204896CDB199AA65D25EDA2188FEDBB0E29A73063728E4112",
+        "--dmg",
+        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/unsigned.dmg"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "diagnostic": "DMG signature is invalid",
+      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/unsigned-rejected.log"
+    },
+    {
+      "name": "sign-without-timestamp",
+      "command": [
+        "/usr/bin/codesign",
+        "--force",
+        "--sign",
+        "Developer ID Application: Chen Li (G9L7H3T3D5)",
+        "--timestamp=none",
+        "--identifier",
+        "com.opentype.voiceinput.dmg",
+        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/no-timestamp.dmg"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "diagnostic": null,
+      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/sign-without-timestamp.log"
+    },
+    {
+      "name": "untimestamped-rejected",
+      "command": [
+        "bash",
+        "/Users/chenli/projects/utter/scripts/verify-release-artifact.sh",
+        "--app",
+        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
+        "--version",
+        "0.0.54",
+        "--require-developer-id",
+        "--expected-cert-sha256",
+        "1B499618154DEB0204896CDB199AA65D25EDA2188FEDBB0E29A73063728E4112",
+        "--dmg",
+        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/no-timestamp.dmg"
+      ],
+      "exit": 1,
+      "expected_exit": 1,
+      "diagnostic": "DMG signature has no secure timestamp",
+      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/untimestamped-rejected.log"
+    },
+    {
+      "name": "actual-shared-signing-block",
+      "command": [
+        "bash",
+        "-e",
+        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/shared-signing-block.sh"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "diagnostic": null,
+      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/actual-shared-signing-block.log"
+    },
+    {
+      "name": "matching-without-expected",
+      "command": [
+        "bash",
+        "/Users/chenli/projects/utter/scripts/verify-release-artifact.sh",
+        "--app",
+        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter.app",
+        "--dmg",
+        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg",
+        "--version",
+        "0.0.54",
+        "--require-developer-id"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "diagnostic": null,
+      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/matching-without-expected.log"
+    },
+    {
+      "name": "dmg-signature-metadata",
+      "command": [
+        "/usr/bin/codesign",
+        "-dvvv",
+        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "diagnostic": null,
+      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dmg-signature-metadata.log"
+    },
+    {
+      "name": "extract-native-dmg-certificate",
+      "command": [
+        "/usr/bin/codesign",
+        "-d",
+        "--extract-certificates=/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dmg-cert-",
+        "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/dist/Utter-0.0.54.dmg"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "diagnostic": null,
+      "log": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-dmg-signing-native-pp1zkm9b/extract-native-dmg-certificate.log"
+    }
+  ],
+  "task_mounts_remaining": [],
+  "certificate_mismatch_coverage": "Controlled-tool actual verifier fixture; no second native Developer ID identity claimed.",
+  "notarization_performed": false,
+  "published": false,
+  "success": true
+}

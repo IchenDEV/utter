@@ -1,0 +1,8 @@
+{
+  "verifier": "/root/signing_verifier",
+  "result": "no remaining blocker",
+  "helper_sha256": "b7fe86e2080cd7b6a007cb05a2eff6035fd4a15fb8c432f01e963b0c42749512",
+  "human_approval": false,
+  "scope": "technical readiness under approved plan; does not approve production",
+  "compatibility_correction": "System LibreSSL used for Apple PKCS12; independently reviewed"
+}

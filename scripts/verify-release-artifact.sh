@@ -68,9 +68,13 @@ certificate_sha256() {
         rm -r "$cert_dir"
         return 1
     fi
-    fingerprint="$(openssl x509 -inform DER -in "${cert_prefix}0" -noout \
-        -fingerprint -sha256 | cut -d= -f2 | tr -d ':' | tr '[:lower:]' '[:upper:]')"
+    if ! fingerprint="$(openssl x509 -inform DER -in "${cert_prefix}0" -noout \
+        -fingerprint -sha256 | cut -d= -f2 | tr -d ':' | tr '[:lower:]' '[:upper:]')"; then
+        rm -r "$cert_dir"
+        return 1
+    fi
     rm -r "$cert_dir"
+    [[ "$fingerprint" =~ ^[A-F0-9]{64}$ ]] || return 1
     printf '%s\n' "$fingerprint"
 }
 
@@ -158,6 +162,21 @@ verify_app "$APP_PATH"
 
 if [ -n "$DMG_PATH" ]; then
     [ -f "$DMG_PATH" ] || fail "DMG not found: $DMG_PATH"
+    if [ "$REQUIRE_DEVELOPER_ID" = true ]; then
+        codesign --verify --strict --verbose=2 "$DMG_PATH" \
+            || fail "DMG signature is invalid"
+        dmg_signature="$(codesign -dvvv "$DMG_PATH" 2>&1)"
+        grep -q '^Authority=Developer ID Application:' <<<"$dmg_signature" \
+            || fail "DMG is not signed with a Developer ID Application identity"
+        grep -Eq '^Timestamp=.+$' <<<"$dmg_signature" \
+            || fail "DMG signature has no secure timestamp"
+        app_cert_sha256="$(certificate_sha256 "$APP_PATH")" \
+            || fail "could not extract the app signing certificate"
+        dmg_cert_sha256="$(certificate_sha256 "$DMG_PATH")" \
+            || fail "could not extract the DMG signing certificate"
+        [ "$dmg_cert_sha256" = "$app_cert_sha256" ] \
+            || fail "DMG signing certificate does not match the app certificate"
+    fi
     hdiutil verify "$DMG_PATH" >/dev/null
 
     mount_point="$(mktemp -d)"

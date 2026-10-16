@@ -1,0 +1,17 @@
+{
+  "swift_resource_package_inputs_match_f0ef2aa": true,
+  "frozen_bundle_files_match": 300,
+  "runtime_policy_sha256": "1c3ccabadb90565b1ddf23d4de039713845ba7d0f32970fa043456b8acdbcf67",
+  "canaries": {
+    "preferences-canary": {
+      "exit": 0,
+      "stdout": "false\n/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-developer-id-ci-evidence-8lm_1sy5/test-home"
+    },
+    "private-path-canary": {
+      "exit": 0,
+      "stdout": "errno=1"
+    }
+  },
+  "production_probe_file_absent_before_after": true,
+  "preflight_parser_correction": "Initial witness parser expected JSON; canaries emit plain text. Corrected parser before running tests."
+}

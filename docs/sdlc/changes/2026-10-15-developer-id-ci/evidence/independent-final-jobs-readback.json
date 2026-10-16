@@ -1,0 +1,253 @@
+{
+  "total_count": 2,
+  "jobs": [
+    {
+      "id": 116544650129,
+      "run_id": 38770474797,
+      "workflow_name": "Release",
+      "head_branch": "v0.0.53",
+      "run_url": "https://api.github.com/repos/IchenDEV/utter/actions/runs/38770474797",
+      "run_attempt": 1,
+      "node_id": "CR_kwDORZD8nM8AAAAbIpo7kQ",
+      "head_sha": "f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+      "url": "https://api.github.com/repos/IchenDEV/utter/actions/jobs/116544650129",
+      "html_url": "https://github.com/IchenDEV/utter/actions/runs/38770474797/job/116544650129",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-10-15T16:36:53Z",
+      "started_at": "2026-10-15T16:37:02Z",
+      "completed_at": "2026-10-15T16:46:46Z",
+      "name": "Release Candidate Tests",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-15T16:37:02Z",
+          "completed_at": "2026-10-15T16:37:03Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-15T16:37:03Z",
+          "completed_at": "2026-10-15T16:37:09Z"
+        },
+        {
+          "name": "Require a SemVer tag on main",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-15T16:37:09Z",
+          "completed_at": "2026-10-15T16:37:10Z"
+        },
+        {
+          "name": "Run repository checks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-15T16:37:10Z",
+          "completed_at": "2026-10-15T16:39:11Z"
+        },
+        {
+          "name": "Ensure Metal toolchain",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-15T16:39:11Z",
+          "completed_at": "2026-10-15T16:39:17Z"
+        },
+        {
+          "name": "Resolve version from tag",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-15T16:39:17Z",
+          "completed_at": "2026-10-15T16:39:17Z"
+        },
+        {
+          "name": "Run unit tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-15T16:39:17Z",
+          "completed_at": "2026-10-15T16:46:40Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-10-15T16:46:40Z",
+          "completed_at": "2026-10-15T16:46:42Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-10-15T16:46:42Z",
+          "completed_at": "2026-10-15T16:46:44Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/IchenDEV/utter/check-runs/116544650129",
+      "labels": [
+        "macos-26"
+      ],
+      "runner_id": 1000020757,
+      "runner_name": "GitHub Actions 1000020757",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 116549335673,
+      "run_id": 38770474797,
+      "workflow_name": "Release",
+      "head_branch": "v0.0.53",
+      "run_url": "https://api.github.com/repos/IchenDEV/utter/actions/runs/38770474797",
+      "run_attempt": 1,
+      "node_id": "CR_kwDORZD8nM8AAAAbIuG6eQ",
+      "head_sha": "f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+      "url": "https://api.github.com/repos/IchenDEV/utter/actions/jobs/116549335673",
+      "html_url": "https://github.com/IchenDEV/utter/actions/runs/38770474797/job/116549335673",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-10-15T16:46:46Z",
+      "started_at": "2026-10-15T16:51:57Z",
+      "completed_at": "2026-10-15T17:06:54Z",
+      "name": "Sign, Verify & Publish / Sign, Verify & Publish",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-15T16:51:57Z",
+          "completed_at": "2026-10-15T16:51:58Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-15T16:51:58Z",
+          "completed_at": "2026-10-15T16:52:02Z"
+        },
+        {
+          "name": "Validate version and tag",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-15T16:52:02Z",
+          "completed_at": "2026-10-15T16:52:02Z"
+        },
+        {
+          "name": "Require a SemVer tag on main",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-15T16:52:02Z",
+          "completed_at": "2026-10-15T16:52:02Z"
+        },
+        {
+          "name": "Create and push release tag",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-10-15T16:52:02Z",
+          "completed_at": "2026-10-15T16:52:02Z"
+        },
+        {
+          "name": "Require release credentials",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-15T16:52:02Z",
+          "completed_at": "2026-10-15T16:52:03Z"
+        },
+        {
+          "name": "Import signing certificate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-15T16:52:03Z",
+          "completed_at": "2026-10-15T16:52:03Z"
+        },
+        {
+          "name": "Ensure Metal toolchain",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-15T16:52:03Z",
+          "completed_at": "2026-10-15T16:52:08Z"
+        },
+        {
+          "name": "Build signed app and DMG",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-15T16:52:08Z",
+          "completed_at": "2026-10-15T17:05:53Z"
+        },
+        {
+          "name": "Classify and verify signed artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-10-15T17:05:53Z",
+          "completed_at": "2026-10-15T17:05:57Z"
+        },
+        {
+          "name": "Notarize and staple DMG",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-15T17:05:57Z",
+          "completed_at": "2026-10-15T17:06:41Z"
+        },
+        {
+          "name": "Verify distribution and checksum",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 12,
+          "started_at": "2026-10-15T17:06:41Z",
+          "completed_at": "2026-10-15T17:06:47Z"
+        },
+        {
+          "name": "Publish GitHub Release",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13,
+          "started_at": "2026-10-15T17:06:47Z",
+          "completed_at": "2026-10-15T17:06:47Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26,
+          "started_at": "2026-10-15T17:06:47Z",
+          "completed_at": "2026-10-15T17:06:48Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "started_at": "2026-10-15T17:06:48Z",
+          "completed_at": "2026-10-15T17:06:52Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/IchenDEV/utter/check-runs/116549335673",
+      "labels": [
+        "macos-26"
+      ],
+      "runner_id": 1000020758,
+      "runner_name": "GitHub Actions 1000020758",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

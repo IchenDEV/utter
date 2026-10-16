@@ -1,0 +1,252 @@
+
+==> Checking Package.swift
+Swift module boundaries passed.
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.003s
+
+OK
+Owned resources passed.
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.023s
+
+OK
+...........................
+----------------------------------------------------------------------
+Ran 27 tests in 0.256s
+
+OK
+
+==> Checking SDLC artifacts and harness regression tests
+==> Checking docs/sdlc/changes/2026-08-25-ai-native-sdlc/
+==> Checking docs/sdlc/changes/2026-08-26-dmg-installer-polish/
+==> Checking docs/sdlc/changes/2026-08-29-espresso-ane/
+==> Checking docs/sdlc/changes/2026-08-30-dev-app-icon-packaging/
+==> Checking docs/sdlc/changes/2026-08-30-history-mode-switch/
+==> Checking docs/sdlc/changes/2026-08-30-model-type-selection/
+==> Checking docs/sdlc/changes/2026-08-30-settings-window-layout/
+==> Checking docs/sdlc/changes/2026-08-30-system-settings-groups/
+==> Checking docs/sdlc/changes/2026-08-31-ane-lm-runtime/
+==> Checking docs/sdlc/changes/2026-08-31-settings-semantic-background/
+==> Checking docs/sdlc/changes/2026-08-31-shell-sdlc-gate/
+==> Checking docs/sdlc/changes/2026-08-31-website-native-redesign/
+==> Checking docs/sdlc/changes/2026-09-03-release-p12-openssl3/
+==> Checking docs/sdlc/changes/2026-09-18-nightly-release-pipeline/
+==> Checking docs/sdlc/changes/2026-09-21-model-download-retry-recovery/
+==> Checking docs/sdlc/changes/2026-09-21-remote-mic-integration/
+==> Checking docs/sdlc/changes/2026-09-21-settings-surface-parity/
+==> Checking docs/sdlc/changes/2026-09-23-confucius4-r2t2-mlx/
+==> Checking docs/sdlc/changes/2026-09-23-input-session-ownership/
+==> Checking docs/sdlc/changes/2026-09-23-silent-input-insertion/
+==> Checking docs/sdlc/changes/2026-09-24-industry-lexicon-expansion/
+==> Checking docs/sdlc/changes/2026-09-24-release-workflow-permissions/
+==> Checking docs/sdlc/changes/2026-09-28-release-input-contract/
+==> Checking docs/sdlc/changes/2026-09-30-firered-asr-download-completeness/
+==> Checking docs/sdlc/changes/2026-10-01-clamshell-mic-failover/
+==> Checking docs/sdlc/changes/2026-10-01-stable-prompt-prefix-cache/
+==> Checking docs/sdlc/changes/2026-10-03-builtin-plugin-composition/
+==> Checking docs/sdlc/changes/2026-10-03-promo-videos/
+==> Checking docs/sdlc/changes/2026-10-04-voice-input-reliability/
+==> Checking docs/sdlc/changes/2026-10-07-desktop-numeral-list-fidelity/
+==> Checking docs/sdlc/changes/2026-10-07-xiaomi-remote-connection/
+==> Checking docs/sdlc/changes/2026-10-15-developer-id-ci/
+SDLC checks passed.
+Build version tests passed.
+Release version tests passed.
+Nightly release plan tests passed.
+From /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.o4WLIZxDtn/origin
+ * branch            main       -> FETCH_HEAD
+From /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.o4WLIZxDtn/origin
+ * branch            main       -> FETCH_HEAD
+Release workflow contract tests passed.
+
+==> Linting property lists and localized strings
+Resources/Info.plist: OK
+Resources/OpenType.entitlements: OK
+Sources/UtterContracts/Resources/en.lproj/Localizable.strings: OK
+Sources/UtterContracts/Resources/zh-Hans.lproj/Localizable.strings: OK
+
+==> Checking brand and compatibility identifiers
+
+==> Checking localization key parity
+
+==> Checking industry vocabulary
+Building for debugging...
+[0/15] Write sources
+[4/15] Copying Info.plist
+[4/15] Copying Localizable.strings
+[6/15] Copying Info.plist
+[7/15] Copying Localizable.strings
+[7/15] Copying THUOCL-LICENSE.txt
+[8/15] Copying IndustryLexicons.json
+[10/15] Write UtterLexiconCheck-entitlement.plist
+[11/15] Write swift-version--1AB21518FC5DEDBE.txt
+[13/25] Compiling UtterRuntime PluginScope.swift
+[14/26] Compiling UtterRuntime PluginRuntimeError.swift
+[15/26] Compiling UtterRuntime ContributionRegistry.swift
+[16/26] Compiling UtterRuntime PluginContext.swift
+[17/26] Compiling UtterRuntime ConfigurationValue.swift
+[18/26] Emitting module UtterRuntime
+[19/26] Compiling UtterRuntime PluginDescriptor.swift
+[20/26] Compiling UtterRuntime CallbackTasks.swift
+[21/26] Compiling UtterRuntime PluginGraph.swift
+[22/26] Compiling UtterRuntime PluginRuntime.swift
+[23/26] Compiling UtterRuntime ServiceKey.swift
+[24/127] Compiling UtterContracts DeferredReplacementPolicy.swift
+[25/127] Compiling UtterContracts DeliveryServices.swift
+[26/127] Compiling UtterContracts DictionaryEntry.swift
+[27/127] Compiling UtterContracts DictionaryService.swift
+[28/127] Compiling UtterContracts DownloadProgressInfo.swift
+[29/127] Compiling UtterContracts EspressoGenerationOutcome.swift
+[30/127] Compiling UtterContracts EspressoLLMError.swift
+[31/127] Compiling UtterContracts EspressoMLXFallbackError.swift
+[32/127] Compiling UtterContracts FrozenModelFiles.swift
+[33/127] Compiling UtterContracts GenerationServices.swift
+[34/127] Compiling UtterContracts GenerationTimingObservation.swift
+[35/138] Compiling UtterContracts ModelStorageService.swift
+[36/138] Compiling UtterContracts NoSpaceScript.swift
+[37/138] Compiling UtterContracts OperationDeadline.swift
+[38/138] Compiling UtterContracts PermissionRequest.swift
+[39/138] Compiling UtterContracts PersonalDictionarySnapshot.swift
+[40/138] Compiling UtterContracts PlatformServices.swift
+[41/138] Compiling UtterContracts ProcessingDecision.swift
+[42/138] Compiling UtterContracts ProductBrand.swift
+[43/138] Compiling UtterContracts ProviderCapabilities.swift
+[44/138] Compiling UtterContracts ProviderCatalog.swift
+[45/138] Compiling UtterContracts ProviderRegistry.swift
+[46/138] Emitting module UtterContracts
+[47/138] Compiling UtterContracts AppSettingTypes.swift
+[48/138] Compiling UtterContracts AudioActivityThresholds.swift
+[49/138] Compiling UtterContracts AudioCaptureActivity.swift
+[50/138] Compiling UtterContracts AudioInputDevice.swift
+[51/138] Compiling UtterContracts Character+ASCIIWord.swift
+[52/138] Compiling UtterContracts CompositionDocument.swift
+[53/138] Compiling UtterContracts CompositionLayer.swift
+[54/138] Compiling UtterContracts CorrectionCaptureSeed.swift
+[55/138] Compiling UtterContracts CorrectionClassificationService.swift
+[56/138] Compiling UtterContracts CredentialsService.swift
+[57/138] Compiling UtterContracts DataServices.swift
+[58/138] Compiling UtterContracts DeferredReplacement.swift
+[59/138] Compiling UtterContracts QwenASRModel.swift
+[60/138] Compiling UtterContracts QwenAudioPreprocessorError.swift
+[61/138] Compiling UtterContracts QwenNativeASRError.swift
+[62/138] Compiling UtterContracts RemoteConnectionService.swift
+[63/138] Compiling UtterContracts RemoteLLMError.swift
+[64/138] Compiling UtterContracts RemoteMicBridgeState.swift
+[65/138] Compiling UtterContracts RemoteMicDiagnostics.swift
+[66/138] Compiling UtterContracts RemoteModelConfig.swift
+[67/138] Compiling UtterContracts ResourceBundle.swift
+[68/138] Compiling UtterContracts ScreenContextMode.swift
+[69/138] Compiling UtterContracts SessionExecutionService.swift
+[70/138] Compiling UtterContracts SpokenEditCommandLLMResolver+ActionTarget.swift
+[71/138] Compiling UtterContracts SpokenEditCommandLLMResolver.swift
+[72/138] Compiling UtterContracts SpokenEditEvidence.swift
+[73/138] Compiling UtterContracts StateNotifications.swift
+[74/138] Compiling UtterContracts StreamingPreviewAccumulator.swift
+[75/138] Compiling UtterContracts StreamingSpeechSupport.swift
+[76/138] Compiling UtterContracts TextFormatKind.swift
+[77/138] Compiling UtterContracts TextPreparationService.swift
+[78/138] Compiling UtterContracts TextProcessingMode.swift
+[79/138] Compiling UtterContracts TextProcessingOptions.swift
+[80/138] Compiling UtterContracts TranscriptSegmentJoiner.swift
+[81/138] Compiling UtterContracts MLXSTTError.swift
+[82/138] Compiling UtterContracts ModelArtifact.swift
+[83/138] Compiling UtterContracts ModelArtifactService.swift
+[84/138] Compiling UtterContracts ModelBenchmarkResult.swift
+[85/138] Compiling UtterContracts ModelBenchmarkSuite.swift
+[86/138] Compiling UtterContracts ModelCatalogService.swift
+[87/138] Compiling UtterContracts ModelCatalogValues.swift
+[88/138] Compiling UtterContracts ModelCompatibility.swift
+[89/138] Compiling UtterContracts ModelDownloadKey.swift
+[90/138] Compiling UtterContracts ModelLocationLease.swift
+[91/138] Compiling UtterContracts ModelServices.swift
+[92/138] Compiling UtterContracts SessionFailurePresentation.swift
+[93/138] Compiling UtterContracts SessionOutputStateService.swift
+[94/138] Compiling UtterContracts SessionPerformance.swift
+[95/138] Compiling UtterContracts SessionPresentation.swift
+[96/138] Compiling UtterContracts SettingsService.swift
+[97/138] Compiling UtterContracts SettingsValues.swift
+[98/138] Compiling UtterContracts SpeechArtifactPolicy.swift
+[99/138] Compiling UtterContracts SpeechModelProgress.swift
+[100/138] Compiling UtterContracts SpeechRecognitionContext.swift
+[101/138] Compiling UtterContracts SpeechSelection.swift
+[102/138] Compiling UtterContracts SpokenEditCommand.swift
+[103/138] Compiling UtterContracts LLMActionValue.swift
+[104/138] Compiling UtterContracts LLMDecodedValue.swift
+[105/138] Compiling UtterContracts LLMError.swift
+[106/138] Compiling UtterContracts LLMFinalTextOutput.swift
+[107/138] Compiling UtterContracts LLMScaffoldedOutput.swift
+[108/138] Compiling UtterContracts LLMStructuredOutput+DecodedStrings.swift
+[109/138] Compiling UtterContracts LLMStructuredOutput.swift
+[110/138] Compiling UtterContracts LearnedCorrectionPolicy.swift
+[111/138] Compiling UtterContracts Loc.swift
+[112/138] Compiling UtterContracts LocalGenerationBudget.swift
+[113/138] Compiling UtterContracts Log.swift
+[114/138] Compiling UtterContracts HistoryService.swift
+[115/138] Compiling UtterContracts HotkeyAction.swift
+[116/138] Compiling UtterContracts IndustryLexiconSnapshot.swift
+[117/138] Compiling UtterContracts InputContext.swift
+[118/138] Compiling UtterContracts InputRecord.swift
+[119/138] Compiling UtterContracts InputSessionModels.swift
+[120/138] Compiling UtterContracts InputSessionService.swift
+[121/138] Compiling UtterContracts InsertResult.swift
+[122/138] Compiling UtterContracts IntegrationClient.swift
+[123/138] Compiling UtterContracts IntegrationError.swift
+[124/138] Compiling UtterContracts IntegrationServices.swift
+[125/138] Compiling UtterContracts TranslationAssessment.swift
+[126/138] Compiling UtterContracts TranslationLanguage.swift
+[127/138] Compiling UtterContracts VocabularyReplacementEngine.swift
+[128/138] Compiling UtterContracts VoiceInputSettings.swift
+[129/138] Compiling UtterContracts VolcASRError.swift
+[130/138] Compiling UtterContracts VolcASRModel.swift
+[131/138] Compiling UtterContracts WhisperError.swift
+[132/138] Compiling UtterContracts WhisperModelDimensions.swift
+[133/138] Compiling UtterContracts WhisperModelSelection.swift
+[134/138] Compiling UtterContracts WhisperTokenizerAssets.swift
+[135/138] Compiling UtterContracts resource_bundle_accessor.swift
+[136/158] Compiling UtterData SettingsStore+Load.swift
+[137/158] Compiling UtterData SettingsStore+Persistence.swift
+[138/158] Compiling UtterData HistoryMemoryService.swift
+[139/158] Compiling UtterData HistoryStore.swift
+[140/158] Compiling UtterData DictionaryStore+Transfer.swift
+[141/158] Compiling UtterData DictionaryStore.swift
+[142/158] Compiling UtterData DataResources.swift
+[143/158] Compiling UtterData DictionaryStore+Learning.swift
+[144/158] Compiling UtterData BuiltinCorrectionClassification.swift
+[145/158] Compiling UtterData CompositionResolver.swift
+[146/158] Compiling UtterData CompositionStore.swift
+[147/158] Compiling UtterData SettingsStore+Token.swift
+[148/158] Compiling UtterData SettingsStore.swift
+[149/158] Compiling UtterData MemoryStore.swift
+[150/158] Compiling UtterData SettingsCredentialsService.swift
+[151/158] Compiling UtterData IndustryLexicon.swift
+[152/158] Compiling UtterData IntegrationClientRegistry.swift
+[153/160] Emitting module UtterData
+[154/160] Compiling UtterData CorrectionCandidateClassifier.swift
+[155/160] Compiling UtterData DataPlugins.swift
+[156/160] Compiling UtterData SystemDiagnostics.swift
+[157/160] Compiling UtterData resource_bundle_accessor.swift
+[158/162] Compiling UtterLexiconCheck IndustryLexiconCheck.swift
+[159/162] Emitting module UtterLexiconCheck
+[159/162] Write Objects.LinkFileList
+[160/162] Linking UtterLexiconCheck
+[161/162] Applying UtterLexiconCheck
+Build of product 'UtterLexiconCheck' complete! (24.38s)
+Industry lexicon deterministic evaluation passed
+  baseline term recall: 20.59%
+  treatment term recall: 100.00%
+  absolute improvement: 79.41 points
+  non-target preservation: 100.00%
+
+==> Checking required app resources
+
+==> Checking bundled helper names
+
+==> Checking for conflict markers
+
+==> Checking tracked secret-bearing file types
+
+==> Checking for broken symlinks
+
+Basic CI checks passed.

@@ -1,0 +1,13 @@
+{
+  "xctest_bundles": 14,
+  "xctest_executed": 1143,
+  "xctest_skipped": 17,
+  "xctest_failures": 0,
+  "unique_swift_testing_cases": 1,
+  "swift_testing_failures": 0,
+  "empty_swift_testing_bundles": 13,
+  "complete": true,
+  "test_bundle_hashes_unchanged": true,
+  "native_evidence": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-developer-id-ci-evidence-8lm_1sy5/native-run-9d5cbdd1",
+  "swiftpm_wrapper": "blocked before test execution by nested sandbox_apply; preserved in swift-test.log"
+}

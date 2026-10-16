@@ -1,0 +1,93 @@
+{
+  "verifier": "/root/signing_verifier",
+  "verified_at_utc": "2026-10-15T17:09:20.540756+00:00",
+  "result": "blocked_release_failed",
+  "run_id": 38770474797,
+  "run_url": "https://github.com/IchenDEV/utter/actions/runs/38770474797",
+  "candidate_sha": "f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+  "tag": "v0.0.53",
+  "run_conclusion": "failure",
+  "human_production_authorization": {
+    "direct_user_record": true,
+    "github_approval_state": "approved",
+    "github_reviewer": "IchenDEV",
+    "environment_id": 20910208532,
+    "environment_admin_bypass": false
+  },
+  "candidate_tests": {
+    "result": "success",
+    "xctest": 1143,
+    "skipped": 18,
+    "failures": 0,
+    "swift_testing_passed": 1
+  },
+  "ci_signed_app_evidence": {
+    "identity": "Developer ID Application: Chen Li",
+    "certificate_sha256": "1B499618154DEB0204896CDB199AA65D25EDA2188FEDBB0E29A73063728E4112",
+    "team": "G9L7H3T3D5",
+    "team_evidence": "Previously inspected selected certificate. CI masks team in identity output; fingerprint matches the approved certificate.",
+    "hardened_runtime": "Checked by successful require-developer-id verification. Raw flags were not printed.",
+    "signature_and_mounted_copy_checks": "Passed before and after stapling, including built/mounted app equality, according to executed verifier source and subsequent log progress.",
+    "independent_local_binary_inspection": false
+  },
+  "apple_notarization": {
+    "submission_id": "29a24fa6-d6b6-4053-9213-a9989e6e705a",
+    "status": "Accepted",
+    "accepted_log_time_utc": "2026-10-15T17:06:38.9288310Z",
+    "stapling": "success",
+    "stapled_ticket_validation": "success"
+  },
+  "distribution_failure": {
+    "step": "Verify distribution and checksum",
+    "command": "spctl --assess --type open --context context:primary-signature --verbose=2 dist/Utter-0.0.53.dmg",
+    "command_source": "scripts/verify-release-artifact.sh:183",
+    "output": [
+      "dist/Utter-0.0.53.dmg: rejected",
+      "source=no usable signature"
+    ],
+    "exit_code": 3,
+    "time_utc": "2026-10-15T17:06:47.9765820Z",
+    "app_execute_assessment": "Not reached after DMG rejection.",
+    "published_sha256_generation": "Not reached after verifier failure."
+  },
+  "actionable_findings": [
+    {
+      "priority": 1,
+      "title": "Outer DMG is never Developer ID signed before the required primary-signature assessment",
+      "location": "scripts/build-app.sh:239",
+      "evidence": "build-app.sh signs APP_BUNDLE at lines179-180, creates DMG at231-237, then verifies it at241-244. There is no codesign operation on DMG_PATH and dmg-settings.py provides no signing identity. The required DMG assessment fails with no usable signature after Apple Accepted and stapler validate success.",
+      "root_cause_confidence": "High from source plus exact failure signature. Failed CI artifact is unavailable for independent byte inspection.",
+      "smallest_remedy": "On the Developer ID path, sign the newly created outer DMG with the selected Developer ID Application identity and secure timestamp before notarization submission. Verify that outer signature and expected certificate before upload. Keep the existing Gatekeeper assessment.",
+      "external_propagation_assessment": "Current evidence indicates a deterministic missing container signature, not an Apple propagation delay. No blind retry is justified.",
+      "apple_reference": "https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution"
+    }
+  ],
+  "publication": {
+    "publish_step": "skipped",
+    "v0_0_53_release_api": "404 Not Found from independent read-only check",
+    "latest_release": "v0.0.52",
+    "latest_release_url": "https://github.com/IchenDEV/utter/releases/tag/v0.0.52",
+    "latest_unchanged": true,
+    "run_artifacts_count": 0,
+    "downloaded_release_files": [],
+    "independent_download_directory": null,
+    "independent_mounts_created": 0,
+    "independent_mounts_remaining": 0
+  },
+  "evidence": {
+    "signing_job_log": "release-signing-independent-attempt-1.log",
+    "signing_job_log_sha256": "99ed5253bec64abdf7ca64dc54a3a950acac5365bde6b61aac1c901ccfe0f020",
+    "run_readback": "independent-final-run-readback.json",
+    "job_readback": "independent-final-jobs-readback.json",
+    "approval_readback": "independent-final-approvals-readback.json"
+  },
+  "remaining_gaps": [
+    "No published v0.0.53 asset or retained workflow artifact exists for independent local DMG/app inspection.",
+    "App execute Gatekeeper assessment was not reached.",
+    "Published DMG checksum/digest and download equality were not produced."
+  ],
+  "remote_mutations_performed_by_verifier": false,
+  "code_changes_performed_by_verifier": false,
+  "release_retry_performed_by_verifier": false,
+  "retry_boundary": "Preserve existing failed v0.0.53 tag and first-failure evidence. A source correction requires its normal reviewed change/PR and a new release commit/version; do not move this tag or replace same-version published assets."
+}

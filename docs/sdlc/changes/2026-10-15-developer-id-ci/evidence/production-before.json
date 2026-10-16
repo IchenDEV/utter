@@ -1,0 +1,12 @@
+{
+  "id": 20910208532,
+  "node_id": "EN_kwDORZD8nM8AAAAE3lh2FA",
+  "name": "production",
+  "url": "https://api.github.com/repos/IchenDEV/utter/environments/production",
+  "html_url": "https://github.com/IchenDEV/utter/deployments/activity_log?environments_filter=production",
+  "created_at": "2026-08-31T07:05:58Z",
+  "updated_at": "2026-08-31T07:05:58Z",
+  "can_admins_bypass": true,
+  "protection_rules": [],
+  "deployment_branch_policy": null
+}

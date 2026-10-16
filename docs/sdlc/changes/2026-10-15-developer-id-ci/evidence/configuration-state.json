@@ -1,0 +1,16 @@
+{
+  "phase": "configured",
+  "attempted_secret_names": [
+    "APPLE_ID",
+    "APPLE_TEAM_ID",
+    "APPLE_APP_PASSWORD",
+    "APPLE_CERTIFICATE_PASSWORD",
+    "APPLE_CERTIFICATE_P12"
+  ],
+  "cleanup_errors": [],
+  "temporary_keychain_deleted": true,
+  "keychain_search_list_restored": true,
+  "temporary_private_directory_removed": true,
+  "configuration_success": true,
+  "success": true
+}

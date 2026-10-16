@@ -1,0 +1,110 @@
+{
+  "verifier": "/root/signing_verifier",
+  "verified_at_utc": "2026-10-16T03:34:01.553051+00:00",
+  "result": "passed",
+  "build_inputs_checked": 767,
+  "build_inputs_unchanged": true,
+  "reviewed_source_hashes_unchanged": true,
+  "package_resolved_sha256": "3a007c520b8b69aa9a675a42675662d7d272e4808dd3e71e4f12e074150219ad",
+  "test_bundle_files_unchanged": 300,
+  "bundle_coverage": [
+    {
+      "bundle": "OpenTypeTests.xctest",
+      "completed_discovered_unique_cases": 499,
+      "skipped": 17,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterAudioTests.xctest",
+      "completed_discovered_unique_cases": 20,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterBuiltinsTests.xctest",
+      "completed_discovered_unique_cases": 2,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterContractsTests.xctest",
+      "completed_discovered_unique_cases": 123,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterDataTests.xctest",
+      "completed_discovered_unique_cases": 58,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterEvaluationTests.xctest",
+      "completed_discovered_unique_cases": 7,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterIngressTests.xctest",
+      "completed_discovered_unique_cases": 12,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterMacServicesTests.xctest",
+      "completed_discovered_unique_cases": 54,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterModelsTests.xctest",
+      "completed_discovered_unique_cases": 34,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterProcessingTests.xctest",
+      "completed_discovered_unique_cases": 107,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterRemoteInferenceTests.xctest",
+      "completed_discovered_unique_cases": 89,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterRemoteMicTests.xctest",
+      "completed_discovered_unique_cases": 54,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterRuntimeTests.xctest",
+      "completed_discovered_unique_cases": 26,
+      "skipped": 0,
+      "failures": 0
+    },
+    {
+      "bundle": "UtterSessionTests.xctest",
+      "completed_discovered_unique_cases": 58,
+      "skipped": 0,
+      "failures": 0
+    }
+  ],
+  "xctest": 1143,
+  "skipped": 17,
+  "non_skipped_passed": 1126,
+  "failures": 0,
+  "unique_swift_testing_passed": 1,
+  "expected_empty_swift_testing_invocations": 13,
+  "native_run": "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-developer-id-ci-evidence-8lm_1sy5/native-run-f8535155",
+  "runtime_preflight_canaries_verified_from_record": true,
+  "runtime_policy_hash_verified": true,
+  "protected_swift_test": "Setup failure retained, not passed.",
+  "native_signing_block_matches_current_literal_yaml": true,
+  "native_signing_block_sha256": "c1ca7730b16cd04fcd44379832f4bb5d1bd66a2d71b258c5d90e9de68455df79",
+  "private_credentials_accessed": false,
+  "test_binaries_rerun_by_verifier": false
+}

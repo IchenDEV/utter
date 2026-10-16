@@ -176,6 +176,9 @@ jobs:
           )
           if grep -q '^Authority=Developer ID Application:' <<<"$SIGNATURE"; then
             SIGNING_MODE=developer-id
+            codesign --force --sign "$SIGN_IDENTITY" --timestamp \
+              --identifier com.opentype.voiceinput.dmg \
+              "dist/Utter-$RELEASE_VERSION.dmg"
             VERIFY_ARGS+=(--require-developer-id)
           elif grep -q '^TeamIdentifier=not set$' <<<"$SIGNATURE"; then
             SIGNING_MODE=self-signed

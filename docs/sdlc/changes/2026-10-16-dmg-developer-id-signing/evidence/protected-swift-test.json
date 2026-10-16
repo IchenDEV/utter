@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/usr/bin/sandbox-exec",
+    "-f",
+    "/var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/utter-developer-id-ci-evidence-8lm_1sy5/test-runtime-narrow.sb",
+    "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift",
+    "test",
+    "--skip-build",
+    "--skip-update",
+    "--disable-automatic-resolution"
+  ],
+  "exit": 1,
+  "nested_sandbox_setup_failure": true,
+  "lockfile_unchanged": true,
+  "native_full_suite_evidence": "full-test-evidence.json"
+}

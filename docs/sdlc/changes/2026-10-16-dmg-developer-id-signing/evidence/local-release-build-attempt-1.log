@@ -1,0 +1,127 @@
+
+▶ Building Utter (Release, arm64)…
+2026-10-16 10:59:54.747 xcodebuild[1954:7813064] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:x86_64, id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:x86_64, variant:Mac Catalyst, id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:arm64e.x1, variant:Designed for [iPad,iPhone], id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:arm64_32, variant:Designed for [iPad,iPhone], id:00008132-001828593639001C, name:My Mac }
+In file included from /Users/chenli/projects/utter/.build/xcode/SourcePackages/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/steel_attention.metal:6:
+In file included from /Users/chenli/projects/utter/.build/xcode/SourcePackages/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:3:
+In file included from /Users/chenli/projects/utter/.build/xcode/SourcePackages/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/attn.h:6:
+In file included from /Users/chenli/projects/utter/.build/xcode/SourcePackages/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/../../steel/attn/mma.h:11:
+/Users/chenli/projects/utter/.build/xcode/SourcePackages/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/../../steel/utils/integral_constant.h:108:6: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+  if constexpr (start < stop) {
+     ^
+In file included from /Users/chenli/projects/utter/.build/xcode/SourcePackages/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/steel_attention.metal:6:
+/Users/chenli/projects/utter/.build/xcode/SourcePackages/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:356:16: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+            if constexpr (is_bool) {
+               ^
+/Users/chenli/projects/utter/.build/xcode/SourcePackages/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:426:14: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+          if constexpr (BD == 128) {
+             ^
+/Users/chenli/projects/utter/.build/xcode/SourcePackages/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:436:14: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+          if constexpr (BD == 128) {
+             ^
+4 warnings generated.
+/Users/chenli/projects/utter/Sources/UtterProcessing/Native/TextProcessor+Benchmark.swift:29:53: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+27 |             }
+28 |         return try await withLocalModelAccess {
+29 |             let provider = try await self.providers.create(id: "generation.mlx", request: .benchmark)
+   |                                                     `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+30 |             return try await ModelBenchmarkSuite.run(workloads: workloads, provider: provider)
+31 |         }
+
+/Users/chenli/projects/utter/Sources/UtterProcessing/Native/TextProcessor+FactSupport.swift:29:34: warning: reference to captured var 'checkOptions' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+27 |                 try await withOperationDeadline(for: ProcessingDeadlines.factSupport) {
+28 |                     try await self.generateText(prompt: prompt, systemPrompt: PromptCatalog.factSupportSystemPrompt,
+29 |                         options: checkOptions, maxTokens: 768, temperature: 0)
+   |                                  `- warning: reference to captured var 'checkOptions' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+30 |                 }
+31 |             }
+
+/Users/chenli/projects/utter/Sources/UtterProcessing/Native/TextProcessor+Generation.swift:60:43: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+ 58 |             maxTokens: maxTokens, temperature: temperature
+ 59 |         )
+ 60 |         let primary = try await providers.create(id: providerID, request: .inference)
+    |                                           `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+ 61 |         try Task.checkCancellation()
+ 62 |         guard usesANE else {
+
+/Users/chenli/projects/utter/Sources/UtterProcessing/Native/TextProcessor+Generation.swift:81:65: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+ 79 |                     prepareForMLXFallback: { await primary.unload() },
+ 80 |                     mlx: {
+ 81 |                         let fallback = try await self.providers.create(id: options.fallbackProviderID, request: .inference)
+    |                                                                 `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+ 82 |                         try Task.checkCancellation()
+ 83 |                         return try await ProcessingObservations.$generationStage.withValue(.fallback) {
+
+/Users/chenli/projects/utter/Sources/UtterProcessing/Native/TextProcessor+Generation.swift:128:49: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+126 |         )
+127 |         guard let imageProviders else { throw GenerationServiceError.unsupportedOperation }
+128 |         let provider = try await imageProviders.create(id: providerID, request: .inference)
+    |                                                 `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+129 |         try Task.checkCancellation()
+130 |         let result = try await ProcessingObservations.$generationStage.withValue(.image) {
+
+/Users/chenli/projects/utter/Sources/UtterProcessing/Native/TextProcessor+ModelPreparation.swift:11:52: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+ 9 |             maxTokens: 1, temperature: 0, usesANE: usesANE)
+10 |         return try await withLocalModelAccess {
+11 |             let primary = try await self.providers.create(id: id, request: .inference)
+   |                                                    `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+12 |             guard usesANE else { try await primary.prepare(request); return nil }
+13 |             let result = try await GenerationFallback.run(fallbackEnabled: options.fallbackToMLXOnEspressoFailure,
+
+/Users/chenli/projects/utter/Sources/UtterProcessing/Native/TextProcessor+ModelPreparation.swift:16:61: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+14 |                 espresso: { try await primary.prepare(request) }, prepareForMLXFallback: { await primary.unload() },
+15 |                 mlx: {
+16 |                     let fallback = try await self.providers.create(id: options.fallbackProviderID, request: .inference)
+   |                                                             `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+17 |                     let request = self.generationRequest(prompt: "", systemPrompt: nil, options: options, maxTokens: 1, temperature: 0)
+18 |                     try await fallback.prepare(request)
+
+/Users/chenli/projects/utter/Sources/UtterProcessing/Native/TextProcessor+Models.swift:37:42: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+35 |         try await withLocalModelAccess {
+36 |             for descriptor in await self.providers.descriptors {
+37 |                 try await self.providers.reset(id: descriptor.id)
+   |                                          `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+38 |             }
+39 |             if let images = self.imageProviders {
+
+/Users/chenli/projects/utter/Sources/UtterProcessing/Native/TextProcessor+Models.swift:40:79: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+38 |             }
+39 |             if let images = self.imageProviders {
+40 |                 for descriptor in await images.descriptors { try await images.reset(id: descriptor.id) }
+   |                                                                               `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+41 |             }
+42 |         }
+
+[#IsolatedConformances]: <https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances>
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+/Users/chenli/projects/utter/Sources/UtterMacServices/CorrectionCaptureRegion.swift:75:5: warning: 'package' modifier conflicts with extension's default access of 'private'
+73 | }
+74 | private extension CorrectionCaptureRegionLocator {
+75 |     package func nearbyRange(
+   |     `- warning: 'package' modifier conflicts with extension's default access of 'private'
+76 |         of needle: String,
+77 |         in text: NSString,
+/Users/chenli/projects/utter/Sources/UtterIngress/Native/IntegrationXPCServer.swift:97:61: warning: variable 'handler' was written to, but never read
+ 95 |         connection.exportedInterface = NSXPCInterface(with: OpenTypeXPCProtocol.self)
+ 96 |         connection.exportedObject = handler
+ 97 |         connection.invalidationHandler = { [weak self, weak handler] in
+    |                                                             `- warning: variable 'handler' was written to, but never read
+ 98 |             Task { @MainActor in
+ 99 |                 self?.retire(id)
+
+/Users/chenli/projects/utter/Sources/UtterIngress/Native/IntegrationXPCServer.swift:102:61: warning: variable 'handler' was written to, but never read
+100 |             }
+101 |         }
+102 |         connection.interruptionHandler = { [weak self, weak handler] in
+    |                                                             `- warning: variable 'handler' was written to, but never read
+103 |             Task { @MainActor in
+104 |                 self?.retire(id)
+** BUILD INTERRUPTED **

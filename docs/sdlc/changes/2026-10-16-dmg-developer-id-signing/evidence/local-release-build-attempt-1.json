@@ -1,0 +1,15 @@
+{
+  "command": [
+    "bash",
+    "scripts/build-app.sh",
+    "--version=0.0.54",
+    "--sign=0A1A804E9C5D7BE644E4A6B884487BB5191F691D"
+  ],
+  "started_at_utc": "2026-10-16T02:56:05.744193+00:00",
+  "finished_at_utc": "2026-10-16T03:01:57.210079+00:00",
+  "exit": -15,
+  "guard_failure": null,
+  "lockfile_unchanged": true,
+  "log": "/Users/chenli/projects/utter/docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/evidence/local-release-build.log",
+  "disk_free_bytes": 21671313408
+}

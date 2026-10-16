@@ -49,6 +49,7 @@ step_script "$MANUAL" 'Resolve version from tag' > "$FIXTURE/manual.sh"
 step_script "$ARTIFACT" 'Validate version and tag' > "$FIXTURE/validate.sh"
 step_script "$ARTIFACT" 'Require a SemVer tag on main' > "$FIXTURE/ancestor.sh"
 step_script "$ARTIFACT" 'Create and push release tag' > "$FIXTURE/create.sh"
+step_script "$ARTIFACT" 'Classify and verify signed artifact' > "$FIXTURE/classify.sh"
 
 # Verify the values emitted by shell steps actually reach the reusable caller.
 job_text "$NIGHTLY" plan > "$FIXTURE/plan-job"
@@ -174,6 +175,66 @@ git --git-dir="$FIXTURE/origin.git" tag v0.0.50
 check reject_step create v0.0.50
 check test -z "$(git tag -l v0.0.50)"
 check test ! -e "$PUSH_LOG"
+
+# Run the literal distribution block with observable external signing state.
+export SIGN_IDENTITY='Developer ID Application: Fixture (ABC1234567)'
+export SIGN_CERT_SHA256="$(printf '%064d' 0)"
+export RELEASE_VERSION=0.0.54 TEAM_IDENTIFIER=ABC1234567 FAIL_SIGN=0
+export SIGNING_TRACE="$FIXTURE/signing-trace" SIGNED_DMG="$FIXTURE/signed-dmg"
+export GITHUB_ENV="$FIXTURE/github-env" GITHUB_STEP_SUMMARY="$FIXTURE/summary"
+cat > "$FIXTURE/bin/codesign" <<'STUB'
+#!/usr/bin/env bash
+set -euo pipefail
+if [ "$1" = -dvvv ]; then
+    printf 'Authority=%s\nTeamIdentifier=%s\n' "$SIGN_IDENTITY" "$TEAM_IDENTIFIER"
+    exit 0
+fi
+echo sign >> "$SIGNING_TRACE"
+[ "$FAIL_SIGN" = 0 ] || exit 42
+timestamp=false identifier=false identity=false
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --timestamp) timestamp=true ;;
+        --identifier|-i) [ "$2" = com.opentype.voiceinput.dmg ]; identifier=true; shift ;;
+        --sign|-s) [ "$2" = "$SIGN_IDENTITY" ]; identity=true; shift ;;
+        --deep|--entitlements|--options) exit 43 ;;
+    esac
+    last="$1"
+    shift
+done
+$timestamp && $identifier && $identity
+[ "$last" = dist/Utter-0.0.54.dmg ]
+touch "$SIGNED_DMG"
+STUB
+cat > scripts/verify-release-artifact.sh <<'STUB'
+#!/usr/bin/env bash
+echo verify >> "$SIGNING_TRACE"
+for arg in "$@"; do
+    if [ "$arg" = --require-developer-id ] && [ ! -f "$SIGNED_DMG" ]; then
+        echo 'unsigned Developer ID DMG reached verification' >&2
+        exit 1
+    fi
+done
+STUB
+chmod +x "$FIXTURE/bin/codesign" scripts/verify-release-artifact.sh
+: > "$SIGNING_TRACE"
+check bash -e "$FIXTURE/classify.sh"
+check test "$(cat "$SIGNING_TRACE")" = $'sign\nverify'
+check grep -Fxq SIGNING_MODE=developer-id "$GITHUB_ENV"
+
+rm -f "$SIGNED_DMG"
+: > "$SIGNING_TRACE"
+export FAIL_SIGN=1
+check reject_step classify unused
+check test "$(cat "$SIGNING_TRACE")" = sign
+check test ! -e "$SIGNED_DMG"
+
+export FAIL_SIGN=0 SIGN_IDENTITY='Utter Signing' TEAM_IDENTIFIER='not set'
+: > "$SIGNING_TRACE"
+check bash -e "$FIXTURE/classify.sh"
+check test "$(cat "$SIGNING_TRACE")" = verify
+check grep -Fxq SIGNING_MODE=self-signed "$GITHUB_ENV"
+check test ! -e "$SIGNED_DMG"
 
 [ "$failures" -eq 0 ] || { echo "$failures release contract checks failed." >&2; exit 1; }
 echo "Release workflow contract tests passed."

@@ -1,0 +1,13 @@
+{
+  "run_id": 38770474797,
+  "job_id": 116544650129,
+  "candidate_commit": "f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+  "command": "swift test",
+  "conclusion": "success",
+  "xctest_cases": 1143,
+  "xctest_conditional_skips": 18,
+  "xctest_failures": 0,
+  "swift_testing_cases_passed": 1,
+  "all_job_steps_success": true,
+  "production_approval": "pending_human_decision"
+}
