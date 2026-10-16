@@ -1,0 +1,14 @@
+{
+  "recorded_at_utc": "2026-10-16T06:28:43.772229+00:00",
+  "version": "0.0.54",
+  "commit": "8d1134ce664fa4dd878389529cf1bf41721af53a",
+  "main_protected": true,
+  "main_run": 38860187195,
+  "main_ci_conclusion": "success",
+  "tag_and_release_unused": true,
+  "failed_v0053_tag_unchanged": true,
+  "production_human_review_required": true,
+  "production_admin_bypass": false,
+  "local_main_clean": true,
+  "new_production_approved": false
+}

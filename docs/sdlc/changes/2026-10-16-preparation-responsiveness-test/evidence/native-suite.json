@@ -1,0 +1,749 @@
+{
+  "summary": {
+    "bundle_count": 14,
+    "invocations": 28,
+    "nonzero_exits": 13,
+    "incomplete_invocations": 0,
+    "total_xctest": 1143,
+    "total_swift_testing": 1,
+    "bundle_hashes_unchanged": true,
+    "all_frozen_products_unchanged": true,
+    "unique_identity_sets_equal": true,
+    "total_xctest_skipped": 17,
+    "xctest_all_pass": true,
+    "swift_testing_all_expected": true,
+    "native_full_pass": true
+  },
+  "identity_audit": [
+    {
+      "bundle": "OpenTypeTests.xctest",
+      "expected": 499,
+      "started": 499,
+      "finished": 499,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterAudioTests.xctest",
+      "expected": 20,
+      "started": 20,
+      "finished": 20,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterBuiltinsTests.xctest",
+      "expected": 2,
+      "started": 2,
+      "finished": 2,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterContractsTests.xctest",
+      "expected": 123,
+      "started": 123,
+      "finished": 123,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterDataTests.xctest",
+      "expected": 58,
+      "started": 58,
+      "finished": 58,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterEvaluationTests.xctest",
+      "expected": 7,
+      "started": 7,
+      "finished": 7,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterIngressTests.xctest",
+      "expected": 12,
+      "started": 12,
+      "finished": 12,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterMacServicesTests.xctest",
+      "expected": 54,
+      "started": 54,
+      "finished": 54,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterModelsTests.xctest",
+      "expected": 34,
+      "started": 34,
+      "finished": 34,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterProcessingTests.xctest",
+      "expected": 107,
+      "started": 107,
+      "finished": 107,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterRemoteInferenceTests.xctest",
+      "expected": 89,
+      "started": 89,
+      "finished": 89,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterRemoteMicTests.xctest",
+      "expected": 54,
+      "started": 54,
+      "finished": 54,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterRuntimeTests.xctest",
+      "expected": 26,
+      "started": 26,
+      "finished": 26,
+      "unique_identity_sets_equal": true
+    },
+    {
+      "bundle": "UtterSessionTests.xctest",
+      "expected": 58,
+      "started": 58,
+      "finished": 58,
+      "unique_identity_sets_equal": true
+    }
+  ],
+  "engine_results": [
+    {
+      "bundle": "OpenTypeTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 499,
+      "skipped": 17,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 499,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/OpenTypeTests.xctest"
+      ]
+    },
+    {
+      "bundle": "OpenTypeTests.xctest",
+      "engine": "swift-testing",
+      "exit": 0,
+      "executed": 1,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/OpenTypeTests.xctest/Contents/MacOS/OpenTypeTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterAudioTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 20,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 20,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterAudioTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterAudioTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterAudioTests.xctest/Contents/MacOS/UtterAudioTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterBuiltinsTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 2,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 2,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterBuiltinsTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterBuiltinsTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterBuiltinsTests.xctest/Contents/MacOS/UtterBuiltinsTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterContractsTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 123,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 123,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterContractsTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterContractsTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterContractsTests.xctest/Contents/MacOS/UtterContractsTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterDataTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 58,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 58,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterDataTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterDataTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterDataTests.xctest/Contents/MacOS/UtterDataTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterEvaluationTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 7,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 7,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterEvaluationTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterEvaluationTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterEvaluationTests.xctest/Contents/MacOS/UtterEvaluationTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterIngressTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 12,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 12,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterIngressTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterIngressTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterIngressTests.xctest/Contents/MacOS/UtterIngressTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterMacServicesTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 54,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 54,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterMacServicesTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterMacServicesTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterMacServicesTests.xctest/Contents/MacOS/UtterMacServicesTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterModelsTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 34,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 34,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterModelsTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterModelsTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterModelsTests.xctest/Contents/MacOS/UtterModelsTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterProcessingTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 107,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 107,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterProcessingTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterProcessingTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterProcessingTests.xctest/Contents/MacOS/UtterProcessingTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterRemoteInferenceTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 89,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 89,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterRemoteInferenceTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterRemoteInferenceTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterRemoteInferenceTests.xctest/Contents/MacOS/UtterRemoteInferenceTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterRemoteMicTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 54,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 54,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterRemoteMicTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterRemoteMicTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterRemoteMicTests.xctest/Contents/MacOS/UtterRemoteMicTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterRuntimeTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 26,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 26,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterRuntimeTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterRuntimeTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterRuntimeTests.xctest/Contents/MacOS/UtterRuntimeTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    },
+    {
+      "bundle": "UtterSessionTests.xctest",
+      "engine": "xctest",
+      "exit": 0,
+      "executed": 58,
+      "skipped": 0,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": 58,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+        "TASK_WORK/frozen-products/UtterSessionTests.xctest"
+      ]
+    },
+    {
+      "bundle": "UtterSessionTests.xctest",
+      "engine": "swift-testing",
+      "exit": 69,
+      "executed": 0,
+      "skipped": null,
+      "failures": 0,
+      "complete": true,
+      "expected_xctest": null,
+      "timeout": false,
+      "command": [
+        "sandbox-exec",
+        "-f",
+        "TASK_WORK/test-runtime-narrow.sb",
+        "/usr/bin/env",
+        "DYLD_FRAMEWORK_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper",
+        "--test-bundle-path",
+        "TASK_WORK/frozen-products/UtterSessionTests.xctest/Contents/MacOS/UtterSessionTests",
+        "--testing-library",
+        "swift-testing"
+      ]
+    }
+  ]
+}

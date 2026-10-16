@@ -1,0 +1,22 @@
+{
+  "run_id": 38861433092,
+  "run_attempt": 1,
+  "candidate_job": 116844377402,
+  "head_sha": "8d1134ce664fa4dd878389529cf1bf41721af53a",
+  "tag": "v0.0.54",
+  "conclusion": "failure",
+  "xctest_executed": 1143,
+  "skipped": 18,
+  "failures": 1,
+  "swift_testing_passed": 1,
+  "failed_test": "UtilityTests.testGenerationPreparationKeepsMainActorResponsive",
+  "path": "Tests/OpenTypeTests/UtilityTests.swift",
+  "line": 271,
+  "diagnostic": "XCTAssertGreaterThan: heartbeats=0; expected MainActor work while preparation copies files",
+  "raw_log_sha256": "367489cfd80d7881c9b5abb652dc0e65b674437c4178e65dff5ecfa1aa79535c",
+  "raw_log_kept_privately": true,
+  "production_job": "skipped",
+  "production_approvals": [],
+  "notarization_or_publication_executed": false,
+  "retry_performed": false
+}

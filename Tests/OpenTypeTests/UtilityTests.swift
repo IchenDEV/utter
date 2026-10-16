@@ -18,7 +18,7 @@ import Foundation
 import XCTest
 @testable import UtterPresentation
 
-private final class StartupCleanupGate: @unchecked Sendable {
+final class BackgroundWorkGate: @unchecked Sendable {
     private let lock = NSLock()
     private let releaseSignal = DispatchSemaphore(value: 0)
     private var entered = false
@@ -161,7 +161,7 @@ final class UtilityTests: XCTestCase {
             )
         }
 
-        let gate = StartupCleanupGate()
+        let gate = BackgroundWorkGate()
         var factoryCalls = 0
         let catalog = ModelCatalog(
             startupStorageRoot: root,
@@ -218,57 +218,6 @@ final class UtilityTests: XCTestCase {
         XCTAssertGreaterThan(heartbeats, 0)
         XCTAssertTrue(state.exited, "startup cleanup must release its exit barrier")
         XCTAssertFalse(FileManager.default.fileExists(atPath: staging.root.path))
-    }
-
-    @MainActor
-    func testGenerationPreparationKeepsMainActorResponsive() async throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("OpenTypePreparationResponsiveness-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        let staging = ModelStorage.generationStaging(for: UUID(), storageRoot: root)
-        try ModelStorage.prepareGeneration(staging)
-        let stagedRepo = ModelStorage.hubModelRepoDir(
-            "org/model",
-            downloadBase: staging.downloadBase
-        )
-        try FileManager.default.createDirectory(at: stagedRepo, withIntermediateDirectories: true)
-        try Data("{}".utf8).write(to: stagedRepo.appendingPathComponent("config.json"))
-        try Data(repeating: 7, count: 16_000_000).write(
-            to: stagedRepo.appendingPathComponent("weights.safetensors")
-        )
-
-        var heartbeats = 0
-        var preparationFinished = false
-        let preparation = Task { @MainActor in
-            do {
-                let prepared = try await ModelStorage.prepareGenerationCommitOffMainActor(
-                    kind: .llm,
-                    modelID: "org/model",
-                    staging: staging
-                )
-                preparationFinished = true
-                return prepared
-            } catch {
-                preparationFinished = true
-                throw error
-            }
-        }
-        // Let the preparation task reach its detached await before starting
-        // the probe. A synchronous MainActor copy would keep this probe from
-        // running until preparationFinished became true.
-        await Task.yield()
-        let heartbeat = Task { @MainActor in
-            while !preparationFinished {
-                heartbeats += 1
-                await Task.yield()
-            }
-        }
-        let prepared = try await preparation.value
-        await heartbeat.value
-        ModelStorage.discardPreparedGeneration(prepared)
-
-        XCTAssertGreaterThan(heartbeats, 0, "MainActor should service work while preparation copies files")
     }
 
     @MainActor

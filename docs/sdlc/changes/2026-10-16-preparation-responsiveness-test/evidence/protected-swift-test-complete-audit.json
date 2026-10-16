@@ -1,0 +1,15 @@
+{
+  "wrapper_exit": 0,
+  "xctest_unique": 1143,
+  "started": 1143,
+  "finished": 1143,
+  "skipped": 17,
+  "failed": 0,
+  "swift_testing_unique": 1,
+  "exact_frozen_discovery_identity_sets_match": true,
+  "private_policy_used": true,
+  "manifest_precompiled_outside_runtime_policy": true,
+  "native_swiftpm_sandbox_preserved": true,
+  "lockfile_unchanged": true,
+  "log_sha256": "b3e564c39430161757ad829724998094d73e9fd01443bb754ce585daeb7e8ad1"
+}
