@@ -56,11 +56,13 @@ enum NativeE2EUI {
     }
 
     static func pointer(_ label: String, in window: NSWindow) async throws {
-        // These centers were measured from this task's native panel bitmap, not an external desktop.
-        let x = window.frame.width - (label == L("selection_edit.apply") ? 47.5 : 125)
-        let location = NSPoint(x: x, y: 28)
+        try await NativeSelectionReviewTestSupport.activateAccessibility(in: window)
+        let button = try NativeSelectionReviewTestSupport.button(label, in: window)
+        NativeSelectionReviewTestSupport.assertVisible(button, in: window)
+        let frame = button.accessibilityFrame()
+        let location = window.convertPoint(fromScreen: NSPoint(x: frame.midX, y: frame.midY))
         try record("local-pointer-" + label, ["windowNumber": window.windowNumber,
-            "x": x, "y": 28, "locator": "measured owned native panel bitmap",
+            "x": location.x, "y": location.y, "locator": "current localized control AX frame converted to owned window",
             "systemPointerPosted": false])
         for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
             let event = try XCTUnwrap(NSEvent.mouseEvent(with: type, location: location,

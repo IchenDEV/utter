@@ -33,6 +33,7 @@ final class NativeSelectionReviewInteractionTests: XCTestCase {
                     defer { panel.close() }
                     panel.appearance = NSAppearance(named: appearance)
                     try await UI.settle(panel)
+                    XCTAssertEqual(panel.frame.size, NSSize(width: width, height: 360))
                     let content = try XCTUnwrap(panel.contentView)
                     let scroll = try XCTUnwrap(UI.scrollView(in: content))
                     _ = try UI.text("原文末尾-END", in: panel)
@@ -118,6 +119,7 @@ final class NativeSelectionReviewInteractionTests: XCTestCase {
         defer { panel.close() }
         let apply = try UI.button(L("selection_edit.apply"), in: panel)
         XCTAssertFalse(try apply.isAccessibilityEnabled())
+        UI.assertVisible(apply, in: panel)
         _ = try apply.accessibilityPerformPress()
         XCTAssertEqual(calls, 0)
     }
@@ -154,11 +156,12 @@ final class NativeSelectionReviewInteractionTests: XCTestCase {
             let receipt = SelectionEditRestoration(operationID: UUID(), originalSelection: "原文 👩🏽‍💻",
                 replacement: "候选 🇸🇬", expiresAt: Date().addingTimeInterval(15), isAvailable: true)
             let panel = try await UI.panel(RestoreOfferView(restoration: receipt, callbacks: callbacks,
-                onClose: { closed += 1 }), width: 280, height: 104)
+                onClose: { closed += 1 }), width: 280, height: SelectionReviewMetrics.restoreHeight)
             defer { panel.close() }
             let restore = try UI.button(L("selection_edit.restore"), in: panel)
             XCTAssertTrue(try restore.accessibilityPerformPress())
             try await UI.settle(panel)
+            XCTAssertEqual(panel.frame.size, NSSize(width: 280, height: 80))
             _ = try UI.button(L("selection_edit.restore"), in: panel).accessibilityPerformPress()
             XCTAssertEqual(calls, 1)
             XCTAssertFalse(try UI.button(L("selection_edit.restore"), in: panel).isAccessibilityEnabled())
@@ -185,8 +188,11 @@ final class NativeSelectionReviewInteractionTests: XCTestCase {
             defer { panel.close() }
             XCTAssertTrue(try UI.button(L("selection_edit.apply"), in: panel).accessibilityPerformPress())
             try await UI.settle(panel)
+            XCTAssertEqual(panel.frame.size, NSSize(width: 280, height: 240))
             _ = try UI.button(L("selection_edit.apply"), in: panel).accessibilityPerformPress()
             XCTAssertEqual(calls, 1)
+            UI.assertVisible(try UI.button(L("selection_edit.apply"), in: panel), in: panel)
+            XCTAssertFalse(try UI.button(L("selection_edit.apply"), in: panel).isAccessibilityEnabled())
             UI.assertVisible(try UI.text(L("selection_edit.expired"), in: panel), in: panel)
             UI.assertVisible(try UI.button(L("common.cancel"), in: panel), in: panel)
             try await NativeE2EUI.capture("rejected-apply-\(language)", window: panel)

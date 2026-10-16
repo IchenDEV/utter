@@ -10,13 +10,11 @@ extension AppState {
 }
 
 enum SelectionReviewMetrics {
-    static let blockPadding: CGFloat = 10
-    static let edgePadding: CGFloat = 16
-    static let blockSpacing: CGFloat = 12
-    static let headerHeight: CGFloat = 48
-    static let footerHeight: CGFloat = 60
-    static let labelHeight: CGFloat = 18
-    static let restoreHeight: CGFloat = 104
+    static let edgePadding: CGFloat = 12
+    static let blockSpacing: CGFloat = 8
+    static let headerHeight: CGFloat = 40
+    static let labelHeight: CGFloat = 14
+    static let restoreHeight: CGFloat = 80
 
     /// Narrowest/shortest connected display, so the panel fits wherever it is placed.
     private static var viewport: CGSize {
@@ -24,24 +22,24 @@ enum SelectionReviewMetrics {
         return CGSize(width: frames.map(\.width).min() ?? 800, height: frames.map(\.height).min() ?? 600)
     }
 
-    static var width: CGFloat { min(420, max(280, viewport.width - 48)) }
-    static var restoreWidth: CGFloat { min(340, max(280, viewport.width - 48)) }
+    static var width: CGFloat { min(304, max(280, viewport.width - 48)) }
+    static var restoreWidth: CGFloat { min(288, max(280, viewport.width - 48)) }
 
     static func reviewHeight(for proposal: SelectionEditProposal) -> CGFloat {
-        let textWidth = width - 2 * edgePadding - 2 * blockPadding
+        let textWidth = width - 2 * edgePadding
         let blocks = [proposal.originalSelection, proposal.candidate].reduce(CGFloat(0)) {
-            $0 + labelHeight + 4 + textHeight($1, .body, textWidth) + 2 * blockPadding
+            $0 + labelHeight + 4 + textHeight($1, .caption1, textWidth)
         }
-        let instruction = labelHeight + 4 + textHeight(proposal.recognizedInstruction, .callout, width - 2 * edgePadding)
+        let instruction = labelHeight + 4 + textHeight(proposal.recognizedInstruction, .caption1, textWidth)
         let content = blocks + instruction + 2 * blockSpacing + edgePadding
-        return min(max(headerHeight + content + footerHeight, 240), viewport.height * 0.7)
+        return min(max(headerHeight + content, 180), min(360, viewport.height * 0.7))
     }
 
     static func disclosureHeight(for consent: SelectionEditRemoteConsent) -> CGFloat {
-        let textWidth = width - 2 * edgePadding - 2 * blockPadding
-        let lead = textHeight(L("selection_edit.remote_lead") + consent.providerHost, .callout, width - 2 * edgePadding)
-        let block = labelHeight + 4 + textHeight(consent.selectedText, .body, textWidth) + 2 * blockPadding
-        return min(max(headerHeight + lead + block + blockSpacing + edgePadding + footerHeight, 240), viewport.height * 0.7)
+        let textWidth = width - 2 * edgePadding
+        let lead = textHeight(String(format: L("selection_edit.remote_lead"), consent.providerHost), .caption1, textWidth)
+        let block = labelHeight + 4 + textHeight(consent.selectedText, .caption1, textWidth)
+        return min(max(headerHeight + lead + block + blockSpacing + edgePadding, 180), min(360, viewport.height * 0.7))
     }
 
     private static func textHeight(_ text: String, _ style: NSFont.TextStyle, _ width: CGFloat) -> CGFloat {
@@ -55,7 +53,9 @@ extension OverlayLayout {
     enum Content: Equatable { case status, review, restore, disclosure, notice }
 
     init(content: Content, size: CGSize) {
-        width = size.width; height = size.height; outerCornerRadius = 16; isInteractive = true
+        width = size.width; height = size.height
+        outerCornerRadius = content == .review || content == .disclosure ? 22 : 18
+        isInteractive = true
         horizontalPadding = 0; topPadding = 0; bottomPadding = 0; stackSpacing = 0
         self.content = content
     }

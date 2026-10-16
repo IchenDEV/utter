@@ -5,9 +5,6 @@ import SwiftUI
 struct OverlayContentView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
-    @Environment(\.colorScheme) private var systemScheme
 
     let onLayoutChange: (OverlayLayout) -> Void
     let onCancel: () -> Void
@@ -41,10 +38,10 @@ struct OverlayContentView: View {
     var body: some View {
         content
             .frame(width: layout.width, height: layout.height, alignment: .center)
-            .background(panelBackground)
+            .background(OverlayPanelSurface(cornerRadius: layout.outerCornerRadius))
             .clipShape(RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous))
             .compositingGroup()
-            .environment(\.colorScheme, layout.content == .status ? .dark : systemScheme)
+            .environment(\.colorScheme, .dark)
             .onAppear {
                 onLayoutChange(layout)
             }
@@ -148,27 +145,6 @@ struct OverlayContentView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var panelBackground: some View {
-        let shape = RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous)
-        let review = layout.content != .status
-        return ZStack {
-            if reduceTransparency {
-                shape.fill(review ? Color(nsColor: .windowBackgroundColor) : Color.black.opacity(0.92))
-            } else if review {
-                shape.fill(.regularMaterial)
-            } else {
-                shape.fill(.ultraThinMaterial)
-                shape.fill(Color.black.opacity(0.22))
-            }
-        }
-        .overlay {
-            shape.strokeBorder(
-                (review ? Color.primary : Color.white).opacity(colorSchemeContrast == .increased ? 0.28 : 0.12),
-                lineWidth: colorSchemeContrast == .increased ? 1 : 0.5
-            )
-        }
-    }
-
     @ViewBuilder
     private var statusIcon: some View {
         switch appState.phase {
@@ -206,6 +182,28 @@ struct OverlayContentView: View {
         default:
             Image(systemName: "mic")
                 .foregroundStyle(.white.opacity(0.7))
+        }
+    }
+}
+
+struct OverlayPanelSurface: View {
+    let cornerRadius: CGFloat
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        ZStack {
+            if reduceTransparency {
+                shape.fill(Color.black.opacity(0.92))
+            } else {
+                shape.fill(.ultraThinMaterial)
+                shape.fill(Color.black.opacity(0.22))
+            }
+        }
+        .overlay {
+            shape.strokeBorder(.white.opacity(contrast == .increased ? 0.28 : 0.12),
+                lineWidth: contrast == .increased ? 1 : 0.5)
         }
     }
 }

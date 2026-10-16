@@ -42,3 +42,9 @@ iPhone/iPad 保留在授权范围。先依赖原负责人 T0 录音→自动返�
 ## Confirmed selected-entry privacy contract
 
 专用selectionEdit及已有command模式中冻结了非空选区的本次指令，都走选区改写与审阅；识别的自然指令不必重复说“选区”。不启动截图/OCR，不落到任意屏幕Action或自动删除；复用同一Session与已有rewrite helper。未选区command及普通听写原行为保留。此为整体授权内的实现设计收敛，未声称用户已审阅或实际验收通过。
+
+## Original HUD styling correction, 2026-10-17
+
+The user rejected the review screen's visual divergence. Preserve the existing HUD language from the pre-feature `f0ef2aa` source and retained native recording renders: dark ultra-thin material in both appearances, caption typography, 26-point circular x/check controls, and the 304-point expanded recording width. Review, remote disclosure and restoration extend that same HUD. Short selections show instruction/original/candidate together; long selections scroll within a panel capped at360points, with the action row always visible. The check control keeps the localized Apply or Continue accessibility label and help; it receives no Return shortcut. Restore uses an undo glyph and the same existing control style. Recording controls and ordinary dictation retain their behavior.
+
+The earlier statement that the UX was preserved meant only that the last test-only increment changed no production source. It did not establish visual consistency with the pre-feature product, and the user has rejected that broader claim. This correction requires fresh native screenshots and interaction checks on the new source; old44-PNG evidence is historical. No actual host/device/VoiceOver/signing acceptance is implied.

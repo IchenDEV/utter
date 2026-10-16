@@ -43,29 +43,17 @@ enum NativeSelectionReviewTestSupport {
             styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         do {
             panel.becomesKeyOnlyIfNeeded = true
-            panel.contentView = NSHostingView(rootView: content.environmentObject(AppState())
-                .background(Color(nsColor: panel.backgroundColor)))
+            let hosting = NSHostingView(rootView: content.environmentObject(AppState())
+                .frame(width: width, height: height)
+                .background(OverlayPanelSurface(cornerRadius: 22))
+                .environment(\.colorScheme, .dark))
+            hosting.sizingOptions = []
+            panel.contentView = hosting
+            panel.setContentSize(NSSize(width: width, height: height))
             panel.orderFrontRegardless()
             try await settle(panel)
             if accessibility {
-                // SwiftUI creates its virtual tree lazily after a public AX client query.
-                let pid = getpid()
-                let status = await Task.detached { () -> (timeout: Int32, query: Int32) in
-                    let application = AXUIElementCreateApplication(pid)
-                    let timeout = AXUIElementSetMessagingTimeout(application, 2).rawValue
-                    guard timeout == AXError.success.rawValue else { return (timeout, AXError.failure.rawValue) }
-                    var children: CFTypeRef?
-                    return (timeout, AXUIElementCopyAttributeValue(application, kAXChildrenAttribute as CFString, &children).rawValue)
-                }.value
-                try NativeE2EUI.record("native-ax-activation-\(panel.windowNumber)",
-                    ["targetPID": pid, "ownProcessOnly": true, "status": status.query,
-                     "timeoutStatus": status.timeout, "permissionRequests": 0])
-                XCTAssertEqual(status.timeout, AXError.success.rawValue)
-                if status.query == AXError.apiDisabled.rawValue {
-                    throw XCTSkip("Public AX self-query is disabled; no permission is requested. VoiceOver remains unverified.")
-                }
-                XCTAssertEqual(status.query, AXError.success.rawValue)
-                try await settle(panel)
+                try await activateAccessibility(in: panel)
             }
             try NativeE2EUI.record("native-tree-\(panel.windowNumber)", ["nodes": nodes(panel).map {
                 ["class": NSStringFromClass(type(of: $0.object)), "role": $0.accessibilityRole()?.rawValue ?? "",
@@ -79,6 +67,28 @@ enum NativeSelectionReviewTestSupport {
             panel.close()
             throw error
         }
+    }
+
+    static func activateAccessibility(in panel: NSWindow) async throws {
+        _ = finishApplicationLaunch
+        // SwiftUI creates its virtual tree lazily after a public AX client query.
+        let pid = getpid()
+        let status = await Task.detached { () -> (timeout: Int32, query: Int32) in
+            let application = AXUIElementCreateApplication(pid)
+            let timeout = AXUIElementSetMessagingTimeout(application, 2).rawValue
+            guard timeout == AXError.success.rawValue else { return (timeout, AXError.failure.rawValue) }
+            var children: CFTypeRef?
+            return (timeout, AXUIElementCopyAttributeValue(application, kAXChildrenAttribute as CFString, &children).rawValue)
+        }.value
+        try NativeE2EUI.record("native-ax-activation-\(panel.windowNumber)",
+            ["targetPID": pid, "ownProcessOnly": true, "status": status.query,
+             "timeoutStatus": status.timeout, "permissionRequests": 0])
+        XCTAssertEqual(status.timeout, AXError.success.rawValue)
+        if status.query == AXError.apiDisabled.rawValue {
+            throw XCTSkip("Public AX self-query is disabled; no permission is requested. VoiceOver remains unverified.")
+        }
+        XCTAssertEqual(status.query, AXError.success.rawValue)
+        try await settle(panel)
     }
 
     static func settle(_ panel: NSWindow) async throws {

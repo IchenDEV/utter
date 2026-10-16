@@ -18,21 +18,15 @@ struct RemoteDisclosureView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(host.isEmpty ? L("selection_edit.remote_title_generic") : String(format: L("selection_edit.remote_title"), host))
-                .font(.headline)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .padding(.horizontal, SelectionReviewMetrics.edgePadding)
-                .frame(height: SelectionReviewMetrics.headerHeight, alignment: .leading)
-                .accessibilityAddTraits(.isHeader)
+            controls
             ScrollView {
                 VStack(alignment: .leading, spacing: SelectionReviewMetrics.blockSpacing) {
                     Text(host.isEmpty ? L("selection_edit.remote_no_provider") : String(format: L("selection_edit.remote_lead"), host))
-                        .font(.callout).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.white.opacity(0.7))
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(L("selection_edit.remote_selected")).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                        Text(L("selection_edit.remote_selected")).font(.caption2.weight(.semibold)).foregroundStyle(.white.opacity(0.7))
                             .frame(height: SelectionReviewMetrics.labelHeight, alignment: .leading)
-                        ReviewTextBlock(text: consent.selectedText, fill: 0.04)
+                        ReviewTextBlock(text: consent.selectedText)
                     }
                     .accessibilityElement(children: .combine)
                 }
@@ -40,7 +34,11 @@ struct RemoteDisclosureView: View {
                 .padding(.bottom, SelectionReviewMetrics.edgePadding)
             }
             .scrollBounceBehavior(.basedOnSize)
-            footer
+            if let notice {
+                Text(L(notice)).font(.caption).foregroundStyle(.white.opacity(0.88))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding([.horizontal, .bottom], SelectionReviewMetrics.edgePadding)
+            }
         }
         .onAppear {
             NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested,
@@ -49,20 +47,19 @@ struct RemoteDisclosureView: View {
         }
     }
 
-    private var footer: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if let notice {
-                Text(L(notice)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            }
-            HStack(spacing: 8) {
-                Spacer(minLength: 0)
-                ReviewButton(title: L("common.cancel"), role: .quiet, shortcut: .cancelAction) { callbacks.decline(intentID) }
-                ReviewButton(title: L("common.continue"), role: .primary, hint: L("selection_edit.remote_continue_hint"), action: authorize)
-                    .disabled(submitted || !canContinue)
-            }
+    private var controls: some View {
+        HStack(spacing: 8) {
+            ReviewButton(title: L("common.cancel"), role: .quiet, shortcut: .cancelAction) { callbacks.decline(intentID) }
+            Text(host.isEmpty ? L("selection_edit.remote_title_generic") : String(format: L("selection_edit.remote_title"), host))
+                .font(.caption.weight(.medium)).foregroundStyle(.white.opacity(0.88))
+                .lineLimit(1).truncationMode(.middle)
+                .frame(maxWidth: .infinity)
+                .accessibilityAddTraits(.isHeader)
+            ReviewButton(title: L("common.continue"), role: .primary, hint: L("selection_edit.remote_continue_hint"), action: authorize)
+                .disabled(submitted || !canContinue)
         }
         .padding(.horizontal, SelectionReviewMetrics.edgePadding)
-        .frame(height: SelectionReviewMetrics.footerHeight, alignment: .center)
+        .frame(height: SelectionReviewMetrics.headerHeight)
     }
 
     private func authorize() {
@@ -79,16 +76,15 @@ struct ReviewNoticeView: View {
     @EnvironmentObject private var appState: AppState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        HStack(spacing: 8) {
+            ReviewButton(title: L("common.close"), role: .quiet, shortcut: .cancelAction, action: onClose)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Image(systemName: "exclamationmark.triangle").foregroundStyle(Color(nsColor: .systemOrange))
                     .accessibilityHidden(true)
-                Text(L(key)).font(.headline).lineLimit(4).fixedSize(horizontal: false, vertical: true)
+                Text(L(key)).font(.caption.weight(.medium)).foregroundStyle(.white.opacity(0.88))
+                    .lineLimit(4).fixedSize(horizontal: false, vertical: true)
             }
-            HStack {
-                Spacer(minLength: 0)
-                ReviewButton(title: L("common.close"), role: .primary, shortcut: .cancelAction, action: onClose)
-            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(SelectionReviewMetrics.edgePadding)
     }

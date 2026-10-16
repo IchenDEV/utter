@@ -1799,5 +1799,29 @@
       "human/protected approval"
     ],
     "next": "Commit/push tested increment to existing Draft PR124, verify remote SHA and exact new-head CI; no protected merge or release."
-  }
+  },
+  "hudStyleCorrection": {
+    "date": "2026-10-17",
+    "owner": "current Codex",
+    "authorization": "User rejects visual divergence; preserve original UX within existing overall implementation/PR authorization",
+    "baseline": "pre-feature f0ef2aa native HUD and retained original screenshots",
+    "status": "local verification passed; Draft PR124 revision",
+    "acceptance": [
+      "same dark HUD surface and caption hierarchy",
+      "existing26pt x/check button renderer",
+      "304pt normal width and bounded long text",
+      "unchanged explicit consent and one-use write/restore controls"
+    ],
+    "evidence": ".local/voicecursor-research/codex-ux-correction-20261017/",
+    "humanAcceptance": "not claimed",
+    "nativeTests": "8/8 +71/71, zero skips/failures",
+    "runtimeCanaries": "9/9",
+    "imagesInspected": 58,
+    "auditHeadings": 157,
+    "sourceSHA256": "a5e6a33c9013bc552541a8cbb6aad410c7ec2a587b0e7edabd9bc4a54abab2df",
+    "artifactSHA256": "f4008ec1e89c91487f418f04dfa80a5e01435384663f9630aedaf2472c22f943",
+    "independentReview": "completed; concrete pointer/fixture findings closed; final execution reviewed by parent",
+    "remaining": "fresh GitHub checks; actual host/VoiceOver/device/distribution acceptance"
+  },
+  "currentOwner": "current Codex"
 }
