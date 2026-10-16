@@ -5,16 +5,21 @@ gap even when repository CI is green.
 
 ## `main` ruleset
 
-Enable an active ruleset targeting `main` with:
+This repository currently has one developer. Keep an active ruleset targeting
+`main` with:
 
 - pull requests required;
-- at least one approval;
-- code-owner review for the sensitive paths in `.github/CODEOWNERS`;
-- approval of the most recent reviewable push;
+- zero required approving reviews, without mandatory code-owner or last-push
+  approval; the sole developer cannot provide a separate reviewer identity;
 - all review conversations resolved;
 - required status check `SDLC Gate`;
 - force pushes and deletions blocked;
-- bypass limited to an explicit emergency role, with an audit reason.
+- no bypass actors.
+
+The owner explicitly authorizes merge after reviewing the change and its
+evidence. High-risk changes still require independent technical verification.
+`CODEOWNERS` continues to document ownership. If another maintainer joins,
+review whether separate approving reviews should become mandatory.
 
 The stable gate name lets internal CI jobs change without repeatedly editing
 the ruleset.

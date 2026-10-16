@@ -1,0 +1,140 @@
+{
+  "verifier": "/root/signing_verifier",
+  "verified_at_utc": "2026-10-15T16:48:27.316814+00:00",
+  "result": "passed_before_production",
+  "human_production_approval": false,
+  "remote_mutations_performed": false,
+  "tag": {
+    "name": "v0.0.53",
+    "annotated_tag_object": "b8e869cddca904cd525ece4fcb36d55fd4a14a33",
+    "peeled_commit": "f0ef2aa88296da017e29ced2b7bc9271af96e4fb"
+  },
+  "workflow_run": {
+    "id": 38770474797,
+    "url": "https://github.com/IchenDEV/utter/actions/runs/38770474797",
+    "head_sha": "f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+    "head_branch": "v0.0.53",
+    "event": "push",
+    "path": ".github/workflows/release.yml",
+    "status": "waiting",
+    "conclusion": null
+  },
+  "candidate_test_job": {
+    "id": 116544650129,
+    "url": "https://github.com/IchenDEV/utter/actions/runs/38770474797/job/116544650129",
+    "status": "completed",
+    "conclusion": "success",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T16:37:02Z",
+        "completed_at": "2026-10-15T16:37:03Z"
+      },
+      {
+        "name": "Run actions/checkout@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T16:37:03Z",
+        "completed_at": "2026-10-15T16:37:09Z"
+      },
+      {
+        "name": "Require a SemVer tag on main",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T16:37:09Z",
+        "completed_at": "2026-10-15T16:37:10Z"
+      },
+      {
+        "name": "Run repository checks",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T16:37:10Z",
+        "completed_at": "2026-10-15T16:39:11Z"
+      },
+      {
+        "name": "Ensure Metal toolchain",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T16:39:11Z",
+        "completed_at": "2026-10-15T16:39:17Z"
+      },
+      {
+        "name": "Resolve version from tag",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T16:39:17Z",
+        "completed_at": "2026-10-15T16:39:17Z"
+      },
+      {
+        "name": "Run unit tests",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T16:39:17Z",
+        "completed_at": "2026-10-15T16:46:40Z"
+      },
+      {
+        "name": "Post Run actions/checkout@v4",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T16:46:40Z",
+        "completed_at": "2026-10-15T16:46:42Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-15T16:46:42Z",
+        "completed_at": "2026-10-15T16:46:44Z"
+      }
+    ],
+    "log_file": "release-candidate-tests-independent.log",
+    "log_sha256": "f46e1adc5ae48fe311d2c069d6dec5f2c63fad5e485b6341b95db41e8edde1bc",
+    "xctest": {
+      "executed": 1143,
+      "skipped": 18,
+      "failures": 0,
+      "started": 1143,
+      "finished": 1143,
+      "all_tests_completed": true
+    },
+    "swift_testing": {
+      "executed": 1,
+      "result": "passed"
+    },
+    "additional_ci_skip_vs_local": {
+      "test": "OpenTypeTests.DeferredReplacementPolicyTests.testDecisionRequiresSameFrontmostApp",
+      "reason": "Current test process has no bundle identifier",
+      "local_case_passed": true
+    }
+  },
+  "pending_production": {
+    "environment_id": 20910208532,
+    "environment_name": "production",
+    "reviewer": "IchenDEV",
+    "pending": true,
+    "prevent_self_review": false,
+    "can_admins_bypass": false,
+    "custom_branch_policy_active": true
+  },
+  "main_protection": {
+    "protected": true,
+    "sha": "f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+    "effective_rule_types": [
+      "deletion",
+      "non_fast_forward",
+      "pull_request",
+      "required_status_checks"
+    ],
+    "ruleset_id": 14695153
+  },
+  "findings": [],
+  "next_gate": "The authorized human must decide whether to approve production for this exact run. Independent verification does not provide that approval.",
+  "remaining_evidence": [
+    "Developer ID certificate identity/team/runtime on built release",
+    "Accepted software notarization and stapled ticket",
+    "Gatekeeper and mounted-DMG verification",
+    "Published checksum and download equality"
+  ]
+}

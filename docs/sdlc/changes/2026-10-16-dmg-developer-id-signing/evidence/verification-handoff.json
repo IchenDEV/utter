@@ -1,0 +1,19 @@
+{
+  "recorded_at_utc": "2026-10-16T03:37:34.515850+00:00",
+  "status": "pending_human_verification_acceptance",
+  "independent_result": "passed_local_implementation_verification",
+  "findings": [],
+  "final_checks": {
+    "sdlc": {
+      "exit_code": 0
+    },
+    "diff": {
+      "exit_code": 0
+    }
+  },
+  "reviewed_source_hashes_match": true,
+  "package_resolved_sha256": "3a007c520b8b69aa9a675a42675662d7d272e4808dd3e71e4f12e074150219ad",
+  "verification_artifact_sha256": "6c32d41f720b28dff23ab63955361de7b5ab4da876165aec085f5ff0eee88b52",
+  "remote_pr_stage_started": false,
+  "new_release_published": false
+}

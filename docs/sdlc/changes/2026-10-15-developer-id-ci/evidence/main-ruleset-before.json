@@ -1,0 +1,35 @@
+{
+  "id": 14695153,
+  "name": "main",
+  "target": "branch",
+  "source_type": "Repository",
+  "source": "IchenDEV/utter",
+  "enforcement": "disabled",
+  "conditions": {
+    "ref_name": {
+      "exclude": [],
+      "include": []
+    }
+  },
+  "rules": [
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    }
+  ],
+  "node_id": "RRS_lACqUmVwb3NpdG9yec5FkPyczgDgOvE",
+  "created_at": "2026-04-04T23:20:35.411+08:00",
+  "updated_at": "2026-04-04T23:20:35.424+08:00",
+  "bypass_actors": [],
+  "current_user_can_bypass": "never",
+  "_links": {
+    "self": {
+      "href": "https://api.github.com/repos/IchenDEV/utter/rulesets/14695153"
+    },
+    "html": {
+      "href": "https://github.com/IchenDEV/utter/rules/14695153"
+    }
+  }
+}

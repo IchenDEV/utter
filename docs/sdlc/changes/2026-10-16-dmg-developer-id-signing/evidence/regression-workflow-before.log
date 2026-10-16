@@ -1,0 +1,12 @@
+From TASK_TMP/tmp.5RrqhVRHzc/origin
+ * branch            main       -> FETCH_HEAD
+From TASK_TMP/tmp.5RrqhVRHzc/origin
+ * branch            main       -> FETCH_HEAD
+Signing mode: developer-id
+unsigned Developer ID DMG reached verification
+FAIL: bash -e TASK_TMP/tmp.5RrqhVRHzc/classify.sh
+FAIL: test verify = sign
+verify
+FAIL: test verify = sign
+Signing mode: self-signed
+3 release contract checks failed.

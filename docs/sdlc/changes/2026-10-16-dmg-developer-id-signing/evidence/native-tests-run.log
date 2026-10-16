@@ -1,0 +1,43 @@
+NATIVE_EVIDENCE_DIR=TASK_TMP/utter-developer-id-ci-evidence-8lm_1sy5/native-run-f8535155
+OpenTypeTests xctest: exit=0, executed=499, failures=0, complete=True
+OpenTypeTests swift-testing: exit=0, executed=1, failures=0, complete=True
+UtterAudioTests xctest: exit=0, executed=20, failures=0, complete=True
+UtterAudioTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterBuiltinsTests xctest: exit=0, executed=2, failures=0, complete=True
+UtterBuiltinsTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterContractsTests xctest: exit=0, executed=123, failures=0, complete=True
+UtterContractsTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterDataTests xctest: exit=0, executed=58, failures=0, complete=True
+UtterDataTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterEvaluationTests xctest: exit=0, executed=7, failures=0, complete=True
+UtterEvaluationTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterIngressTests xctest: exit=0, executed=12, failures=0, complete=True
+UtterIngressTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterMacServicesTests xctest: exit=0, executed=54, failures=0, complete=True
+UtterMacServicesTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterModelsTests xctest: exit=0, executed=34, failures=0, complete=True
+UtterModelsTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterProcessingTests xctest: exit=0, executed=107, failures=0, complete=True
+UtterProcessingTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterRemoteInferenceTests xctest: exit=0, executed=89, failures=0, complete=True
+UtterRemoteInferenceTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterRemoteMicTests xctest: exit=0, executed=54, failures=0, complete=True
+UtterRemoteMicTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterRuntimeTests xctest: exit=0, executed=26, failures=0, complete=True
+UtterRuntimeTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+UtterSessionTests xctest: exit=0, executed=58, failures=0, complete=True
+UtterSessionTests swift-testing: exit=69, executed=0, failures=0, complete=True
+
+{"bundle_count": 14, "invocations": 28, "nonzero_exits": 13, "incomplete_invocations": 0, "total_xctest": 1143, "total_swift_testing": 1, "bundle_hashes_unchanged": true}

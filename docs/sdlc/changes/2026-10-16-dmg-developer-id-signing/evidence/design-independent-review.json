@@ -1,0 +1,121 @@
+{
+  "verifier": "/root/signing_verifier",
+  "reviewed_at_utc": "2026-10-15T17:38:48.371981+00:00",
+  "result": "no_design_blocker",
+  "human_design_approval": false,
+  "spec_sha256": "1295ed50787bbf334ac566298486f231537d4e4a5d20d8f00e2eb2abf44a6d59",
+  "scope": "Read-only independent review of proposed shared CI DMG signing and verifier boundary; implementation has not been reviewed because it does not exist.",
+  "reviewed_files": [
+    "docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/intent.md",
+    "docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/spec.md",
+    ".github/workflows/release.yml",
+    ".github/workflows/nightly-release.yml",
+    ".github/workflows/release-artifact.yml",
+    ".github/workflows/manual-app-artifact.yml",
+    "scripts/build-app.sh",
+    "scripts/build-and-run.sh",
+    "scripts/verify-release-artifact.sh",
+    "scripts/tests/test_release_workflow_contract.sh",
+    "scripts/tests/test_release_version.sh",
+    "scripts/tests/test_nightly_release_plan.sh",
+    ".github/CODEOWNERS"
+  ],
+  "call_path_review": [
+    {
+      "caller": "release.yml and nightly-release.yml",
+      "route": "Both invoke release-artifact.yml with inherited secrets.",
+      "effect": "Single Developer ID signing correction before first strict verification covers both public release entry points."
+    },
+    {
+      "caller": "release-artifact.yml classification block",
+      "route": "App must match imported SIGN_IDENTITY before Developer ID branch; expected certificate SHA-256 is already passed to verifier.",
+      "effect": "Signing DMG with exact identity then checking its certificate against app/imported fingerprint fails closed before notarization."
+    },
+    {
+      "caller": "release-artifact.yml final distribution block",
+      "route": "require-developer-id plus require-notarization",
+      "effect": "Reuses strengthened container check after staple, with existing ticket, Gatekeeper and checksum gates retained."
+    },
+    {
+      "caller": "build-app.sh generic and app-only paths",
+      "route": "No require-developer-id option currently passed to generic packaging verification.",
+      "effect": "They keep current packaging scope. Shared CI step owns distribution container signing."
+    },
+    {
+      "caller": "manual-app-artifact.yml",
+      "route": "Fixed historical checkout, app-only acceptance verification without DMG or Developer ID requirement.",
+      "effect": "Does not enter the new container guard."
+    },
+    {
+      "caller": "self-signed release classification",
+      "route": "require-self-signed branch",
+      "effect": "Does not receive a Developer ID-only DMG signature requirement."
+    }
+  ],
+  "security_review": {
+    "exact_imported_identity_reused": true,
+    "fingerprint_equality_required_even_without_expected_flag": true,
+    "secure_timestamp_required": true,
+    "container_identifier_distinct_from_app": true,
+    "app_entitlements_runtime_deep_not_applied_to_dmg": true,
+    "signing_failure_stops_before_notarization": true,
+    "gatekeeper_gate_retained": true,
+    "new_credentials_permissions_dependencies_required": false,
+    "failed_v0053_tag_and_old_assets_preserved": true
+  },
+  "blockers": [],
+  "implementation_test_clarifications": [
+    {
+      "priority": 2,
+      "location": "spec.md Test strategy",
+      "requirement": "Native smoke must execute the actual verify-release-artifact.sh boundary for positive and unsigned/mismatched/no-secure-timestamp negative images. Merely running native codesign/extraction commands does not prove the new verifier guard.",
+      "resolution": "Make this explicit in the implementation plan; reuse the existing real release-style app fixture and/or a credential-free tool boundary fixture rather than adding a framework or needing another real signing credential."
+    },
+    {
+      "priority": 2,
+      "location": "Workflow literal-block regression",
+      "requirement": "Run the actual extracted run block with external bash -e semantics and an observable signing-before-verification order. Signing failure must prevent verifier invocation; the old block must fail the new check.",
+      "resolution": "Extend the existing contract harness as proposed. A source grep alone is insufficient."
+    }
+  ],
+  "rollout_evidence_gap": {
+    "observed_collaborators": [
+      {
+        "login": "IchenDEV",
+        "role_name": "admin",
+        "admin": true
+      }
+    ],
+    "sensitive_path_codeowner": "IchenDEV",
+    "ruleset_active": true,
+    "bypass_actors": [],
+    "required_approving_review_count": 1,
+    "require_code_owner_review": true,
+    "require_last_push_approval": true,
+    "gap": "No distinct eligible code-owner reviewer is currently identified if the eventual PR author is IchenDEV. Resolve the concrete PR approval route by explicit human decision before merge.",
+    "not_authorized_by_this_review": [
+      "Adding collaborators",
+      "Changing CODEOWNERS",
+      "Weakening or bypassing main rules",
+      "Approving production"
+    ]
+  },
+  "rollout_remaining_gates": [
+    "Human design approval",
+    "Implementation plan approval",
+    "Actual diff plus regression old/fail/pass evidence and native boundary smoke",
+    "Required repository/full native tests and release-style packaging",
+    "Independent implementation verification and human verification acceptance",
+    "Concrete PR approval and protected main merge",
+    "Exact merged SHA CI gate, new unused version, run-specific human production approval",
+    "Independent final signed/notarized artifact and checksum download review"
+  ],
+  "apple_reference": "https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution",
+  "verifier_mutations": {
+    "source_edits": false,
+    "remote_writes": false,
+    "credential_access": false,
+    "human_approval_recorded": false,
+    "report_only": true
+  }
+}

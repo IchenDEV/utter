@@ -1,0 +1,20 @@
+{
+  "command": [
+    "/usr/bin/sandbox-exec",
+    "-f",
+    "TASK_TMP/utter-developer-id-ci-evidence-8lm_1sy5/test-runtime-narrow.sb",
+    "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift",
+    "test",
+    "--skip-build",
+    "--skip-update",
+    "--disable-automatic-resolution"
+  ],
+  "exit": 1,
+  "nested_sandbox_setup_failure": true,
+  "lockfile_unchanged": true,
+  "native_full_suite_evidence": "full-test-evidence.json",
+  "_public_redaction": {
+    "original_sha256": "169c0910c74f25eebef1c3b5fdd997dd6a53bd4b290dbe15142bfcce3cbe99a7",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
+  }
+}

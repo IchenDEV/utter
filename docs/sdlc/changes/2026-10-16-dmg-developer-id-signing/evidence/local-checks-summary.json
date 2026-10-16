@@ -1,0 +1,56 @@
+{
+  "recorded_at_utc": "2026-10-16T03:34:39.955281+00:00",
+  "source_sha256": {
+    ".github/workflows/release-artifact.yml": "f9845ad9d4b7d35367d5cffa722b208f998f90a400ce3dffc44173d4449af73b",
+    "scripts/verify-release-artifact.sh": "e2ee26c5fc9c5b2cb122731a7d801f8ef91176733256f92cbd76cf1c3a1b735b",
+    "scripts/tests/test_release_workflow_contract.sh": "7ba76b3f1edd5ec01601f62b3a98c7571e5e244cd9ef730f55c0ae1dffe05c37",
+    "scripts/tests/test_release_artifact.py": "23004ea623723d5649fc211ca2efdd775d6b57930622afa65462ae3d69e9f995"
+  },
+  "syntax": {
+    "workflow_yaml": "Ruby YAML.parse_file passed",
+    "shell": "bash -n passed for verifier, contract harness, and extracted shared workflow block"
+  },
+  "basic_checks": {
+    "result": "pass",
+    "python": "3.14.6",
+    "log_sha256": "9abda60c70729ffcc3d95107783ba5b23ca5f3e695a260697c0c3a82e20923e8"
+  },
+  "swift": {
+    "native_evidence": "TASK_TMP/utter-developer-id-ci-evidence-8lm_1sy5/native-run-f8535155",
+    "xctest_bundles": 14,
+    "xctest_executed": 1143,
+    "xctest_skipped": 17,
+    "xctest_failures": 0,
+    "unique_swift_testing_cases": 1,
+    "swift_testing_failures": 0,
+    "expected_empty_swift_testing_bundles": 13,
+    "complete": true,
+    "frozen_bundle_files_unchanged": 300,
+    "runtime_preflight": "native-suite-preflight.json",
+    "standard_swift_test": "Separate protected-wrapper result; not inferred from native engines."
+  },
+  "protected_wrapper": {
+    "command": [
+      "/usr/bin/sandbox-exec",
+      "-f",
+      "TASK_TMP/utter-developer-id-ci-evidence-8lm_1sy5/test-runtime-narrow.sb",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift",
+      "test",
+      "--skip-build",
+      "--skip-update",
+      "--disable-automatic-resolution"
+    ],
+    "exit": 1,
+    "nested_sandbox_setup_failure": true,
+    "lockfile_unchanged": true,
+    "native_full_suite_evidence": "full-test-evidence.json"
+  },
+  "native_dmg_result": true,
+  "package_resolved_sha256": "3a007c520b8b69aa9a675a42675662d7d272e4808dd3e71e4f12e074150219ad",
+  "remote_source_writes_performed": false,
+  "new_release_created": false,
+  "_public_redaction": {
+    "original_sha256": "8b85b3c1c2e1202f88cdad68e17740d8b09df91e16cdfc091b67fc195c596c76",
+    "scope": "Local machine paths and redundant commit emails; original evidence retained privately"
+  }
+}

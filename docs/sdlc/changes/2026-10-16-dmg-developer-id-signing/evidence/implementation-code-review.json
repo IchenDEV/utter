@@ -1,0 +1,68 @@
+{
+  "verifier": "/root/signing_verifier",
+  "reviewed_at_utc": "2026-10-16T02:58:40.586603+00:00",
+  "result": "no_code_findings_pending_native_and_full_suite_verification",
+  "human_verification_approval": false,
+  "base_head": "f0ef2aa88296da017e29ced2b7bc9271af96e4fb",
+  "reviewed_file_sha256": {
+    ".github/workflows/release-artifact.yml": "f9845ad9d4b7d35367d5cffa722b208f998f90a400ce3dffc44173d4449af73b",
+    "scripts/verify-release-artifact.sh": "e2ee26c5fc9c5b2cb122731a7d801f8ef91176733256f92cbd76cf1c3a1b735b",
+    "scripts/tests/test_release_workflow_contract.sh": "7ba76b3f1edd5ec01601f62b3a98c7571e5e244cd9ef730f55c0ae1dffe05c37",
+    "scripts/tests/test_release_artifact.py": "23004ea623723d5649fc211ca2efdd775d6b57930622afa65462ae3d69e9f995"
+  },
+  "findings": [],
+  "boundary_assessment": {
+    "shared_entry_points": "Tag and nightly callers both reach the amended shared classification block.",
+    "developer_id_order": "Existing app/imported-identity equality precedes DMG sign; exact imported identity, timestamp, distinct identifier are used before first verification and Apple submission.",
+    "signing_failure": "Actual extracted block runs under an external bash -e process. A codesign failure stops before verifier invocation or later notarization steps.",
+    "dmg_verifier": "The actual script rejects invalid primary signatures, non-Developer-ID authorities, missing Timestamp, failed/empty fingerprint extraction and certificate mismatch before any hdiutil mount.",
+    "expected_fingerprint": "App matches optional imported fingerprint first. DMG must match app, so both are tied to expected fingerprint when supplied. DMG/app equality remains required without the option.",
+    "certificate_helper": "Explicit if-failure handling under global pipefail plus exact 64-hex output validation prevents conditional-context errexit suppression from returning empty success.",
+    "unaffected_paths": "Generic packaging, app-only acceptance and self-signed branch retain their prior contracts.",
+    "post_staple_controls": "Same strict DMG guard runs again; stapler validation, both Gatekeeper assessments, mounted-app equality and publication checksum gates remain in place.",
+    "secrets_permissions_dependencies": "No new credential export, remote permission, API secret, dependency or app behavior introduced."
+  },
+  "independently_executed_checks": [
+    {
+      "command": "bash -n scripts/verify-release-artifact.sh scripts/tests/test_release_workflow_contract.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash scripts/tests/test_release_workflow_contract.sh",
+      "exit": 0,
+      "covered": "Literal YAML block sign-before-verify, exact arguments, abort on signing failure, self-signed branch."
+    },
+    {
+      "command": "python3 scripts/tests/test_release_artifact.py",
+      "exit": 0,
+      "test_methods": 4,
+      "covered": "Actual verifier with controlled external tool boundary: success, unsigned, ad-hoc, no timestamp, mismatch with/without expected fingerprint, extraction failure, nonzero/empty OpenSSL output, generic unsigned packaging."
+    }
+  ],
+  "regression_evidence_review": {
+    "workflow_before": "regression-workflow-before.log",
+    "workflow_before_observed": "Old literal block reached verifier without a signed-DMG marker and failed order/fail-closed assertions.",
+    "verifier_before": "regression-verifier-before.log",
+    "verifier_before_observed": "Old actual verifier accepted unsigned/ad-hoc/untimestamped/mismatched images and failed the new negative assertions.",
+    "after_logs": [
+      "regression-workflow-after.log",
+      "regression-verifier-after.log"
+    ],
+    "baseline_limit": "Before-verifier log contains three test methods; the final four-method suite additionally covers generic behavior and newer parser negatives. Core original regression failures are directly evidenced."
+  },
+  "ci_integration": "scripts/ci-basic-checks.sh already executes python3 -m unittest discover -s scripts/tests and the shell contract test. The new test is included without adding another runner.",
+  "remaining_evidence_gates": [
+    "Real versioned release-style app/DMG build and actual native verifier positive/unsigned/no-secure-timestamp cases.",
+    "Independent inspection of native certificate/timestamp metadata and task-owned mount cleanup.",
+    "Complete Swift/native test identity coverage with build inputs and frozen bundle integrity verified.",
+    "Required SDLC/basic checks, human verification acceptance and concrete PR review route.",
+    "Protected merge, fresh exact-SHA CI and new run-specific production approval.",
+    "Real software notarization/Gatekeeper/published checksum and independent download evidence."
+  ],
+  "reviewer_mutations": {
+    "source_edits": false,
+    "remote_writes": false,
+    "credential_access": false,
+    "report_only": true
+  }
+}

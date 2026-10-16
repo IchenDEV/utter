@@ -1,0 +1,41 @@
+{
+  "included": "Public JSON summaries, SDLC artifacts and focused local logs; original hosted logs remain byte-for-byte local and available by run/job, without binaries or credentials",
+  "local_only_raw_logs": [
+    {
+      "path": "docs/sdlc/changes/2026-10-15-developer-id-ci/evidence/release-candidate-tests-independent.log",
+      "size": 1178762,
+      "sha256": "f46e1adc5ae48fe311d2c069d6dec5f2c63fad5e485b6341b95db41e8edde1bc",
+      "retention": "Preserved locally; complete hosted CI test log remains available in run 38770474797, job 116544650129"
+    },
+    {
+      "path": "docs/sdlc/changes/2026-10-15-developer-id-ci/evidence/release-candidate-tests.log",
+      "size": 1178762,
+      "sha256": "f46e1adc5ae48fe311d2c069d6dec5f2c63fad5e485b6341b95db41e8edde1bc",
+      "retention": "Preserved locally; complete hosted CI test log remains available in run 38770474797, job 116544650129"
+    },
+    {
+      "path": "docs/sdlc/changes/2026-10-15-developer-id-ci/evidence/release-signing-attempt-1.log",
+      "size": 64187,
+      "sha256": "99ed5253bec64abdf7ca64dc54a3a950acac5365bde6b61aac1c901ccfe0f020",
+      "retention": "Preserved byte-for-byte locally, including original trailing whitespace; exact hosted signing log is run 38770474797, job 116549335673. Failure summary and independent verification are committed."
+    },
+    {
+      "path": "docs/sdlc/changes/2026-10-15-developer-id-ci/evidence/release-signing-independent-attempt-1.log",
+      "size": 64187,
+      "sha256": "99ed5253bec64abdf7ca64dc54a3a950acac5365bde6b61aac1c901ccfe0f020",
+      "retention": "Preserved byte-for-byte locally, including original trailing whitespace; exact hosted signing log is run 38770474797, job 116549335673. Failure summary and independent verification are committed."
+    }
+  ],
+  "json_wrapped_raw_logs": [
+    {
+      "original": "docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/evidence/regression-verifier-before.log",
+      "committed": "docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/evidence/regression-verifier-before-log.json",
+      "sha256": "9172cdd7e88908a0dc53752ed33dfdd720201789a9e9b395cbc35e9e38f79efa"
+    },
+    {
+      "original": "docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/evidence/basic-checks-python39-attempt-1.log",
+      "committed": "docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/evidence/basic-checks-python39-attempt-1-log.json",
+      "sha256": "1c8e7f3d8a72365cd32beadd052b33c381355f03c4499312fdcdd0670821b901"
+    }
+  ]
+}
