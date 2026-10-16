@@ -1761,5 +1761,43 @@
       "reportSHA256": "332c32fd40d3fbb218136b72e5eadcae66e5f5026ee345f55866498b1c9f660b"
     }
   },
-  "reportingRoute": "Latest user: report directly in this thread, no root progress/terminal notifications"
+  "reportingRoute": "Latest user: report directly in this thread, no root progress/terminal notifications",
+  "codexNativeUX20261016": {
+    "owner": "current Codex; user direct reporting",
+    "authorization": "Explicit user: no T3 dependency; safe regenerable cache cleanup; preserve UX; finish native/scroll/narrow/accessibility validation and update PR124",
+    "humanAcceptance": false,
+    "dependencies": [
+      "existing19localpins",
+      "Data>=10GiB",
+      "unchanged native build and private-runtime boundaries"
+    ],
+    "outputs": [
+      "two native XCTest source files",
+      "plan.md",
+      "verification.md",
+      "ignored native render/log/hash/audit records"
+    ],
+    "acceptance": {
+      "wholeBuild": "pass",
+      "basicSDLC": "pass",
+      "canaries": "9/9",
+      "nativeTests": "6/6,0skip,0fail",
+      "sameSourceOwnerSessionTests": "71/71,0skip,0fail",
+      "visual": "44nativePNGs/12variants inspected",
+      "UX": "production source unchanged",
+      "scope": "programmatic native scroll layout; AX actions/content order; local key/pointer routing"
+    },
+    "independentTask": "/root/native_ax_boundary_review; completed two bounded read-only reports; no T3",
+    "status": "local scope passed; PR update pending; product acceptance remains partial",
+    "open": [
+      "physical wheel",
+      "actual VoiceOver speech/navigation/scroll",
+      "unlocked-host voice/focus/delivery",
+      "physical mobile T0",
+      "full private-broker coverage",
+      "distribution signing/notarization",
+      "human/protected approval"
+    ],
+    "next": "Commit/push tested increment to existing Draft PR124, verify remote SHA and exact new-head CI; no protected merge or release."
+  }
 }
