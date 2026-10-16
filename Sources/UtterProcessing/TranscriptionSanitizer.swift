@@ -9,8 +9,16 @@ package enum TranscriptionSanitizer {
             .replacingOccurrences(of: "\t", with: " ")
             .replacingOccurrences(of: "[ ]{2,}", with: " ", options: .regularExpression)
             .replacingOccurrences(of: " *\n *", with: "\n", options: .regularExpression)
+            .replacingOccurrences(of: spaceBeforeFullWidth, with: "$1", options: .regularExpression)
+            .replacingOccurrences(of: spaceAfterFullWidth, with: "$1", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    // Speech engines return segments that end with a space, which lands before the next segment's
+    // full-width punctuation ("见面 ，请"). Full-width marks carry their own spacing. Quotes and
+    // apostrophes are left alone because English uses the same glyphs with real spaces ("the ’90s").
+    private static let spaceBeforeFullWidth = "[ ]+([，。、；：！？（）「」『』【】《》])"
+    private static let spaceAfterFullWidth = "([，。、；：！？（）「」『』【】《》])[ ]+"
 
     package static func prepare(
         _ text: String,

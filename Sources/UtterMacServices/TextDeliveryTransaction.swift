@@ -17,17 +17,20 @@ enum TextDeliveryTransaction {
                         allowsClipboardPaste: Bool, isSecureInput: () -> Bool,
                         prepareKeys: (_ deleting: Bool) -> (() -> Bool)?,
                         canCommit: () -> Bool, mark: (DeliveryEffect) -> Bool) async -> DeliveryCompletion {
-        guard canCommit(), target.isCurrent, target.prepareSelection() else {
+        func mayWrite() -> Bool {
+            !isSecureInput() && canCommit() && !isSecureInput() && target.isCurrent && !isSecureInput()
+        }
+        guard mayWrite(), target.prepareSelection() else {
             return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.target_changed"))
         }
         var documentEffect = false
-        defer { if !documentEffect { target.restoreSelection() } }
-        func mayWrite() -> Bool { canCommit() && target.isCurrent }
+        defer { if !documentEffect && !isSecureInput() { target.restoreSelection() } }
         func markDocument(_ effect: DeliveryEffect) -> Bool {
-            guard mark(effect) else { return false }
+            guard mark(effect), mayWrite() else { return false }
             if effect != .clipboard { documentEffect = true }
             return true
         }
+        guard mayWrite() else { return DeliveryCompletion(disposition: .notCommitted) }
         if target.supportsSelectionWrite {
             guard mayWrite(), markDocument(.accessibility) else { return DeliveryCompletion(disposition: .notCommitted) }
             guard target.writeSelection(text) else {
@@ -41,9 +44,9 @@ enum TextDeliveryTransaction {
         guard allowsClipboardPaste else {
             return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.unavailable"))
         }
-        guard !isSecureInput(), let post = prepareKeys(text.isEmpty) else {
+        guard let post = prepareKeys(text.isEmpty) else {
             guard !text.isEmpty else { return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.unavailable")) }
-            return ClipboardPasteTransaction.copy(text, pasteboard: pasteboard, canCommit: mayWrite, mark: mark)
+            return ClipboardPasteTransaction.copy(text, pasteboard: pasteboard, canCommit: mayWrite, mark: markDocument)
         }
         if text.isEmpty {
             guard mayWrite(), !isSecureInput(), markDocument(.keyPress), post() else {

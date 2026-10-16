@@ -1,0 +1,16 @@
+# 对照测试输出（testDeviceKeyboardNativeAlignment，iPad mini A17 Pro，iPadOS 27.2）
+# 来源：.build-ios/kbd-final-1.log；同一次运行内先测系统键盘再测 Utter，单位 pt（颜色为 0-255）。
+# corner = 键最上一行像素相对键左缘的缩进（pt），直接反映圆角曲线；系统与 Utter 相差 ≤ 1pt 才通过。
+# 系统键的 accessibility frame 比可见键向左多 3pt、向上多 1pt，比较时已按此换算。
+native-light-portrait bar=(0.0, 793.0, 744.0, 55.0) globe=(3.0, 1048.5, 69.0, 64.5) delete=(667.5, 855.0, 79.5, 64.5) space=(210.0, 1048.5, 330.0, 64.5) colors=["keycap": [255, 255, 255], "backdrop": [216, 218, 224]] corner=8.5
+utter-light-portrait bar=(0.0, 793.0, 744.0, 55.0) globe=(3.0, 1048.5, 68.5, 64.5) delete=(670.5, 856.0, 67.5, 55.0) space=(74.5, 1049.5, 560.0, 55.0) colors=["keycap": [255, 255, 255], "backdrop": [216, 218, 224]] corner=8.5
+native-light-landscape bar=(0.0, 316.0, 1133.0, 55.0) globe=(4.0, 638.5, 103.0, 85.5) delete=(1015.5, 381.0, 121.5, 86.0) space=(312.5, 638.5, 516.0, 85.5) colors=["backdrop": [205, 209, 215], "keycap": [255, 255, 255]] corner=10.5
+utter-light-landscape bar=(0.0, 316.0, 1133.0, 55.0) globe=(4.0, 638.5, 102.0, 85.5) delete=(1018.5, 383.0, 107.5, 73.5) space=(109.0, 639.5, 863.5, 73.5) colors=["backdrop": [205, 209, 215], "keycap": [255, 255, 255]] corner=11.0
+native-dark-portrait bar=(0.0, 793.0, 744.0, 55.0) globe=(3.0, 1048.5, 69.0, 64.5) delete=(667.5, 855.0, 79.5, 64.5) space=(210.0, 1048.5, 330.0, 64.5) colors=["keycap": [69, 70, 71], "backdrop": [33, 34, 35]] corner=8.5
+utter-dark-portrait bar=(0.0, 793.0, 744.0, 55.0) globe=(3.0, 1048.5, 68.5, 64.5) delete=(670.5, 856.0, 67.5, 55.0) space=(74.5, 1049.5, 560.0, 55.0) colors=["keycap": [70, 70, 70], "backdrop": [33, 34, 35]] corner=9.0
+native-dark-landscape bar=(0.0, 316.0, 1133.0, 55.0) globe=(4.0, 638.5, 103.0, 85.5) delete=(1015.5, 381.0, 121.5, 86.0) space=(312.5, 638.5, 516.0, 85.5) colors=["backdrop": [32, 35, 37], "keycap": [69, 70, 70]] corner=11.0
+utter-dark-landscape bar=(0.0, 316.0, 1133.0, 55.0) globe=(4.0, 638.5, 102.0, 85.5) delete=(1018.5, 383.0, 107.5, 73.5) space=(109.0, 639.5, 863.5, 73.5) colors=["keycap": [70, 70, 70], "backdrop": [32, 35, 37]] corner=11.0
+
+# 按住说话（testDeviceKeyboardHoldToTalk）与早松手（testDeviceKeyboardHoldReleasedEarlyDoesNotRecordLate）
+DEVICE_HOLD_EARLY_RELEASE status=failed
+DEVICE_HOLD_RESULT 今天下午 3:00，我们在公园见面，请记得带一瓶水。

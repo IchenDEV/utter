@@ -4,6 +4,14 @@ import Foundation
 @preconcurrency import Speech
 
 package enum AppleSpeechAnalyzer {
+    package static func isModelInstalled(locale: Locale) async -> Bool {
+        if let transcriber = await makeSpeechTranscriber(locale: locale) {
+            return await AssetInventory.status(forModules: [transcriber]) == .installed
+        }
+        guard let transcriber = try? await makeDictationTranscriber(locale: locale, preset: .shortDictation) else { return false }
+        return await AssetInventory.status(forModules: [transcriber]) == .installed
+    }
+
     package static func prepare(locale: Locale) async throws {
         if let transcriber = await makeSpeechTranscriber(locale: locale) {
             try await ensureModel(for: transcriber)
@@ -20,6 +28,7 @@ package enum AppleSpeechAnalyzer {
         audioURL: URL,
         locale: Locale,
         context: SpeechRecognitionContext = .empty,
+        allowAssetInstallation: Bool = true,
         log: Log
     ) async throws -> String {
         let metadataFile = try AVAudioFile(forReading: audioURL)
@@ -27,13 +36,16 @@ package enum AppleSpeechAnalyzer {
             / metadataFile.processingFormat.sampleRate
         if let transcriber = await makeSpeechTranscriber(locale: locale) {
             do {
-                try await ensureModel(for: transcriber)
+                try await ensureModel(for: transcriber, allowDownload: allowAssetInstallation)
                 return try await transcribe(
                     file: AVAudioFile(forReading: audioURL),
                     with: transcriber,
                     context: context
                 )
+            } catch is CancellationError {
+                throw CancellationError()
             } catch {
+                try Task.checkCancellation()
                 log.info(
                     "[AppleSpeech] SpeechTranscriber failed, trying compatible dictation: "
                         + error.localizedDescription
@@ -45,7 +57,7 @@ package enum AppleSpeechAnalyzer {
             locale: locale,
             preset: dictationPreset(forDuration: duration)
         )
-        try await ensureModel(for: transcriber)
+        try await ensureModel(for: transcriber, allowDownload: allowAssetInstallation)
         return try await transcribe(
             file: AVAudioFile(forReading: audioURL),
             with: transcriber,
@@ -114,17 +126,25 @@ package enum AppleSpeechAnalyzer {
         with analyzer: SpeechAnalyzer,
         resultTask: Task<String, Error>
     ) async throws -> String {
-        do {
-            if let lastSample = try await analyzer.analyzeSequence(from: file) {
-                try await analyzer.finalizeAndFinish(through: lastSample)
-            } else {
+        try await withTaskCancellationHandler {
+            do {
+                try Task.checkCancellation()
+                if let lastSample = try await analyzer.analyzeSequence(from: file) {
+                    try await analyzer.finalizeAndFinish(through: lastSample)
+                } else {
+                    await analyzer.cancelAndFinishNow()
+                }
+                let text = try await resultTask.value
+                try Task.checkCancellation()
+                return text
+            } catch {
+                resultTask.cancel()
                 await analyzer.cancelAndFinishNow()
+                throw error
             }
-            return try await resultTask.value
-        } catch {
+        } onCancel: {
             resultTask.cancel()
-            await analyzer.cancelAndFinishNow()
-            throw error
+            Task { await analyzer.cancelAndFinishNow() }
         }
     }
 
@@ -152,13 +172,19 @@ package enum AppleSpeechAnalyzer {
         return DictationTranscriber(locale: supported, preset: preset)
     }
 
-    private static func ensureModel(for module: any SpeechModule) async throws {
+    private static func ensureModel(for module: any SpeechModule, allowDownload: Bool = true) async throws {
+        try Task.checkCancellation()
         let modules = [module]
         if await AssetInventory.status(forModules: modules) == .installed { return }
+        guard allowDownload else { throw AppleSpeechAnalyzerError.modelUnavailable }
         if let request = try await AssetInventory.assetInstallationRequest(
             supporting: modules
         ) {
-            try await request.downloadAndInstall()
+            try await withTaskCancellationHandler {
+                do { try await request.downloadAndInstall() }
+                catch { try Task.checkCancellation(); throw error }
+                try Task.checkCancellation()
+            } onCancel: { request.progress.cancel() }
         }
         guard await AssetInventory.status(forModules: modules) == .installed else {
             throw AppleSpeechAnalyzerError.modelUnavailable

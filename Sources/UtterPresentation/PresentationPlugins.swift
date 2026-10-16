@@ -79,14 +79,38 @@ package enum PresentationPlugins {
 }
 
 @MainActor
-private final class NativeOverlayPresentation: OverlayPresentationService {
+final class NativeOverlayPresentation: OverlayPresentationService {
     private let panel: OverlayPanel
+    private let notice = ReviewNotice()
+    private var context: PresentationContext?
+    private var targetApp: NSRunningApplication?
+    private var disclosureID: UUID?
+    private var userDeclined = false
     init(screen: (any ScreenCaptureService)?) { panel = OverlayPanel(screen: screen) }
+
     func show(context: PresentationContext, targetApp: NSRunningApplication?) {
+        self.context = context; self.targetApp = targetApp
+        let pending = context.state.remoteDisclosure != nil ? context.state.snapshot.id : nil
+        if pending != disclosureID { userDeclined = false }
+        disclosureID = pending
+        if context.state.isBusy { notice.key = nil }
+        let review = SelectionReviewCallbacks(context: context, notice: notice, onDecline: { [weak self] in self?.userDeclined = true })
         panel.show(appState: context.state, targetApp: targetApp, onCancel: context.cancel, onConfirm: context.stop,
-            onCopy: { context.copy(context.state.snapshot.text) }, onRecover: context.recover, onDismiss: context.dismiss)
+            onCopy: { context.copy(context.state.snapshot.text) }, onRecover: context.recover, onDismiss: context.dismiss,
+            review: review)
     }
-    func hide() { panel.hide() }
+
+    /// A disclosure that the owner cancelled without the user pressing Cancel (key released, expiry, changed target)
+    /// leaves a local notice so the panel does not just vanish; nothing was recorded or sent.
+    func hide() {
+        let unconfirmed = disclosureID != nil && !userDeclined && context?.state.snapshot.id == disclosureID
+            && context?.state.snapshot.phase == .cancelled
+        panel.hide()
+        notice.key = nil; disclosureID = nil
+        guard unconfirmed, let context else { return }
+        notice.key = "selection_edit.remote_not_confirmed"
+        show(context: context, targetApp: targetApp)
+    }
 }
 
 @MainActor

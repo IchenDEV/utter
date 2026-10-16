@@ -16,19 +16,24 @@ package struct SessionIntent: Equatable, Sendable {
     package let request: InputSessionRequest
     package let mode: TextProcessingMode?
     package let operation: SessionOperation
+    package let remoteSelectionConsent: SelectionEditRemoteConsent?
     package init(id: UUID = UUID(), clientID: String? = nil, input: SessionInput,
                  request: InputSessionRequest = InputSessionRequest(), mode: TextProcessingMode? = nil,
-                 operation: SessionOperation = .input) {
+                 operation: SessionOperation = .input, remoteSelectionConsent: SelectionEditRemoteConsent? = nil) {
         self.id = id
         self.clientID = clientID
         self.input = input
         self.request = request
         self.mode = mode
         self.operation = operation
+        self.remoteSelectionConsent = remoteSelectionConsent
     }
 }
 
-package enum SessionOperation: Equatable, Sendable { case input, applyReplacement(UUID), copy(String) }
+package enum SessionOperation: Equatable, Sendable {
+    case input, applyReplacement(UUID), copy(String)
+    case restoreSelectionEdit(operationID: UUID)
+}
 
 package struct SessionHistoryReplacement {
     package let recordID: UUID
@@ -45,6 +50,8 @@ package enum SessionExecutionPhase: Equatable, Sendable {
     case created, preparing, recording, transcribing, processing, delivering, completed, cancelled, failed
 }
 
+package enum SessionCaptureFinalizationReason: Equatable, Sendable { case durationLimit }
+
 package struct SessionExecutionSnapshot: Equatable, Sendable {
     package let id: UUID?
     package let phase: SessionExecutionPhase?
@@ -58,16 +65,24 @@ package struct SessionExecutionSnapshot: Equatable, Sendable {
     package let mode: TextProcessingMode?
     package let recoveryAction: SessionRecoveryAction?
     package let generationOutcome: EspressoGenerationOutcome?
+    package let selectionEditProposal: SelectionEditProposal?
+    package let remoteDisclosure: SelectionEditRemoteConsent?
+    package let isSelectionEditing: Bool
     package init(id: UUID? = nil, phase: SessionExecutionPhase? = nil, transcript: String = "",
                  text: String = "", error: String? = nil, isBusy: Bool = false, deliveryStatus: DeliveryStatus? = nil,
                  performance: SessionPerformance? = nil, audioLevel: Float = 0, mode: TextProcessingMode? = nil,
-                 recoveryAction: SessionRecoveryAction? = nil, generationOutcome: EspressoGenerationOutcome? = nil) {
+                 recoveryAction: SessionRecoveryAction? = nil, generationOutcome: EspressoGenerationOutcome? = nil,
+                 selectionEditProposal: SelectionEditProposal? = nil, remoteDisclosure: SelectionEditRemoteConsent? = nil,
+                 isSelectionEditing: Bool = false) {
         self.id = id; self.phase = phase; self.transcript = transcript
         self.text = text; self.error = error; self.isBusy = isBusy
         self.deliveryStatus = deliveryStatus
         self.performance = performance
         self.audioLevel = audioLevel.isFinite ? min(1, max(0, audioLevel)) : 0
         self.mode = mode
+        self.selectionEditProposal = selectionEditProposal
+        self.remoteDisclosure = remoteDisclosure
+        self.isSelectionEditing = isSelectionEditing
         self.recoveryAction = recoveryAction
         self.generationOutcome = generationOutcome
     }
@@ -129,15 +144,18 @@ package protocol SessionJobControl: AnyObject {
     var isStopped: Bool { get }
     func update(phase: SessionExecutionPhase, transcript: String)
     func cancel()
+    func waitForSelectionEditDecision(_ proposal: SelectionEditProposal) async throws
     func waitForStop() async throws
     func beginStage(_ stage: SessionStage) -> UUID
     func endStage(_ id: UUID)
     func updateAudioLevel(_ level: Float)
+    @discardableResult func finalizeCapture(reason: SessionCaptureFinalizationReason) -> Bool
 }
 
 @MainActor
 package protocol SessionJob: AnyObject {
     var presentationMode: TextProcessingMode? { get }
+    var containsSelectedText: Bool { get }
     func promoteToTranslation() -> TextProcessingMode?
     func bind(input: SessionInput) throws
     func attach(control: any SessionJobControl)
@@ -159,6 +177,9 @@ package protocol SessionWorkflowFactory: AnyObject {
 package protocol SessionExecutionService: AnyObject {
     @discardableResult func requestStop(_ id: UUID, at timestamp: Duration?) -> Bool
     func promoteToTranslation(_ id: UUID, reason: HotkeyPromotion) -> Bool
+    @discardableResult func applySelectionEdit(sessionID: UUID, proposalID: UUID) -> Bool
+    func authorizeRemoteDisclosure(_ intentID: UUID) throws
+    func declineRemoteDisclosure(_ intentID: UUID)
     var snapshot: SessionExecutionSnapshot { get }
     func reserve(_ intent: SessionIntent) throws
     func activate(_ id: UUID, input: SessionInput?) throws
@@ -184,6 +205,7 @@ extension SessionServices {
 
 extension SessionJob {
     package var presentationMode: TextProcessingMode? { nil }
+    package var containsSelectedText: Bool { false }
     package func promoteToTranslation() -> TextProcessingMode? { nil }
     package func bind(input: SessionInput) throws { throw IntegrationError.invalidSessionState }
     package func attach(control: any SessionJobControl) {}

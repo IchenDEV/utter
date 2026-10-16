@@ -14,8 +14,13 @@ package struct ConfiguredModelFiles: ModelFilesService {
     }
 
     package static func storageRoot(settings: SettingsValues) -> URL {
+        #if os(iOS)
+        // iOS container paths can change after an app update or restore.
+        return DataLocations.models
+        #else
         guard !settings.modelStoragePath.isEmpty else { return DataLocations.models }
         return expandedURL(settings.modelStoragePath)
+        #endif
     }
 
     package static func repositoryDirectory(_ id: String, storageRoot: URL) -> URL {

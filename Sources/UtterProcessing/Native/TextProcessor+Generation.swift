@@ -44,7 +44,8 @@ extension TextProcessor {
     }
 
     package func generateText(
-        prompt: String, systemPrompt: String, options: TextProcessingOptions, maxTokens: Int, temperature: Double
+        prompt: String, systemPrompt: String, options: TextProcessingOptions, maxTokens: Int, temperature: Double,
+        allowsFailureDetails: Bool = true
     ) async throws -> String {
         let options = await effectiveProviderOptions(options)
         let providerID = options.textProviderID ?? (options.useRemoteLLM ? "remote" : options.localLLMBackend.rawValue)
@@ -98,7 +99,7 @@ extension TextProcessor {
                 throw CancellationError()
             } catch let error as EspressoMLXFallbackError {
                 await Self.recordEspressoOutcome(.unavailable)
-                log.sensitive("[TextProcessor] ANE-LM and MLX fallback failed: \(error.details)")
+                if allowsFailureDetails { log.sensitive("[TextProcessor] ANE-LM and MLX fallback failed: \(error.details)") }
                 throw error
             } catch {
                 if !options.fallbackToMLXOnEspressoFailure { await Self.recordEspressoOutcome(.failed) }

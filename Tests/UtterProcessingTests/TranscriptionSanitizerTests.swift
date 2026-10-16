@@ -3,6 +3,21 @@ import XCTest
 @testable import UtterProcessing
 
 final class TranscriptionSanitizerTests: XCTestCase {
+    func testRemovesSegmentSpacingAroundFullWidthPunctuation() {
+        XCTAssertEqual(
+            TranscriptionSanitizer.normalizeInput("今天下午 3:00，我们在公园见面 ，请记得带一瓶水。"),
+            "今天下午 3:00，我们在公园见面，请记得带一瓶水。"
+        )
+        XCTAssertEqual(TranscriptionSanitizer.normalizeInput("你好 （世界 ）。 再见"), "你好（世界）。再见")
+        XCTAssertEqual(TranscriptionSanitizer.normalizeInput("他说： 「好 」！ 走吧"), "他说：「好」！走吧")
+    }
+
+    func testKeepsSpacesAroundAsciiPunctuationAndApostrophes() {
+        let english = "Hello , world. rock ’n’ roll in the ’90s, “quoted” text"
+        XCTAssertEqual(TranscriptionSanitizer.normalizeInput(english), english)
+        XCTAssertEqual(TranscriptionSanitizer.normalizeInput("OK ，好的"), "OK，好的")
+    }
+
     func testCollapsesRepeatedTranscriptOnlyWhenAudioSuggestsHallucination() {
         var weakAudio = AudioCaptureActivity()
         weakAudio.record(rms: 0.002, frameCount: 16_000)

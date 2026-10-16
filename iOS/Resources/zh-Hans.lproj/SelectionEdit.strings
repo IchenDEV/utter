@@ -1,0 +1,12 @@
+"ios.selection.instruction" = "指令";
+"ios.selection.original" = "原文";
+"ios.selection.candidate" = "修改后";
+"ios.selection.apply" = "应用";
+"ios.selection.cancel" = "取消";
+"ios.selection.restore" = "恢复原文";
+"ios.selection.waiting" = "处理中";
+"ios.selection.expired" = "已过期。请重新选择文字再试。";
+"ios.selection.uncertain" = "无法确认修改是否完成。再次编辑前请先检查文字。";
+"ios.selection.model_unavailable" = "编辑模型不可用。请打开 Utter 检查模型。";
+"ios.selection.cancelled" = "已取消。";
+"ios.selection.failure" = "编辑失败。";

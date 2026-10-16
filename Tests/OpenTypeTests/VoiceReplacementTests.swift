@@ -19,6 +19,25 @@ import UtterSession
 
 @MainActor
 final class VoiceReplacementTests: XCTestCase {
+    func testRefusedLocalTargetCannotCopyPendingReplacement() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        try await fixture.start()
+        let (pending, original) = try installPending(fixture)
+        fixture.targetAvailable = false
+        let execution = try fixture.runtime.service(SessionServices.execution)
+        let intent = SessionIntent(input: .local, operation: .applyReplacement(pending.id))
+        do {
+            try execution.start(intent)
+            _ = try await execution.waitForCompletion(intent.id)
+            XCTFail("Refused capture became a pending replacement copy")
+        } catch { XCTAssertEqual(error as? DeliveryError, .invalidTarget) }
+        XCTAssertTrue(fixture.output.requests.isEmpty)
+        XCTAssertEqual(try fixture.runtime.service(DataServices.history).records.first?.processedText, original.processedText)
+        XCTAssertEqual(try fixture.runtime.service(SessionServices.outputs).snapshot.pending?.state, .ready)
+        try await fixture.runtime.stop()
+    }
+
     func testAcceptedReplacementAfterCancellationUpdatesOnlyOriginalHistoryRecord() async throws {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }

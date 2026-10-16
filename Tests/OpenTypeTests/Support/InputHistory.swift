@@ -18,7 +18,7 @@ import UtterPresentationContracts
 @MainActor
 extension InputHistory {
     static let shared = InputHistory(service: HistoryStore(
-        directoryURL: DataLocations.applicationSupport,
+        directoryURL: TestFixtureRoot.history,
         retention: { AppSettings.shared.historyRetention },
         reportError: TestDiagnostics.error
     ))

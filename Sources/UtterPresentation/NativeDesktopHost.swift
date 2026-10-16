@@ -15,6 +15,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     let icons: (any IconPresentationService)?
     let diagnostics: any DiagnosticsService
     let isCurrent: () -> Bool
+    let shortcuts: OverlayShortcuts
     var statusItem: NSStatusItem?
     let popover = NSPopover()
     let outsideClicks = PopoverOutsideClickMonitor()
@@ -23,6 +24,10 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     var windowDelegate: DesktopWindowDelegate?
     var subscriptions: Set<AnyCancellable> = []
     var hideTask: Task<Void, Never>?
+    var overlayVisible = false
+    var restoreShown: UUID?
+    var restoreDismissed: UUID?
+    var restoreExpiry: Task<Void, Never>?
     var executionObserver: UUID?
     var outputObserver: UUID?
     var closed = false
@@ -30,11 +35,14 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     init(catalog: any PresentationCatalog, settings: any SettingsService, credentials: any CredentialsService,
          execution: (any SessionExecutionService)?, outputs: (any SessionOutputStateService)?,
          overlay: (any OverlayPresentationService)?, icons: (any IconPresentationService)?,
-         diagnostics: any DiagnosticsService, isCurrent: @escaping () -> Bool) {
+         diagnostics: any DiagnosticsService, isCurrent: @escaping () -> Bool,
+         shortcutRegistration: (any OverlayShortcutRegistration)? = nil) {
         self.catalog = catalog; self.settings = AppSettings(service: settings, credentials: credentials)
         self.execution = execution; self.outputs = outputs; self.overlay = overlay; self.icons = icons
         self.diagnostics = diagnostics; self.isCurrent = isCurrent
+        shortcuts = OverlayShortcuts(registration: shortcutRegistration ?? CarbonOverlayShortcuts())
         super.init()
+        shortcuts.onAction = { [weak self] in self?.handleShortcut($0) }
     }
 
     var context: PresentationContext {
@@ -43,10 +51,16 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
             applyReplacement: { [weak self] in self?.applyReplacement() },
             copy: { [weak self] in self?.copy($0) },
             completeOnboarding: { [weak self] in self?.completeOnboarding() },
-            dismiss: { [weak self] in self?.overlay?.hide() },
+            dismiss: { [weak self] in self?.dismissOverlay() },
             cancel: { [weak self] in self?.cancel() },
             stop: { [weak self] in self?.stop() },
-            recover: { [weak self] in self?.recover() })
+            recover: { [weak self] in self?.recover() },
+            applySelectionEdit: { [weak self] in self?.applySelectionEdit(sessionID: $0, proposalID: $1) ?? false },
+            cancelSelectionEdit: { [weak self] in self?.cancelSelectionEdit(sessionID: $0, proposalID: $1) },
+            restoreSelectionEdit: { [weak self] in self?.restoreSelectionEdit(operationID: $0) ?? false },
+            refreshRestoration: { [weak self] in self?.refreshRestoration() },
+            authorizeRemoteDisclosure: { [weak self] in self?.authorizeRemoteDisclosure($0) ?? false },
+            declineRemoteDisclosure: { [weak self] in self?.declineRemoteDisclosure($0) })
     }
 
     func start() {
@@ -60,7 +74,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
         popover.delegate = self
         popover.contentViewController = NSHostingController(rootView: contributed(.menu))
         executionObserver = execution?.observe { [weak self] in self?.project($0) }
-        outputObserver = outputs?.observe { [weak self] in self?.state.project($0) }
+        outputObserver = outputs?.observe { [weak self] in self?.state.project($0); self?.outputsChanged() }
         settings.objectWillChange.sink { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self, !self.closed, self.isCurrent() else { return }
@@ -70,6 +84,8 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
                 self.settingsWindow?.title = SettingsWindowTitle.text(for: self.settings.uiLanguage)
             }
         }.store(in: &subscriptions)
+        NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didActivateApplicationNotification)
+            .sink { [weak self] _ in self?.refreshRestoration() }.store(in: &subscriptions)
         NSApp.publisher(for: \.effectiveAppearance).sink { [weak self] _ in self?.refreshIcons() }.store(in: &subscriptions)
         refreshIcons()
         if !settings.hasCompletedOnboarding { showOnboarding() }
@@ -88,15 +104,16 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
         state.project(snapshot)
         refreshIcons()
         hideTask?.cancel()
-        guard snapshot.phase != nil, snapshot.phase != .cancelled else { overlay?.hide(); return }
-        if snapshot.isBusy { closePopover() }
-        let target = NSWorkspace.shared.frontmostApplication
-        overlay?.show(context: context, targetApp: target)
+        guard snapshot.phase != nil, snapshot.phase != .cancelled else { hideOverlay(); return }
+        if snapshot.isBusy { closePopover(); restoreShown = nil }
+        showOverlay()
         if !snapshot.isBusy && !state.presentation.keepsVisible {
+            if state.offersRestore { outputsChanged(); return }
             hideTask = Task { [weak self] in
                 do { try await Task.sleep(for: .seconds(1.5)) } catch { return }
-                guard let self, !self.closed, self.isCurrent(), self.state.snapshot.id == snapshot.id else { return }
-                self.overlay?.hide()
+                guard let self, !self.closed, self.isCurrent(), self.state.snapshot.id == snapshot.id,
+                      !self.state.offersRestore else { return }
+                self.hideOverlay()
             }
         }
     }
@@ -110,6 +127,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     @objc func togglePopover() {
         guard !closed, isCurrent(), let button = statusItem?.button else { return }
         if popover.isShown { closePopover(); return }
+        if state.phase == .uncertain { showOverlay() }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         outsideClicks.start { [weak self] in self?.closePopover() }
     }
@@ -120,12 +138,14 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     func close() {
         guard !closed else { return }
         closed = true
+        shortcuts.close()
         hideTask?.cancel(); hideTask = nil
+        restoreExpiry?.cancel(); restoreExpiry = nil
         if let executionObserver { execution?.removeObserver(executionObserver) }
         if let outputObserver { outputs?.removeObserver(outputObserver) }
         executionObserver = nil; outputObserver = nil
         subscriptions.removeAll()
-        overlay?.hide(); closePopover()
+        hideOverlay(); closePopover()
         popover.contentViewController = nil
         settingsWindow?.close(); settingsWindow = nil
         onboardingWindow?.close(); onboardingWindow = nil

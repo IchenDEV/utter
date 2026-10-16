@@ -6,6 +6,8 @@ import UtterRuntime
 @MainActor
 final class VoiceSessionJob: SessionJob {
     let intent: SessionIntent
+    let containsSelectedText: Bool
+    let selectedTextAtCapture: String?
     var input: SessionInput
     let settings: VoiceInputSettings
     let options: TextProcessingOptions
@@ -45,6 +47,12 @@ final class VoiceSessionJob: SessionJob {
          target: (any OutputTargetLease)?, recentOutput: RecentSessionOutput?, memoryContext: String,
          dependencies: VoiceWorkflowDependencies, authorize: @escaping () throws -> Void) {
         self.intent = intent
+        selectedTextAtCapture = target?.selectedText
+        switch mode {
+        case .selectionEdit: containsSelectedText = intent.clientID == nil
+        case .command: containsSelectedText = intent.clientID == nil && target?.selectedText?.isEmpty == false
+        default: containsSelectedText = false
+        }
         self.input = intent.input
         self.settings = settings
         self.options = options
@@ -119,11 +127,14 @@ final class VoiceSessionJob: SessionJob {
         try check(control)
         let inputContext = contextWithScreen(screen.text)
         let formatKind = mode == .formatting ? dependencies.preparation.format(text: transcript, context: inputContext).kind : nil
-        let recipe = try await dependencies.recipes.create(id: recipeID, request: ())
-        try check(control)
         let request = ProcessingRequest(mode: mode, text: processingText(transcript), options: options,
             dictionary: settings.dictionary, screenContext: screen.text, screenImage: screen.image,
             memoryContext: memoryContext, inputContext: inputContext, formatKind: formatKind)
+        if intent.clientID == nil, mode == .command, target?.selectedText?.isEmpty == false {
+            return try await performSelectedRewrite(request, control: control)
+        }
+        let recipe = try await dependencies.recipes.create(id: recipeID, request: ())
+        try check(control)
         if intent.clientID == nil, mode == .command,
            let edited = try await performSpokenEdit(request, recipe: recipe, control: control) { return edited }
         if mode == .command, [.permissionDenied, .captureFailed, .recognitionFailed].contains(screen.status) {
@@ -142,17 +153,24 @@ final class VoiceSessionJob: SessionJob {
         if intent.clientID != nil {
             acceptance = .returnedText
         } else {
-            control.update(phase: .delivering, transcript: transcript)
             let command: DeliveryCommand
             if case .selectionEdit = mode {
                 guard target?.selectedText?.isEmpty == false else { throw DeliveryError.invalidTarget }
+                try await prepareSelectionEdit(text, instruction: transcript, target: target, control: control)
                 command = .replaceSelection(text)
-            } else { command = .insert(text) }
+            } else {
+                control.update(phase: .delivering, transcript: transcript)
+                command = .insert(text)
+            }
             acceptance = try await deliver(command, target: target, control: control)
         }
+        let record: InputRecord?
+        if case .selectionEdit = mode { record = nil }
+        else { record = InputRecord(id: intent.id, date: Date(), rawText: transcript, processedText: text,
+            wasProcessed: mode != .direct, context: inputContext, formatKind: formatKind) }
         return SessionCompletion(transcript: transcript, text: text, acceptance: acceptance,
-            record: InputRecord(id: intent.id, date: Date(), rawText: transcript, processedText: text, wasProcessed: mode != .direct,
-                                context: inputContext, formatKind: formatKind), generationOutcome: output.generationOutcome)
+            record: record, outputMutation: record == nil ? selectedOutputMutation(acceptance) : .remember,
+            generationOutcome: output.generationOutcome)
     }
 
     func check(_ control: any SessionJobControl) throws {

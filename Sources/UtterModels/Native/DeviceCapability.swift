@@ -1,6 +1,8 @@
 import UtterContracts
 import Foundation
+#if os(macOS)
 import IOKit
+#endif
 
 package enum DeviceCapability {
     package struct Info: Sendable {
@@ -46,20 +48,30 @@ package enum DeviceCapability {
         )
     }
 
+    /// iOS ends an app that holds most of the device's memory; budget what one app can reasonably keep.
+    package static var usableMemoryFraction: Double {
+        #if os(iOS)
+        0.7
+        #else
+        1
+        #endif
+    }
+
     package static func check(
         modelID: String,
         downloadSizeBytes: Int64?, memoryRequirements: ModelMemoryRequirements? = nil
     ) -> Compatibility {
         let reqs = requirements(downloadSizeBytes: downloadSizeBytes, memory: memoryRequirements)
         let info = current
+        let ram = info.totalRAMGB * usableMemoryFraction
 
         if reqs.diskGB > 0, info.availableDiskGB < reqs.diskGB * 1.1 {
             return .incompatible(L("device.insufficient_disk"))
         }
-        if info.totalRAMGB < reqs.minRAMGB {
+        if ram < reqs.minRAMGB {
             return .incompatible(L("device.insufficient_ram"))
         }
-        if info.totalRAMGB < reqs.recommendedRAMGB {
+        if ram < reqs.recommendedRAMGB {
             return .marginal(L("device.marginal_ram"))
         }
         return .compatible
@@ -106,6 +118,7 @@ package enum DeviceCapability {
     }
 
     private static func ioRegistryInt(className: String, key: String) -> Int? {
+        #if os(macOS)
         var iterator: io_iterator_t = 0
         guard IOServiceGetMatchingServices(
             kIOMainPortDefault,
@@ -124,6 +137,9 @@ package enum DeviceCapability {
             }
         }
         return nil
+        #else
+        return nil
+        #endif
     }
 
     private static func gpuCoresFromChipName(_ name: String) -> Int {

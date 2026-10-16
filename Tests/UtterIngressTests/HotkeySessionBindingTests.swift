@@ -7,6 +7,75 @@ import UtterSession
 
 @MainActor
 final class HotkeySessionBindingTests: XCTestCase {
+    func testReleaseBeforeDisclosureConsentRetiresTheSameIntentWithoutStartingCapture() async throws {
+        let fixture = try BindingFixture()
+        defer { fixture.remove() }
+        fixture.factory.requiredConsent = consent()
+        fixture.binding.start()
+        let id = UUID()
+        fixture.hotkeys.captureID = id
+        fixture.hotkeys.start?(.dictation)
+        XCTAssertEqual(fixture.execution.snapshot.id, id)
+        XCTAssertEqual(fixture.execution.snapshot.remoteDisclosure?.selectedText, "private selection 👩🏽‍💻")
+        XCTAssertTrue(fixture.execution.snapshot.isBusy)
+        XCTAssertEqual(fixture.factory.job.runs, 0)
+        fixture.hotkeys.stop?(.dictation)
+        XCTAssertEqual(fixture.execution.snapshot.phase, .cancelled)
+        XCTAssertNil(fixture.execution.snapshot.remoteDisclosure)
+        XCTAssertThrowsError(try fixture.execution.authorizeRemoteDisclosure(id))
+        XCTAssertEqual(fixture.factory.job.runs, 0)
+        XCTAssertEqual(fixture.factory.intents.count, 1)
+        await fixture.binding.close(); await fixture.execution.close()
+    }
+
+    func testContinueWhileHeldStartsOneSameIntentAndNormalReleaseFinalizesIt() async throws {
+        let fixture = try BindingFixture()
+        defer { fixture.remove() }
+        let approved = consent()
+        fixture.factory.requiredConsent = approved
+        fixture.binding.start()
+        let id = UUID()
+        fixture.hotkeys.captureID = id
+        fixture.hotkeys.start?(.dictation)
+        XCTAssertEqual(fixture.factory.job.runs, 0)
+        try fixture.execution.authorizeRemoteDisclosure(id)
+        XCTAssertThrowsError(try fixture.execution.authorizeRemoteDisclosure(id))
+        try await fixture.execution.waitForRecording(id)
+        XCTAssertEqual(fixture.factory.job.runs, 1)
+        XCTAssertEqual(fixture.factory.intents.map(\.id), [id, id])
+        XCTAssertEqual(fixture.factory.intents.last?.input, .local)
+        XCTAssertEqual(fixture.factory.intents.last?.remoteSelectionConsent, approved)
+        fixture.hotkeys.stop?(.dictation)
+        let result = try await fixture.execution.waitForCompletion(id)
+        XCTAssertEqual(result.phase, .completed)
+        XCTAssertEqual(fixture.factory.job.runs, 1)
+        await fixture.binding.close(); await fixture.execution.close()
+    }
+
+    func testDisclosureCancellationExpiryAndChangedTargetOrProviderHaveNoCapture() async throws {
+        for change in 0..<4 {
+            let fixture = try BindingFixture()
+            defer { fixture.remove() }
+            fixture.factory.requiredConsent = consent(expiresAt: Date().addingTimeInterval(change == 1 ? 0.02 : 120))
+            let id = UUID()
+            try fixture.execution.start(SessionIntent(id: id, input: .local))
+            if change == 0 { fixture.execution.declineRemoteDisclosure(id) }
+            else if change == 1 { try await Task.sleep(for: .milliseconds(60)) }
+            else if change == 2 { fixture.factory.targetCurrent = false }
+            else { fixture.factory.requiredConsent = consent(baseURL: "https://changed.example.test/v1") }
+            XCTAssertThrowsError(try fixture.execution.authorizeRemoteDisclosure(id))
+            XCTAssertEqual(fixture.factory.job.runs, 0)
+            XCTAssertNil(fixture.execution.snapshot.remoteDisclosure)
+            XCTAssertFalse(fixture.execution.snapshot.isBusy)
+            await fixture.binding.close(); await fixture.execution.close()
+        }
+    }
+
+    private func consent(baseURL: String = "https://model.example.test/v1", expiresAt: Date = Date().addingTimeInterval(120)) -> SelectionEditRemoteConsent {
+        SelectionEditRemoteConsent(selectedText: "private selection 👩🏽‍💻", providerID: "generation.remote",
+            providerBaseURL: baseURL, expiresAt: expiresAt)
+    }
+
     func testCallbacksFreezeCaptureIdentityAndStopTimeBeforeDraining() async throws {
         let fixture = try BindingFixture()
         defer { fixture.remove() }
@@ -95,14 +164,24 @@ private final class BindingHotkeys: HotkeyControlService {
 private final class BindingWorkflows: SessionWorkflowFactory {
     var intents: [SessionIntent] = []
     let job = BindingJob()
-    func make(_ intent: SessionIntent) throws -> any SessionJob { intents.append(intent); return job }
+    var requiredConsent: SelectionEditRemoteConsent?
+    var targetCurrent = true
+    func make(_ intent: SessionIntent) throws -> any SessionJob {
+        intents.append(intent)
+        if let requiredConsent, intent.remoteSelectionConsent != requiredConsent {
+            throw SelectionEditRemoteDisclosureRequired(consent: requiredConsent, isTargetCurrent: { self.targetCurrent })
+        }
+        return job
+    }
     func settle(_ intent: SessionIntent, result: Result<SessionCompletion, Error>) {}
 }
 @MainActor
 private final class BindingJob: SessionJob {
     weak var control: (any SessionJobControl)?
+    var runs = 0
     func promoteToTranslation() -> TextProcessingMode? { .translation(.english) }
     func run(control: any SessionJobControl) async throws -> SessionCompletion {
+        runs += 1
         self.control = control
         control.update(phase: .recording, transcript: "")
         try await control.waitForStop()

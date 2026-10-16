@@ -22,9 +22,10 @@ final class OverlayPanel {
         onConfirm: @escaping () -> Void,
         onCopy: @escaping () -> Void,
         onRecover: @escaping () -> Void,
-        onDismiss: @escaping () -> Void
+        onDismiss: @escaping () -> Void,
+        review: SelectionReviewCallbacks = .none
     ) {
-        let initialLayout = OverlayLayout(appState: appState)
+        let initialLayout = OverlayLayout(appState: appState, notice: review.notice.key)
         targetDisplayID = OverlayTargetScreenResolver.displayID(for: targetApp)
 
         if window == nil {
@@ -53,7 +54,9 @@ final class OverlayPanel {
                 onConfirm: onConfirm,
                 onCopy: onCopy,
                 onRecover: onRecover,
-                onDismiss: onDismiss
+                onDismiss: onDismiss,
+                review: review,
+                notice: review.notice
             )
             .environmentObject(appState)
 

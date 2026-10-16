@@ -165,6 +165,11 @@ private actor QwenNativeASRRuntime {
         }
 
         modelLoadAttempted = true
+        #if os(iOS)
+        // The default Metal buffer pool can exceed the app's jetsam limit.
+        Memory.cacheLimit = min(Memory.cacheLimit, 16 * 1_024 * 1_024)
+        Memory.clearCache()
+        #endif
         let loaded = try await Qwen3ASRModel.fromModelDirectory(standardizedDirectory)
         try Task.checkCancellation()
         model = loaded

@@ -19,10 +19,16 @@ final class VoiceWorkflowFactory: SessionWorkflowFactory {
             guard intent.clientID == nil else { throw IntegrationError.invalidSessionState }
             return try CopySessionJob(id: intent.id, text: text, output: dependencies.output)
         }
+        if case .restoreSelectionEdit(let operationID) = intent.operation {
+            guard intent.clientID == nil, let outputs = dependencies.outputs else { throw IntegrationError.invalidSessionState }
+            return try RestoreSelectionEditJob(operationID: operationID, sessionID: intent.id,
+                outputs: outputs, output: dependencies.output,
+                authorize: { [self] in try authorize(intent) })
+        }
         if case .applyReplacement(let id) = intent.operation {
             guard intent.clientID == nil, let outputs = dependencies.outputs else { throw IntegrationError.invalidSessionState }
             let values = dependencies.settings.values
-            let target = try? dependencies.targets.capture(TargetCaptureRequest(outputMode: values.outputMode,
+            let target = try dependencies.targets.capture(TargetCaptureRequest(outputMode: values.outputMode,
                 inputLanguage: values.inputLanguage, source: .menuBar))
             return try DeferredReplacementJob(id: id, outputs: outputs, output: dependencies.output,
                 access: dependencies.access, target: target, operationID: intent.id,
@@ -32,6 +38,8 @@ final class VoiceWorkflowFactory: SessionWorkflowFactory {
         if let language = intent.request.language { values.inputLanguage = language }
         if let mode = intent.request.mode { values.outputMode = mode }
         if let screen = intent.request.useScreenContext { values.useScreenContext = screen }
+        let target = try intent.clientID == nil ? dependencies.targets.capture(TargetCaptureRequest(
+            outputMode: values.outputMode, inputLanguage: values.inputLanguage, source: .menuBar)) : nil
         let bindings = try dependencies.configuration?.sessionSnapshot.bindings ?? [:]
         let speech: ProviderDescriptor?
         if case .text = intent.input { speech = nil }
@@ -58,8 +66,14 @@ final class VoiceWorkflowFactory: SessionWorkflowFactory {
             _ = try descriptor(options.fallbackProviderID, in: dependencies.generation.descriptors)
         }
         let client = intent.clientID.flatMap { dependencies.clients.client(id: $0) }
-        let target = intent.clientID == nil ? try? dependencies.targets.capture(TargetCaptureRequest(
-            outputMode: values.outputMode, inputLanguage: values.inputLanguage, source: .menuBar)) : nil
+        let editsSelection: Bool
+        switch mode { case .selectionEdit, .command: editsSelection = true; default: editsSelection = false }
+        if editsSelection, options.useRemoteLLM, let selected = target?.selectedText, !selected.isEmpty,
+           intent.remoteSelectionConsent?.authorizes(selectedText: selected, options: options) != true {
+            throw SelectionEditRemoteDisclosureRequired(consent: SelectionEditRemoteConsent(
+                selectedText: selected, providerID: options.textProviderID ?? "generation.remote",
+                providerBaseURL: options.remoteBaseURL), isTargetCurrent: { target?.isCurrent == true })
+        }
         let context = target?.context ?? InputContext(appName: client?.displayName, bundleIdentifier: client?.bundleIdentifier,
             outputMode: values.outputMode, inputLanguage: values.inputLanguage, source: .integration)
         let dictionary = dependencies.dictionary.snapshot(industryLexicon: dependencies.lexicons.snapshot(for: values.industryLexicon),
@@ -93,7 +107,8 @@ final class VoiceWorkflowFactory: SessionWorkflowFactory {
             }
             followups[intent.id] = (work, task)
         }
-        guard case .delivery(let receipt) = completion.acceptance, let context = completion.record?.context,
+        guard case .delivery(let receipt) = completion.acceptance, receipt.selectionEdit == nil,
+              let context = completion.record?.context,
               let seed = receipt.anchor?.correctionSeed(context: context) else { return }
         dependencies.correction?.start(seed: seed, recordID: recordID)
     }
