@@ -759,3 +759,7 @@
 "selection_edit.remote_continue_hint" = "开始录音。你说完后，选中的文本才会发送给该服务商。";
 "selection_edit.remote_failed" = "无法继续。未录音，也未发送任何内容。";
 "selection_edit.remote_not_confirmed" = "未及时确认，或选区已变化。未录音，也未发送任何内容。";
+
+"selection_edit.restore_shortcut" = "⌘⌥Z 恢复原文";
+"selection_edit.cancel_shortcut" = "Esc 取消修改";
+"selection_edit.processing" = "正在修改选区…";

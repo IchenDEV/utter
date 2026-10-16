@@ -25,16 +25,6 @@ enum SelectionReviewMetrics {
     static var width: CGFloat { min(304, max(280, viewport.width - 48)) }
     static var restoreWidth: CGFloat { min(288, max(280, viewport.width - 48)) }
 
-    static func reviewHeight(for proposal: SelectionEditProposal) -> CGFloat {
-        let textWidth = width - 2 * edgePadding
-        let blocks = [proposal.originalSelection, proposal.candidate].reduce(CGFloat(0)) {
-            $0 + labelHeight + 4 + textHeight($1, .caption1, textWidth)
-        }
-        let instruction = labelHeight + 4 + textHeight(proposal.recognizedInstruction, .caption1, textWidth)
-        let content = blocks + instruction + 2 * blockSpacing + edgePadding
-        return min(max(headerHeight + content, 180), min(360, viewport.height * 0.7))
-    }
-
     static func disclosureHeight(for consent: SelectionEditRemoteConsent) -> CGFloat {
         let textWidth = width - 2 * edgePadding
         let lead = textHeight(String(format: L("selection_edit.remote_lead"), consent.providerHost), .caption1, textWidth)
@@ -50,11 +40,11 @@ enum SelectionReviewMetrics {
 }
 
 extension OverlayLayout {
-    enum Content: Equatable { case status, review, restore, disclosure, notice }
+    enum Content: Equatable { case status, restore, disclosure, notice }
 
     init(content: Content, size: CGSize) {
         width = size.width; height = size.height
-        outerCornerRadius = content == .review || content == .disclosure ? 22 : 18
+        outerCornerRadius = content == .disclosure ? 22 : 18
         isInteractive = true
         horizontalPadding = 0; topPadding = 0; bottomPadding = 0; stackSpacing = 0
         self.content = content

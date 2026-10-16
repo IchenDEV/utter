@@ -67,11 +67,13 @@ package struct SessionExecutionSnapshot: Equatable, Sendable {
     package let generationOutcome: EspressoGenerationOutcome?
     package let selectionEditProposal: SelectionEditProposal?
     package let remoteDisclosure: SelectionEditRemoteConsent?
+    package let isSelectionEditing: Bool
     package init(id: UUID? = nil, phase: SessionExecutionPhase? = nil, transcript: String = "",
                  text: String = "", error: String? = nil, isBusy: Bool = false, deliveryStatus: DeliveryStatus? = nil,
                  performance: SessionPerformance? = nil, audioLevel: Float = 0, mode: TextProcessingMode? = nil,
                  recoveryAction: SessionRecoveryAction? = nil, generationOutcome: EspressoGenerationOutcome? = nil,
-                 selectionEditProposal: SelectionEditProposal? = nil, remoteDisclosure: SelectionEditRemoteConsent? = nil) {
+                 selectionEditProposal: SelectionEditProposal? = nil, remoteDisclosure: SelectionEditRemoteConsent? = nil,
+                 isSelectionEditing: Bool = false) {
         self.id = id; self.phase = phase; self.transcript = transcript
         self.text = text; self.error = error; self.isBusy = isBusy
         self.deliveryStatus = deliveryStatus
@@ -80,6 +82,7 @@ package struct SessionExecutionSnapshot: Equatable, Sendable {
         self.mode = mode
         self.selectionEditProposal = selectionEditProposal
         self.remoteDisclosure = remoteDisclosure
+        self.isSelectionEditing = isSelectionEditing
         self.recoveryAction = recoveryAction
         self.generationOutcome = generationOutcome
     }
@@ -152,6 +155,7 @@ package protocol SessionJobControl: AnyObject {
 @MainActor
 package protocol SessionJob: AnyObject {
     var presentationMode: TextProcessingMode? { get }
+    var containsSelectedText: Bool { get }
     func promoteToTranslation() -> TextProcessingMode?
     func bind(input: SessionInput) throws
     func attach(control: any SessionJobControl)
@@ -201,6 +205,7 @@ extension SessionServices {
 
 extension SessionJob {
     package var presentationMode: TextProcessingMode? { nil }
+    package var containsSelectedText: Bool { false }
     package func promoteToTranslation() -> TextProcessingMode? { nil }
     package func bind(input: SessionInput) throws { throw IntegrationError.invalidSessionState }
     package func attach(control: any SessionJobControl) {}

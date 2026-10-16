@@ -7,7 +7,7 @@ extension VoiceSessionJob {
         let selectedTarget = try selectionTarget()
         let (text, outcome) = try await rewrite(selectedTarget.selectedText ?? "", instruction: .custom(request.text),
             request: request, control: control)
-        try await reviewSelectionEdit(text, instruction: request.text, target: selectedTarget, control: control)
+        try await prepareSelectionEdit(text, instruction: request.text, target: selectedTarget, control: control)
         let acceptance = try await deliver(.replaceSelection(text), target: selectedTarget, control: control)
         return SessionCompletion(transcript: request.text, text: text, acceptance: acceptance,
             outputMutation: selectedOutputMutation(acceptance), generationOutcome: outcome)
@@ -77,7 +77,7 @@ extension VoiceSessionJob {
             recordsHistory = false
         }
         if case .replaceSelection = outputCommand {
-            try await reviewSelectionEdit(text, instruction: request.text, target: outputTarget, control: control)
+            try await prepareSelectionEdit(text, instruction: request.text, target: outputTarget, control: control)
         }
         control.update(phase: .delivering, transcript: request.text)
         let acceptance = try await deliver(outputCommand, target: outputTarget, control: control)

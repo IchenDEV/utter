@@ -1823,5 +1823,50 @@
     "independentReview": "completed; concrete pointer/fixture findings closed; final execution reviewed by parent",
     "remaining": "fresh GitHub checks; actual host/VoiceOver/device/distribution acceptance"
   },
-  "currentOwner": "current Codex"
+  "currentOwner": "current Codex",
+  "automaticDesktopEdit": {
+    "owner": "current Codex",
+    "authorization": "2026-10-17 explicit user: remove candidate/Apply; support shortcuts; preserve original UX",
+    "status": "local verification passed; Draft PR124 update",
+    "dependencies": [
+      "same Session/target/output/receipt owners",
+      "19 local pins",
+      "Data>=10GiB",
+      "retained native sandbox/private test runtime"
+    ],
+    "deliverables": [
+      "direct-edit Session flow",
+      "compact HUD and scoped shortcuts",
+      "behavior/native tests",
+      "same-source evidence",
+      "PR124 update"
+    ],
+    "acceptance": [
+      "one automatic guarded write",
+      "cancel/stale/error no write",
+      "one-use exact restoration",
+      "no candidate/Apply in popup",
+      "keyboard lifecycle and no host Command-Z capture"
+    ],
+    "humanAcceptance": false,
+    "open": [
+      "locked real host",
+      "actual VoiceOver",
+      "physical mobile T0",
+      "distribution acceptance"
+    ],
+    "sourceSHA256": "b9b45674c3ff4e0e2afdc76b62fea190a02a3f3ada97849b91b94788be91f836",
+    "productSHA256": "a605be004e1dfa496e2a4b89182b4f8c214ec80c02fd99208552706fd5e67e86",
+    "checks": {
+      "wholeBuild": "pass",
+      "basic": "pass",
+      "ownerSecurity": "81/81",
+      "nativeShortcuts": "9/9",
+      "canaries": "9/9",
+      "rawPNGs": 42
+    },
+    "independentReview": "completed; visibility/drain findings fixed; final source review no findings",
+    "evidence": ".local/voicecursor-research/codex-auto-edit-20261017/",
+    "next": "Push exact verified source to existing Draft PR124 and read fresh remote head/CI; keep actual host/VoiceOver/mobile/distribution gates open"
+  }
 }

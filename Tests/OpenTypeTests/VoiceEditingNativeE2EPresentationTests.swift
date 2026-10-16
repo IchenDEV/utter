@@ -9,89 +9,117 @@ import UtterSession
 
 @MainActor
 final class VoiceEditingNativeE2EPresentationTests: XCTestCase {
-    func testRealCompiledSessionAndNativeReviewPointerApplyCancel() async throws {
-        _ = NSApplication.shared
-        NSApp.setActivationPolicy(.accessory)
-        let frontmostBefore = NSWorkspace.shared.frontmostApplication?.processIdentifier
-        let generalChangeBefore = NSPasteboard.general.changeCount
-        let original = "  中文 e\u{301} 👩🏽‍💻 🇸🇬\n" + String(repeating: "保留完整选区与空白。\n", count: 80) + "\n  "
-        let candidate = ("请您同步进展。 e\u{301} 👩🏽‍💻\n" + String(repeating: "候选细节保持完整。\n", count: 80))
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        for apply in [false, true] {
+    func testRealSessionAutomaticallyAppliesThenNativePointerRestoresOnceWithoutDisplayingContent() async throws {
+        for keyboardRestore in [false, true] {
             let fixture = try VoiceWorkflowFixture()
             defer { fixture.remove() }
+            let original = "  原文 e\u{301} 👩🏽‍💻 🇸🇬\n" + String(repeating: "保留完整选区与空白。\n", count: 80)
+            let candidate = ("请您今天同步进展。 👩🏽‍💻\n" + String(repeating: "保留候选细节。\n", count: 80)).trimmingCharacters(in: .whitespacesAndNewlines)
+            let generation = HeldSelectionGeneration(candidate)
+            fixture.recipe.selectionProcessor = generation.process
             fixture.target.selectedText = original
-            fixture.recipe.generatedText = candidate
+            let anchor = EditingAnchor(target: fixture.target, text: candidate)
+            fixture.output.delivery.anchor = anchor
             try await fixture.start()
             let execution = try fixture.runtime.service(SessionServices.execution)
             let outputs = try fixture.runtime.service(SessionServices.outputs)
-            let settings = try fixture.runtime.service(DataServices.settings)
-            let credentials = try fixture.runtime.service(DataServices.credentials)
-            let overlay = NativeOverlayPresentation(screen: nil)
-            let host = NativeDesktopHost(catalog: PresentationRegistry(), settings: settings,
-                credentials: credentials, execution: execution, outputs: outputs, overlay: overlay,
-                icons: nil, diagnostics: NativeE2EDiagnostics(), isCurrent: { true })
+            let registration = TestOverlayShortcutRegistration()
+            let host = try makeHost(fixture, registration: registration)
             defer { host.close() }
-            Loc.use(.english)
+            let frontmost = NSWorkspace.shared.frontmostApplication?.processIdentifier
+            let clipboard = NSPasteboard.general.changeCount
             let intent = SessionIntent(input: .text("改礼貌一点并保留全部细节"), mode: .command)
             try execution.start(intent)
-            let deadline = ContinuousClock.now.advanced(by: .seconds(5))
-            while execution.snapshot.selectionEditProposal == nil, execution.snapshot.isBusy,
-                  ContinuousClock.now < deadline { await Task.yield() }
-            let proposal = try XCTUnwrap(execution.snapshot.selectionEditProposal)
-            XCTAssertEqual(proposal.originalSelection, original)
-            XCTAssertEqual(proposal.candidate, candidate)
-            XCTAssertEqual(proposal.recognizedInstruction, "改礼貌一点并保留全部细节")
-            XCTAssertTrue(fixture.output.requests.isEmpty)
-            XCTAssertTrue(fixture.capture.requests.isEmpty)
-            XCTAssertTrue(fixture.screen.requests.isEmpty)
-            host.state.project(execution.snapshot)
-            overlay.show(context: host.context, targetApp: nil)
+            try await generation.waitUntilEntered()
+            host.project(execution.snapshot)
             let panel = try NativeE2EUI.panel()
+            try await NativeSelectionReviewTestSupport.activateAccessibility(in: panel)
+            XCTAssertFalse(registration.keys.isEmpty)
+            XCTAssertNil(execution.snapshot.selectionEditProposal)
+            try await NativeE2EUI.capture("real-session-auto-processing-\(keyboardRestore)", window: panel)
+            generation.release()
+            let completion = try await execution.waitForCompletion(intent.id)
+            XCTAssertEqual(completion.deliveryStatus, .inserted)
+            XCTAssertEqual(fixture.output.requests.count, 1)
+            guard case .replaceSelection(let written) = fixture.output.requests.first?.command else { return XCTFail("Missing auto replacement") }
+            XCTAssertEqual(written, candidate)
+            host.state.project(outputs.snapshot)
+            host.project(completion)
+            let restoredPanel = try NativeE2EUI.panel()
             for appearance in [NSAppearance.Name.aqua, .darkAqua] {
-                panel.appearance = NSAppearance(named: appearance)
-                try await NativeE2EUI.capture("review-\(apply)-\(appearance.rawValue)", window: panel)
+                restoredPanel.appearance = NSAppearance(named: appearance)
+                try await NativeE2EUI.capture("real-session-auto-restorable-\(keyboardRestore)-\(appearance.rawValue)", window: restoredPanel)
             }
-            XCTAssertFalse(panel.isKeyWindow)
-            XCTAssertFalse(host.applySelectionEdit(sessionID: UUID(), proposalID: proposal.id))
-            XCTAssertFalse(host.applySelectionEdit(sessionID: intent.id, proposalID: UUID()))
-            try NativeE2EUI.localKey(36, character: "\r", in: panel)
-            XCTAssertTrue(fixture.output.requests.isEmpty)
-            XCTAssertEqual(NSPasteboard.general.changeCount, generalChangeBefore)
-            try await NativeE2EUI.pointer(apply ? L("selection_edit.apply") : L("common.cancel"), in: panel)
-            let pointerDeadline = ContinuousClock.now.advanced(by: .seconds(3))
-            while execution.snapshot.selectionEditProposal != nil, execution.snapshot.isBusy,
-                  ContinuousClock.now < pointerDeadline { try await Task.sleep(for: .milliseconds(20)) }
-            if execution.snapshot.selectionEditProposal != nil {
-                execution.cancel(intent.id)
-                try? await fixture.runtime.stop()
-                return XCTFail("Process-local pointer did not dispatch the native control; no host action attempted")
-            }
-            if apply {
-                _ = try await execution.waitForCompletion(intent.id)
-                XCTAssertEqual(fixture.output.requests.count, 1)
-                guard case .replaceSelection(let written) = fixture.output.requests.first?.command else {
-                    return XCTFail("Native pointer did not authorize selected replacement")
-                }
-                XCTAssertEqual(written, candidate)
-                XCTAssertFalse(host.applySelectionEdit(sessionID: intent.id, proposalID: proposal.id))
+            let nodes = NativeSelectionReviewTestSupport.nodes(restoredPanel)
+            XCTAssertFalse(nodes.contains { (($0.accessibilityLabel() ?? "") + $0.textValue).contains("保留候选细节") })
+            XCTAssertFalse(nodes.contains { $0.accessibilityRole() == .button && $0.accessibilityLabel() == L("selection_edit.apply") })
+            XCTAssertTrue(host.state.selectionEditRestoreShortcut)
+            if keyboardRestore {
+                let keyID = try XCTUnwrap(registration.keys.first?.key)
+                registration.press(keyID); registration.press(keyID)
             } else {
-                do { _ = try await execution.waitForCompletion(intent.id); XCTFail("Cancel accepted") }
-                catch { XCTAssertTrue(error is CancellationError) }
-                XCTAssertTrue(fixture.output.requests.isEmpty)
+                try await NativeE2EUI.pointer(L("selection_edit.restore"), in: restoredPanel)
             }
-            XCTAssertEqual(fixture.target.selectedText, original, "This fixture target never writes a host document")
-            XCTAssertEqual(NSPasteboard.general.changeCount, generalChangeBefore)
-            try NativeE2EUI.record("session-native-pointer-\(apply)", ["sessionID": intent.id.uuidString,
-                "proposalID": proposal.id.uuidString, "originalUTF16": original.utf16.count,
-                "candidateUTF16": candidate.utf16.count, "outputRequests": fixture.output.requests.count,
-                "targetAndOutput": "controlled existing Workflow fixtures; no external host",
-                "pointer": "process-local NSEvent through actual native NSPanel; not system pointer",
-                "sessionAndPresentation": "real SwiftPM owner modules and resources"])
-            overlay.hide()
+            let restoreID = try XCTUnwrap(execution.snapshot.id)
+            _ = try await execution.waitForCompletion(restoreID)
+            XCTAssertEqual(fixture.output.requests.count, 2)
+            guard case .replaceAnchor(let restored, _) = fixture.output.requests.last?.command else { return XCTFail("Missing receipt restore") }
+            XCTAssertEqual(restored, original)
+            XCTAssertFalse(host.restoreSelectionEdit(operationID: intent.id))
+            XCTAssertEqual(fixture.output.requests.count, 2)
+            XCTAssertNil(outputs.snapshot.selectionEditRestoration)
+            XCTAssertEqual(NSPasteboard.general.changeCount, clipboard)
+            XCTAssertEqual(NSWorkspace.shared.frontmostApplication?.processIdentifier, frontmost)
+            XCTAssertFalse(restoredPanel.isKeyWindow)
+            host.close()
+            XCTAssertTrue(registration.closed)
             try await fixture.runtime.stop()
         }
-        XCTAssertEqual(NSWorkspace.shared.frontmostApplication?.processIdentifier, frontmostBefore)
-        XCTAssertFalse(NSApp.windows.contains { $0.isVisible && $0.styleMask.contains(.nonactivatingPanel) })
+    }
+
+    func testNativeHostScopesCancelToVisibleSessionAndDrainsLateGenerationWithoutWriting() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        fixture.target.selectedText = "原文 👩🏽‍💻"
+        let generation = HeldSelectionGeneration()
+        fixture.recipe.selectionProcessor = generation.process
+        try await fixture.start()
+        let execution = try fixture.runtime.service(SessionServices.execution)
+        let registration = TestOverlayShortcutRegistration()
+        let host = try makeHost(fixture, registration: registration)
+        defer { host.close() }
+        let intent = SessionIntent(input: .text("rewrite"), mode: .command)
+        try execution.start(intent)
+        try await generation.waitUntilEntered()
+        host.state.project(execution.snapshot)
+        host.updateShortcuts()
+        XCTAssertTrue(registration.keys.isEmpty, "Hidden HUD must not intercept host Escape")
+        host.showOverlay()
+        let oldID = try XCTUnwrap(registration.keys.first?.key)
+        host.dismissOverlay()
+        XCTAssertTrue(registration.keys.isEmpty)
+        registration.press(oldID)
+        XCTAssertTrue(execution.snapshot.isBusy)
+        host.showOverlay()
+        let currentID = try XCTUnwrap(registration.keys.first?.key)
+        registration.press(currentID); registration.press(currentID)
+        XCTAssertTrue(registration.keys.isEmpty, "Consumed cancellation cannot re-register on the stale busy snapshot")
+        generation.release()
+        do { _ = try await execution.waitForCompletion(intent.id); XCTFail("Cancelled edit completed") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        host.project(execution.snapshot)
+        XCTAssertTrue(registration.keys.isEmpty)
+        XCTAssertTrue(fixture.output.requests.isEmpty)
+        XCTAssertEqual(fixture.target.selectedText, "原文 👩🏽‍💻")
+        host.close()
+        try await fixture.runtime.stop()
+    }
+
+    private func makeHost(_ fixture: VoiceWorkflowFixture, registration: TestOverlayShortcutRegistration) throws -> NativeDesktopHost {
+        NativeDesktopHost(catalog: PresentationRegistry(), settings: try fixture.runtime.service(DataServices.settings),
+            credentials: try fixture.runtime.service(DataServices.credentials),
+            execution: try fixture.runtime.service(SessionServices.execution), outputs: try fixture.runtime.service(SessionServices.outputs),
+            overlay: NativeOverlayPresentation(screen: nil), icons: nil, diagnostics: NativeE2EDiagnostics(),
+            isCurrent: { true }, shortcutRegistration: registration)
     }
 }

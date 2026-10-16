@@ -3,7 +3,7 @@ import UtterContracts
 
 extension SessionDriver {
     func hasTemporarySelectionContent(_ intent: SessionIntent) -> Bool {
-        if active?.control.hasSelectionEditReview == true { return true }
+        if active?.job.containsSelectedText == true || active?.control.hasSelectionEditReview == true { return true }
         if case .selectionEdit = intent.mode { return true }
         if case .restoreSelectionEdit = intent.operation { return true }
         return false

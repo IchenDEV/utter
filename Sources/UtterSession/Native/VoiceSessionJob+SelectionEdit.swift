@@ -8,7 +8,7 @@ extension VoiceSessionJob {
         return .remember
     }
 
-    func reviewSelectionEdit(_ candidate: String, instruction: String, target: (any OutputTargetLease)?,
+    func prepareSelectionEdit(_ candidate: String, instruction: String, target: (any OutputTargetLease)?,
                              control: any SessionJobControl) async throws {
         try check(control)
         guard let target, target.isCurrent, let original = target.selectedText, !original.isEmpty,
@@ -21,13 +21,7 @@ extension VoiceSessionJob {
         recording = nil; engine = nil
         try check(control)
         guard target.isCurrent else { throw DeliveryError.invalidTarget }
-        let proposal = SelectionEditProposal(sessionID: intent.id, targetID: target.id,
-            processIdentifier: target.processIdentifier, originalSelection: original,
-            recognizedInstruction: instruction, candidate: candidate)
-        try await control.waitForSelectionEditDecision(proposal)
-        try check(control)
-        guard proposal.isApplicable, target.id == proposal.targetID,
-              target.processIdentifier == proposal.processIdentifier, target.isCurrent,
-              target.selectedText == proposal.originalSelection else { throw DeliveryError.invalidTarget }
+        guard target.selectedText == original, original == selectedTextAtCapture else { throw DeliveryError.invalidTarget }
+        control.update(phase: .delivering, transcript: instruction)
     }
 }

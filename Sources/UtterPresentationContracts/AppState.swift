@@ -14,6 +14,8 @@ package enum VoiceInputMode: Equatable {
 
 @MainActor
 package final class AppState: ObservableObject {
+    @Published package var selectionEditCancelShortcut = false
+    @Published package var selectionEditRestoreShortcut = false
     @Published package var selectedSettingsID = "presentation.general"
     @Published package private(set) var phase: AppPhase = .idle
     @Published package private(set) var rawTranscription = ""

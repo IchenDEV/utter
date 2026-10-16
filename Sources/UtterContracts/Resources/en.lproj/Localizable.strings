@@ -759,3 +759,7 @@
 "selection_edit.remote_continue_hint" = "Starts recording. Your selected text is sent to the provider after you finish speaking.";
 "selection_edit.remote_failed" = "Couldn't continue. Nothing was recorded or sent.";
 "selection_edit.remote_not_confirmed" = "Not confirmed in time, or the selection changed. Nothing was recorded or sent.";
+
+"selection_edit.restore_shortcut" = "⌘⌥Z  Restore original";
+"selection_edit.cancel_shortcut" = "Esc  Cancel edit";
+"selection_edit.processing" = "Editing selection…";

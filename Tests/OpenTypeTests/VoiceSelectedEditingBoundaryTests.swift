@@ -6,77 +6,68 @@ import UtterSession
 
 @MainActor
 final class VoiceSelectedEditingBoundaryTests: XCTestCase {
-    func testNaturalSelectedInstructionUsesOneRecordingAndReviewWithoutScreenOrAction() async throws {
-        for apply in [false, true] {
-            let fixture = try VoiceWorkflowFixture()
-            defer { fixture.remove() }
-            fixture.defaults.set(true, forKey: "useScreenContext")
-            fixture.target.selectedText = "请同步进展。 e\u{301} 👩🏽‍💻"
-            fixture.engine.transcript = "改礼貌一点"
-            fixture.recipe.resolution = .command(.deleteSelection)
-            fixture.recipe.generatedText = "请您方便时同步进展。"
-            fixture.screen.snapshot = ScreenContextSnapshot(text: "", image: nil, status: .permissionDenied)
-            try await fixture.start()
-            let execution = try fixture.runtime.service(SessionServices.execution)
-            let intent = SessionIntent(input: .local, mode: .command)
-            try execution.start(intent)
-            let deadline = ContinuousClock.now.advanced(by: .seconds(3))
-            while execution.snapshot.phase != .recording, execution.snapshot.isBusy, ContinuousClock.now < deadline { await Task.yield() }
-            XCTAssertTrue(execution.requestStop(intent.id, at: nil))
-            let proposal = try await review(in: execution)
-            XCTAssertEqual(proposal.sessionID, intent.id)
-            XCTAssertEqual(proposal.recognizedInstruction, "改礼貌一点")
-            XCTAssertEqual(proposal.originalSelection, "请同步进展。 e\u{301} 👩🏽‍💻")
-            XCTAssertEqual(proposal.candidate, "请您方便时同步进展。")
-            XCTAssertEqual(fixture.capture.requests.count, 1)
-            XCTAssertEqual(fixture.speechRequests.count, 1)
-            XCTAssertTrue(fixture.capture.recording.closed)
-            XCTAssertEqual(fixture.recipeCreations, ["mode.edit"])
-            XCTAssertTrue(fixture.recipe.resolutionContexts.isEmpty)
-            XCTAssertTrue(fixture.screen.requests.isEmpty)
-            XCTAssertTrue(fixture.output.requests.isEmpty)
-            if apply {
-                XCTAssertTrue(execution.applySelectionEdit(sessionID: intent.id, proposalID: proposal.id))
-                XCTAssertFalse(execution.applySelectionEdit(sessionID: intent.id, proposalID: proposal.id))
-                _ = try await execution.waitForCompletion(intent.id)
-                guard case .replaceSelection("请您方便时同步进展。") = fixture.output.requests.first?.command else {
-                    return XCTFail("Selected instruction did not use the reviewed replacement")
-                }
-                XCTAssertEqual(fixture.output.requests.count, 1)
-            } else {
-                execution.cancel(intent.id)
-                do { _ = try await execution.waitForCompletion(intent.id); XCTFail("Cancelled edit completed") }
-                catch { XCTAssertTrue(error is CancellationError) }
-                XCTAssertTrue(fixture.output.requests.isEmpty)
-            }
-            try await fixture.runtime.stop()
+    func testNaturalSelectedInstructionAutomaticallyWritesOnceAfterOneRecordingWithoutScreenOrAction() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        fixture.defaults.set(true, forKey: "useScreenContext")
+        fixture.target.selectedText = "请同步进展。 e\u{301} 👩🏽‍💻"
+        fixture.engine.transcript = "改礼貌一点"
+        fixture.recipe.resolution = .command(.deleteSelection)
+        fixture.recipe.generatedText = "请您方便时同步进展。"
+        fixture.screen.snapshot = ScreenContextSnapshot(text: "", image: nil, status: .permissionDenied)
+        try await fixture.start()
+        let execution = try fixture.runtime.service(SessionServices.execution)
+        var sawProposal = false
+        let observer = execution.observe { sawProposal = sawProposal || $0.selectionEditProposal != nil }
+        defer { execution.removeObserver(observer) }
+        let intent = SessionIntent(input: .local, mode: .command)
+        try execution.start(intent)
+        let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+        while execution.snapshot.phase != .recording, execution.snapshot.isBusy, ContinuousClock.now < deadline { await Task.yield() }
+        XCTAssertTrue(execution.snapshot.isSelectionEditing)
+        XCTAssertTrue(execution.requestStop(intent.id, at: nil))
+        let result = try await execution.waitForCompletion(intent.id)
+        XCTAssertEqual(result.deliveryStatus, .inserted)
+        XCTAssertFalse(sawProposal)
+        XCTAssertEqual(fixture.capture.requests.count, 1)
+        XCTAssertEqual(fixture.speechRequests.count, 1)
+        XCTAssertTrue(fixture.capture.recording.closed)
+        XCTAssertEqual(fixture.recipeCreations, ["mode.edit"])
+        XCTAssertEqual(fixture.recipe.requests.first?.mode, .selectionEdit(.custom("改礼貌一点"), spokenCommand: "改礼貌一点"))
+        XCTAssertTrue(fixture.recipe.resolutionContexts.isEmpty)
+        XCTAssertTrue(fixture.screen.requests.isEmpty)
+        guard case .replaceSelection("请您方便时同步进展。") = fixture.output.requests.first?.command else {
+            return XCTFail("Selected instruction did not use automatic replacement")
         }
+        XCTAssertEqual(fixture.output.requests.count, 1)
+        XCTAssertFalse(execution.applySelectionEdit(sessionID: intent.id, proposalID: UUID()))
+        XCTAssertEqual(fixture.output.requests.count, 1)
+        try await fixture.runtime.stop()
     }
 
-    func testSelectedCommandKeepsFullInstructionAndExplicitSelectionEditNeverCapturesScreen() async throws {
+    func testAutomaticSelectedCommandKeepsFullInstructionAndExplicitSelectionEditNeverCapturesScreen() async throws {
         let instruction = "改礼貌一点，" + String(repeating: "保留原来的细节。", count: 120) + "结尾保留 🇸🇬。"
         for mode in [TextProcessingMode.command, .selectionEdit(.custom(instruction), spokenCommand: instruction)] {
             let fixture = try VoiceWorkflowFixture()
             defer { fixture.remove() }
             fixture.defaults.set(true, forKey: "useScreenContext")
-            fixture.target.selectedText = "完整原文 👩🏽‍💻\n" + String(repeating: "保留细节。", count: 200)
+            let original = "完整原文 👩🏽‍💻\n" + String(repeating: "保留细节。", count: 200)
+            fixture.target.selectedText = original
             fixture.recipe.generatedText = "完整候选 🇸🇬"
             try await fixture.start()
             let execution = try fixture.runtime.service(SessionServices.execution)
             let intent = SessionIntent(input: .text(instruction), mode: mode)
             try execution.start(intent)
-            let proposal = try await review(in: execution)
-            XCTAssertEqual(proposal.recognizedInstruction, instruction)
-            XCTAssertEqual(fixture.recipe.requests.first?.text, fixture.target.selectedText)
+            _ = try await execution.waitForCompletion(intent.id)
+            XCTAssertEqual(fixture.recipe.requests.first?.text, original)
             XCTAssertEqual(fixture.recipe.requests.first?.mode, .selectionEdit(.custom(instruction), spokenCommand: instruction))
             XCTAssertEqual(fixture.recipeCreations, ["mode.edit"])
             XCTAssertEqual(fixture.recipe.requests.first?.screenContext, "")
             XCTAssertNil(fixture.recipe.requests.first?.screenImage)
             XCTAssertTrue(fixture.screen.requests.isEmpty)
-            execution.cancel(intent.id)
-            do { _ = try await execution.waitForCompletion(intent.id); XCTFail("Cancelled edit completed") }
-            catch { XCTAssertTrue(error is CancellationError) }
-            XCTAssertTrue(fixture.output.requests.isEmpty)
+            XCTAssertNil(execution.snapshot.selectionEditProposal)
+            guard case .replaceSelection("完整候选 🇸🇬") = fixture.output.requests.first?.command else { return XCTFail("Missing automatic replacement") }
+            XCTAssertEqual(fixture.output.requests.count, 1)
             try await fixture.runtime.stop()
         }
     }
@@ -129,9 +120,5 @@ final class VoiceSelectedEditingBoundaryTests: XCTestCase {
         }
     }
 
-    private func review(in execution: any SessionExecutionService) async throws -> SelectionEditProposal {
-        let deadline = ContinuousClock.now.advanced(by: .seconds(3))
-        while execution.snapshot.selectionEditProposal == nil, execution.snapshot.isBusy, ContinuousClock.now < deadline { await Task.yield() }
-        return try XCTUnwrap(execution.snapshot.selectionEditProposal)
-    }
+
 }

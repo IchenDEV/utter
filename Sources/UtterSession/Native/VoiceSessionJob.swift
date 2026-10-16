@@ -6,6 +6,8 @@ import UtterRuntime
 @MainActor
 final class VoiceSessionJob: SessionJob {
     let intent: SessionIntent
+    let containsSelectedText: Bool
+    let selectedTextAtCapture: String?
     var input: SessionInput
     let settings: VoiceInputSettings
     let options: TextProcessingOptions
@@ -45,6 +47,12 @@ final class VoiceSessionJob: SessionJob {
          target: (any OutputTargetLease)?, recentOutput: RecentSessionOutput?, memoryContext: String,
          dependencies: VoiceWorkflowDependencies, authorize: @escaping () throws -> Void) {
         self.intent = intent
+        selectedTextAtCapture = target?.selectedText
+        switch mode {
+        case .selectionEdit: containsSelectedText = intent.clientID == nil
+        case .command: containsSelectedText = intent.clientID == nil && target?.selectedText?.isEmpty == false
+        default: containsSelectedText = false
+        }
         self.input = intent.input
         self.settings = settings
         self.options = options
@@ -145,13 +153,15 @@ final class VoiceSessionJob: SessionJob {
         if intent.clientID != nil {
             acceptance = .returnedText
         } else {
-            control.update(phase: .delivering, transcript: transcript)
             let command: DeliveryCommand
             if case .selectionEdit = mode {
                 guard target?.selectedText?.isEmpty == false else { throw DeliveryError.invalidTarget }
-                try await reviewSelectionEdit(text, instruction: transcript, target: target, control: control)
+                try await prepareSelectionEdit(text, instruction: transcript, target: target, control: control)
                 command = .replaceSelection(text)
-            } else { command = .insert(text) }
+            } else {
+                control.update(phase: .delivering, transcript: transcript)
+                command = .insert(text)
+            }
             acceptance = try await deliver(command, target: target, control: control)
         }
         let record: InputRecord?

@@ -88,11 +88,6 @@ final class VoiceTextInputTests: XCTestCase {
         let mode = TextProcessingMode.selectionEdit(.concise, spokenCommand: "Make concise")
         let intent = SessionIntent(input: .text("Make concise"), mode: mode)
         try driver.start(intent)
-        let proposal = try await review(in: driver)
-        XCTAssertEqual(proposal.originalSelection, selected)
-        XCTAssertTrue(fixture.output.requests.isEmpty)
-        XCTAssertTrue(driver.applySelectionEdit(sessionID: intent.id, proposalID: proposal.id))
-        XCTAssertFalse(driver.applySelectionEdit(sessionID: intent.id, proposalID: proposal.id))
         _ = try await driver.waitForCompletion(intent.id)
         XCTAssertEqual(fixture.recipe.requests.first?.text, selected)
         XCTAssertEqual(fixture.recipe.requests.first?.mode, mode)
@@ -102,30 +97,33 @@ final class VoiceTextInputTests: XCTestCase {
         try await fixture.runtime.stop()
     }
 
-    func testSelectionReviewCancellationAndStaleSelectionNeverPrepareHostOrClipboardWrites() async throws {
-        for cancel in [false, true] {
+    func testAutomaticSelectionCancellationAndStaleSelectionNeverPrepareHostOrClipboardWrites() async throws {
+        for change in 0..<3 {
             let fixture = try VoiceWorkflowFixture()
             defer { fixture.remove() }
+            let generation = HeldSelectionGeneration()
+            fixture.recipe.selectionProcessor = generation.process
             fixture.target.selectedText = "原文 e\u{301} 👩🏽‍💻\n第二行"
             try await fixture.start()
             let driver = try fixture.runtime.service(SessionServices.execution)
             let intent = SessionIntent(input: .text("Make concise"), mode: .selectionEdit(.concise, spokenCommand: "Make concise"))
             try driver.start(intent)
-            let proposal = try await review(in: driver)
-            XCTAssertEqual(proposal.originalSelection, "原文 e\u{301} 👩🏽‍💻\n第二行")
+            try await generation.waitUntilEntered()
+            XCTAssertTrue(driver.snapshot.isSelectionEditing)
+            XCTAssertNil(driver.snapshot.selectionEditProposal)
             XCTAssertTrue(fixture.output.requests.isEmpty)
-            if cancel { driver.cancel(intent.id) }
-            else {
-                fixture.target.selectedText = "用户后续输入 🇸🇬"
-                XCTAssertTrue(driver.applySelectionEdit(sessionID: intent.id, proposalID: proposal.id))
-            }
+            if change == 0 { driver.cancel(intent.id) }
+            else if change == 1 { fixture.target.selectedText = "用户后续输入 🇸🇬" }
+            else { fixture.target.isCurrent = false }
+            generation.release()
             do { _ = try await driver.waitForCompletion(intent.id); XCTFail("Cancelled or stale edit delivered") }
             catch {
-                if cancel { XCTAssertTrue(error is CancellationError) }
+                if change == 0 { XCTAssertTrue(error is CancellationError) }
                 else { XCTAssertEqual(error as? DeliveryError, .invalidTarget) }
             }
             XCTAssertTrue(fixture.output.requests.isEmpty)
             XCTAssertNil(driver.snapshot.selectionEditProposal)
+            XCTAssertEqual(driver.snapshot.transcript, "")
             XCTAssertTrue(fixture.capture.requests.isEmpty)
             try await fixture.runtime.stop()
         }
@@ -176,11 +174,5 @@ final class VoiceTextInputTests: XCTestCase {
         try await fixture.runtime.stop()
     }
 
-    private func review(in driver: any SessionExecutionService) async throws -> SelectionEditProposal {
-        let deadline = ContinuousClock.now.advanced(by: .seconds(3))
-        while driver.snapshot.selectionEditProposal == nil, driver.snapshot.isBusy, ContinuousClock.now < deadline {
-            await Task.yield()
-        }
-        return try XCTUnwrap(driver.snapshot.selectionEditProposal)
-    }
+
 }

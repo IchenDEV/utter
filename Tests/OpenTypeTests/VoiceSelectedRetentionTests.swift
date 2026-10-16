@@ -6,7 +6,7 @@ import UtterSession
 
 @MainActor
 final class VoiceSelectedRetentionTests: XCTestCase {
-    func testSelectedApplyAndRestoreKeepFullVolatileReceiptWithoutHistoryOrLearning() async throws {
+    func testAutomaticSelectedEditAndRestoreKeepFullVolatileReceiptWithoutHistoryOrLearning() async throws {
         let original = "  原文 e\u{301} 👩🏽‍💻\n" + String(repeating: "完整内容 🇸🇬。", count: 120) + "\n  "
         for mode in [TextProcessingMode.command, .selectionEdit(.custom("改礼貌一点"), spokenCommand: "改礼貌一点")] {
             let fixture = try VoiceWorkflowFixture()
@@ -24,10 +24,7 @@ final class VoiceSelectedRetentionTests: XCTestCase {
             let execution = try fixture.runtime.service(SessionServices.execution)
             let intent = SessionIntent(input: .text("改礼貌一点"), mode: mode)
             try execution.start(intent)
-            let proposal = try await review(in: execution)
-            XCTAssertEqual(proposal.originalSelection, original)
             XCTAssertLessThan(fixture.target.context.selectedText?.count ?? 0, original.count)
-            XCTAssertTrue(execution.applySelectionEdit(sessionID: intent.id, proposalID: proposal.id))
             let applied = try await execution.waitForCompletion(intent.id)
             XCTAssertEqual(applied.deliveryStatus, .inserted)
             XCTAssertEqual(applied.text, "")
@@ -83,8 +80,6 @@ final class VoiceSelectedRetentionTests: XCTestCase {
         let execution = try fixture.runtime.service(SessionServices.execution)
         let intent = SessionIntent(input: .text("rewrite"), mode: .command)
         try execution.start(intent)
-        let proposal = try await review(in: execution)
-        XCTAssertTrue(execution.applySelectionEdit(sessionID: intent.id, proposalID: proposal.id))
         let completion = try await execution.waitForCompletion(intent.id)
         XCTAssertEqual(completion.deliveryStatus, .copied)
         XCTAssertEqual(completion.text, "")
@@ -95,11 +90,7 @@ final class VoiceSelectedRetentionTests: XCTestCase {
         try await fixture.runtime.stop()
     }
 
-    private func review(in execution: any SessionExecutionService) async throws -> SelectionEditProposal {
-        let deadline = ContinuousClock.now.advanced(by: .seconds(3))
-        while execution.snapshot.selectionEditProposal == nil, execution.snapshot.isBusy, ContinuousClock.now < deadline { await Task.yield() }
-        return try XCTUnwrap(execution.snapshot.selectionEditProposal)
-    }
+
 }
 
 @MainActor

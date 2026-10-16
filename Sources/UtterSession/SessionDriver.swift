@@ -72,7 +72,8 @@ package final class SessionDriver: SessionExecutionService {
         }
         workflows.willActivate(active.intent)
         active.control.activate()
-        publish(SessionExecutionSnapshot(id: id, phase: .preparing, isBusy: true))
+        publish(SessionExecutionSnapshot(id: id, phase: .preparing, isBusy: true,
+            isSelectionEditing: active.job.containsSelectedText))
     }
     private func admit(_ intent: SessionIntent, activate: Bool, allowsDisclosure: Bool = true) throws {
         guard !closed, isReady() else { throw IntegrationError.developerInterfaceDisabled }
@@ -119,7 +120,7 @@ package final class SessionDriver: SessionExecutionService {
         active = Active(intent: frozen, job: job, control: control, task: task, timing: timing)
         job.attach(control: control)
         if activate { workflows.willActivate(intent); control.activate() }
-        publish(SessionExecutionSnapshot(id: intent.id, phase: activate ? .preparing : .created, isBusy: true, mode: frozen.mode))
+        publish(SessionExecutionSnapshot(id: intent.id, phase: activate ? .preparing : .created, isBusy: true, mode: frozen.mode, isSelectionEditing: job.containsSelectedText))
     }
 
     @discardableResult
@@ -215,13 +216,14 @@ package final class SessionDriver: SessionExecutionService {
         guard [.recording, .transcribing, .processing, .delivering].contains(phase) else { return }
         publish(SessionExecutionSnapshot(id: id, phase: phase, transcript: transcript, isBusy: true,
             audioLevel: phase == .recording ? snapshot.audioLevel : 0, mode: active.intent.mode,
-            selectionEditProposal: active.control.selectionEditProposal))
+            selectionEditProposal: active.control.selectionEditProposal, isSelectionEditing: active.job.containsSelectedText))
     }
 
     private func updateLevel(_ id: UUID, level: Float) {
         guard active?.intent.id == id, snapshot.phase == .recording else { return }
         publish(SessionExecutionSnapshot(id: id, phase: .recording, transcript: snapshot.transcript,
-            isBusy: true, audioLevel: level, mode: active?.intent.mode))
+            isBusy: true, audioLevel: level, mode: active?.intent.mode,
+            isSelectionEditing: active?.job.containsSelectedText == true))
     }
 
     private func finish(_ original: SessionIntent, result: Result<SessionCompletion, Error>) {

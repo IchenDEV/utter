@@ -55,8 +55,6 @@ struct OverlayContentView: View {
     private var content: some View {
         if let consent = appState.remoteDisclosure, let intentID = appState.snapshot.id {
             RemoteDisclosureView(consent: consent, intentID: intentID, callbacks: review).id(intentID)
-        } else if let proposal = appState.selectionEditProposal {
-            SelectionReviewView(proposal: proposal, callbacks: review).id(proposal.id)
         } else if appState.offersRestore, let restoration = appState.selectionEditRestoration {
             RestoreOfferView(restoration: restoration, callbacks: review, onClose: onDismiss).id(restoration.operationID)
         } else if layout.content == .notice, let key = notice.key {
@@ -99,6 +97,11 @@ struct OverlayContentView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 4)
+            if appState.snapshot.isSelectionEditing, appState.snapshot.isBusy,
+               appState.snapshot.phase != .delivering {
+                ReviewButton(title: L("common.cancel"), role: .quiet,
+                    hint: appState.selectionEditCancelShortcut ? L("selection_edit.cancel_shortcut") : nil, action: onCancel)
+            }
         }
         .frame(width: layout.width - 2 * layout.horizontalPadding, alignment: .leading)
     }

@@ -24,11 +24,6 @@ struct OverlayLayout: Equatable {
                 size: CGSize(width: SelectionReviewMetrics.width, height: SelectionReviewMetrics.disclosureHeight(for: consent)))
             return
         }
-        if let proposal = appState.selectionEditProposal {
-            self = OverlayLayout(content: .review,
-                size: CGSize(width: SelectionReviewMetrics.width, height: SelectionReviewMetrics.reviewHeight(for: proposal)))
-            return
-        }
         if appState.offersRestore {
             self = OverlayLayout(content: .restore,
                 size: CGSize(width: SelectionReviewMetrics.restoreWidth, height: SelectionReviewMetrics.restoreHeight))
@@ -65,9 +60,9 @@ struct OverlayLayout: Equatable {
             width = 216
             height = 40
             outerCornerRadius = 20
-            horizontalPadding = 12
-            topPadding = 10
-            bottomPadding = 10
+            horizontalPadding = appState.snapshot.isSelectionEditing ? 7 : 12
+            topPadding = appState.snapshot.isSelectionEditing ? 7 : 10
+            bottomPadding = appState.snapshot.isSelectionEditing ? 7 : 10
             stackSpacing = 6
         case .error, .uncertain:
             width = 360

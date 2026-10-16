@@ -15,6 +15,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     let icons: (any IconPresentationService)?
     let diagnostics: any DiagnosticsService
     let isCurrent: () -> Bool
+    let shortcuts: OverlayShortcuts
     var statusItem: NSStatusItem?
     let popover = NSPopover()
     let outsideClicks = PopoverOutsideClickMonitor()
@@ -23,6 +24,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     var windowDelegate: DesktopWindowDelegate?
     var subscriptions: Set<AnyCancellable> = []
     var hideTask: Task<Void, Never>?
+    var overlayVisible = false
     var restoreShown: UUID?
     var restoreDismissed: UUID?
     var restoreExpiry: Task<Void, Never>?
@@ -33,11 +35,14 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     init(catalog: any PresentationCatalog, settings: any SettingsService, credentials: any CredentialsService,
          execution: (any SessionExecutionService)?, outputs: (any SessionOutputStateService)?,
          overlay: (any OverlayPresentationService)?, icons: (any IconPresentationService)?,
-         diagnostics: any DiagnosticsService, isCurrent: @escaping () -> Bool) {
+         diagnostics: any DiagnosticsService, isCurrent: @escaping () -> Bool,
+         shortcutRegistration: (any OverlayShortcutRegistration)? = nil) {
         self.catalog = catalog; self.settings = AppSettings(service: settings, credentials: credentials)
         self.execution = execution; self.outputs = outputs; self.overlay = overlay; self.icons = icons
         self.diagnostics = diagnostics; self.isCurrent = isCurrent
+        shortcuts = OverlayShortcuts(registration: shortcutRegistration ?? CarbonOverlayShortcuts())
         super.init()
+        shortcuts.onAction = { [weak self] in self?.handleShortcut($0) }
     }
 
     var context: PresentationContext {
@@ -99,7 +104,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
         state.project(snapshot)
         refreshIcons()
         hideTask?.cancel()
-        guard snapshot.phase != nil, snapshot.phase != .cancelled else { overlay?.hide(); return }
+        guard snapshot.phase != nil, snapshot.phase != .cancelled else { hideOverlay(); return }
         if snapshot.isBusy { closePopover(); restoreShown = nil }
         showOverlay()
         if !snapshot.isBusy && !state.presentation.keepsVisible {
@@ -108,7 +113,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
                 do { try await Task.sleep(for: .seconds(1.5)) } catch { return }
                 guard let self, !self.closed, self.isCurrent(), self.state.snapshot.id == snapshot.id,
                       !self.state.offersRestore else { return }
-                self.overlay?.hide()
+                self.hideOverlay()
             }
         }
     }
@@ -133,13 +138,14 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     func close() {
         guard !closed else { return }
         closed = true
+        shortcuts.close()
         hideTask?.cancel(); hideTask = nil
         restoreExpiry?.cancel(); restoreExpiry = nil
         if let executionObserver { execution?.removeObserver(executionObserver) }
         if let outputObserver { outputs?.removeObserver(outputObserver) }
         executionObserver = nil; outputObserver = nil
         subscriptions.removeAll()
-        overlay?.hide(); closePopover()
+        hideOverlay(); closePopover()
         popover.contentViewController = nil
         settingsWindow?.close(); settingsWindow = nil
         onboardingWindow?.close(); onboardingWindow = nil

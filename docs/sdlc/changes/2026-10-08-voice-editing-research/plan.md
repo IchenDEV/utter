@@ -7,6 +7,16 @@
 
 **Authorization:** 用户整体授权，2026-10-08；普通阶段可继续，未声称用户已审阅本方案。实际验收仍待完成。
 
+## Current direct-edit contract, 2026-10-17
+
+The user explicitly removes the candidate preview and Apply step, requests keyboard operation, and retains the original HUD appearance. This supersedes earlier explicit-Apply desktop requirements below. It is user authorization for this change, not human acceptance of an unseen result.
+
+Desktop selected voice commands generate and validate inside the existing Session, drain capture, revalidate the original target/selection/document, then commit once through the existing output transaction. The popup shows recording/processing/result status and one-use Restore only; it never displays selected original, generated candidate or an Apply control. No simulated button press or second session/output pipeline is used. Invalid/empty/model-error/stale/uncertain paths retain existing protections and never blind retry. Selected content stays ephemeral even without a review suspension.
+
+Use the existing voice trigger/release to finish capture. Register Esc only during an eligible local selected session and Command-Option-Z only for its current confirmed restoration receipt. Bind each registration to its exact session/operation, reject queued/stale events, unregister when hidden/ineligible/closed, and revalidate before action. Preserve host Command-Z. Registration conflicts fail closed and cannot be advertised as available. Native keyboard registrations use the already-installed macOS API without prompts or global configuration changes. Remote-provider disclosure before sending selected text remains distinct from Apply and retains explicit one-use consent.
+
+Verify real Session automatic single delivery, cancel while generation drains, stale selection/focus, Unicode, empty/error output, uncertainty, temporary-content retention, and one-use restoration. Render the actual compact production HUD in English/Chinese and both appearances; prove long original/candidate text is absent and controls fit narrow width. Verify native event decoding/registration lifecycle with owned local event fixtures; locked-host global dispatch, actual VoiceOver and device acceptance remain open. Independent review and rollback remain required. Roll back this increment with a normal revert, without resetting other changes or user data. Mobile's existing proposal protocol stays supported pending its separately verified platform adapter; no device or original-owner workspace actions.
+
 ## Current delivery plan — 2026-10-14
 
 用户最新明确要求取消时间上限、完成整体功能后提交 PR。旧轮次截止和原型计划以下作为历史证据保留，不是当前执行限制；普通阶段已整体授权，实际通过仍须证据。
