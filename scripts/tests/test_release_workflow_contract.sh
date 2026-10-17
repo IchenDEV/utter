@@ -236,5 +236,43 @@ check test "$(cat "$SIGNING_TRACE")" = verify
 check grep -Fxq SIGNING_MODE=self-signed "$GITHUB_ENV"
 check test ! -e "$SIGNED_DMG"
 
+# ─── Update metadata contract ─────────────────────────────────────────────────
+line_of() { grep -n "^      - name: $1\$" "$ARTIFACT" | cut -d: -f1; }
+verify_line="$(line_of 'Verify distribution and checksum')"
+sign_line="$(line_of 'Sign update metadata')"
+publish_line="$(line_of 'Publish GitHub Release')"
+check test -n "$verify_line"
+check test -n "$sign_line"
+check test -n "$publish_line"
+check test "$verify_line" -lt "$sign_line"
+check test "$sign_line" -lt "$publish_line"
+
+credentials_step="$(step_script "$ARTIFACT" 'Require release credentials')"
+check grep -Fq 'SPARKLE_ED_PRIVATE_KEY' <<<"$credentials_step"
+
+build_step="$(step_script "$ARTIFACT" 'Build signed app and DMG')"
+check grep -Fq -- '--updates' <<<"$build_step"
+
+verify_step="$(step_script "$ARTIFACT" 'Verify distribution and checksum')"
+check grep -Fq -- '--dump-app-plist' <<<"$verify_step"
+
+sign_step="$(step_script "$ARTIFACT" 'Sign update metadata')"
+check grep -Fq 'scripts/sparkle-tools.sha256' <<<"$sign_step"
+check grep -Fq 'shasum -a 256 -c' <<<"$sign_step"
+check grep -Fq 'scripts/generate-appcast.py' <<<"$sign_step"
+check grep -Fq 'scripts/verify-update-signature.swift' <<<"$sign_step"
+# The key must only ever arrive through the environment and stdin.
+check grep -Fq 'printf '\''%s'\'' "$SPARKLE_ED_PRIVATE_KEY"' <<<"$sign_step"
+check grep -Fq -- '--ed-key-file -' <<<"$sign_step"
+check test -z "$(grep -F -- '--ed-key-file "$SPARKLE_ED_PRIVATE_KEY"' <<<"$sign_step" || true)"
+check test -z "$(grep -F 'set -x' <<<"$sign_step" || true)"
+
+publish_step="$(step_script "$ARTIFACT" 'Publish GitHub Release')"
+check grep -Fq 'dist/appcast.xml' <<<"$publish_step"
+check grep -Fq 'cmp "dist/appcast.xml"' <<<"$publish_step"
+
+# No workflow may point the build at a different update template.
+check test -z "$(grep -rn -- '--update-info' "$ROOT/.github/workflows" || true)"
+
 [ "$failures" -eq 0 ] || { echo "$failures release contract checks failed." >&2; exit 1; }
 echo "Release workflow contract tests passed."

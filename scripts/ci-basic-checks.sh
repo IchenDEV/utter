@@ -31,12 +31,18 @@ bash scripts/tests/test_build_version.sh
 bash scripts/tests/test_release_version.sh
 bash scripts/tests/test_nightly_release_plan.sh
 bash scripts/tests/test_release_workflow_contract.sh
+bash scripts/tests/test_verify_update_signature.sh
 
 step "Linting property lists and localized strings"
 plutil -lint Resources/Info.plist
 plutil -lint Resources/OpenType.entitlements
+plutil -lint Resources/UpdateInfo.plist
 plutil -lint Sources/UtterContracts/Resources/en.lproj/Localizable.strings
 plutil -lint Sources/UtterContracts/Resources/zh-Hans.lproj/Localizable.strings
+
+step "Linting the committed update template"
+python3 scripts/check-update-plist.py --update-info Resources/UpdateInfo.plist \
+    || fail "Resources/UpdateInfo.plist must be a valid update template"
 
 step "Checking brand and compatibility identifiers"
 test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' Resources/Info.plist)" = "Utter" \

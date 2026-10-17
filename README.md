@@ -125,7 +125,15 @@ The public app is `Utter.app`. The Swift package product remains `OpenType` so e
 | Accessibility | Global hotkey, text insertion (clipboard + simulated ⌘V), and reading the focused field for context | Yes |
 | Speech Recognition | Apple on-device ASR engine | Only if using Apple Speech |
 | Screen Recording | OCR for screen context and Voice Command mode | Optional |
-| Network | Model downloads; remote LLM API calls | First run / remote LLM mode |
+| Network | Model downloads; remote LLM API calls; daily update checks | First run / remote LLM mode |
+
+## Updates
+
+Utter checks for updates once a day; you can also check manually from **Settings → About** or the menu bar row ("Check for Updates…"). Automatic checks are on by default and can be turned off in the same place.
+
+A check is one HTTPS GET of the release feed on GitHub. Installing an update is one GET of the DMG. Nothing else is sent: no profile, no identifier, no usage data. Updates are signed with Ed25519 and verified before they are offered, and nothing is downloaded or installed until you choose **Install Update** in the standard update alert.
+
+The first release that carries the updater has to be installed manually once. After that, updates apply in place and keep your permissions, settings and history.
 
 ## Local Models
 
