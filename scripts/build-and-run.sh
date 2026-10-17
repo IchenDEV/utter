@@ -21,6 +21,9 @@ CLI_HELPER_BINARY="$APP_MACOS/$CLI_HELPER_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
 ICON_RESOURCES="$ROOT_DIR/Sources/UtterPresentation/Resources"
 
+# shellcheck source=scripts/embed-sparkle.sh
+source "$ROOT_DIR/scripts/embed-sparkle.sh"
+
 export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-/tmp/clang-module-cache}"
 mkdir -p "$CLANG_MODULE_CACHE_PATH"
 
@@ -53,6 +56,10 @@ for bundle in "$BUILD_DIR"/*.bundle; do
   cp -R "$bundle" "$APP_RESOURCES/"
 done
 
+# The executable links Sparkle, so the framework ships here too. This script never merges update
+# keys, so the development app stays inert and cannot replace itself with a release.
+embed_sparkle "$APP_BUNDLE" "$(find_sparkle_framework "$ROOT_DIR/.build/artifacts")"
+
 # Sign after copying all nested helpers and SwiftPM resource bundles.
 ENTITLEMENTS="$ROOT_DIR/Resources/OpenType.entitlements"
 SIGN_IDENTITY="${SIGN_IDENTITY:-}"
@@ -65,10 +72,15 @@ if [ -z "$SIGN_IDENTITY" ]; then
   done
 fi
 
+# Sparkle is re-signed without entitlements, then the app is re-sealed over it.
 if [ -n "$SIGN_IDENTITY" ] && [ "$SIGN_IDENTITY" != "-" ]; then
   codesign --force --deep --sign "$SIGN_IDENTITY" --options runtime --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
+  sign_sparkle "$APP_BUNDLE" "$SIGN_IDENTITY"
+  codesign --force --sign "$SIGN_IDENTITY" --options runtime --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
 else
   codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
+  sign_sparkle "$APP_BUNDLE" -
+  codesign --force --sign - --entitlements "$ENTITLEMENTS" "$APP_BUNDLE"
 fi
 
 icon_file="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$INFO_PLIST" 2>/dev/null || true)"

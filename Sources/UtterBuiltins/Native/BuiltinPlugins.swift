@@ -15,6 +15,7 @@ import UtterANE
 import UtterRemoteInference
 import UtterIngress
 import UtterPresentation
+import UtterUpdates
 
 @MainActor
 package enum BuiltinPlugins {
@@ -42,7 +43,7 @@ package enum BuiltinPlugins {
                           ModePlugins.translation(), ModePlugins.edit()]
         let platform = [RemoteMicPlugins.capture(), AudioPlugins.capture(), AudioPlugins.files(), AudioPlugins.speechEvidence(), AudioPlugins.devices(),
                         MacPlugins.target(), MacPlugins.output(), MacPlugins.screen(), MacPlugins.hotkeys(),
-                        MacPlugins.sounds(), MacPlugins.loginItem(), MacPlugins.correction()]
+                        MacPlugins.sounds(), MacPlugins.loginItem(), MacPlugins.correction(), UpdatePlugins.updater()]
         let session = [SessionPlugins.outputs(), SessionPlugins.voiceWorkflows(), SessionPlugins.execution(), SessionPlugins.api(), SessionPlugins.metrics()]
         let ingress = [IngressPlugins.hotkeySessions(), IngressPlugins.remoteSessions(), IngressPlugins.http(), IngressPlugins.xpc()]
         let presentation = [PresentationPlugins.catalog(), PresentationPlugins.icons(), PresentationPlugins.menu(),

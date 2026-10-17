@@ -520,6 +520,17 @@
 "about.subtitle" = "Intelligent Voice Input";
 "about.body" = "On-device voice input powered by WhisperKit and MLX.\nSpeech recognition, smart formatting, and personal dictionary — all local.";
 "about.feedback" = "Feedback";
+"update.section" = "Updates";
+"update.check" = "Check for Updates…";
+"update.menu.available" = "Update Available — v%@";
+"update.menu.pending" = "Update Ready — Installs When Idle";
+"update.automatic" = "Check for updates automatically";
+"update.status.checking" = "Checking for updates…";
+"update.status.up_to_date" = "Utter is up to date.";
+"update.status.available" = "Version %@ is available.";
+"update.status.pending" = "Version %@ will install when Utter is idle.";
+"update.status.failed" = "The update check failed. Try again later.";
+"update.privacy" = "A check sends one request to GitHub for the update feed. No profile, identifier, or usage data is sent. Nothing installs until you choose Install Update.";
 
 /* ── Errors ── */
 "error.whisper_not_loaded" = "Whisper model not loaded: %@";

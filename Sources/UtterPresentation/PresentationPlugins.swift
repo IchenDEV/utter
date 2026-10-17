@@ -30,9 +30,10 @@ package enum PresentationPlugins {
     }
 
     package static func menu() -> PluginRegistration {
-        contribution(id: "presentation.menu", role: .menu) { context, _ in
-            { presentation in
-                AnyView(MenuBarView(onOpenSettings: presentation.openSettings,
+        contribution(id: "presentation.menu", role: .menu, requires: [UpdateServices.updater.optional]) { context, _ in
+            let update = try updateProjection(context)
+            return { presentation in
+                AnyView(MenuBarView(update: update, onOpenSettings: presentation.openSettings,
                     onApplyPendingReplacement: presentation.applyReplacement, onCopy: presentation.copy,
                     onQuit: { NSApp.terminate(nil) }))
             }
@@ -65,6 +66,13 @@ package enum PresentationPlugins {
                     return view(presentation)
                 }), scope: context.scope)
         }
+    }
+
+    static func updateProjection(_ context: PluginContext) throws -> UpdateProjection? {
+        guard let service = try context.optional(UpdateServices.updater) else { return nil }
+        let projection = UpdateProjection(service: service)
+        try context.scope.onDispose { projection.dispose() }
+        return projection
     }
 
     static let platformRequirements: [ServiceRequirement] = [RemoteMicServices.control.optional, MacServices.loginItem.optional,

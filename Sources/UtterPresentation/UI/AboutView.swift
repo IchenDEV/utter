@@ -6,6 +6,7 @@ import Speech
 
 struct AboutView: View {
     @EnvironmentObject private var platform: PlatformProjection
+    let update: UpdateProjection?
     var body: some View {
         Form {
             Section {
@@ -30,6 +31,8 @@ struct AboutView: View {
                     .accessibilityLabel(L("settings.permissions"))
                 }
             }
+
+            if let update { AboutUpdatesSection(update: update) }
 
             Section {
                 appInfo

@@ -63,9 +63,10 @@ extension PresentationPlugins {
     }
     package static func about() -> PluginRegistration {
         contribution(id: "presentation.about", role: .settings, order: 50, label: "tab.about", symbol: "info.circle",
-            requires: platformRequirements) { context, _ in
+            requires: platformRequirements + [UpdateServices.updater.optional]) { context, _ in
                 let platform = try platform(context)
-                return { _ in AnyView(AboutView().environmentObject(platform)) }
+                let update = try updateProjection(context)
+                return { _ in AnyView(AboutView(update: update).environmentObject(platform)) }
             }
     }
     package static func onboarding() -> PluginRegistration {
