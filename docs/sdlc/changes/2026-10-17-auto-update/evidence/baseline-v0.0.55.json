@@ -1,0 +1,144 @@
+{
+  "bundleIdentifier": "com.opentype.voiceinput",
+  "entries": {
+    "Contents/MacOS/Utter": {
+      "archs": "arm64",
+      "entitlements": {
+        "com.apple.security.app-sandbox": false,
+        "com.apple.security.automation.apple-events": true,
+        "com.apple.security.cs.allow-jit": true,
+        "com.apple.security.cs.allow-unsigned-executable-memory": true,
+        "com.apple.security.cs.disable-library-validation": true,
+        "com.apple.security.device.audio-input": true,
+        "com.apple.security.device.bluetooth": true,
+        "com.apple.security.personal-information.speech-recognition": true,
+        "com.apple.security.screen-recording": true
+      },
+      "rpaths": [
+        "@executable_path/../lib"
+      ],
+      "signature": {
+        "Identifier": "com.opentype.voiceinput",
+        "TeamIdentifier": "G9L7H3T3D5",
+        "Timestamp": "16 Oct 2026 at 7:10:38\u202fPM",
+        "authority": [
+          "Developer ID Application: Chen Li (G9L7H3T3D5)",
+          "Developer ID Certification Authority",
+          "Apple Root CA"
+        ],
+        "flags": "0x10000(runtime)"
+      }
+    },
+    "Contents/MacOS/opentype-cli": {
+      "archs": "arm64",
+      "entitlements": {
+        "com.apple.security.app-sandbox": false,
+        "com.apple.security.automation.apple-events": true,
+        "com.apple.security.cs.allow-jit": true,
+        "com.apple.security.cs.allow-unsigned-executable-memory": true,
+        "com.apple.security.cs.disable-library-validation": true,
+        "com.apple.security.device.audio-input": true,
+        "com.apple.security.device.bluetooth": true,
+        "com.apple.security.personal-information.speech-recognition": true,
+        "com.apple.security.screen-recording": true
+      },
+      "rpaths": [
+        "@loader_path"
+      ],
+      "signature": {
+        "Identifier": "opentype-cli",
+        "TeamIdentifier": "G9L7H3T3D5",
+        "Timestamp": "16 Oct 2026 at 7:10:38\u202fPM",
+        "authority": [
+          "Developer ID Application: Chen Li (G9L7H3T3D5)",
+          "Developer ID Certification Authority",
+          "Apple Root CA"
+        ],
+        "flags": "0x10000(runtime)"
+      }
+    },
+    "Contents/Resources/OpenType_UtterContracts.bundle": {
+      "archs": null,
+      "entitlements": null,
+      "rpaths": [],
+      "signature": {}
+    },
+    "Contents/Resources/OpenType_UtterData.bundle": {
+      "archs": null,
+      "entitlements": null,
+      "rpaths": [],
+      "signature": {}
+    },
+    "Contents/Resources/OpenType_UtterMacServices.bundle": {
+      "archs": null,
+      "entitlements": null,
+      "rpaths": [],
+      "signature": {}
+    },
+    "Contents/Resources/OpenType_UtterPresentation.bundle": {
+      "archs": null,
+      "entitlements": null,
+      "rpaths": [],
+      "signature": {}
+    },
+    "Contents/Resources/mlx-swift_Cmlx.bundle": {
+      "archs": null,
+      "entitlements": null,
+      "rpaths": [],
+      "signature": {}
+    },
+    "Contents/Resources/swift-crypto_Crypto.bundle": {
+      "archs": null,
+      "entitlements": null,
+      "rpaths": [],
+      "signature": {}
+    },
+    "Contents/Resources/swift-transformers_Hub.bundle": {
+      "archs": null,
+      "entitlements": null,
+      "rpaths": [],
+      "signature": {}
+    },
+    "Utter.app": {
+      "archs": null,
+      "entitlements": {
+        "com.apple.security.app-sandbox": false,
+        "com.apple.security.automation.apple-events": true,
+        "com.apple.security.cs.allow-jit": true,
+        "com.apple.security.cs.allow-unsigned-executable-memory": true,
+        "com.apple.security.cs.disable-library-validation": true,
+        "com.apple.security.device.audio-input": true,
+        "com.apple.security.device.bluetooth": true,
+        "com.apple.security.personal-information.speech-recognition": true,
+        "com.apple.security.screen-recording": true
+      },
+      "rpaths": [],
+      "signature": {
+        "Identifier": "com.opentype.voiceinput",
+        "TeamIdentifier": "G9L7H3T3D5",
+        "Timestamp": "16 Oct 2026 at 7:10:38\u202fPM",
+        "authority": [
+          "Developer ID Application: Chen Li (G9L7H3T3D5)",
+          "Developer ID Certification Authority",
+          "Apple Root CA"
+        ],
+        "flags": "0x10000(runtime)"
+      }
+    }
+  },
+  "observations": [
+    "Resource .bundle directories carry no signature of their own; they are sealed as resources of the app signature.",
+    "opentype-cli carries the same 9 entitlements as the main executable, so --deep applied the app entitlements to nested code.",
+    "Main executable rpath is @executable_path/../lib; the CLI helper's is @loader_path.",
+    "Every signed item has hardened runtime and a secure timestamp without an explicit --timestamp flag."
+  ],
+  "purpose": "Pass 1 of the new signing flow must reproduce these for existing content",
+  "shortVersion": "0.0.55",
+  "source": {
+    "asset": "Utter-0.0.55.dmg",
+    "recorded": "2026-10-17",
+    "release": "v0.0.55",
+    "sha256": "89628c7ae829e256d2f603eeca35b2da274e603fad6e1e31b1f1116406d5f85f",
+    "tool": "evidence/record_signatures.py (read-only; codesign, lipo, otool)"
+  }
+}

@@ -21,6 +21,7 @@ extension SettingsStore {
         case preloadSpeechModelOnLaunch, preloadFormattingModelOnLaunch
         case modelStoragePath, localWhisperModelPaths, localLLMModelPaths
         case developerInterfaceEnabled, developerHTTPPort, developerHTTPToken
+        case automaticUpdateChecks
     }
 
     static func load(defaults: UserDefaults) -> SettingsValues {
@@ -130,6 +131,7 @@ extension SettingsStore {
         values.localLLMModelPaths = ud.dictionary(forKey: Key.localLLMModelPaths.rawValue) as? [String: String] ?? [:]
         values.developerInterfaceEnabled = ud.object(forKey: Key.developerInterfaceEnabled.rawValue) as? Bool ?? false
         values.developerHTTPPort = validDeveloperHTTPPort(ud.integer(forKey: Key.developerHTTPPort.rawValue))
+        values.automaticUpdateChecks = ud.object(forKey: Key.automaticUpdateChecks.rawValue) as? Bool ?? true
         if let savedToken = ud.string(forKey: Key.developerHTTPToken.rawValue), !savedToken.isEmpty {
             values.developerHTTPToken = savedToken
         } else {

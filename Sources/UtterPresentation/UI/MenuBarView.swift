@@ -5,6 +5,7 @@ import SwiftUI
 struct MenuBarView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var settings: AppSettings
+    let update: UpdateProjection?
     let onOpenSettings: () -> Void
     let onApplyPendingReplacement: () -> Void
     let onCopy: (String) -> Void
@@ -18,6 +19,7 @@ struct MenuBarView: View {
                 mainContent
             }
             Divider()
+            if let update { UpdateMenuRow(update: update) }
             bottomActions
         }
         .padding(10)

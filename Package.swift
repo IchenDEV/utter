@@ -1,7 +1,7 @@
 // swift-tools-version: 6.2
 import PackageDescription
 
-let dependencies: [Package.Dependency] = [
+var dependencies: [Package.Dependency] = [
     .package(url: "https://github.com/argmaxinc/argmax-oss-swift.git", from: "1.0.0"),
     .package(
         url: "https://github.com/IchenDEV/ANE-LM.git",
@@ -13,9 +13,10 @@ let dependencies: [Package.Dependency] = [
 ]
 
 #if os(macOS)
+dependencies.append(.package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0"))
 let dataExclusions: [String] = []
 let builtinDependencies: [Target.Dependency] = ["UtterMediaContracts", "UtterModels", "UtterSession", "UtterProcessing",
-    "UtterAudio", "UtterMacServices", "UtterRemoteMic", "UtterAppleSpeech", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterIngress", "UtterPresentation"]
+    "UtterAudio", "UtterMacServices", "UtterRemoteMic", "UtterAppleSpeech", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterIngress", "UtterPresentation", "UtterUpdates"]
 let builtinExclusions: [String] = []
 let modelDependencies: [Target.Dependency] = [
     "UtterMediaContracts", "UtterPresentationContracts",
@@ -37,6 +38,8 @@ let macServiceDependencies: [Target.Dependency] = ["UtterMediaContracts"]
 let macServiceExclusions: [String] = []
 let ingressDependencies: [Target.Dependency] = ["UtterMediaContracts", "UtterPresentationContracts"]
 let ingressExclusions: [String] = []
+let updatesDependencies: [Target.Dependency] = [.product(name: "Sparkle", package: "Sparkle")]
+let updatesExclusions: [String] = []
 #else
 let dataExclusions = ["SystemDiagnostics.swift"]
 let builtinDependencies: [Target.Dependency] = []
@@ -55,6 +58,8 @@ let macServiceDependencies: [Target.Dependency] = []
 let macServiceExclusions = ["Native"]
 let ingressDependencies: [Target.Dependency] = []
 let ingressExclusions = ["Native"]
+let updatesDependencies: [Target.Dependency] = []
+let updatesExclusions = ["Native"]
 let remoteDependencies: [Target.Dependency] = []
 let remoteExclusions = ["GzipCompression.swift", "VolcSpeechEngine+Audio.swift", "VolcSpeechEngine+Codec.swift", "VolcSpeechEngine+Requests.swift", "VolcSpeechEngine+Transport.swift", "VolcSpeechEngine.swift", "VolcSpeechPlugins.swift", "VolcStreamingSession.swift"]
 #endif
@@ -63,6 +68,10 @@ let portableTargets: [Target] = [
     .target(name: "UtterIngress", dependencies: ["UtterRuntime", "UtterContracts"] + ingressDependencies,
         exclude: ingressExclusions, swiftSettings: [.swiftLanguageMode(.v5)]),
     .testTarget(name: "UtterIngressTests", dependencies: ["UtterIngress", "UtterSession", "UtterData"],
+        swiftSettings: [.swiftLanguageMode(.v5)]),
+    .target(name: "UtterUpdates", dependencies: ["UtterRuntime", "UtterContracts"] + updatesDependencies,
+        exclude: updatesExclusions, swiftSettings: [.swiftLanguageMode(.v5)]),
+    .testTarget(name: "UtterUpdatesTests", dependencies: ["UtterUpdates", "UtterContracts", "UtterRuntime"],
         swiftSettings: [.swiftLanguageMode(.v5)]),
     .target(name: "UtterBuiltins", dependencies: ["UtterRuntime", "UtterContracts", "UtterData"] + builtinDependencies,
         exclude: builtinExclusions, swiftSettings: [.swiftLanguageMode(.v5)]),
@@ -270,7 +279,7 @@ let package = Package(
         ),
         .testTarget(
             name: "OpenTypeTests",
-            dependencies: ["OpenType", "UtterPresentation", "UtterIngress", "UtterBuiltins", "UtterMacServices", "UtterRemoteMic", "UtterAudio", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterAppleSpeech", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterProcessing", "UtterMediaContracts", "UtterPresentationContracts"],
+            dependencies: ["OpenType", "UtterPresentation", "UtterIngress", "UtterBuiltins", "UtterMacServices", "UtterRemoteMic", "UtterAudio", "UtterContracts", "UtterRuntime", "UtterData", "UtterSession", "UtterModels", "UtterAppleSpeech", "UtterWhisper", "UtterMLX", "UtterANE", "UtterRemoteInference", "UtterProcessing", "UtterMediaContracts", "UtterPresentationContracts", "UtterUpdates"],
             path: "Tests/OpenTypeTests",
             swiftSettings: [
                 .swiftLanguageMode(.v5)

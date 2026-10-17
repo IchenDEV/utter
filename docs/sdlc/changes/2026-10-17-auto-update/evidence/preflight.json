@@ -1,0 +1,26 @@
+{
+  "recorded": "2026-10-17",
+  "note": "Two execution views exist. The sandboxed view has the Command Line Tools active and cannot see signing identities or mount disk images. The unrestricted view has full Xcode active. Repository-wide swift build/test runs use the sandboxed view; release-style packaging, signing, hdiutil and GUI steps use the unrestricted view with DEVELOPER_DIR set explicitly.",
+  "sandboxed": {
+    "developerDir": "CommandLineTools",
+    "swift": "Apple Swift 6.2.3",
+    "codeSigningIdentities": 0,
+    "diskImageMount": false,
+    "xcodebuild": "usable only with DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer"
+  },
+  "unrestricted": {
+    "developerDir": "Xcode.app",
+    "xcodebuild": "Xcode 27.1 (27A9275)",
+    "swift": "Apple Swift 6.4",
+    "metalToolchain": "installed",
+    "codeSigningIdentities": ["Apple Development", "Developer ID Application"],
+    "diskImageMount": true
+  },
+  "python": "3.14.6 (new scripts stay Python 3.9-compatible, standard library only)",
+  "ownerInstalledUtterRunning": true,
+  "decisions": [
+    "The owner's Developer ID and Apple Development identities are never used for test or rehearsal builds. Release-style verification uses a throwaway self-signed identity in a temporary keychain, as the plan specifies.",
+    "build-app.sh auto-detects identities when --sign is omitted, so every local invocation passes --sign explicitly.",
+    "build-and-run.sh runs pkill -x Utter and is not run on this machine, because the owner's installed app is running."
+  ]
+}

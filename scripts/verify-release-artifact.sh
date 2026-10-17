@@ -10,9 +10,13 @@ EXPECTED_CERT_SHA256=""
 REQUIRE_DEVELOPER_ID=false
 REQUIRE_SELF_SIGNED=false
 REQUIRE_NOTARIZATION=false
+REQUIRE_UPDATER=false
+UPDATE_INFO=""
+ALLOW_LOOPBACK_FEED=false
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 usage() {
-    echo "Usage: $0 --app PATH --version X.Y.Z [--dmg PATH] [--expected-cert-sha256 HEX] [--require-developer-id|--require-self-signed] [--require-notarization]"
+    echo "Usage: $0 --app PATH --version X.Y.Z [--dmg PATH] [--expected-cert-sha256 HEX] [--require-developer-id|--require-self-signed] [--require-notarization] [--require-updater --update-info PLIST [--allow-loopback-feed]]"
 }
 
 fail() {
@@ -29,6 +33,9 @@ while [ "$#" -gt 0 ]; do
         --require-developer-id) REQUIRE_DEVELOPER_ID=true; shift ;;
         --require-self-signed) REQUIRE_SELF_SIGNED=true; shift ;;
         --require-notarization) REQUIRE_NOTARIZATION=true; shift ;;
+        --require-updater) REQUIRE_UPDATER=true; shift ;;
+        --update-info) UPDATE_INFO="${2:-}"; shift 2 ;;
+        --allow-loopback-feed) ALLOW_LOOPBACK_FEED=true; shift ;;
         --help|-h) usage; exit 0 ;;
         *) usage >&2; fail "unknown argument: $1" ;;
     esac
@@ -48,6 +55,12 @@ if [ "$REQUIRE_DEVELOPER_ID" = true ] && [ "$REQUIRE_SELF_SIGNED" = true ]; then
 fi
 if [ "$REQUIRE_NOTARIZATION" = true ] && [ "$REQUIRE_DEVELOPER_ID" != true ]; then
     fail "--require-notarization also requires --require-developer-id"
+fi
+if [ "$REQUIRE_UPDATER" = true ] && [ -z "$UPDATE_INFO" ]; then
+    fail "--require-updater requires --update-info"
+fi
+if [ "$REQUIRE_UPDATER" = false ] && { [ -n "$UPDATE_INFO" ] || [ "$ALLOW_LOOPBACK_FEED" = true ]; }; then
+    fail "--update-info and --allow-loopback-feed only apply with --require-updater"
 fi
 if [ -n "$EXPECTED_CERT_SHA256" ]; then
     EXPECTED_CERT_SHA256="$(tr '[:lower:]' '[:upper:]' <<<"$EXPECTED_CERT_SHA256")"
@@ -78,6 +91,9 @@ certificate_sha256() {
     printf '%s\n' "$fingerprint"
 }
 
+# shellcheck source=scripts/verify-sparkle.sh
+source "$SCRIPT_DIR/verify-sparkle.sh"
+
 verify_app() {
     local app="$1"
     local plist="$app/Contents/Info.plist"
@@ -100,6 +116,7 @@ verify_app() {
     [ "$(lipo -archs "$executable")" = "arm64" ] || fail "Utter executable must be arm64-only"
     [ "$(lipo -archs "$helper")" = "arm64" ] || fail "CLI helper must be arm64-only"
     codesign --verify --deep --strict --verbose=2 "$app"
+    verify_sparkle_embedding "$app"
 
     if [ "$REQUIRE_DEVELOPER_ID" = true ] || [ "$REQUIRE_SELF_SIGNED" = true ]; then
         local signature

@@ -28,6 +28,7 @@ Utter is a macOS menu bar voice input app built with Swift 6 / SwiftUI / AppKit.
 | `UtterAudio/`, `UtterRemoteMic/`, `UtterMacServices/` | Capture, remote device control, OCR, target leases and transactional output |
 | `UtterAppleSpeech/`, `UtterWhisper/`, `UtterMLX/`, `UtterANE/`, `UtterRemoteInference/` | Independently registered inference providers |
 | `UtterPresentation/` | Menu, onboarding, overlay, icons and settings contributions |
+| `UtterUpdates/` | In-app updates: configuration gate, status, busy-held relaunch; Sparkle only under `Native/` |
 | `UtterEvaluation/` | Headless evaluation schema and finite budgets |
 
 Resources belong to their owner targets; `scripts/resource-bundles.json` is the packaging manifest.
@@ -49,6 +50,7 @@ Tests use owner modules directly. Construction fixtures under `Tests/OpenTypeTes
 - **Release build**: `bash scripts/build-app.sh` — uses `xcodebuild` (required for Metal shader bundling), then assembles .app and .dmg
 - **PR CI**: `.github/workflows/pr.yml` — validates SDLC artifacts, runs linked checks and unit tests, builds a release-style app, and exposes the stable `SDLC Gate` check
 - **Release CI**: `.github/workflows/release.yml` — accepts a SemVer tag on `main`, verifies either the existing self-signed identity or Developer ID, requires Apple notarization for Developer ID, and publishes the mounted-DMG-verified artifact with a checksum
+- **In-app updates**: Sparkle is embedded in every build but only armed by `build-app.sh --updates --update-info <plist>`, which merges the `SU*` keys into `Info.plist`, refuses ad-hoc signing, and makes the verifier require them. Dev, PR and manual builds carry no feed keys and never contact a server; `scripts/embed-sparkle.sh` and `scripts/verify-sparkle.sh` own the embedding, arm64 thinning and signing rules.
 - **Icon**: `scripts/generate-icon.swift` programmatically renders the icon and generates `.icns`; `Sources/UtterPresentation/App/AppIcon.swift` renders the same icon at runtime for the Dock
 
 ## SDLC Operating Contract

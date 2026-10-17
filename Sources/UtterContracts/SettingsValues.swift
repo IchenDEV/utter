@@ -71,6 +71,7 @@ package struct SettingsValues: Equatable, Sendable {
     package var developerInterfaceEnabled: Bool = false
     package var developerHTTPPort: Int = 38_765
     package var developerHTTPToken: String = ""
+    package var automaticUpdateChecks: Bool = true
 
     package init() {}
 

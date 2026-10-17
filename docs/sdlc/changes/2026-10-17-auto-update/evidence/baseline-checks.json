@@ -1,0 +1,47 @@
+{
+  "recorded": "2026-10-17",
+  "commit": "8dc954794d8f9987408ee7e3f5bfcad5c1be32e8",
+  "branch": "t3/add-auto-update-support",
+  "tree": "unchanged branch (only the SDLC change bundle untracked)",
+  "view": "unrestricted (Xcode 27.1, Swift 6.4)",
+  "results": {
+    "bash scripts/ci-basic-checks.sh": {
+      "exit": 0,
+      "last_line": "Basic CI checks passed."
+    },
+    "swift test": {
+      "exit": 0,
+      "xctest": "Executed 499 tests, with 18 tests skipped and 0 failures (0 unexpected)",
+      "swift_testing": "all suites passed",
+      "xctest_note": "The 499 above is the OpenTypeTests bundle line; totals across all bundles are below.",
+      "xctest_total_all_bundles": 1143,
+      "xctest_by_bundle": {
+        "OpenTypeTests": 499,
+        "UtterAudioTests": 20,
+        "UtterBuiltinsTests": 2,
+        "UtterContractsTests": 123,
+        "UtterDataTests": 58,
+        "UtterEvaluationTests": 7,
+        "UtterIngressTests": 12,
+        "UtterMacServicesTests": 54,
+        "UtterModelsTests": 34,
+        "UtterProcessingTests": 107,
+        "UtterRemoteInferenceTests": 89,
+        "UtterRemoteMicTests": 54,
+        "UtterRuntimeTests": 26,
+        "UtterSessionTests": 58
+      }
+    },
+    "scripts unittest groups (ci-basic-checks)": {
+      "tests": [
+        6,
+        5,
+        31
+      ]
+    }
+  },
+  "observations": [
+    "The 'error:' lines in the swift test log are CoreData/XPC store noise printed by passing tests; the run exits 0.",
+    "Pre-existing failures: none. Any later failure is attributable to this change."
+  ]
+}

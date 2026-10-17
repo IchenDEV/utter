@@ -520,6 +520,17 @@
 "about.subtitle" = "智能语音输入";
 "about.body" = "基于 WhisperKit 与 MLX 的本地化语音输入方案。\n语音识别、智能整理、个人词库，全部在设备端完成。";
 "about.feedback" = "反馈";
+"update.section" = "更新";
+"update.check" = "检查更新…";
+"update.menu.available" = "有可用更新 — v%@";
+"update.menu.pending" = "更新就绪 — 空闲时安装";
+"update.automatic" = "自动检查更新";
+"update.status.checking" = "正在检查更新…";
+"update.status.up_to_date" = "Utter 已是最新版本。";
+"update.status.available" = "版本 %@ 可用。";
+"update.status.pending" = "版本 %@ 将在 Utter 空闲时安装。";
+"update.status.failed" = "检查更新失败，请稍后重试。";
+"update.privacy" = "检查更新只会向 GitHub 发送一次获取更新源的请求，不会发送用户资料、标识符或使用数据。只有在你选择“安装更新”后才会安装。";
 
 /* ── Errors ── */
 "error.whisper_not_loaded" = "Whisper 模型未加载: %@";
