@@ -32,7 +32,7 @@ EXPECTED = f"""<?xml version="1.0" encoding="utf-8"?>
       <sparkle:shortVersionString>0.0.56</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
       <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-      <description>Fix A &amp; B
+      <description sparkle:format="plain-text">Fix A &amp; B
 Add &lt;C&gt; "D"</description>
       <enclosure url="https://github.com/IchenDEV/utter/releases/download/v0.0.56/Utter-0.0.56.dmg" sparkle:edSignature="{SIGNATURE}" length="{DMG_SIZE}" type="application/octet-stream"/>
     </item>
@@ -90,6 +90,10 @@ class AppcastTests(unittest.TestCase):
         self.assertEqual(enclosure.get("length"), str(DMG_SIZE))
         self.assertEqual(
             root.find(".//sparkle:version", namespace).text, VERSION)
+        description = root.find(".//item/description")
+        self.assertEqual(description.get("{http://www.andymatuschak.org/xml-namespaces/sparkle}format"),
+                         "plain-text")
+        self.assertEqual(description.text, 'Fix A & B\nAdd <C> "D"')
 
     def test_dmg_comes_from_the_verified_app_not_a_second_source(self):
         # The version in the feed is the app plist's, cross-checked against the tag.

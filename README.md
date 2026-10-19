@@ -131,7 +131,7 @@ The public app is `Utter.app`. The Swift package product remains `OpenType` so e
 
 Utter checks for updates once a day; you can also check manually from **Settings → About** or the menu bar row ("Check for Updates…"). Automatic checks are on by default and can be turned off in the same place.
 
-A check is one HTTPS GET of the release feed on GitHub. Installing an update is one GET of the DMG. Nothing else is sent: no profile, no identifier, no usage data. Updates are signed with Ed25519 and verified before they are offered, and nothing is downloaded or installed until you choose **Install Update** in the standard update alert.
+A check fetches the release feed from GitHub over HTTPS and may follow GitHub CDN redirects. GitHub receives your IP address and Sparkle's User-Agent with the app and Sparkle versions. The check sends no audio, text, history, system profile, or persistent identifier. Sparkle verifies the feed's Ed25519 signature before showing an update. After you choose **Install Update**, it downloads the DMG and verifies it before extraction and installation.
 
 The first release that carries the updater has to be installed manually once. After that, updates apply in place and keep your permissions, settings and history.
 

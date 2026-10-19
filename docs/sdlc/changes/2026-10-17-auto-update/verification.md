@@ -9,7 +9,8 @@
 `verification.md` is approved once per PR (plan, "One bundle, two
 verifications"). It holds **Part B, enable updates**. Part A (PR #127, dormant
 integration) is merged as `077f6d8`; its approved record is in git history and in
-PR #127. Part B is `d994b9b` on `t3/enable-auto-update`.
+PR #127. Part B starts at `d994b9b` on `t3/enable-auto-update`, with the
+2026-10-19 corrections recorded below. Verification approval is still pending.
 
 ## Scope of Part B
 
@@ -41,8 +42,10 @@ exported, printed or written to the repository.
 
 ## Key ceremony
 
-The owner generated the key pair in the login keychain and instructed the agent
-to install the secret. The agent never handled the key material in the clear:
+The owner explicitly instructed the agent to generate the key pair and then
+install the secret. Generation used Sparkle's tool and the login keychain.
+This overrides the approved intent's owner-only ceremony for this task. The
+private key never entered the transcript or repository:
 
 1. `generate_keys -x <0600 temp file>` wrote the private key to a temporary file
    that was never read into the transcript, then
@@ -60,7 +63,71 @@ to install the secret. The agent never handled the key material in the clear:
 the secret was set, so the login keychain remains the only local copy. Recorded
 as residual risk 1.
 
-## Evidence
+## Resume verification, 2026-10-19
+
+The current run uses Xcode 27.1 explicitly through `DEVELOPER_DIR`. The remote
+`main` is still `077f6d8`; the production environment lists
+`SPARKLE_ED_PRIVATE_KEY`, last updated 2026-10-17. No production key was exported
+or used during this run. Results are in
+[`evidence/part-b-resume-checks.json`](evidence/part-b-resume-checks.json).
+
+Resolved findings from the independent review:
+
+- Both release-workflow verifier calls omitted `--require-updater`, causing
+  armed builds to fail as inert. Both now name the committed update template.
+  The literal-step fixture fails four cases on the old workflow and passes on
+  the correction. See
+  [`evidence/part-b-workflow-before-fix.txt`](evidence/part-b-workflow-before-fix.txt).
+- Release notes now declare `sparkle:format="plain-text"`. The golden test
+  failed before this correction and now checks both format and decoded text.
+- The complete pinned Sparkle `LICENSE`, including its external notices, now
+  ships inside the framework before signing. The artifact verifier rejects a
+  missing notice, covered by a fixture test.
+- Rotation docs account for signed-feed rejection and Sparkle's default
+  20-day recovery delay. READMEs distinguish feed validation from archive
+  validation and disclose IP address, User-Agent, and CDN redirects.
+
+Fresh checks passed: `sdlc-checks.sh`; `ci-basic-checks.sh` with 67 Python tests;
+`swift test --skip-update --disable-automatic-resolution -j 4`, with 1193 XCTest
+tests, 18 skips, zero failures, plus one Swift Testing test; a release-style
+armed app and DMG build with a throwaway self-signed identity; mounted-DMG
+verification with `--require-updater` and plist extraction; and the literal
+metadata-step dry run with a throwaway EdDSA key. `Package.resolved` retained
+SHA-256 `a4443ef840b345d8873b9c0f0a37d8c7dfc6ed6c6045e25f76965cb6d3e484e9`.
+The build and native tests did not use the owner's Developer ID identity.
+
+The independent verifier reran the generator, lock, signature, workflow, and
+artifact fixtures, and tested publication failures without remote writes. Its
+archive checksum check passed; a fresh GitHub asset-digest comparison was
+blocked by an unauthenticated HTTP 403 rate limit. See
+[`evidence/part-b-independent-review.md`](evidence/part-b-independent-review.md).
+
+The owner approved temporary keychains and isolated GUI rehearsal in chat.
+`scripts/rehearse-updates.py` prepared signed versions 0.0.55, 0.0.56, and 0.0.57
+with a distinct bundle identifier, private home and model caches, and loopback
+feed. The packaged 0.0.56 process launched and automatically fetched the signed
+same-version feed. The captured request has no query or body and includes
+`Accept-Language` and `User-Agent: Utter Rehearsal/0.0.56 Sparkle/2.10.0`. See
+[`evidence/part-b-rehearsal-request.json`](evidence/part-b-rehearsal-request.json).
+This proves launch and a real feed request, not an installation or UI result.
+
+GUI interaction is blocked by the locked macOS session, confirmed by
+`CGSSessionScreenIsLocked=true`. CUA returned `cgWindowNotFound` for the
+rehearsal app and System Settings, and timed out on another window lookup.
+The owner was asked to unlock the desktop. No install button or permission
+prompt has been clicked. S1-S13 and visual acceptance remain pending.
+The rehearsal app and server were stopped before handoff. Both temporary
+keychains and generated private fixture seeds were deleted. The user keychain
+search list still contains only the login keychain. Signed fixture apps and
+feeds remain under `.build/auto-update-resume-20261019/gui` for resumption.
+
+`ANTI_SLOP.md` was reread completely before handoff. This correction adds no
+custom interface, font, layout, or motion. Release-note text format is checked,
+and localization parity passes. Real control behavior, contrast, alignment,
+clipping, keyboard operation, both languages, and light/dark/narrow-window QA
+remain unverified while locked. No visual acceptance is claimed.
+
+## Earlier evidence, 2026-10-17
 
 | Check | Result | Evidence |
 |---|---|---|
@@ -93,7 +160,7 @@ does not link Sparkle.
 | Criterion | Status |
 |---|---|
 | Newer feed version reported with version; same or older is up to date | Unit-level from Part A. **Real feed through Sparkle: rehearsal S1, S2, S7 — not run.** |
-| Menu and About manual check, four states, `en` and `zh-Hans`, real-window evidence | Projection and presentation tests; localization parity passes. **Real-window evidence: rehearsal — not run.** |
+| Menu and About manual check, four states, `en` and `zh-Hans`, real-window evidence | Projection and presentation tests; localization parity passes. **Real-window evidence: blocked by lockscreen.** |
 | Background checks on by default, persisted, off means no request, consent before install | Default and persistence tests from Part A; `SUEnableAutomaticChecks=true`, `SUAllowsAutomaticUpdates=false`, `SUAutomaticallyUpdate=false` in the committed template and enforced by the lint. **Zero requests when off: rehearsal S9 — not run.** |
 | Negative cases leave the install untouched | Generator, verifier and workflow-level refusals above. **Tampered archive, bad EdDSA, unsigned feed, downgrade and different identity on a running app: rehearsal S4–S8 — not run.** |
 | New version shown after relaunch; permissions persist | **Rehearsal S2, S3 and the first real update — not run.** |
@@ -101,16 +168,16 @@ does not link Sparkle.
 | Network request matches the docs | **Rehearsal — not run.** |
 | Release workflow fail-closed metadata | Done: secret required before any build, tools digest verified before execution, the key only on stdin, both signatures independently verified against the shipped public key, appcast uploaded to the draft and compared after download. |
 | Rollback written | `github-controls.md` (withdraw, rotate, quarterly audit) and `release-runbook.md` (update metadata, stop conditions). **Rehearsed rollback (S13): not run.** |
-| Independent verifier | **Not yet commissioned.** |
+| Independent verifier | Source and risk-critical local checks complete on 2026-10-19; GUI and production gaps remain. |
 
 ## Rehearsal (S1 to S14)
 
-**Not run.** It needs the owner at the machine: Utter must be quit (the hotkey
-and XPC names are shared), a temporary keychain must be accepted, and the
-scenarios need GUI interaction (Sparkle's alert, Install Update, the App
-Management prompt) plus light/dark/narrow screenshots in `en` and `zh-Hans`.
-The procedure is in the plan. This is the remaining gate before Part B can be
-approved and the PR opened.
+**Partially started on 2026-10-19.** Owner consent and app shutdown are complete,
+and the isolated packaged app launches and fetches the local signed feed.
+S14 launch is observed at process/network level. S1-S13, visible settings,
+Sparkle alerts, App Management, and light/dark/narrow screenshots in `en` and
+`zh-Hans` require an unlocked desktop. The procedure is in the plan. This remains
+a gate before verification approval and opening PR B.
 
 ## Spec and plan discrepancies to confirm
 
@@ -141,13 +208,13 @@ approved and the PR opened.
    first production proof.
 4. **The first updater release must be installed manually once**, as both READMEs
    now say.
-5. **Sparkle's license notice is still not shipped inside the app** (Part A
-   residual risk, unchanged).
+5. **Signed-feed key recovery is delayed.** The single-key pipeline has no
+   immediate in-app key-rotation bridge. Manual installation is the immediate
+   fallback, documented in `github-controls.md`.
 
 ## Decision
 
-Implementation, tests and local evidence for Part B are recorded. The GUI
-rehearsal (S1 to S14) has not been run and needs the owner, and the independent
-verifier has not been commissioned; until both are recorded this file is not
-ready for approval. Everything claimed above was actually run; nothing is
-claimed that was not.
+Implementation corrections, fresh tests, signed local packaging, and independent
+technical review are recorded. GUI rehearsal is blocked by the locked desktop.
+This file remains pending approval and is not yet ready for approval. No PR B,
+merge, tag, or release has been created by this resumed run.

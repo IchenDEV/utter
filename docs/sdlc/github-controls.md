@@ -58,10 +58,18 @@ The agent never handles the private key; the owner runs the ceremony:
 
 The pipeline fails closed when the secret is missing, and the independent
 CryptoKit check in the `Sign update metadata` step fails when the secret does
-not match the committed public key. Because Sparkle accepts either a valid
-EdDSA signature or a matching Developer ID signature, rotation is a release
-signed with Developer ID that carries a new `SUPublicEDKey`; the quarterly audit
-below confirms the secret still exists.
+not match the committed public key. Preserve an offline backup before shipping.
+The quarterly audit below confirms the secret still exists.
+
+To recover after key loss, publish a Developer ID signed DMG carrying the new
+`SUPublicEDKey` and direct users to install it manually. This app requires a
+signed feed, so existing clients reject a feed signed only with the new key.
+Sparkle 2.10 defaults to a 20-day recovery interval after each client's first
+feed-signature failure. Only after that interval can it offer the replacement
+through the matching Developer ID signature, without release notes. The current
+single-key pipeline does not provide an immediate in-app rotation bridge.
+Do not promise uninterrupted rotation without a separately reviewed bridge.
+See [Sparkle's signed-feed recovery settings](https://sparkle-project.org/documentation/customization/#security-settings).
 
 ## Release operation
 
@@ -94,8 +102,8 @@ carries its own immutable one-item feed.
 - **Code rollback:** revert the update integration in a normal PR; already
   installed copies keep polling the feed, so withdrawal above is the control
   point that decides what they are offered.
-- **Rotation:** see the key ceremony above. A Developer ID signed release can
-  carry a new `SUPublicEDKey`.
+- **Rotation:** follow the recovery procedure above. Offer a manual installation
+  immediately and account for the signed-feed recovery delay on existing clients.
 - **First updater release:** users install it manually once. Only the release
   after it is the first real in-app update, and permissions, launch-at-login and
   restart behavior are observed on a real Developer ID install.

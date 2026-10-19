@@ -100,7 +100,7 @@ def build(tag, version, url, signature, length, notes, pub_date, title):
         f"      <sparkle:hardwareRequirements>{HARDWARE_REQUIREMENTS}</sparkle:hardwareRequirements>",
     ]
     if notes:
-        lines.append(f"      <description>{escape(notes)}</description>")
+        lines.append(f'      <description sparkle:format="plain-text">{escape(notes)}</description>')
     lines.append(
         f"      <enclosure url={quoteattr(url)} sparkle:edSignature={quoteattr(signature)}"
         f' length="{length}" type="application/octet-stream"/>'

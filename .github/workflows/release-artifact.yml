@@ -175,6 +175,7 @@ jobs:
             --dmg "dist/Utter-$RELEASE_VERSION.dmg"
             --version "$RELEASE_VERSION"
             --expected-cert-sha256 "$SIGN_CERT_SHA256"
+            --require-updater --update-info Resources/UpdateInfo.plist
           )
           if grep -q '^Authority=Developer ID Application:' <<<"$SIGNATURE"; then
             SIGNING_MODE=developer-id
@@ -229,6 +230,7 @@ jobs:
             --dmg "$DMG"
             --version "$RELEASE_VERSION"
             --expected-cert-sha256 "$SIGN_CERT_SHA256"
+            --require-updater --update-info Resources/UpdateInfo.plist
             --dump-app-plist "$RUNNER_TEMP/dmg-app-Info.plist"
           )
           if [ "$SIGNING_MODE" = "developer-id" ]; then

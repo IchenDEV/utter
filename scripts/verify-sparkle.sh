@@ -13,6 +13,7 @@ verify_sparkle_embedding() {
     local file loads links
 
     [ -d "$framework" ] || fail "missing Sparkle.framework in $app"
+    [ -s "$framework/Versions/B/Resources/LICENSE" ] || fail "missing Sparkle license notice in $app"
     [ -z "$(find "$framework" \( -name XPCServices -o -name '*.xpc' \) -print -quit)" ] \
         || fail "Sparkle XPC services must not be bundled in $app"
     while IFS= read -r file; do
