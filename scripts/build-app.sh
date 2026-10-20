@@ -8,8 +8,9 @@
 # Usage:
 #   ./scripts/build-app.sh              # build .app + .dmg
 #   ./scripts/build-app.sh --app-only   # build .app only
-#   ./scripts/build-app.sh --updates --update-info=PLIST --sign=IDENTITY
-#                                       # also arm the in-app updater (release builds only)
+#   ./scripts/build-app.sh --updates --sign=IDENTITY
+#                                       # arm the in-app updater with the committed
+#                                       # Resources/UpdateInfo.plist (release builds only)
 #   ./scripts/build-app.sh --help       # show help
 #
 # Requirements:
@@ -60,14 +61,16 @@ for arg in "$@"; do
         --update-info=*) UPDATE_INFO="${arg#*=}" ;;
         --allow-loopback-feed) ALLOW_LOOPBACK_FEED=true ;;
         --help|-h)
-            echo "Usage: $0 [--version=X.Y.Z] [--app-only] [--sign=IDENTITY] [--updates --update-info=PLIST] [--help]"
+            echo "Usage: $0 [--version=X.Y.Z] [--app-only] [--sign=IDENTITY] [--updates [--update-info=PLIST]] [--help]"
             echo ""
             echo "  --version=X.Y.Z    Set version (default: latest git tag, or \$VERSION env)"
             echo "  --app-only         Build .app bundle only, skip DMG creation"
             echo "  --sign=IDENTITY    Code signing identity (default: auto-detect)"
             echo "                     Use '--sign=-' to force ad-hoc signing"
-            echo "  --updates          Arm the in-app updater (needs --update-info=PLIST of SU* keys and a"
-            echo "                     real signing identity). Without it the app never checks for updates."
+            echo "  --updates          Arm the in-app updater with the committed"
+            echo "                     Resources/UpdateInfo.plist and a real signing identity."
+            echo "                     Override the template with --update-info=PLIST."
+            echo "                     Without --updates the app never checks for updates."
             echo "  --allow-loopback-feed  Accept an http loopback feed (rehearsal builds only)"
             echo "  --help             Show this help"
             exit 0

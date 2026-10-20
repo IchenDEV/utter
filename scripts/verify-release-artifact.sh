@@ -13,10 +13,11 @@ REQUIRE_NOTARIZATION=false
 REQUIRE_UPDATER=false
 UPDATE_INFO=""
 ALLOW_LOOPBACK_FEED=false
+DUMP_APP_PLIST=""
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 usage() {
-    echo "Usage: $0 --app PATH --version X.Y.Z [--dmg PATH] [--expected-cert-sha256 HEX] [--require-developer-id|--require-self-signed] [--require-notarization] [--require-updater --update-info PLIST [--allow-loopback-feed]]"
+    echo "Usage: $0 --app PATH --version X.Y.Z [--dmg PATH] [--expected-cert-sha256 HEX] [--require-developer-id|--require-self-signed] [--require-notarization] [--require-updater --update-info PLIST [--allow-loopback-feed]] [--dump-app-plist PATH]"
 }
 
 fail() {
@@ -36,6 +37,7 @@ while [ "$#" -gt 0 ]; do
         --require-updater) REQUIRE_UPDATER=true; shift ;;
         --update-info) UPDATE_INFO="${2:-}"; shift 2 ;;
         --allow-loopback-feed) ALLOW_LOOPBACK_FEED=true; shift ;;
+        --dump-app-plist) DUMP_APP_PLIST="${2:-}"; shift 2 ;;
         --help|-h) usage; exit 0 ;;
         *) usage >&2; fail "unknown argument: $1" ;;
     esac
@@ -61,6 +63,9 @@ if [ "$REQUIRE_UPDATER" = true ] && [ -z "$UPDATE_INFO" ]; then
 fi
 if [ "$REQUIRE_UPDATER" = false ] && { [ -n "$UPDATE_INFO" ] || [ "$ALLOW_LOOPBACK_FEED" = true ]; }; then
     fail "--update-info and --allow-loopback-feed only apply with --require-updater"
+fi
+if [ -n "$DUMP_APP_PLIST" ] && [ -z "$DMG_PATH" ]; then
+    fail "--dump-app-plist requires --dmg"
 fi
 if [ -n "$EXPECTED_CERT_SHA256" ]; then
     EXPECTED_CERT_SHA256="$(tr '[:lower:]' '[:upper:]' <<<"$EXPECTED_CERT_SHA256")"
@@ -209,6 +214,11 @@ if [ -n "$DMG_PATH" ]; then
     mounted=true
     verify_app "$mount_point/Utter.app"
     compare_app_bundles "$APP_PATH" "$mount_point/Utter.app"
+    if [ -n "$DUMP_APP_PLIST" ]; then
+        # The appcast must describe the artifact inside the verified DMG, not a
+        # second copy that happened to be lying around.
+        cp "$mount_point/Utter.app/Contents/Info.plist" "$DUMP_APP_PLIST"
+    fi
     hdiutil detach "$mount_point" -quiet
     mounted=false
     rmdir "$mount_point"

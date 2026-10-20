@@ -12,6 +12,7 @@ NAME="Utter Rehearsal Signing"
 create() {
     local dir="$1" pass
     mkdir -p "$dir/bin"
+    dir="$(cd "$dir" && pwd)"
     pass="$(openssl rand -hex 16)"
     cat > "$dir/openssl.cnf" <<EOF
 [ req ]

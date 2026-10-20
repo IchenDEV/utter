@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Committed update keys merged into Utter.app by build-app.sh when the updater
+  is armed. They are deliberately not in Info.plist, so a development, PR or
+  manual build carries no feed and can never update itself into a production
+  release. The public key here must match the SPARKLE_ED_PRIVATE_KEY secret; the
+  release pipeline proves that before publishing.
+-->
+<plist version="1.0">
+<dict>
+	<key>SUFeedURL</key>
+	<string>https://github.com/IchenDEV/utter/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>XbBUmoegXl8DL7141ASPz4CHVrkAk6CyGiHkUfkLUww=</string>
+	<key>SURequireSignedFeed</key>
+	<true/>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUAllowsAutomaticUpdates</key>
+	<false/>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
+	<key>SUSendProfileInfo</key>
+	<false/>
+</dict>
+</plist>

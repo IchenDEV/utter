@@ -1,0 +1,11 @@
+From /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.wmhw7PEsIk/origin
+ * branch            main       -> FETCH_HEAD
+From /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.wmhw7PEsIk/origin
+ * branch            main       -> FETCH_HEAD
+Signing mode: developer-id
+FAIL: bash -e /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.wmhw7PEsIk/classify.sh
+FAIL: env SIGNING_MODE=developer-id bash -e /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.wmhw7PEsIk/distribution.sh
+Signing mode: self-signed
+FAIL: bash -e /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.wmhw7PEsIk/classify.sh
+FAIL: env SIGNING_MODE=self-signed bash -e /var/folders/8w/4lcbknl57rj88rn6_lqdk50r0000gn/T/tmp.wmhw7PEsIk/distribution.sh
+4 release contract checks failed.

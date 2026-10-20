@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Sourced by build-app.sh. Owns --updates, --update-info and --allow-loopback-feed.
-# The caller sets SCRIPT_DIR, UPDATES, UPDATE_INFO, ALLOW_LOOPBACK_FEED and SIGN_IDENTITY.
+# The caller sets SCRIPT_DIR, PROJECT_DIR, UPDATES, UPDATE_INFO, ALLOW_LOOPBACK_FEED
+# and SIGN_IDENTITY.
 
 UPDATE_GATE_FLAGS=()
 VERIFY_UPDATER_ARGS=()
@@ -10,7 +11,7 @@ update_fail() { echo "error: $1" >&2; exit 1; }
 # validate_update_options — refuse bad combinations and lint the plist before the long build.
 validate_update_options() {
     if [ "$UPDATES" = true ] && [ -z "$UPDATE_INFO" ]; then
-        update_fail "--updates requires --update-info=PLIST"
+        UPDATE_INFO="${PROJECT_DIR}/Resources/UpdateInfo.plist"
     fi
     if [ "$UPDATES" = false ] && { [ -n "$UPDATE_INFO" ] || [ "$ALLOW_LOOPBACK_FEED" = true ]; }; then
         update_fail "--update-info and --allow-loopback-feed only apply with --updates"

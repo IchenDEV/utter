@@ -1,0 +1,15 @@
+[
+  {
+    "time": 1792378909.8161201,
+    "request": "GET /appcast.xml HTTP/1.1",
+    "headers": {
+      "Host": "127.0.0.1:18739",
+      "Accept": "application/rss+xml,*/*;q=0.1",
+      "Accept-Language": "zh-SG,zh-CN;q=0.9,zh-Hans;q=0.8",
+      "Connection": "keep-alive",
+      "Accept-Encoding": "gzip, deflate",
+      "User-Agent": "Utter Rehearsal/0.0.56 Sparkle/2.10.0"
+    },
+    "result": "\"GET /appcast.xml HTTP/1.1\" 200 -"
+  }
+]
