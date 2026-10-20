@@ -15,6 +15,25 @@ merge on 2026-10-21 after receiving the results and remaining test list.
 Deferred tests remain unverified. A protected production approval must name
 the actual workflow run separately.
 
+## Delivery progress, 2026-10-21
+
+PR #129 merged the independently reviewed dormant packaging and Settings
+corrections as `39391a6224c3e3c09cedf2e5069ab8663ec87254`. Its exact source head
+`1edb28da76e9e2e55a29d2c1ebacb6445c0df6fd` passed Contract & Tests,
+Release-style App Build and SDLC Gate in
+[run 39460559529](https://github.com/IchenDEV/utter/actions/runs/39460559529).
+The dormant [delivery record](evidence/dormant-delivery-20261021.json) and
+[independent review](evidence/dormant-independent-review-20261021.md) are retained.
+Production signing, notarization and published-artifact verification remain
+pending. PR #128 stays draft until that release is verified.
+
+PR #128 source head `ca7356cc3d69f37a42c822153529caf69ad768a8` passed the same
+three checks in
+[run 39459653509](https://github.com/IchenDEV/utter/actions/runs/39459653509).
+Merging current main changes documentation only relative to that candidate;
+CI must pass again on the resulting head. The owner repeated the instruction
+to merge and release automatically; protected approvals still name each run.
+
 ## Scope of Part B
 
 Updates are turned on for release builds only. `Resources/UpdateInfo.plist`

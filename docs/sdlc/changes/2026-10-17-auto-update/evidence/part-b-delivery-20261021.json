@@ -35,5 +35,19 @@
     "Complete keyboard/focus interaction",
     "Aqua same-version alert visual capture"
   ],
-  "rollback": "Withdraw the bad release from latest and restore the previous known-good release; do not delete evidence or replace published same-version assets."
+  "rollback": "Withdraw the bad release from latest and restore the previous known-good release; do not delete evidence or replace published same-version assets.",
+  "automation_owner_instruction": "自动merge 并 relese",
+  "part_b_pre_sync_ci": {
+    "source_head": "ca7356cc3d69f37a42c822153529caf69ad768a8",
+    "run": 39459653509,
+    "result": "all three checks passed"
+  },
+  "dormant_delivery": {
+    "pull_request": 129,
+    "source_head": "1edb28da76e9e2e55a29d2c1ebacb6445c0df6fd",
+    "ci_run": 39460559529,
+    "ci_result": "all three checks passed",
+    "merge_commit": "39391a6224c3e3c09cedf2e5069ab8663ec87254",
+    "production_result": "pending"
+  }
 }
