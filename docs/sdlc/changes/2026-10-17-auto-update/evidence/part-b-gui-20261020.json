@@ -1,0 +1,346 @@
+{
+  "recorded_at": "2026-10-20T15:22:41.034407+00:00",
+  "fixture_root": ".build/auto-update-resume-20261019/gui-settings",
+  "baseline_version": "0.0.56",
+  "baseline_executable_sha256": "6f47b5121b9a4b7a43eca7ee867abe818c508fb1e5577b67ffcc93707fb5d7f4",
+  "observations": [
+    {
+      "scenario": "Settings menu",
+      "result": "passed",
+      "observed": "App menu Settings invokes the real Utter Settings window. Navigation entries including General and About are accessible through the toolbar overflow menu. The desired sidebar is not present. This describes the initial candidate; later grouped navigation removes the overflow."
+    },
+    {
+      "scenario": "S1 same version",
+      "result": "passed",
+      "observed": "About says Utter is up to date. Manual check shows Sparkle alert: Utter Rehearsal 0.0.56 is currently the newest version available."
+    },
+    {
+      "scenario": "S6 unsigned feed",
+      "result": "passed",
+      "observed": "Sparkle: The update feed is improperly signed and could not be validated. About then reports the update check failed.",
+      "installed_version": "0.0.56",
+      "executable_unchanged": true
+    },
+    {
+      "scenario": "S5 bad archive EdDSA signature",
+      "result": "passed",
+      "observed": "Valid signed feed offered 0.0.57. After Install Update, Sparkle rejected the archive as improperly signed. Release notes rendered all three lines as plain text, including <C> and Chinese.",
+      "installed_version": "0.0.56",
+      "executable_unchanged": true
+    },
+    {
+      "scenario": "S4 tampered DMG",
+      "result": "passed",
+      "observed": "Valid signed feed offered 0.0.57. After Install Update, Sparkle rejected the modified DMG as improperly signed.",
+      "installed_version": "0.0.56",
+      "executable_unchanged": true
+    },
+    {
+      "scenario": "S7 older version",
+      "result": "passed",
+      "observed": "Sparkle says 0.0.55 is newest available while explicitly reporting the running 0.0.56. No Install Update button or downgrade is offered."
+    },
+    {
+      "scenario": "S9 automatic checks toggle",
+      "result": "passed with controlled due-check timestamp",
+      "observed": "The UI-off value persisted across restart. With the rehearsal-only SULastCheckTime removed, there were zero requests for 434.3 seconds while off. Enabling caused one appcast request, About reported 0.0.57 available, and no download or alert started.",
+      "new_requests": [
+        "GET /appcast.xml HTTP/1.1"
+      ]
+    },
+    {
+      "scenario": "Cmd+, after restart",
+      "result": "passed",
+      "observed": "Keyboard shortcut opened the real settings window after app restart."
+    },
+    {
+      "scenario": "S2 newer update install and relaunch",
+      "result": "passed",
+      "observed": "0.0.56 offered 0.0.57 only after a manual check. Install Update downloaded and extracted the DMG. Install and Relaunch replaced the test bundle and relaunched a new process. About displays v0.0.57. Deep strict codesign verification passed.",
+      "installed_version": "0.0.57",
+      "new_pid": 61160,
+      "app_management_prompt": "not shown for writable rehearsal path; no new permission was granted"
+    },
+    {
+      "scenario": "S3 preference persistence",
+      "result": "partial",
+      "observed": "The Chinese interface and automatic checks enabled value survived the update. Launch at login remained off. Accessibility, microphone, speech, and screen permissions remained ungranted. This does not prove persistence of granted TCC permissions or enabled login registration."
+    },
+    {
+      "scenario": "S14 packaged app launch",
+      "result": "passed",
+      "observed": "Both 0.0.56 and the Sparkle-installed 0.0.57 launched visible native windows."
+    },
+    {
+      "scenario": "Native grouped navigation, English dark",
+      "result": "passed",
+      "observed": "Real 760-point Settings window shows all eight named tabs simultaneously. About opens with one click. Update privacy text is readable and wraps to two complete lines. No toolbar overflow remains. Cmd+, opens the window. Ctrl+Tab did not change the selected tab; full keyboard traversal is not claimed."
+    },
+    {
+      "scenario": "S13 withdrawn latest / rollback feed",
+      "result": "passed",
+      "observed": "A signed 0.0.55 client first received an offer for 0.0.57. After Remind Me Later and replacing the active feed with the signed earlier 0.0.56 feed, manual checking offered 0.0.56. The installed version remained 0.0.55. This is feed withdrawal for older clients, not a downgrade of installed newer clients."
+    },
+    {
+      "scenario": "Chinese grouped navigation hot switch",
+      "result": "passed after correction on latest candidate",
+      "observed": "Before correction, English to Chinese collapsed native tab titles to ellipses; reopening restored them. On the latest gui-final candidate, replacing the hosting view left all eight Chinese labels visible without reopening. General and About were inspected in dark appearance. Reverse switching and light appearance remain pending. No automated locale-refresh regression is claimed."
+    },
+    {
+      "scenario": "S11 interrupted installer",
+      "result": "passed at observed post-host-exit interruption point",
+      "observed": "From 0.0.55, the user-confirmed valid 0.0.56 installer reached Ready to Install. After Install and Relaunch and observed host exit, SIGKILL was sent to the exact isolated Autoupdate process. The resulting 0.0.56 bundle passed deep strict signature verification and displayed a native app window. The test does not cover every possible instruction inside atomic replacement.",
+      "injection": {
+        "stage": "Install and Relaunch committed; installer killed when host exits",
+        "host_pid": 84831,
+        "installer_pid": 89933,
+        "initial_version": "0.0.55",
+        "armed_at": 1792511773.0419042,
+        "host_exit_observed_at": 1792511779.384351,
+        "installer_killed_at": 1792511779.482563,
+        "interruption_sent": true
+      },
+      "resulting_version": "0.0.56",
+      "signature_exit": 0
+    },
+    {
+      "scenario": "S8 insecure remote HTTP configuration",
+      "result": "passed",
+      "observed": "A freshly signed fixture has SUFeedURL=http://updates.example.invalid/appcast.xml. Its real About window omits the entire Updates section and manual-check control. The production configuration gate unit tests also reject non-loopback HTTP. No remote-network packet capture was made."
+    },
+    {
+      "scenario": "Latest language/appearance matrix",
+      "result": "passed for changed surfaces",
+      "observed": "Final CFBundleLocalizations candidate shows eight full tabs and readable update/privacy content in English/Chinese and light/dark. Sparkle update-offer windows were inspected in all four combinations. Aqua-only signed clones used no global appearance change. Screenshots/AX are in the native CUA transcript. This does not cover every pre-existing settings section or failure dialog."
+    },
+    {
+      "scenario": "Chinese to English hot switch",
+      "result": "passed",
+      "observed": "The existing Aqua settings window switched from Chinese to English with all eight full labels, General still selected, and readable General/About content. The window was not closed."
+    },
+    {
+      "scenario": "Final localized candidate install and relaunch",
+      "result": "passed",
+      "observed": "Signed 0.0.56 Aqua clone offered 0.0.57 in Chinese, downloaded after consent, reached native Chinese Install and Relaunch, and restarted as the normal dark 0.0.57 app. About showed 0.0.57. Deep strict signature verification passed.",
+      "artifact_result": {
+        "version": "0.0.57",
+        "signature_exit": 0,
+        "bundle_localizations": [
+          "en",
+          "zh-Hans"
+        ],
+        "requires_aqua_key": null,
+        "executable_sha256": "8a737331f742aee268ab215ac1015d78ad72d76052f7822bc2e2394c9fdcf2e8"
+      }
+    },
+    {
+      "scenario": "Aqua same-version alert image",
+      "result": "capture limitation",
+      "observed": "AX reported the correct up-to-date alert and OK button; Return dismissed it and About showed up to date. CUA returned blank white images twice for this alert. No visual acceptance of this particular alert is claimed."
+    },
+    {
+      "scenario": "Permission deferral and cleanup",
+      "result": "deferred by owner; temporary microphone grant revoked",
+      "observed": "The microphone Grant action was invoked. The tool refused UserNotificationCenter access for safety reasons. Owner explicitly declined further permissions and requested preserving pending tests. At exit, About showed microphone granted, without the agent clicking any system Allow control. The exact rehearsal bundle Microphone status was reset with tccutil, and a fresh native About inspection showed Grant again. Accessibility, Speech and Screen controls also remained Grant. The app then quit. No audio recording was started."
+    }
+  ],
+  "pending": [
+    "S3 granted TCC and enabled launch-at-login persistence, deferred by owner",
+    "S10 real recording-busy restart, deferred by owner",
+    "S12 App Management prompt on protected install path",
+    "Complete keyboard/focus operation",
+    "Aqua same-version alert visual capture, AX passed but image was blank",
+    "Part B verification approval and first production Developer ID update"
+  ],
+  "screenshots": "Native CUA screenshots and AX observations are in the parent thread tool transcript. No standalone screenshot files were saved.",
+  "s9_observation": {
+    "automatic_checks_off_verified_in_ui": true,
+    "off_window_start_unix": 1792509970.4348328,
+    "off_window_initial_requests": 8,
+    "off_window_end_unix": 1792510001.781832,
+    "off_window_seconds": 31.3,
+    "off_window_final_requests": 8,
+    "off_window_requests": 0,
+    "limitation": "Bounded observation while disabled; does not by itself prove all future schedules.",
+    "fresh_start_requests_before": 8,
+    "fresh_start_unix": 1792510044.510849,
+    "fresh_start_off_seconds": 434.3,
+    "fresh_start_off_requests": 0,
+    "on_start_unix": 1792510478.848474,
+    "on_initial_requests": 8,
+    "on_observed_seconds": 40.1,
+    "on_requests": [
+      "GET /appcast.xml HTTP/1.1"
+    ]
+  },
+  "updated_bundle_plist_sha256": "6fbacbd5b226c378ce9f648896eab353e27acc04d523ba355c5bd29b9b9dc557",
+  "independent_source_review": {
+    "task_id": "node:delegated-task:command%3Amcp%3A6c56e53b-052e-4d79-afcf-d0662f5b8ef3%3Adelegate-task%3Autter-update-gui-review-20261020-01",
+    "result": "No actionable source findings. No concrete Cmd+, ownership, observer-lifetime, or restoration defect. git diff --check passed. No GUI, builds, or tests run by verifier. Latest grouped navigation and secondary text still require fresh GUI proof."
+  },
+  "gui_corrections": {
+    "native_grouped_tab_style": "Replaces toolbar-overflow navigation found during rehearsal.",
+    "privacy_text": "Uses secondary instead of tertiary foreground for readability.",
+    "release_build_and_mounted_dmg": "passed",
+    "basic_ci": "passed",
+    "swift_test": {
+      "bundles": 15,
+      "tests": 1194,
+      "skipped": 18,
+      "failures": 0,
+      "swift_testing_tests": 1
+    },
+    "new_fixture_root": ".build/auto-update-resume-20261020/gui-navigation",
+    "new_feed_port": 18741,
+    "logs": {
+      "navigation-release-build.log": "9d0bd26ba0fe8b7d33ea4b97b02abc1543dc9d570ff2532169290d033ce6b9b5",
+      "navigation-ci-basic.log": "b4364124e8e6a6d6f674b5021b833499355fe07877ce4339a0fffa4edb36f92d",
+      "navigation-swift-test.log": "117f5a5d24cc3aa689ffac8b1e4831756e7d56848a0b75b10e13a2fcad0d51c1",
+      "navigation-prepare.log": "a13548b5e806b5cd4b6679133b0175c7c8acb2eea1bca4bde868476e46414aec"
+    }
+  },
+  "locale_refresh": {
+    "change": "Replace the settings hosting view when its localized title changes, retaining its NSWindow and selected section.",
+    "tests": [
+      1194,
+      18,
+      0
+    ],
+    "bundles": 15,
+    "swift_testing_tests": 1,
+    "release_build_and_mounted_dmg": "passed",
+    "basic_ci": "passed",
+    "logs": {
+      "locale-refresh-release-build.log": "0922ef0e2c9472e6a64d55d5b8730c0951e976e293b03e408c1167c639e72a78",
+      "locale-refresh-ci-basic.log": "239bdd44c83355d620e85303120fad5455bec2f4ba4fc406ba07a0ae34f57530",
+      "locale-refresh-swift-test.log": "708a28b58b8ee1e84137e28d4e7c92d5a3174f4f1b81499a35cf27557daf959c",
+      "locale-refresh-prepare.log": "45e67fd356a49ca7ade9032c4e6f12376eb8bf0d065ea38691a481e57ae1deb6"
+    },
+    "gui": "Dark English-to-Chinese and Aqua Chinese-to-English hot switches passed without closing the window; eight full labels remained visible. Final language/appearance and localized install results are recorded in later observations.",
+    "fixture_root": ".build/auto-update-resume-20261020/gui-final",
+    "independent_source_review": {
+      "task_id": "node:delegated-task:command%3Amcp%3A6c56e53b-052e-4d79-afcf-d0662f5b8ef3%3Adelegate-task%3Autter-update-gui-review-20261020-02",
+      "result": "No actionable source findings in closed/current callbacks, lifetime, title comparison, command restoration or grouped navigation. git diff --check and Python syntax parsing passed. Reviewer ran no native builds, tests or GUI and performed no key/process actions. Command test does not cover locale refresh."
+    }
+  },
+  "updated_at": "2026-10-20T16:28:42.472430+00:00",
+  "state": "Completed authorized non-permission GUI checks; permission scenarios explicitly deferred by owner; rehearsal cleaned",
+  "verified_source_sha256": {
+    "Sources/UtterPresentation/NativeDesktopHost.swift": "fa665f68d952609475147f3c5bdbe87a9bbc480d01ea6dd5164aa5c77c9f9656",
+    "Sources/UtterPresentation/NativeDesktopHost+Windows.swift": "7a2267944b1c36909151182fb7403b0c3d2cefa2cebb12352acebaa458139be2",
+    "Sources/UtterPresentation/UI/SettingsView.swift": "a9d22e9940d84cf166af31b6e4dd797771498d9721a318bf4e5f486ca5676c20",
+    "Sources/UtterPresentation/UI/UpdateViews.swift": "b5ab1a03b522fa86254da768e98aafda349ab921b4c30542607222b3f08b18ac",
+    "Tests/OpenTypeTests/DesktopSettingsCommandTests.swift": "c5ae5c6fd2e5dd02a933dfefb1aa81e8fc3a4296b92f3298b79ba672f79aeb86",
+    "scripts/rehearse-updates.py": "4de1d962279f8a915bd3ba641ad12ff1a7958788258909e6f4f11e3709beaa66",
+    "Package.resolved": "a4443ef840b345d8873b9c0f0a37d8c7dfc6ed6c6045e25f76965cb6d3e484e9",
+    "Resources/Info.plist": "967aed3bde96c4d5d6323a103832a64e9bfba070692fbbfdcca763b8c29a4a2a"
+  },
+  "request_logs": {
+    ".build/auto-update-resume-20261019/gui-settings/requests.jsonl": {
+      "sha256": "d8e2ec404a25813b3c8b0a364187c6822c796c2111f6bc608797282a83cec724"
+    },
+    ".build/auto-update-resume-20261020/gui-navigation/requests.jsonl": {
+      "sha256": "9d5b953fed438e390e1c4518fa9a7e1054b24f81d333627d486f268024a91968"
+    },
+    ".build/auto-update-resume-20261020/gui-final/requests.jsonl": {
+      "state": "not created; no request observed by this server"
+    },
+    ".build/auto-update-resume-20261021/gui-localized/requests.jsonl": {
+      "sha256": "d246859f231bf17030154005739a21bc6221129018f556755d5206438097f511"
+    }
+  },
+  "cleanup": {
+    "rehearsal_apps_and_servers_stopped": true,
+    "bounded_caffeinate_stopped": true,
+    "all_owned_temporary_signing_keychains_deleted": true,
+    "all_owned_fixture_private_seeds_deleted": true,
+    "rehearsal_defaults_cleared": true,
+    "temporary_microphone_grant_reset": "tccutil reported success for exact rehearsal bundle; fresh native About showed Grant again",
+    "user_keychain_search_list": [
+      "\"/Users/chenli/Library/Keychains/login.keychain-db\""
+    ],
+    "signed_samples_and_logs_preserved": true,
+    "production_identity_used": false,
+    "listener_ports_closed": [
+      18740,
+      18741,
+      18742,
+      18743
+    ]
+  },
+  "resume": {
+    "fixture_root": ".build/auto-update-resume-20261021/gui-localized",
+    "feed_port": 18743,
+    "active_feed": "newer.xml, signed 0.0.57",
+    "installed_app": "installed/Utter Rehearsal.app, version 0.0.56",
+    "verified_updated_app": "light/Utter Rehearsal.app, now normal 0.0.57 after update",
+    "aqua_baseline": "light-baseline/Utter Rehearsal.app, 0.0.56",
+    "preferences": "resume-preferences.plist",
+    "instructions": "Owner deferred permission tests. After fresh authorization, confirm production Utter is stopped, import the separate rehearsal domain snapshot, start the local server, and open an existing signed sample via CUA. No private key or keychain is needed to reuse samples. Check temporary certificate validity before reuse."
+  },
+  "native_bundle_localization": {
+    "change": "Resources/Info.plist declares en and zh-Hans as manually handled CFBundleLocalizations",
+    "before": {
+      "bundle_localizations": [],
+      "preferred_for_zh_hans": [
+        "en"
+      ],
+      "sparkle_alert": "English under Chinese native preference"
+    },
+    "after": {
+      "bundle_localizations": [
+        "en",
+        "zh-Hans"
+      ],
+      "preferred_for_zh_hans": [
+        "zh-Hans"
+      ],
+      "sparkle_alert": "Chinese in native dark/light offer and install/relaunch windows"
+    },
+    "boundary": "Sparkle follows native process language selection; this does not bind it to live custom uiLanguage changes. Only the separate rehearsal defaults domain AppleLanguages was configured.",
+    "reference": "https://developer.apple.com/documentation/bundleresources/information-property-list/cfbundlelocalizations",
+    "independent_review": {
+      "task_id": "node:delegated-task:command%3Amcp%3A6c56e53b-052e-4d79-afcf-d0662f5b8ef3%3Adelegate-task%3Autter-update-gui-review-20261021-03",
+      "result": "No actionable source findings. Parsed metadata-only change, plist lint, pinned Chinese Sparkle string inspection, Python AST parsing and diff check passed. No independent native GUI/build/tests/key/process/defaults actions."
+    },
+    "logs": {
+      ".build/auto-update-resume-20261019/sparkle-locale-release-build.log": "598e40f3138cea02497eae07586090e1a455ba9e3cff8f78b7c4762d1e5268eb",
+      ".build/auto-update-resume-20261019/sparkle-locale-ci-basic.log": "b8692d68ca96e0409150ed3f0f620a186c545252563c01f00f6522445693a4e4",
+      ".build/auto-update-resume-20261019/sparkle-locale-prepare.log": "41602de14c3bd02a14960492e1c7d2bce2236f34128e04830ae6dcef5d59db26",
+      ".build/auto-update-resume-20261019/sparkle-locale-bundle-before.log": "126eb2a349819bc1263dea5f34afbed6fc769cc104f2253cfefaab1732704891",
+      ".build/auto-update-resume-20261019/sparkle-locale-bundle-after.log": "a5269778d7e07fcc4a1e8ad8945f2d7fec5ed417b85e1b2c19a5725802881229"
+    }
+  },
+  "earlier_cleanup": {
+    "rehearsal_app_and_three_servers_stopped": true,
+    "bounded_caffeinate_stopped": true,
+    "temporary_signing_keychain_deleted": true,
+    "fixture_private_seeds_deleted": true,
+    "rehearsal_defaults_cleared": true,
+    "defaults_note": "defaults delete succeeded; a subsequent export contained an empty dictionary and no rehearsal values",
+    "user_keychain_search_list": [
+      "\"/Users/chenli/Library/Keychains/login.keychain-db\""
+    ],
+    "resume_preferences": ".build/auto-update-resume-20261020/gui-final/resume-preferences.plist",
+    "signed_fixtures_preserved": true,
+    "production_identity_used_this_resume": false
+  },
+  "head": "ba12e66a78de6503e4190b6d78eb67a8723d2346",
+  "new_changes_committed": false,
+  "production_release_or_pr_created": false,
+  "final_checks": {
+    "logs": {
+      ".build/auto-update-resume-20261019/gui-final-sdlc.log": {
+        "result": "passed",
+        "sha256": "b3d1f12bd63bab717697b3bdf5c3a1bcea844042ff34424193cb670914266bb2"
+      },
+      ".build/auto-update-resume-20261019/sparkle-locale-ci-basic.log": {
+        "result": "passed",
+        "sha256": "b8692d68ca96e0409150ed3f0f620a186c545252563c01f00f6522445693a4e4"
+      }
+    },
+    "git_diff_check": "passed",
+    "plist_lint": "passed",
+    "swift_suite": "1194 XCTest, 18 skips, zero failures across 15 bundles; plus one Swift Testing test. Swift sources unchanged after the final metadata-only correction."
+  }
+}

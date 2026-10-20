@@ -48,7 +48,7 @@ struct AboutUpdatesSection: View {
             Toggle(L("update.automatic"), isOn: $settings.automaticUpdateChecks)
             Text(L("update.privacy"))
                 .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

@@ -1,0 +1,48 @@
+{
+  "recorded_at": "2026-10-20T16:42:20.559353+00:00",
+  "owner_instruction": "pr & merge & release",
+  "base": "077f6d856898f0f06a4bd71dc17a2ba4626dae59",
+  "source_candidate": "ca7356cc3d69f37a42c822153529caf69ad768a8",
+  "scope": "Copy reviewed settings/bundle-language and Sparkle license corrections into dormant baseline before the first production Sparkle build. No updater arming or workflow changes.",
+  "source_sha256": {
+    "Resources/Info.plist": "967aed3bde96c4d5d6323a103832a64e9bfba070692fbbfdcca763b8c29a4a2a",
+    "Sources/UtterPresentation/NativeDesktopHost+Windows.swift": "7a2267944b1c36909151182fb7403b0c3d2cefa2cebb12352acebaa458139be2",
+    "Sources/UtterPresentation/NativeDesktopHost.swift": "fa665f68d952609475147f3c5bdbe87a9bbc480d01ea6dd5164aa5c77c9f9656",
+    "Sources/UtterPresentation/UI/SettingsView.swift": "a9d22e9940d84cf166af31b6e4dd797771498d9721a318bf4e5f486ca5676c20",
+    "Sources/UtterPresentation/UI/UpdateViews.swift": "b5ab1a03b522fa86254da768e98aafda349ab921b4c30542607222b3f08b18ac",
+    "Tests/OpenTypeTests/DesktopSettingsCommandTests.swift": "c5ae5c6fd2e5dd02a933dfefb1aa81e8fc3a4296b92f3298b79ba672f79aeb86",
+    "scripts/embed-sparkle.sh": "cd2e00efafde79e6d52de058076f9800a3b0cb2a071110c3f1558d3474b04535",
+    "scripts/verify-sparkle.sh": "91aa5be77f5e7e465884e44734d59bd8f73911e8209a2f2eb1af992ce806b138",
+    "scripts/tests/test_release_artifact.py": "313527661523d2d9e882ea34aac5164860f9ecdfee2351b29ff6b92ce65d6406"
+  },
+  "inert_guards": {
+    "no_update_info_template": true,
+    "no_SU_keys_in_main_info": true,
+    "release_artifact_workflow_unchanged": true,
+    "package_resolved_matches_candidate": true
+  },
+  "checks": {
+    "release_artifact_fixtures": 13,
+    "fixture_result": "passed",
+    "sdlc": "passed",
+    "plist_lint": "passed",
+    "diff_check": "passed",
+    "full_swift_and_release_build": "matching full-candidate Swift code passed; exact dormant subset awaits CI"
+  },
+  "logs": {
+    "/Users/chenli/.t3/worktrees/utter/t3-75323f02/.build/pr-release-20261021/dormant-release-artifact-tests.log": "f91890635cd7a0eea8df042ce7c5810b0d6dab138e4691a6e485eb549a704113",
+    "/Users/chenli/.t3/worktrees/utter/t3-75323f02/.build/pr-release-20261021/dormant-sdlc.log": "b3d1f12bd63bab717697b3bdf5c3a1bcea844042ff34424193cb670914266bb2"
+  },
+  "independent_review_task": "node:delegated-task:command%3Amcp%3A6c56e53b-052e-4d79-afcf-d0662f5b8ef3%3Adelegate-task%3Autter-dormant-delivery-review-20261021-01",
+  "independent_review_result": "completed; no actionable findings; independent 13-fixture run passed; source and dormancy guards verified",
+  "protected_production_approval": "not granted; requires actual run-specific owner decision",
+  "deferred_tests": [
+    "Granted TCC/login persistence",
+    "Real recording-busy restart",
+    "Protected-path App Management",
+    "Complete keyboard/focus interaction",
+    "Aqua same-version alert capture"
+  ],
+  "independent_review_report": "dormant-independent-review-20261021.md",
+  "reviewed_source_manifest_sha256": "a1c2c98caf4cfbc1e2938a44c42d91de161190e83b813fb3e5c6ec816f0f93c7"
+}

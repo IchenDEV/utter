@@ -25,10 +25,12 @@ embed_sparkle() {
     local app="$1" source="$2"
     local framework="$app/Contents/Frameworks/Sparkle.framework"
     local executable="$app/Contents/MacOS/Utter"
-    local file thin mode
+    local file thin mode license="${source%%/Sparkle.xcframework/*}/LICENSE"
+    [ -s "$license" ] || { echo "error: pinned Sparkle LICENSE not found: $license" >&2; return 1; }
     mkdir -p "$app/Contents/Frameworks"
     rm -rf "$framework"
     ditto "$source" "$framework"
+    cp "$license" "$framework/Versions/B/Resources/LICENSE"
     rm -rf "$framework/Versions/B/XPCServices" "$framework/XPCServices"
     while IFS= read -r file; do
         [ -f "$file" ] || { echo "error: Sparkle code missing from the framework: $file" >&2; return 1; }
