@@ -39,12 +39,16 @@ def prepare(work, keychain, port):
                    "HF_HUB_CACHE": str(home / "huggingface/hub")}
     prefs = home / "Library/Preferences"
     prefs.mkdir(parents=True)
-    (prefs / f"{BUNDLE_ID}.plist").write_bytes(plistlib.dumps({
-        "hasCompletedOnboarding": True, "hotkeyAccessibilityPrompted": True,
+    defaults_file = prefs / f"{BUNDLE_ID}.plist"
+    defaults_file.write_bytes(plistlib.dumps({
+        "hasCompletedOnboarding": False, "hotkeyAccessibilityPrompted": True,
         "preloadSpeechModelOnLaunch": False, "preloadFormattingModelOnLaunch": False,
         "automaticUpdateChecks": True, "developerInterfaceEnabled": False,
         "uiLanguage": "en",
     }))
+    # CFPreferences uses the user's daemon even with CFFIXED_USER_HOME; its
+    # separate rehearsal domain must be initialized through that daemon.
+    run("defaults", "import", BUNDLE_ID, defaults_file)
     template = plistlib.loads((ROOT / "Resources/UpdateInfo.plist").read_bytes())
     template.update(SUFeedURL=f"http://127.0.0.1:{port}/appcast.xml", SUPublicEDKey=public)
     (work / "UpdateInfo.plist").write_bytes(plistlib.dumps(template))

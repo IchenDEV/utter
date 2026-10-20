@@ -21,6 +21,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     var settingsWindow: NSWindow?
     var onboardingWindow: NSWindow?
     var windowDelegate: DesktopWindowDelegate?
+    var settingsCommand: (item: NSMenuItem, target: AnyObject?, action: Selector?)?
     var subscriptions: Set<AnyCancellable> = []
     var hideTask: Task<Void, Never>?
     var executionObserver: UUID?
@@ -53,6 +54,9 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
         guard !closed, isCurrent() else { return }
         Loc.use(settings.uiLanguage)
         NSApplication.shared.setActivationPolicy(.accessory)
+        bindSettingsCommand()
+        NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
+            .sink { [weak self] _ in self?.bindSettingsCommand() }.store(in: &subscriptions)
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem?.button?.target = self
         statusItem?.button?.action = #selector(togglePopover)
@@ -67,7 +71,10 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
                 Loc.use(self.settings.uiLanguage)
                 self.state.project(self.state.snapshot)
                 self.refreshIcons()
-                self.settingsWindow?.title = SettingsWindowTitle.text(for: self.settings.uiLanguage)
+                if let window = self.settingsWindow,
+                   window.title != SettingsWindowTitle.text(for: self.settings.uiLanguage) {
+                    self.installSettingsContent(in: window)
+                }
             }
         }.store(in: &subscriptions)
         NSApp.publisher(for: \.effectiveAppearance).sink { [weak self] _ in self?.refreshIcons() }.store(in: &subscriptions)
@@ -125,6 +132,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
         if let outputObserver { outputs?.removeObserver(outputObserver) }
         executionObserver = nil; outputObserver = nil
         subscriptions.removeAll()
+        restoreSettingsCommand()
         overlay?.hide(); closePopover()
         popover.contentViewController = nil
         settingsWindow?.close(); settingsWindow = nil
