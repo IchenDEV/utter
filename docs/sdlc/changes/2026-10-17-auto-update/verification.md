@@ -1,13 +1,53 @@
 # Verification: Add in-app auto-update support
 
 **Status:** approved
-**Approved-by:** User, explicit chat decision: 批准 (Part A, PR A only)
-**Approved-date:** 2026-10-17
+**Approved-by:** User, explicit chat instruction `pr & merge & release` after the verification handoff; dormant delivery corrections only
+**Approved-date:** 2026-10-21
 **Upstream:** [plan](plan.md)
 
 This file is approved once per PR (plan, "One bundle, two verifications"). It
 currently holds **Part A, PR A (dormant integration)**. Part B returns it to
 `pending approval` before PR B.
+
+## Dormant delivery corrections, 2026-10-21
+
+The original Part A release has not been published. Delivery preflight found
+the known missing Sparkle license notices still present on main. The obsolete
+waiting release runs were cancelled before approval. This follow-up carries
+the already reviewed license and native Settings corrections before the dormant
+release, preserving the approved order before Part B enables update feeds.
+
+The complete pinned Sparkle LICENSE is copied before signing, and the release
+verifier rejects a missing notice before mounting. The regression fixture is
+included. Settings menu/Cmd+, routing and command restoration, native grouped
+navigation, language-change rehosting, semantic privacy text, and the manually
+handled bundle languages are copied byte-for-byte from the validated Part B
+candidate. No UpdateInfo.plist or release-workflow change is included. The
+build remains inert and the release verifier still rejects feed keys.
+
+The matching Swift sources passed 1194 XCTest tests with 18 skips and zero
+failures plus one Swift Testing test. The Part B candidate also passed a signed
+release-style build and actual update installation/relaunch. Those are results
+on the full candidate, not a new signed build of this isolated subset. Native
+CI must test and build this exact dormant head before merge. The language and
+appearance evidence is in
+[`evidence/part-b-gui-20261020.json`](evidence/part-b-gui-20261020.json) and
+[`evidence/part-b-ui-audit.md`](evidence/part-b-ui-audit.md); update-feed scenarios
+in those snapshots apply to Part B only.
+
+The owner explicitly kept permission persistence and recording-busy restart
+pending, then requested PR, merge and release. Those tests, protected-path App
+Management, complete keyboard/focus checks and the Aqua same-version alert
+capture remain unverified. Production signing/notarization and published
+artifact verification remain separate gates. The later historical license
+gap below is resolved by this follow-up; the remaining gaps are retained.
+The exact source hashes, 13 passing artifact fixtures, inert-configuration
+guards and delivery-review task are recorded in
+[`evidence/dormant-delivery-20261021.json`](evidence/dormant-delivery-20261021.json).
+The completed [independent review](evidence/dormant-independent-review-20261021.md)
+found no actionable issue and independently passed all 13 artifact fixtures.
+Its source hashes remain unchanged; exact-head CI and production proof are
+still required.
 
 ## Scope of PR A
 

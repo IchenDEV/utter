@@ -118,6 +118,7 @@ class ReleaseArtifactTests(unittest.TestCase):
             (version / relative).write_text("MACHO")
         (version / "Resources").mkdir()
         (version / "Resources/Info.plist").write_text("text")
+        (version / "Resources/LICENSE").write_text("Sparkle license fixture")
         (framework / "Versions/Current").symlink_to("B")
         (framework / "Sparkle").symlink_to("Versions/Current/Sparkle")
 
@@ -251,6 +252,13 @@ class ReleaseArtifactTests(unittest.TestCase):
         result = self.verify("unlinked", updater=True)
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("Utter executable does not link Sparkle", result.stderr)
+
+    def test_missing_sparkle_license_stops_before_mounting(self):
+        (self.app / "Contents/Frameworks/Sparkle.framework/Versions/B/Resources/LICENSE").unlink()
+        result = self.verify("valid")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing Sparkle license notice", result.stderr)
+        self.assertNotIn("hdiutil attach", self.trace.read_text())
 
     def test_ad_hoc_app_needs_ad_hoc_sparkle_and_can_never_be_armed(self):
         result = self.verify("app-adhoc", developer_id=False, expected=False)
