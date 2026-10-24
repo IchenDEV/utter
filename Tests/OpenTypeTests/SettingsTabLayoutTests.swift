@@ -98,10 +98,7 @@ final class SettingsTabLayoutTests: XCTestCase {
 
     func testGroupLabelIsLocalizedInBothLanguages() {
         let key = SettingsGroup.integrations.label
-        let english = Loc.string(key, language: .english)
-        let chinese = Loc.string(key, language: .chinese)
-        XCTAssertNotEqual(english, key)
-        XCTAssertNotEqual(chinese, key)
-        XCTAssertNotEqual(english, chinese)
+        XCTAssertEqual(Loc.string(key, language: .english), "Integrations")
+        XCTAssertEqual(Loc.string(key, language: .chinese), "集成")
     }
 }
