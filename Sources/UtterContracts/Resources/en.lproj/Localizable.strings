@@ -211,6 +211,17 @@
 "remote_mic.discovery.connected_voice" = "System Bluetooth connection";
 "remote_mic.discovery.connected_hid" = "System Bluetooth connection (keyboard)";
 "remote_mic.discovery.scan" = "Bluetooth scan";
+"remote_key.title" = "Keep the voice key from opening Dictation";
+"remote_key.help" = "The remote's voice key also sends F5, which macOS treats as the Dictation key and answers by typing stray text such as \"I\". Utter turns off that one key on this remote only. Other keys and other keyboards are untouched, and the key comes back when you turn this off or quit Utter.";
+"remote_key.status" = "Status";
+"remote_key.state.off" = "Off";
+"remote_key.state.no_remote" = "Remote not connected";
+"remote_key.state.waiting" = "Getting ready…";
+"remote_key.state.active" = "Active";
+"remote_key.state.conflict" = "Conflict";
+"remote_key.detail.conflict" = "Another app keeps changing this key, so Utter stopped to avoid a tug of war. Quit that app or turn this off.";
+"remote_key.state.failed" = "Not applied";
+"remote_key.detail.failed" = "Utter could not change the key, so the voice key behaves as before. Reconnect the remote in System Settings → Bluetooth, or turn Dictation off in System Settings → Keyboard.";
 "remote_mic.decoder.standard" = "Standard";
 "remote_mic.decoder.low" = "Remote 2 / 2 Pro (low nibble first)";
 "remote_mic.capture.none" = "No recording yet";

@@ -67,6 +67,22 @@ final class RemoteMicDeviceMatcherTests: XCTestCase {
         }
     }
 
+    func testRemoteKeyRemapStatesHaveDistinctLocalizedTextAndOnlyProblemsNeedAttention() throws {
+        let states: [RemoteKeyRemapState] = [.off, .noRemote, .waitingForService, .active, .conflict, .failed]
+        let keys = states.map(RemoteKeyRemapText.stateKey)
+        XCTAssertEqual(Set(keys).count, states.count)
+        for key in keys { XCTAssertNotEqual(L(key), key, "\(key) is missing from Localizable.strings") }
+        XCTAssertEqual(states.filter(RemoteKeyRemapText.needsAttention), [.conflict, .failed])
+        for state in states where RemoteKeyRemapText.needsAttention(state) {
+            let detail = try XCTUnwrap(RemoteKeyRemapText.detailKey(state))
+            XCTAssertNotEqual(L(detail), detail, "\(detail) is missing from Localizable.strings")
+        }
+        XCTAssertNil(RemoteKeyRemapText.detailKey(.active))
+        for key in ["remote_key.title", "remote_key.help", "remote_key.status"] {
+            XCTAssertNotEqual(L(key), key, "\(key) is missing from Localizable.strings")
+        }
+    }
+
     func testBluetoothSettingsLinkTargetsThePrivacyPaneWhenAccessWasRefused() {
         XCTAssertTrue(RemoteMicSettingsText.bluetoothSettingsURL(for: .unauthorized)
             .absoluteString.contains("Privacy_Bluetooth"))
