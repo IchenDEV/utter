@@ -15,7 +15,8 @@ package final class AudioCaptureManager {
     /// Thresholds used for the next recording. Set from user sensitivity
     /// presets before `start(...)`; defaults preserve prior behavior.
     package var thresholds = AudioActivityThresholds.default
-    /// The preferred remote can supply voice-key and host-requested recordings.
+    /// A voice-key session from the connected remote can supply audio instead of
+    /// the selected CoreAudio device. Keyboard/API sessions remain local.
     package var remoteMicSource: (any RemoteCaptureSource)?
     /// Called on the main run loop after capture switches to a fallback input
     /// because the active device became unusable (for example, the lid closed).
@@ -24,8 +25,6 @@ package final class AudioCaptureManager {
     /// usable input exists.
     package var onInputUnavailable: (() -> Void)?
     var usesRemoteMic = false
-    var remoteSilenceTask: Task<Void, Never>?
-    var requestedDeviceID: String?
     var levelCallback: ((Float) -> Void)?
     var bufferCallback: ((AVAudioPCMBuffer) -> Void)?
 
@@ -85,12 +84,19 @@ package final class AudioCaptureManager {
         levelCallback = levelUpdate
         bufferCallback = bufferUpdate
 
-        requestedDeviceID = deviceID
-        if remoteEnabled(), startRemoteCapture() { return nil }
-        return startLocal(deviceID: deviceID)
-    }
+        // Only a session latched by the remote's voice key adopts its audio.
+        if remoteEnabled(),
+           let remoteMicSource,
+           let token = remoteMicSource.currentSessionToken {
+            remoteMicSource.thresholds = thresholds
+            if remoteMicSource.start(token: token, levelUpdate: levelUpdate, bufferUpdate: bufferUpdate) {
+                usesRemoteMic = true
+                isRunning = true
+                return nil
+            }
+            log.info("[AudioCapture] wireless remote unavailable; using the system input")
+        }
 
-    func startLocal(deviceID: String?) -> AudioCaptureStartFailure? {
         let authStatus = AVCaptureDevice.authorizationStatus(for: .audio)
         guard authStatus == .authorized else {
             log.error("[AudioCapture] microphone not authorized (status: \(authStatus.rawValue))")
@@ -160,8 +166,6 @@ package final class AudioCaptureManager {
     }
 
     package func stop() {
-        remoteSilenceTask?.cancel()
-        remoteSilenceTask = nil
         guard isRunning else { return }
         stopFailoverMonitor()
         if usesRemoteMic {

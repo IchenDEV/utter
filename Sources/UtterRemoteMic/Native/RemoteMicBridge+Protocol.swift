@@ -26,7 +26,10 @@ extension XiaomiRemoteMicBridge {
                 failAttempt(reason: L("remote_mic.error.unsupported_codec"))
                 return
             }
-            finishInitializationIfReady()
+            cancelTimeout()
+            reconnectAttempts = 0
+            state = .ready(deviceName: peripheral?.name ?? "MI RC")
+            if session.isLive { openMicrophoneIfNeeded() }
         case .startSearch:
             guard handshake.isReady, isActive else { return }
             // `START_SEARCH` (0x08) is the device announcing itself, not a
@@ -44,23 +47,12 @@ extension XiaomiRemoteMicBridge {
                 failAttempt(reason: L("remote_mic.error.unsupported_codec"))
                 return
             }
-            if session.isLive {
-                // The app already opened this session; the remote is now
-                // streaming it, so keep it alive past the remote's timeout.
-                streamAnnounced = true
-                if hostInitiated { startExtending() }
-                return
-            }
             // Latch synchronously: the pipeline start is asynchronous, and a
             // stop or disconnect may arrive before it commits.
-            hostInitiated = false
-            streamAnnounced = true
-            streamGainDB = gainDB()
+            if !session.isLive { streamGainDB = gainDB() }
             let token = session.press()
             onVoiceKeyPressed?(token)
         case .streamStop:
-            if hostInitiated, session.isLive, !streamAnnounced { return }
-            cancelExtend()
             // Release before clearing state so endCapture can still close the
             // microphone; previously the reset ran first and made that
             // unreachable, leaving microphoneOpened set.
@@ -116,13 +108,5 @@ extension XiaomiRemoteMicBridge {
             isSatisfied: { [weak self] in self?.handshake.isReady ?? false }
         )
         _ = write(RemoteMicProtocol.getCapabilities)
-    }
-
-    func finishInitializationIfReady() {
-        guard handshake.isReady else { return }
-        cancelTimeout()
-        reconnectAttempts = 0
-        state = .ready(deviceName: peripheral?.name ?? "MI RC")
-        if session.isLive { openMicrophoneIfNeeded() }
     }
 }

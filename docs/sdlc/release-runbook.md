@@ -21,15 +21,11 @@ Every protected workflow run must:
 
 - rerun repository checks and Swift tests;
 - import the configured code-signing identity and prove the built app uses it;
-- build the app and DMG with the tagged version and `--updates`;
+- build the app and DMG with the tagged version;
 - verify the app signature, architecture, identifiers, version, helper, mounted
   DMG contents, and binary equality;
-- sign the DMG and the generated `appcast.xml` with `SPARKLE_ED_PRIVATE_KEY`,
-  then re-verify both with `scripts/verify-update-signature.swift` against the
-  public key taken from the app inside the mounted DMG;
-- publish the DMG, its SHA-256 checksum and the appcast only after artifact
-  checks; require human environment approval once the external `production`
-  protection is active.
+- publish the DMG and its SHA-256 checksum only after artifact checks; require
+  human environment approval once the external `production` protection is active.
 
 For Developer ID, the run must additionally verify the Apple team identifier and
 hardened runtime, receive an accepted notarization result, staple the ticket,
@@ -37,37 +33,17 @@ and pass Gatekeeper assessment. For the project self-signed identity, the
 release notes must warn that the build is not Apple-notarized and may require
 manual approval on macOS.
 
-Keep the workflow URL, release URL, commit SHA, signing mode, checksum,
-appcast URL, and any notarization result as release evidence.
-
-## Update metadata
-
-`scripts/generate-appcast.py` writes a one-item feed from the verified DMG: the
-enclosure URL comes from the validated tag, the version comes from the app plist
-inside the mounted DMG, and the release notes come from
-`git log --no-merges --pretty=format:'- %s' <previous-tag>..<tag>` as plain text.
-`bin/sign_update` from the pinned `Sparkle-2.10.0.tar.xz`
-(`scripts/sparkle-tools.sha256`, cross-checked against the GitHub asset digest)
-signs the DMG and then the feed. The secret reaches `sign_update` only through
-the step environment and stdin: never argv, never `set -x`, never a file.
-
-If the secret is missing or does not match `Resources/UpdateInfo.plist`, the
-`Sign update metadata` step fails and the release stays a draft.
-
-Withdrawing a bad release, rolling the code back and rotating the key are in
-`github-controls.md`. Nothing is ever deleted; a published same-version release
-is never replaced. Users install the first updater release manually once; the
-release after it is the first real in-app update.
+Keep the workflow URL, release URL, commit SHA, signing mode, checksum, and any
+notarization result as release evidence.
 
 ## Stop conditions
 
 Stop without publishing if the commit is not on `main`, a required check is not
 green, the version's release already exists, the configured identity is missing
 or does not match the app, Developer ID notarization fails, the mounted artifact
-differs, the update secret is missing or does not match the shipped public key,
-or a reviewer does not accept residual risk. Diagnose through a normal change
-bundle and PR; do not edit the tag, replace published same-version assets, or
-silently fall back to ad-hoc signing.
+differs, or a reviewer does not accept residual risk. Diagnose through a normal
+change bundle and PR; do not edit the tag, replace published same-version assets,
+or silently fall back to ad-hoc signing.
 
 If an upload or download verification fails, the workflow leaves a draft. Record
 the failure and inspect its assets before deleting that draft and rerunning; a

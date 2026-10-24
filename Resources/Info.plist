@@ -20,11 +20,6 @@
     <string>0.0.4</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
-    <key>CFBundleLocalizations</key>
-    <array>
-        <string>en</string>
-        <string>zh-Hans</string>
-    </array>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>LSMinimumSystemVersion</key>

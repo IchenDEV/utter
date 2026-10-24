@@ -66,18 +66,6 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(fixture.defaults.string(forKey: "speechEngine"), "apple")
     }
 
-    func testAutomaticUpdateChecksDefaultOnAndPersistOptOut() {
-        let fixture = defaultsFixture()
-        defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }
-        let store = SettingsStore(defaults: fixture.defaults)
-        XCTAssertTrue(store.values.automaticUpdateChecks)
-        XCTAssertNil(fixture.defaults.object(forKey: "automaticUpdateChecks"), "an untouched install stores nothing")
-        store.update { $0.automaticUpdateChecks = false }
-        XCTAssertFalse(SettingsStore(defaults: fixture.defaults).values.automaticUpdateChecks)
-        store.update { $0.automaticUpdateChecks = true }
-        XCTAssertTrue(SettingsStore(defaults: fixture.defaults).values.automaticUpdateChecks)
-    }
-
     func testTokenRotationKeepsOriginalKeyAndDoesNotChangeComposition() throws {
         let fixture = defaultsFixture()
         defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }

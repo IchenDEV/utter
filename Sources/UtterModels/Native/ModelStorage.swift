@@ -149,21 +149,14 @@ package enum ModelStorage {
 
     /// Performs preparation on a detached task so the MainActor remains
     /// responsive while large model trees are copied and symlinks resolved.
-    package static func prepareGenerationCommitOffMainActor(
-        kind: ModelDownloadKind, modelID: String, staging: ModelDownloadStaging,
-        onEnter: (@Sendable () -> Void)? = nil,
-        onExit: (@Sendable () -> Void)? = nil
-    ) async throws -> PreparedModelGeneration {
+    package static func prepareGenerationCommitOffMainActor(kind: ModelDownloadKind, modelID: String, staging: ModelDownloadStaging) async throws -> PreparedModelGeneration {
         let source = kind == .whisper
             ? whisperVariantDir(modelID, downloadBase: staging.downloadBase)
             : hubModelRepoDir(modelID, downloadBase: staging.downloadBase)
         let destination = kind == .whisper
             ? whisperVariantDir(modelID, downloadBase: staging.storageRoot)
             : hubModelRepoDir(modelID, downloadBase: staging.storageRoot)
-        return try await ModelGenerations.prepareOffMainActor(
-            source: source, destination: destination, storageRoot: staging.storageRoot,
-            onEnter: onEnter, onExit: onExit
-        )
+        return try await ModelGenerations.prepareOffMainActor(source: source, destination: destination, storageRoot: staging.storageRoot)
     }
 
     /// Retires an unpublished candidate and any rollback backup. The source

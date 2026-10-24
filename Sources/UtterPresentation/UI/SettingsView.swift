@@ -33,7 +33,6 @@ struct SettingsView: View {
                     .tag(section.id)
             }
         }
-        .tabViewStyle(.grouped)
         .frame(width: SettingsWindowLayout.width, height: SettingsWindowLayout.height)
         .background(SettingsSurface.page)
         .id(settings.uiLanguage)

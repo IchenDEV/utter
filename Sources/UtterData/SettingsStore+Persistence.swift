@@ -58,6 +58,5 @@ extension SettingsStore {
         defaults.set(values.developerInterfaceEnabled, forKey: Key.developerInterfaceEnabled.rawValue)
         defaults.set(values.developerHTTPPort, forKey: Key.developerHTTPPort.rawValue)
         defaults.set(values.developerHTTPToken, forKey: Key.developerHTTPToken.rawValue)
-        defaults.set(values.automaticUpdateChecks, forKey: Key.automaticUpdateChecks.rawValue)
     }
 }

@@ -15,7 +15,6 @@ import UtterANE
 import UtterRemoteInference
 import UtterIngress
 import UtterPresentation
-import UtterUpdates
 
 @MainActor
 package enum BuiltinPlugins {
@@ -43,11 +42,11 @@ package enum BuiltinPlugins {
                           ModePlugins.translation(), ModePlugins.edit()]
         let platform = [RemoteMicPlugins.capture(), AudioPlugins.capture(), AudioPlugins.files(), AudioPlugins.speechEvidence(), AudioPlugins.devices(),
                         MacPlugins.target(), MacPlugins.output(), MacPlugins.screen(), MacPlugins.hotkeys(),
-                        MacPlugins.sounds(), MacPlugins.loginItem(), MacPlugins.correction(), UpdatePlugins.updater()]
+                        MacPlugins.sounds(), MacPlugins.loginItem(), MacPlugins.correction()]
         let session = [SessionPlugins.outputs(), SessionPlugins.voiceWorkflows(), SessionPlugins.execution(), SessionPlugins.api(), SessionPlugins.metrics()]
         let ingress = [IngressPlugins.hotkeySessions(), IngressPlugins.remoteSessions(), IngressPlugins.http(), IngressPlugins.xpc()]
         let presentation = [PresentationPlugins.catalog(), PresentationPlugins.icons(), PresentationPlugins.menu(),
-            PresentationPlugins.overlay(), PresentationPlugins.desktop(), PresentationPlugins.general(), PresentationPlugins.remote(), PresentationPlugins.history(),
+            PresentationPlugins.overlay(), PresentationPlugins.desktop(), PresentationPlugins.general(), PresentationPlugins.history(),
             PresentationPlugins.models(), PresentationPlugins.style(), PresentationPlugins.integrations(), PresentationPlugins.about(),
             PresentationPlugins.onboarding(), PresentationPlugins.configuration()]
         return try BuiltinRegistrationPolicy.replacing(data + models + inference + processing + platform + session + ingress + presentation + additional,

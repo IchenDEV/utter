@@ -18,7 +18,6 @@ import UtterContracts
 import UtterData
 import UtterMediaContracts
 import UtterRuntime
-import UtterUpdates
 
 @MainActor
 final class BuiltinCatalogTests: XCTestCase {
@@ -36,13 +35,7 @@ final class BuiltinCatalogTests: XCTestCase {
         XCTAssertEqual(effective.mountedPluginIDs, Set(plugins.map { $0.descriptor.id }))
         XCTAssertTrue(effective.mountedPluginIDs.contains("session.execution"))
         XCTAssertTrue(effective.mountedPluginIDs.contains("mac.output"))
-        XCTAssertTrue(effective.mountedPluginIDs.contains(UpdatePlugins.pluginID))
-        XCTAssertEqual(plugins.filter { $0.descriptor.id == UpdatePlugins.pluginID }.count, 1)
         XCTAssertEqual(effective.bindings["speech"], "speech.apple")
-    }
-
-    func testRecoveryNeverMountsTheUpdater() {
-        XCTAssertFalse(BuiltinCompositions.recoveryIDs.contains(UpdatePlugins.pluginID))
     }
 
     func testInvalidDocumentStartsOnlyRecoveryAndPreservesTheOriginalBytes() async throws {
@@ -65,7 +58,6 @@ final class BuiltinCatalogTests: XCTestCase {
         XCTAssertThrowsError(try application.runtime.service(MacServices.hotkeys))
         XCTAssertThrowsError(try application.runtime.service(GenerationServices.providers))
         XCTAssertThrowsError(try application.runtime.service(SessionServices.api))
-        XCTAssertThrowsError(try application.runtime.service(UpdateServices.updater))
         XCTAssertEqual(try Data(contentsOf: url), original)
         try await application.stop()
     }

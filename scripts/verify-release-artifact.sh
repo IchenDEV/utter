@@ -10,14 +10,9 @@ EXPECTED_CERT_SHA256=""
 REQUIRE_DEVELOPER_ID=false
 REQUIRE_SELF_SIGNED=false
 REQUIRE_NOTARIZATION=false
-REQUIRE_UPDATER=false
-UPDATE_INFO=""
-ALLOW_LOOPBACK_FEED=false
-DUMP_APP_PLIST=""
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 usage() {
-    echo "Usage: $0 --app PATH --version X.Y.Z [--dmg PATH] [--expected-cert-sha256 HEX] [--require-developer-id|--require-self-signed] [--require-notarization] [--require-updater --update-info PLIST [--allow-loopback-feed]] [--dump-app-plist PATH]"
+    echo "Usage: $0 --app PATH --version X.Y.Z [--dmg PATH] [--expected-cert-sha256 HEX] [--require-developer-id|--require-self-signed] [--require-notarization]"
 }
 
 fail() {
@@ -34,10 +29,6 @@ while [ "$#" -gt 0 ]; do
         --require-developer-id) REQUIRE_DEVELOPER_ID=true; shift ;;
         --require-self-signed) REQUIRE_SELF_SIGNED=true; shift ;;
         --require-notarization) REQUIRE_NOTARIZATION=true; shift ;;
-        --require-updater) REQUIRE_UPDATER=true; shift ;;
-        --update-info) UPDATE_INFO="${2:-}"; shift 2 ;;
-        --allow-loopback-feed) ALLOW_LOOPBACK_FEED=true; shift ;;
-        --dump-app-plist) DUMP_APP_PLIST="${2:-}"; shift 2 ;;
         --help|-h) usage; exit 0 ;;
         *) usage >&2; fail "unknown argument: $1" ;;
     esac
@@ -58,15 +49,6 @@ fi
 if [ "$REQUIRE_NOTARIZATION" = true ] && [ "$REQUIRE_DEVELOPER_ID" != true ]; then
     fail "--require-notarization also requires --require-developer-id"
 fi
-if [ "$REQUIRE_UPDATER" = true ] && [ -z "$UPDATE_INFO" ]; then
-    fail "--require-updater requires --update-info"
-fi
-if [ "$REQUIRE_UPDATER" = false ] && { [ -n "$UPDATE_INFO" ] || [ "$ALLOW_LOOPBACK_FEED" = true ]; }; then
-    fail "--update-info and --allow-loopback-feed only apply with --require-updater"
-fi
-if [ -n "$DUMP_APP_PLIST" ] && [ -z "$DMG_PATH" ]; then
-    fail "--dump-app-plist requires --dmg"
-fi
 if [ -n "$EXPECTED_CERT_SHA256" ]; then
     EXPECTED_CERT_SHA256="$(tr '[:lower:]' '[:upper:]' <<<"$EXPECTED_CERT_SHA256")"
     [[ "$EXPECTED_CERT_SHA256" =~ ^[A-F0-9]{64}$ ]] \
@@ -86,18 +68,11 @@ certificate_sha256() {
         rm -r "$cert_dir"
         return 1
     fi
-    if ! fingerprint="$(openssl x509 -inform DER -in "${cert_prefix}0" -noout \
-        -fingerprint -sha256 | cut -d= -f2 | tr -d ':' | tr '[:lower:]' '[:upper:]')"; then
-        rm -r "$cert_dir"
-        return 1
-    fi
+    fingerprint="$(openssl x509 -inform DER -in "${cert_prefix}0" -noout \
+        -fingerprint -sha256 | cut -d= -f2 | tr -d ':' | tr '[:lower:]' '[:upper:]')"
     rm -r "$cert_dir"
-    [[ "$fingerprint" =~ ^[A-F0-9]{64}$ ]] || return 1
     printf '%s\n' "$fingerprint"
 }
-
-# shellcheck source=scripts/verify-sparkle.sh
-source "$SCRIPT_DIR/verify-sparkle.sh"
 
 verify_app() {
     local app="$1"
@@ -121,7 +96,6 @@ verify_app() {
     [ "$(lipo -archs "$executable")" = "arm64" ] || fail "Utter executable must be arm64-only"
     [ "$(lipo -archs "$helper")" = "arm64" ] || fail "CLI helper must be arm64-only"
     codesign --verify --deep --strict --verbose=2 "$app"
-    verify_sparkle_embedding "$app"
 
     if [ "$REQUIRE_DEVELOPER_ID" = true ] || [ "$REQUIRE_SELF_SIGNED" = true ]; then
         local signature
@@ -184,21 +158,6 @@ verify_app "$APP_PATH"
 
 if [ -n "$DMG_PATH" ]; then
     [ -f "$DMG_PATH" ] || fail "DMG not found: $DMG_PATH"
-    if [ "$REQUIRE_DEVELOPER_ID" = true ]; then
-        codesign --verify --strict --verbose=2 "$DMG_PATH" \
-            || fail "DMG signature is invalid"
-        dmg_signature="$(codesign -dvvv "$DMG_PATH" 2>&1)"
-        grep -q '^Authority=Developer ID Application:' <<<"$dmg_signature" \
-            || fail "DMG is not signed with a Developer ID Application identity"
-        grep -Eq '^Timestamp=.+$' <<<"$dmg_signature" \
-            || fail "DMG signature has no secure timestamp"
-        app_cert_sha256="$(certificate_sha256 "$APP_PATH")" \
-            || fail "could not extract the app signing certificate"
-        dmg_cert_sha256="$(certificate_sha256 "$DMG_PATH")" \
-            || fail "could not extract the DMG signing certificate"
-        [ "$dmg_cert_sha256" = "$app_cert_sha256" ] \
-            || fail "DMG signing certificate does not match the app certificate"
-    fi
     hdiutil verify "$DMG_PATH" >/dev/null
 
     mount_point="$(mktemp -d)"
@@ -214,11 +173,6 @@ if [ -n "$DMG_PATH" ]; then
     mounted=true
     verify_app "$mount_point/Utter.app"
     compare_app_bundles "$APP_PATH" "$mount_point/Utter.app"
-    if [ -n "$DUMP_APP_PLIST" ]; then
-        # The appcast must describe the artifact inside the verified DMG, not a
-        # second copy that happened to be lying around.
-        cp "$mount_point/Utter.app/Contents/Info.plist" "$DUMP_APP_PLIST"
-    fi
     hdiutil detach "$mount_point" -quiet
     mounted=false
     rmdir "$mount_point"

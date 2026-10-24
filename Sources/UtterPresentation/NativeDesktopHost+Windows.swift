@@ -5,32 +5,6 @@ import UtterPresentationContracts
 
 @MainActor
 extension NativeDesktopHost {
-    func bindSettingsCommand() {
-        guard !closed, isCurrent(), let menu = NSApp.mainMenu else { return }
-        func find(in menu: NSMenu) -> NSMenuItem? {
-            for item in menu.items {
-                if item.keyEquivalent == ",", item.keyEquivalentModifierMask.contains(.command) { return item }
-                if let submenu = item.submenu, let found = find(in: submenu) { return found }
-            }
-            return nil
-        }
-        guard let item = find(in: menu), settingsCommand?.item !== item else { return }
-        restoreSettingsCommand()
-        settingsCommand = (item, item.target as AnyObject?, item.action)
-        item.target = self
-        item.action = #selector(showSettingsWindow(_:))
-    }
-
-    func restoreSettingsCommand() {
-        if let command = settingsCommand, command.item.target === self {
-            command.item.target = command.target
-            command.item.action = command.action
-        }
-        settingsCommand = nil
-    }
-
-    @objc private func showSettingsWindow(_ sender: Any?) { openSettings() }
-
     func openSettings() {
         guard !closed, isCurrent() else { return }
         closePopover()
@@ -41,11 +15,13 @@ extension NativeDesktopHost {
         }
         let window = NSWindow(contentRect: NSRect(origin: .zero, size: SettingsWindowLayout.contentSize),
             styleMask: SettingsWindowLayout.styleMask, backing: .buffered, defer: false)
+        window.title = SettingsWindowTitle.text(for: settings.uiLanguage)
         window.setFrameAutosaveName("UtterSettingsWindow")
         window.contentMinSize = SettingsWindowLayout.contentSize
         window.contentMaxSize = SettingsWindowLayout.contentSize
         window.isReleasedWhenClosed = false
-        installSettingsContent(in: window)
+        window.contentView = NSHostingView(rootView: SettingsView(sections: sections, context: context)
+            .environmentObject(settings).environmentObject(state))
         windowDelegate = DesktopWindowDelegate { [weak self] in
             self?.settingsWindow = nil
             if self?.onboardingWindow == nil { NSApp.setActivationPolicy(.accessory) }
@@ -54,14 +30,6 @@ extension NativeDesktopHost {
         settingsWindow = window
         window.center()
         activate(window)
-    }
-
-    func installSettingsContent(in window: NSWindow) {
-        window.title = SettingsWindowTitle.text(for: settings.uiLanguage)
-        // Native tab controls need fresh intrinsic sizes after a language change.
-        window.contentView = NSHostingView(rootView: SettingsView(
-            sections: catalog.contributions(for: .settings), context: context)
-            .environmentObject(settings).environmentObject(state))
     }
 
     func showOnboarding() {

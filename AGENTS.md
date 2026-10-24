@@ -28,7 +28,6 @@ Utter is a macOS menu bar voice input app built with Swift 6 / SwiftUI / AppKit.
 | `UtterAudio/`, `UtterRemoteMic/`, `UtterMacServices/` | Capture, remote device control, OCR, target leases and transactional output |
 | `UtterAppleSpeech/`, `UtterWhisper/`, `UtterMLX/`, `UtterANE/`, `UtterRemoteInference/` | Independently registered inference providers |
 | `UtterPresentation/` | Menu, onboarding, overlay, icons and settings contributions |
-| `UtterUpdates/` | In-app updates: configuration gate, status, busy-held relaunch; Sparkle only under `Native/` |
 | `UtterEvaluation/` | Headless evaluation schema and finite budgets |
 
 Resources belong to their owner targets; `scripts/resource-bundles.json` is the packaging manifest.
@@ -50,7 +49,6 @@ Tests use owner modules directly. Construction fixtures under `Tests/OpenTypeTes
 - **Release build**: `bash scripts/build-app.sh` — uses `xcodebuild` (required for Metal shader bundling), then assembles .app and .dmg
 - **PR CI**: `.github/workflows/pr.yml` — validates SDLC artifacts, runs linked checks and unit tests, builds a release-style app, and exposes the stable `SDLC Gate` check
 - **Release CI**: `.github/workflows/release.yml` — accepts a SemVer tag on `main`, verifies either the existing self-signed identity or Developer ID, requires Apple notarization for Developer ID, and publishes the mounted-DMG-verified artifact with a checksum
-- **In-app updates**: Sparkle is embedded in every build but only armed by `build-app.sh --updates`, which merges `Resources/UpdateInfo.plist` (overridable with `--update-info <plist>`) into `Info.plist`, refuses ad-hoc signing, and makes the verifier require the keys. Dev, PR and manual builds carry no feed keys and never contact a server; `scripts/embed-sparkle.sh` and `scripts/verify-sparkle.sh` own the embedding, arm64 thinning and signing rules. The release pipeline signs the DMG and `appcast.xml` with `SPARKLE_ED_PRIVATE_KEY` (`scripts/generate-appcast.py`, `scripts/verify-update-signature.swift`, pinned tools in `scripts/sparkle-tools.sha256`).
 - **Icon**: `scripts/generate-icon.swift` programmatically renders the icon and generates `.icns`; `Sources/UtterPresentation/App/AppIcon.swift` renders the same icon at runtime for the Dock
 
 ## SDLC Operating Contract
@@ -60,7 +58,7 @@ Tests use owner modules directly. Construction fixtures under `Tests/OpenTypeTes
 - **Every stage requires explicit human approval before the next one starts.** Set the artifact's `Status: pending approval` and stop for the user's decision; never mark a stage `approved` on the user's behalf. `approved` requires `Approved-by` and `Approved-date`. Artifacts without a Status header are legacy merged bundles.
 - Begin implementation only after intent has observable acceptance criteria and medium/high-risk design choices have been reviewed.
 - Always run `bash scripts/sdlc-checks.sh`, `bash scripts/ci-basic-checks.sh`, and `swift test`. Add release-style build, real-window visual QA, permission/privacy paths, or clean-machine checks in proportion to risk.
-- High-risk changes require an independent verifier, explicit rollback, the owner's explicit merge authorization, and protected production approval. This single-maintainer repository requires PRs and passing CI, but not a separate GitHub approving reviewer; see `docs/sdlc/github-controls.md`.
+- High-risk changes require an independent verifier, explicit rollback, PR approval, and protected production approval.
 - A production incident must link a corrective intent and add a regression test, deterministic guardrail, eval case, or explicit reason automation is impossible.
 - Never fall back to ad-hoc signing when configured signing fails. A self-signed release must use the configured identity, pass the same artifact/checksum checks, and be labeled as not Apple-notarized.
 

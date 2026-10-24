@@ -49,8 +49,6 @@ step_script "$MANUAL" 'Resolve version from tag' > "$FIXTURE/manual.sh"
 step_script "$ARTIFACT" 'Validate version and tag' > "$FIXTURE/validate.sh"
 step_script "$ARTIFACT" 'Require a SemVer tag on main' > "$FIXTURE/ancestor.sh"
 step_script "$ARTIFACT" 'Create and push release tag' > "$FIXTURE/create.sh"
-step_script "$ARTIFACT" 'Classify and verify signed artifact' > "$FIXTURE/classify.sh"
-step_script "$ARTIFACT" 'Verify distribution and checksum' > "$FIXTURE/distribution.sh"
 
 # Verify the values emitted by shell steps actually reach the reusable caller.
 job_text "$NIGHTLY" plan > "$FIXTURE/plan-job"
@@ -176,117 +174,6 @@ git --git-dir="$FIXTURE/origin.git" tag v0.0.50
 check reject_step create v0.0.50
 check test -z "$(git tag -l v0.0.50)"
 check test ! -e "$PUSH_LOG"
-
-# Run the literal distribution block with observable external signing state.
-export SIGN_IDENTITY='Developer ID Application: Fixture (ABC1234567)'
-export SIGN_CERT_SHA256="$(printf '%064d' 0)"
-export RELEASE_VERSION=0.0.54 TEAM_IDENTIFIER=ABC1234567 FAIL_SIGN=0
-export SIGNING_TRACE="$FIXTURE/signing-trace" SIGNED_DMG="$FIXTURE/signed-dmg"
-export GITHUB_ENV="$FIXTURE/github-env" GITHUB_STEP_SUMMARY="$FIXTURE/summary"
-cat > "$FIXTURE/bin/codesign" <<'STUB'
-#!/usr/bin/env bash
-set -euo pipefail
-if [ "$1" = -dvvv ]; then
-    printf 'Authority=%s\nTeamIdentifier=%s\n' "$SIGN_IDENTITY" "$TEAM_IDENTIFIER"
-    exit 0
-fi
-echo sign >> "$SIGNING_TRACE"
-[ "$FAIL_SIGN" = 0 ] || exit 42
-timestamp=false identifier=false identity=false
-while [ "$#" -gt 0 ]; do
-    case "$1" in
-        --timestamp) timestamp=true ;;
-        --identifier|-i) [ "$2" = com.opentype.voiceinput.dmg ]; identifier=true; shift ;;
-        --sign|-s) [ "$2" = "$SIGN_IDENTITY" ]; identity=true; shift ;;
-        --deep|--entitlements|--options) exit 43 ;;
-    esac
-    last="$1"
-    shift
-done
-$timestamp && $identifier && $identity
-[ "$last" = dist/Utter-0.0.54.dmg ]
-touch "$SIGNED_DMG"
-STUB
-cat > scripts/verify-release-artifact.sh <<'STUB'
-#!/usr/bin/env bash
-set -euo pipefail
-echo verify >> "$SIGNING_TRACE"
-updater=false template=''
-while [ "$#" -gt 0 ]; do
-    if [ "$1" = --require-developer-id ] && [ ! -f "$SIGNED_DMG" ]; then
-        echo 'unsigned Developer ID DMG reached verification' >&2
-        exit 1
-    fi
-    case "$1" in
-        --require-updater) updater=true ;;
-        --update-info) template="$2"; shift ;;
-    esac
-    shift
-done
-$updater && [ "$template" = Resources/UpdateInfo.plist ]
-STUB
-chmod +x "$FIXTURE/bin/codesign" scripts/verify-release-artifact.sh
-export RUNNER_TEMP="$FIXTURE"
-mkdir -p dist
-printf 'fixture DMG\n' > dist/Utter-0.0.54.dmg
-: > "$SIGNING_TRACE"
-check bash -e "$FIXTURE/classify.sh"
-check test "$(cat "$SIGNING_TRACE")" = $'sign\nverify'
-check grep -Fxq SIGNING_MODE=developer-id "$GITHUB_ENV"
-check env SIGNING_MODE=developer-id bash -e "$FIXTURE/distribution.sh"
-
-rm -f "$SIGNED_DMG"
-: > "$SIGNING_TRACE"
-export FAIL_SIGN=1
-check reject_step classify unused
-check test "$(cat "$SIGNING_TRACE")" = sign
-check test ! -e "$SIGNED_DMG"
-
-export FAIL_SIGN=0 SIGN_IDENTITY='Utter Signing' TEAM_IDENTIFIER='not set'
-: > "$SIGNING_TRACE"
-check bash -e "$FIXTURE/classify.sh"
-check test "$(cat "$SIGNING_TRACE")" = verify
-check grep -Fxq SIGNING_MODE=self-signed "$GITHUB_ENV"
-check test ! -e "$SIGNED_DMG"
-check env SIGNING_MODE=self-signed bash -e "$FIXTURE/distribution.sh"
-
-# ─── Update metadata contract ─────────────────────────────────────────────────
-line_of() { grep -n "^      - name: $1\$" "$ARTIFACT" | cut -d: -f1; }
-verify_line="$(line_of 'Verify distribution and checksum')"
-sign_line="$(line_of 'Sign update metadata')"
-publish_line="$(line_of 'Publish GitHub Release')"
-check test -n "$verify_line"
-check test -n "$sign_line"
-check test -n "$publish_line"
-check test "$verify_line" -lt "$sign_line"
-check test "$sign_line" -lt "$publish_line"
-
-credentials_step="$(step_script "$ARTIFACT" 'Require release credentials')"
-check grep -Fq 'SPARKLE_ED_PRIVATE_KEY' <<<"$credentials_step"
-
-build_step="$(step_script "$ARTIFACT" 'Build signed app and DMG')"
-check grep -Fq -- '--updates' <<<"$build_step"
-
-verify_step="$(step_script "$ARTIFACT" 'Verify distribution and checksum')"
-check grep -Fq -- '--dump-app-plist' <<<"$verify_step"
-
-sign_step="$(step_script "$ARTIFACT" 'Sign update metadata')"
-check grep -Fq 'scripts/sparkle-tools.sha256' <<<"$sign_step"
-check grep -Fq 'shasum -a 256 -c' <<<"$sign_step"
-check grep -Fq 'scripts/generate-appcast.py' <<<"$sign_step"
-check grep -Fq 'scripts/verify-update-signature.swift' <<<"$sign_step"
-# The key must only ever arrive through the environment and stdin.
-check grep -Fq 'printf '\''%s'\'' "$SPARKLE_ED_PRIVATE_KEY"' <<<"$sign_step"
-check grep -Fq -- '--ed-key-file -' <<<"$sign_step"
-check test -z "$(grep -F -- '--ed-key-file "$SPARKLE_ED_PRIVATE_KEY"' <<<"$sign_step" || true)"
-check test -z "$(grep -F 'set -x' <<<"$sign_step" || true)"
-
-publish_step="$(step_script "$ARTIFACT" 'Publish GitHub Release')"
-check grep -Fq 'dist/appcast.xml' <<<"$publish_step"
-check grep -Fq 'cmp "dist/appcast.xml"' <<<"$publish_step"
-
-# The build uses its committed default; verification names that template explicitly.
-check test -z "$(grep -F -- '--update-info' <<<"$build_step" || true)"
 
 [ "$failures" -eq 0 ] || { echo "$failures release contract checks failed." >&2; exit 1; }
 echo "Release workflow contract tests passed."

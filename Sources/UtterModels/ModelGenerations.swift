@@ -58,14 +58,10 @@ package enum ModelGenerations {
     }
 
     package static func prepareOffMainActor(
-        source: URL, destination: URL, storageRoot: URL,
-        onEnter: (@Sendable () -> Void)? = nil,
-        onExit: (@Sendable () -> Void)? = nil
+        source: URL, destination: URL, storageRoot: URL
     ) async throws -> PreparedModelGeneration {
         try await Task.detached {
-            onEnter?()
-            defer { onExit?() }
-            return try prepare(
+            try prepare(
                 source: source, destination: destination, storageRoot: storageRoot
             )
         }.value

@@ -8,9 +8,6 @@
 # Usage:
 #   ./scripts/build-app.sh              # build .app + .dmg
 #   ./scripts/build-app.sh --app-only   # build .app only
-#   ./scripts/build-app.sh --updates --sign=IDENTITY
-#                                       # arm the in-app updater with the committed
-#                                       # Resources/UpdateInfo.plist (release builds only)
 #   ./scripts/build-app.sh --help       # show help
 #
 # Requirements:
@@ -30,10 +27,6 @@ BUNDLE_ID="com.opentype.voiceinput"
 CLI_HELPER_NAME="opentype-cli"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-# shellcheck source=scripts/embed-sparkle.sh
-source "${SCRIPT_DIR}/embed-sparkle.sh"
-# shellcheck source=scripts/update-options.sh
-source "${SCRIPT_DIR}/update-options.sh"
 
 # Shallow/tagless development checkouts use 0.0.0. Public release tags are
 # validated separately by release-version.sh and passed explicitly.
@@ -46,9 +39,6 @@ BUILD_DIR="${DERIVED_DATA}/Build/Products/Release"
 DIST_DIR="${PROJECT_DIR}/dist"
 APP_ONLY=false
 SIGN_IDENTITY="${SIGN_IDENTITY:-}"
-UPDATES=false
-UPDATE_INFO=""
-ALLOW_LOOPBACK_FEED=false
 
 # ─── Parse arguments ────────────────────────────────────────────────────────────
 
@@ -57,21 +47,13 @@ for arg in "$@"; do
         --app-only)  APP_ONLY=true ;;
         --version=*) VERSION="${arg#*=}" ;;
         --sign=*)    SIGN_IDENTITY="${arg#*=}" ;;
-        --updates)   UPDATES=true ;;
-        --update-info=*) UPDATE_INFO="${arg#*=}" ;;
-        --allow-loopback-feed) ALLOW_LOOPBACK_FEED=true ;;
         --help|-h)
-            echo "Usage: $0 [--version=X.Y.Z] [--app-only] [--sign=IDENTITY] [--updates [--update-info=PLIST]] [--help]"
+            echo "Usage: $0 [--version=X.Y.Z] [--app-only] [--sign=IDENTITY] [--help]"
             echo ""
             echo "  --version=X.Y.Z    Set version (default: latest git tag, or \$VERSION env)"
             echo "  --app-only         Build .app bundle only, skip DMG creation"
             echo "  --sign=IDENTITY    Code signing identity (default: auto-detect)"
             echo "                     Use '--sign=-' to force ad-hoc signing"
-            echo "  --updates          Arm the in-app updater with the committed"
-            echo "                     Resources/UpdateInfo.plist and a real signing identity."
-            echo "                     Override the template with --update-info=PLIST."
-            echo "                     Without --updates the app never checks for updates."
-            echo "  --allow-loopback-feed  Accept an http loopback feed (rehearsal builds only)"
             echo "  --help             Show this help"
             exit 0
             ;;
@@ -81,18 +63,6 @@ for arg in "$@"; do
             ;;
     esac
 done
-
-validate_update_options
-
-if [ -z "$SIGN_IDENTITY" ]; then
-    for candidate in "Developer ID Application" "Apple Development" "Utter Signing" "OpenType Signing"; do
-        if security find-identity -v -p codesigning 2>/dev/null | grep -q "$candidate"; then
-            SIGN_IDENTITY="$candidate"
-            break
-        fi
-    done
-fi
-require_updater_identity
 
 APP_BUNDLE="${DIST_DIR}/${APP_NAME}.app"
 DMG_PATH="${DIST_DIR}/${APP_NAME}-${VERSION}.dmg"
@@ -147,8 +117,6 @@ cp "${PROJECT_DIR}/Resources/Info.plist" "${APP_BUNDLE}/Contents/"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION}" "${APP_BUNDLE}/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VERSION}"           "${APP_BUNDLE}/Contents/Info.plist"
 
-merge_update_keys "${APP_BUNDLE}"
-
 # PkgInfo
 echo -n "APPL????" > "${APP_BUNDLE}/Contents/PkgInfo"
 
@@ -157,9 +125,6 @@ for bundle in "${BUILD_DIR}"/*.bundle; do
     [ -d "$bundle" ] || continue
     cp -R "$bundle" "${APP_BUNDLE}/Contents/Resources/"
 done
-
-# The executable links Sparkle, so the framework ships in every build; only --updates arms it.
-embed_sparkle "${APP_BUNDLE}" "$(find_sparkle_framework "${DERIVED_DATA}/SourcePackages/artifacts")"
 
 done_msg "App bundle assembled"
 
@@ -200,20 +165,22 @@ step "Code signing (hardened runtime + entitlements)…"
 
 ENTITLEMENTS="${PROJECT_DIR}/Resources/OpenType.entitlements"
 
-# Pass 1 keeps the historical --deep flags for the helper and resource bundles. Pass 2 re-signs
-# Sparkle without entitlements. Pass 3 re-seals the app over the changed nested signatures.
+if [ -z "$SIGN_IDENTITY" ]; then
+    for candidate in "Developer ID Application" "Apple Development" "Utter Signing" "OpenType Signing"; do
+        if security find-identity -v -p codesigning 2>/dev/null | grep -q "$candidate"; then
+            SIGN_IDENTITY="$candidate"
+            break
+        fi
+    done
+fi
+
 SIGN_FLAGS=(--force --deep --options runtime --entitlements "$ENTITLEMENTS")
-SEAL_FLAGS=(--force --options runtime --entitlements "$ENTITLEMENTS")
 
 if [ -n "$SIGN_IDENTITY" ] && [ "$SIGN_IDENTITY" != "-" ]; then
     codesign "${SIGN_FLAGS[@]}" --sign "$SIGN_IDENTITY" "${APP_BUNDLE}"
-    sign_sparkle "${APP_BUNDLE}" "$SIGN_IDENTITY"
-    codesign "${SEAL_FLAGS[@]}" --sign "$SIGN_IDENTITY" "${APP_BUNDLE}"
     done_msg "Signed with: $SIGN_IDENTITY (hardened runtime)"
 else
     codesign "${SIGN_FLAGS[@]}" --sign - "${APP_BUNDLE}"
-    sign_sparkle "${APP_BUNDLE}" -
-    codesign "${SEAL_FLAGS[@]}" --sign - "${APP_BUNDLE}"
     done_msg "Signed (ad-hoc, hardened runtime)"
     echo "  ⚠ Ad-hoc signing: first launch on other machines may require:"
     echo "    xattr -cr Utter.app"
@@ -221,13 +188,10 @@ fi
 
 # ─── Step 5: Create DMG ────────────────────────────────────────────────────────
 
-set_updater_verify_args
-
 if [ "$APP_ONLY" = true ]; then
     "${SCRIPT_DIR}/verify-release-artifact.sh" \
         --app "${APP_BUNDLE}" \
-        --version "${VERSION}" \
-        ${VERIFY_UPDATER_ARGS[@]+"${VERIFY_UPDATER_ARGS[@]}"}
+        --version "${VERSION}"
     echo ""
     echo "═══════════════════════════════════════════════════"
     echo "  Done!  ${APP_BUNDLE}"
@@ -277,8 +241,7 @@ done_msg "DMG created"
 "${SCRIPT_DIR}/verify-release-artifact.sh" \
     --app "${APP_BUNDLE}" \
     --dmg "${DMG_PATH}" \
-    --version "${VERSION}" \
-    ${VERIFY_UPDATER_ARGS[@]+"${VERIFY_UPDATER_ARGS[@]}"}
+    --version "${VERSION}"
 
 # ─── Summary ────────────────────────────────────────────────────────────────────
 

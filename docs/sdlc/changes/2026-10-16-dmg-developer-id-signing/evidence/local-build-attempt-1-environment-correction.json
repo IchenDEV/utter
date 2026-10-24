@@ -1,7 +1,0 @@
-{
-  "build_processes_stopped": [
-    1935
-  ],
-  "reason": "Validation launcher PATH chose system Python 3.9.6; build requires Python 3.10+. Restart with installed Homebrew Python 3.14.6 first in minimal PATH.",
-  "production_source_changed": false
-}

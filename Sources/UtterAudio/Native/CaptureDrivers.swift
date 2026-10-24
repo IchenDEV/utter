@@ -5,10 +5,7 @@ import UtterMediaContracts
 @MainActor
 final class LocalCaptureDriver: CaptureDriver {
     private let capture: AudioCaptureManager
-    init(log: Log, remote: (any RemoteCaptureSource)? = nil) {
-        capture = AudioCaptureManager(log: log, remoteEnabled: { remote != nil })
-        capture.remoteMicSource = remote
-    }
+    init(log: Log) { capture = AudioCaptureManager(log: log, remoteEnabled: { false }) }
 
     func start(_ request: CaptureRequest, callbacks: CaptureCallbacks) async throws {
         guard case .local(let deviceID) = request.source else { throw CaptureError.remoteUnavailable }
@@ -24,9 +21,7 @@ final class LocalCaptureDriver: CaptureDriver {
         if flushTail, capture.isRunning {
             try? await Task.sleep(for: capture.tailDrainDuration)
         }
-        let silenceTask = capture.remoteSilenceTask
         capture.stop()
-        await silenceTask?.value
         return CapturedAudio(url: capture.lastRecordingURL, activity: capture.lastActivity)
     }
     func cleanup() async {
@@ -51,7 +46,6 @@ final class RemoteCaptureDriver: CaptureDriver {
             throw CaptureError.remoteUnavailable
         }
         ownsCapture = true
-        source.noteCapture(.remote)
     }
     func stop(flushTail: Bool) async -> CapturedAudio {
         guard ownsCapture else { return CapturedAudio(url: nil, activity: AudioCaptureActivity()) }

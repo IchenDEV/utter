@@ -59,8 +59,6 @@ final class RemoteMicHandshakeTests: XCTestCase {
 
         let sixteenKilohertz = RemoteMicCapabilities.default
         XCTAssertTrue(handshake.confirmCapabilities(sixteenKilohertz))
-        XCTAssertFalse(handshake.isReady, "model-dependent decoder configuration is still pending")
-        handshake.markDecoderConfigured()
         XCTAssertTrue(handshake.isReady)
     }
 
@@ -71,7 +69,6 @@ final class RemoteMicHandshakeTests: XCTestCase {
         handshake.confirmSubscription(.control)
         handshake.markCapabilitiesRequested()
         _ = handshake.confirmCapabilities(.default)
-        handshake.markDecoderConfigured()
         XCTAssertTrue(handshake.isReady)
 
         handshake.reset()
@@ -79,7 +76,6 @@ final class RemoteMicHandshakeTests: XCTestCase {
         XCTAssertFalse(handshake.shouldRequestCapabilities)
         XCTAssertFalse(handshake.hasAllCharacteristics)
         XCTAssertFalse(handshake.subscriptionsReady)
-        XCTAssertFalse(handshake.decoderConfigured)
     }
 
     /// A capability frame that arrives before this attempt requested one (a late
@@ -99,7 +95,6 @@ final class RemoteMicHandshakeTests: XCTestCase {
 
         handshake.markCapabilitiesRequested()
         XCTAssertTrue(handshake.confirmCapabilities(.default))
-        handshake.markDecoderConfigured()
         XCTAssertTrue(handshake.isReady)
     }
 
@@ -161,7 +156,6 @@ final class RemoteMicAttemptIsolationTests: XCTestCase {
         handshake.confirmSubscription(.control)
         handshake.markCapabilitiesRequested()
         XCTAssertTrue(handshake.confirmCapabilities(.default))
-        handshake.markDecoderConfigured()
         XCTAssertTrue(handshake.isReady)
 
         handshake.beginAttempt(2)
@@ -170,9 +164,6 @@ final class RemoteMicAttemptIsolationTests: XCTestCase {
         XCTAssertFalse(handshake.subscriptionsReady)
         XCTAssertFalse(handshake.shouldRequestCapabilities)
         XCTAssertFalse(handshake.accepts(1))
-        handshake.markCapabilitiesRequested()
-        XCTAssertTrue(handshake.confirmCapabilities(.default))
-        XCTAssertFalse(handshake.isReady, "decoder configuration must be resolved again after reconnect")
     }
 
     /// `reset` keeps the current attempt identity, so callbacks already in flight

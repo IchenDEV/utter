@@ -10,12 +10,10 @@ package enum CaptureSource: Equatable, Sendable {
 
 package struct CaptureRequest: Sendable {
     package let source: CaptureSource
-    package let preferRemoteMic: Bool
     package let thresholds: AudioActivityThresholds
-    package init(source: CaptureSource, thresholds: AudioActivityThresholds = .default, preferRemoteMic: Bool = false) {
+    package init(source: CaptureSource, thresholds: AudioActivityThresholds = .default) {
         self.source = source
         self.thresholds = thresholds
-        self.preferRemoteMic = preferRemoteMic
     }
 }
 

@@ -89,10 +89,9 @@ jobs:
         env:
           APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
         run: |
           missing=()
-          for name in APPLE_CERTIFICATE_P12 APPLE_CERTIFICATE_PASSWORD SPARKLE_ED_PRIVATE_KEY; do
+          for name in APPLE_CERTIFICATE_P12 APPLE_CERTIFICATE_PASSWORD; do
             if [ -z "${!name:-}" ]; then
               missing+=("$name")
             fi
@@ -157,7 +156,6 @@ jobs:
         run: |
           ./scripts/build-app.sh \
             --version="$RELEASE_VERSION" \
-            --updates \
             --sign="$SIGN_IDENTITY"
 
       - name: Classify and verify signed artifact
@@ -175,13 +173,9 @@ jobs:
             --dmg "dist/Utter-$RELEASE_VERSION.dmg"
             --version "$RELEASE_VERSION"
             --expected-cert-sha256 "$SIGN_CERT_SHA256"
-            --require-updater --update-info Resources/UpdateInfo.plist
           )
           if grep -q '^Authority=Developer ID Application:' <<<"$SIGNATURE"; then
             SIGNING_MODE=developer-id
-            codesign --force --sign "$SIGN_IDENTITY" --timestamp \
-              --identifier com.opentype.voiceinput.dmg \
-              "dist/Utter-$RELEASE_VERSION.dmg"
             VERIFY_ARGS+=(--require-developer-id)
           elif grep -q '^TeamIdentifier=not set$' <<<"$SIGNATURE"; then
             SIGNING_MODE=self-signed
@@ -230,8 +224,6 @@ jobs:
             --dmg "$DMG"
             --version "$RELEASE_VERSION"
             --expected-cert-sha256 "$SIGN_CERT_SHA256"
-            --require-updater --update-info Resources/UpdateInfo.plist
-            --dump-app-plist "$RUNNER_TEMP/dmg-app-Info.plist"
           )
           if [ "$SIGNING_MODE" = "developer-id" ]; then
             VERIFY_ARGS+=(--require-developer-id --require-notarization)
@@ -244,65 +236,6 @@ jobs:
             shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256"
             shasum -c "$(basename "$DMG").sha256"
           )
-
-      - name: Sign update metadata
-        env:
-          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
-          RELEASE_TAG: ${{ inputs.tag }}
-          RELEASE_VERSION: ${{ inputs.version }}
-        run: |
-          set -euo pipefail
-          DMG="dist/Utter-$RELEASE_VERSION.dmg"
-          TOOLS_DIR="$RUNNER_TEMP/sparkle-tools"
-          mkdir -p "$TOOLS_DIR"
-
-          # The tools come from the pinned Sparkle release, verified against the
-          # committed digest before anything is unpacked or executed.
-          ARCHIVE="$(awk '{print $2}' scripts/sparkle-tools.sha256)"
-          SPARKLE_VERSION="${ARCHIVE#Sparkle-}"
-          SPARKLE_VERSION="${SPARKLE_VERSION%.tar.xz}"
-          curl -sSL -o "$TOOLS_DIR/$ARCHIVE" \
-            "https://github.com/sparkle-project/Sparkle/releases/download/$SPARKLE_VERSION/$ARCHIVE"
-          ( cd "$TOOLS_DIR" && shasum -a 256 -c "$GITHUB_WORKSPACE/scripts/sparkle-tools.sha256" )
-          tar -xJf "$TOOLS_DIR/$ARCHIVE" -C "$TOOLS_DIR" bin/sign_update
-
-          # The key reaches sign_update only through its environment and stdin:
-          # never argv, never a trace, never a file on disk.
-          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" \
-            | "$TOOLS_DIR/bin/sign_update" --ed-key-file - -p "$DMG" > "$RUNNER_TEMP/dmg.edSignature"
-          test -s "$RUNNER_TEMP/dmg.edSignature" || { echo "sign_update produced no signature"; exit 1; }
-
-          PREVIOUS_TAG="$(git describe --tags --abbrev=0 --match 'v[0-9]*' "$RELEASE_TAG^" 2>/dev/null || true)"
-          if [ -n "$PREVIOUS_TAG" ]; then
-            git log --no-merges --pretty=format:'- %s' "$PREVIOUS_TAG..$RELEASE_TAG" \
-              > "$RUNNER_TEMP/release-notes.txt"
-          else
-            git log --no-merges --pretty=format:'- %s' -n 20 "$RELEASE_TAG" \
-              > "$RUNNER_TEMP/release-notes.txt"
-          fi
-
-          # The feed describes the app inside the DMG the verifier just mounted.
-          python3 scripts/generate-appcast.py \
-            --tag "$RELEASE_TAG" \
-            --version "$RELEASE_VERSION" \
-            --app-plist "$RUNNER_TEMP/dmg-app-Info.plist" \
-            --dmg "$DMG" \
-            --signature "$(cat "$RUNNER_TEMP/dmg.edSignature")" \
-            --release-notes "$RUNNER_TEMP/release-notes.txt" \
-            --output dist/appcast.xml
-
-          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" \
-            | "$TOOLS_DIR/bin/sign_update" --ed-key-file - dist/appcast.xml
-
-          # Independent CryptoKit check against the key shipped to clients, so a
-          # wrong or rotated secret cannot strand every installed copy.
-          PUBLIC_KEY="$(python3 -c 'import plistlib,sys; print(plistlib.load(open(sys.argv[1], "rb"))["SUPublicEDKey"])' \
-            "$RUNNER_TEMP/dmg-app-Info.plist")"
-          swift scripts/verify-update-signature.swift --public-key "$PUBLIC_KEY" \
-            --dmg "$DMG" --signature "$(cat "$RUNNER_TEMP/dmg.edSignature")"
-          swift scripts/verify-update-signature.swift --public-key "$PUBLIC_KEY" \
-            --feed dist/appcast.xml
-          rm -f "$RUNNER_TEMP/dmg.edSignature" "$TOOLS_DIR/bin/sign_update"
 
       - name: Publish GitHub Release
         env:
@@ -328,19 +261,17 @@ jobs:
             --generate-notes \
             --notes "$RELEASE_NOTE" \
             --verify-tag
-          gh release upload "$RELEASE_TAG" "$DMG" "$CHECKSUM" "dist/appcast.xml"
+          gh release upload "$RELEASE_TAG" "$DMG" "$CHECKSUM"
 
           DOWNLOAD_DIR="$(mktemp -d)"
           trap 'rm -r "$DOWNLOAD_DIR"' EXIT
           gh release download "$RELEASE_TAG" \
             --pattern "$(basename "$DMG")" \
             --pattern "$(basename "$CHECKSUM")" \
-            --pattern "appcast.xml" \
             --dir "$DOWNLOAD_DIR"
           (
             cd "$DOWNLOAD_DIR"
             shasum -c "$(basename "$CHECKSUM")"
           )
           cmp "$DMG" "$DOWNLOAD_DIR/$(basename "$DMG")"
-          cmp "dist/appcast.xml" "$DOWNLOAD_DIR/appcast.xml"
           gh release edit "$RELEASE_TAG" --draft=false --latest

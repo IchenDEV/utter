@@ -7,7 +7,7 @@ package enum AudioPlugins {
     package static func capture() -> PluginRegistration {
         capture { request, remote, log in
             switch request.source {
-            case .local: return LocalCaptureDriver(log: log, remote: request.preferRemoteMic ? remote : nil)
+            case .local: return LocalCaptureDriver(log: log)
             case .remote:
                 guard let remote else { throw CaptureError.remoteUnavailable }
                 return RemoteCaptureDriver(source: remote)

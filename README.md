@@ -125,15 +125,7 @@ The public app is `Utter.app`. The Swift package product remains `OpenType` so e
 | Accessibility | Global hotkey, text insertion (clipboard + simulated ⌘V), and reading the focused field for context | Yes |
 | Speech Recognition | Apple on-device ASR engine | Only if using Apple Speech |
 | Screen Recording | OCR for screen context and Voice Command mode | Optional |
-| Network | Model downloads; remote LLM API calls; daily update checks | First run / remote LLM mode |
-
-## Updates
-
-Utter checks for updates once a day; you can also check manually from **Settings → About** or the menu bar row ("Check for Updates…"). Automatic checks are on by default and can be turned off in the same place.
-
-A check fetches the release feed from GitHub over HTTPS and may follow GitHub CDN redirects. GitHub receives your IP address and Sparkle's User-Agent with the app and Sparkle versions. The check sends no audio, text, history, system profile, or persistent identifier. Sparkle verifies the feed's Ed25519 signature before showing an update. After you choose **Install Update**, it downloads the DMG and verifies it before extraction and installation.
-
-The first release that carries the updater has to be installed manually once. After that, updates apply in place and keep your permissions, settings and history.
+| Network | Model downloads; remote LLM API calls | First run / remote LLM mode |
 
 ## Local Models
 

@@ -13,13 +13,6 @@ extension PresentationPlugins {
                 return { _ in AnyView(GeneralSettingsView().environmentObject(platform)) }
             }
     }
-    package static func remote() -> PluginRegistration {
-        contribution(id: "presentation.remote", role: .settings, order: 35, label: "tab.remote", symbol: "appletvremote.gen4",
-            requires: platformRequirements) { context, _ in
-                let platform = try platform(context)
-                return { _ in AnyView(RemoteMicSettingsView().environmentObject(platform)) }
-            }
-    }
     package static func history() -> PluginRegistration {
         contribution(id: "presentation.history", role: .settings, order: 0, label: "tab.history", symbol: "chart.line.uptrend.xyaxis",
             requires: [DataServices.history.required]) { context, _ in
@@ -63,10 +56,9 @@ extension PresentationPlugins {
     }
     package static func about() -> PluginRegistration {
         contribution(id: "presentation.about", role: .settings, order: 50, label: "tab.about", symbol: "info.circle",
-            requires: platformRequirements + [UpdateServices.updater.optional]) { context, _ in
+            requires: platformRequirements) { context, _ in
                 let platform = try platform(context)
-                let update = try updateProjection(context)
-                return { _ in AnyView(AboutView(update: update).environmentObject(platform)) }
+                return { _ in AnyView(AboutView().environmentObject(platform)) }
             }
     }
     package static func onboarding() -> PluginRegistration {
