@@ -1,8 +1,8 @@
 # Verification: Roll back to v0.0.51 and consolidate Settings tabs
 
-**Status:** pending approval            # draft | pending approval | approved | rejected | blocked
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved            # draft | pending approval | approved | rejected | blocked
+**Approved-by:** User, explicit chat decision: 批准 (the verification record, its deviations and its residual risks as written; merging, tagging and releasing remain separate decisions)
+**Approved-date:** 2026-10-25
 **Upstream:** plan.md (approved 2026-10-24)
 **Risk:** High, the rollback range includes release, signing and packaging files
 
