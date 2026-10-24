@@ -78,6 +78,26 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertTrue(SettingsStore(defaults: fixture.defaults).values.automaticUpdateChecks)
     }
 
+    func testRemoteKeyRemapDefaultsOnStoresNothingUntouchedAndPersistsBothValues() {
+        let fixture = defaultsFixture()
+        defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }
+        let store = SettingsStore(defaults: fixture.defaults)
+        XCTAssertTrue(store.values.remoteKeyRemapEnabled)
+        XCTAssertNil(fixture.defaults.object(forKey: "remoteKeyRemapEnabled"), "an untouched install stores nothing")
+        store.update { $0.remoteKeyRemapEnabled = false }
+        XCTAssertFalse(SettingsStore(defaults: fixture.defaults).values.remoteKeyRemapEnabled)
+        XCTAssertEqual(fixture.defaults.object(forKey: "remoteKeyRemapEnabled") as? Bool, false)
+        store.update { $0.remoteKeyRemapEnabled = true }
+        XCTAssertTrue(SettingsStore(defaults: fixture.defaults).values.remoteKeyRemapEnabled)
+    }
+
+    func testRemoteKeyRemapHiddenDefaultKillSwitchIsHonoredOnLaunch() {
+        let fixture = defaultsFixture()
+        defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }
+        fixture.defaults.set(false, forKey: "remoteKeyRemapEnabled")
+        XCTAssertFalse(SettingsStore(defaults: fixture.defaults).values.remoteKeyRemapEnabled)
+    }
+
     func testTokenRotationKeepsOriginalKeyAndDoesNotChangeComposition() throws {
         let fixture = defaultsFixture()
         defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }

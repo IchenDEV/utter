@@ -14,6 +14,7 @@ extension SettingsStore {
         defaults.set(values.microphoneID, forKey: Key.microphoneID.rawValue)
         defaults.set(values.remoteMicEnabled, forKey: Key.remoteMicEnabled.rawValue)
         defaults.set(values.remoteMicGainDB, forKey: Key.remoteMicGainDB.rawValue)
+        defaults.set(values.remoteKeyRemapEnabled, forKey: Key.remoteKeyRemapEnabled.rawValue)
         defaults.set(values.audioGateSensitivity.rawValue, forKey: Key.audioGateSensitivity.rawValue)
         defaults.set(values.audioWeakSpeechSensitivity.rawValue, forKey: Key.audioWeakSpeechSensitivity.rawValue)
         defaults.set(values.outputMode.rawValue, forKey: Key.outputMode.rawValue)
