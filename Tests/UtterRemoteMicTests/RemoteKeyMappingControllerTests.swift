@@ -136,6 +136,18 @@ final class RemoteKeyMappingControllerTests: XCTestCase {
         XCTAssertEqual(service.entries, [foreignF5], "restore leaves another tool's mapping alone")
     }
 
+    func testATableClearedByAnotherToolIsReappliedWithOnlyOurEntryAndNothingIsResurrected() {
+        let service = FakeKeyService(id: 1, entries: [capsToEscape, foreignF5])
+        let (controller, _, _) = make([service])
+        controller.setEnabled(true)
+        XCTAssertEqual(service.entries, [capsToEscape, ours])
+        service.entries = []
+        controller.tick()
+        XCTAssertEqual(service.entries, [ours], "entries another tool removed are not ours to bring back")
+        controller.setEnabled(false)
+        XCTAssertEqual(service.entries, [], "restore must not undo another tool's deliberate clear")
+    }
+
     func testDisablingRestoresTheForeignF5AndEverythingElse() {
         let service = FakeKeyService(id: 1, entries: [capsToEscape, foreignF5])
         let (controller, _, _) = make([service])

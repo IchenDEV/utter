@@ -1,0 +1,11 @@
+=== RESTORE READBACK ===
+/Applications/Utter.app/Contents/MacOS/Utter
+Utter   33917 chenli  txt       REG   1,17 100859920           225529236 /Applications/Utter.app/Contents/MacOS/Utter
+Error: Could not find key 'remoteKeyRemapEnabled' in domain 'com.opentype.voiceinput'.
+RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)

@@ -1,0 +1,15 @@
+[2026-10-24T18:22:29Z] === Batch8 automated lifecycle (no voice-key presses) ===
+[2026-10-24T18:22:29Z] baseline remote: UserKeyMapping F5->0 (manual)
+[2026-10-24T18:22:32Z] quit graceful (installed Utter)
+[2026-10-24T18:22:32Z] after clear: UserKeyMapping ()
+[2026-10-24T18:22:35Z] dist started setting=false after 3s: UserKeyMapping () — E4: no write
+[2026-10-24T18:22:37Z] after E4 quit: UserKeyMapping ()
+[2026-10-24T18:22:37Z] foreign set: unrelated 30064771076->30064771073 + F5 30064771134->30064771073
+[2026-10-24T18:22:38Z] apply latency ~1s — after apply: unrelated kept, F5 30064771134->0
+[2026-10-24T18:22:38Z] internal Apple VID 1452: UserKeyMapping (null)
+[2026-10-24T18:22:40Z] E1 after quit: unrelated kept, F5 foreign 30064771134->30064771073 restored
+[2026-10-24T18:22:42Z] E3 before clear1: both entries + our F5->0
+[2026-10-24T18:22:45Z] E3 after clear1 +3s: ONLY F5->0 (unrelated entry LOST)
+[2026-10-24T18:22:50Z] E3 after clear2 +5s: UserKeyMapping ()
+[2026-10-24T18:22:50Z] E3 poll 1-6 (+12s): mapping stays empty (conflict / stop rewriting)
+[2026-10-24T18:23:05Z] final remote after quit: UserKeyMapping ()

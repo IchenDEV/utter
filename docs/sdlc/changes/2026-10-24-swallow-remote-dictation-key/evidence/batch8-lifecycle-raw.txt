@@ -1,0 +1,24 @@
+[2026-10-24T18:22:29Z] === Batch8 automated lifecycle (no voice-key presses) ===
+[2026-10-24T18:22:29Z] baseline remote: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   (         {         HIDKeyboardModifierMappingDst = 0;         HIDKeyboardModifierMappingSrc = 30064771134; 
+[2026-10-24T18:22:32Z] quit graceful
+RegistryID  Key                   Value
+[2026-10-24T18:22:32Z] after clear: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
+[2026-10-24T18:22:35Z] dist started setting=false after 3s: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
+[2026-10-24T18:22:35Z] E4 partial: mapping should stay empty — contains F5? 0
+[2026-10-24T18:22:37Z] after E4 quit: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
+RegistryID  Key                   Value
+[2026-10-24T18:22:37Z] foreign set: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   (         {         HIDKeyboardModifierMappingDst = 30064771073;         HIDKeyboardModifierMappingSrc = 30064771076;     },         {         HIDKeyboardModifierMappingDst = 30064771073;         HIDKeyboardModifierMappingSrc = 30064771134;     } ) 
+[2026-10-24T18:22:38Z] apply latency ~1s (from dist open)
+[2026-10-24T18:22:38Z] after apply: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   (         {         HIDKeyboardModifierMappingDst = 30064771073;         HIDKeyboardModifierMappingSrc = 30064771076;     },         {         HIDKeyboardModifierMappingDst = 0;         HIDKeyboardModifierMappingSrc = 30064771134;     } ) 
+[2026-10-24T18:22:38Z] internal: 
+[2026-10-24T18:22:40Z] E1 after quit: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   (         {         HIDKeyboardModifierMappingDst = 30064771073;         HIDKeyboardModifierMappingSrc = 30064771076;     },         {         HIDKeyboardModifierMappingDst = 30064771073;         HIDKeyboardModifierMappingSrc = 30064771134;     } ) 
+[2026-10-24T18:22:42Z] E3 before clear1: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   (         {         HIDKeyboardModifierMappingDst = 30064771073;         HIDKeyboardModifierMappingSrc = 30064771076;     },         {         HIDKeyboardModifierMappingDst = 0;         HIDKeyboardModifierMappingSrc = 30064771134;     } ) 
+[2026-10-24T18:22:45Z] E3 after clear1 +3s: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   (         {         HIDKeyboardModifierMappingDst = 0;         HIDKeyboardModifierMappingSrc = 30064771134;     } ) 
+[2026-10-24T18:22:50Z] E3 after clear2 +5s: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
+[2026-10-24T18:22:50Z] E3 poll 1: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
+[2026-10-24T18:22:52Z] E3 poll 2: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
+[2026-10-24T18:22:54Z] E3 poll 3: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
+[2026-10-24T18:22:56Z] E3 poll 4: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
+[2026-10-24T18:22:58Z] E3 poll 5: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
+[2026-10-24T18:23:00Z] E3 poll 6: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
+[2026-10-24T18:23:05Z] final remote: RegistryID  Key                   Value 1000da8ae   UserKeyMapping   ( ) 
