@@ -55,12 +55,12 @@ package enum PresentationPlugins {
     }
 
     static func contribution(id: String, role: PresentationRole, order: Int = 0, label: String = "", symbol: String = "",
-        requires: [ServiceRequirement] = [],
+        group: String? = nil, requires: [ServiceRequirement] = [],
         make: @escaping (PluginContext, [String: ConfigurationValue]) throws -> (PresentationContext) -> AnyView) -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(id: id, requires: [PresentationServices.catalog.required] + requires)) { context, configuration in
             let view = try make(context, configuration)
             try context.require(PresentationServices.catalog).register(PresentationContribution(id: id, role: role,
-                order: order, label: label, symbol: symbol, view: { presentation in
+                order: order, label: label, symbol: symbol, group: group, view: { presentation in
                     guard context.isCurrent else { return AnyView(EmptyView()) }
                     return view(presentation)
                 }), scope: context.scope)

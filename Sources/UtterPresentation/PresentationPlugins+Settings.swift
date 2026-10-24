@@ -48,8 +48,8 @@ extension PresentationPlugins {
             }
     }
     package static func integrations() -> PluginRegistration {
-        contribution(id: "presentation.integrations", role: .settings, order: 40, label: "settings.integrations", symbol: "point.3.connected.trianglepath.dotted",
-            requires: [IntegrationServices.clients.required]) { context, _ in
+        contribution(id: "presentation.integrations", role: .settings, order: 0, label: "settings.integrations", symbol: "point.3.connected.trianglepath.dotted",
+            group: SettingsGroup.integrations.id, requires: [IntegrationServices.clients.required]) { context, _ in
                 let clients = try context.require(IntegrationServices.clients)
                 return { _ in AnyView(IntegrationsSettingsView(registry: clients)) }
             }
