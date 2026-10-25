@@ -112,9 +112,9 @@ Batch 0 showed that Input Monitoring is required for M3's observer (`IOHIDManage
 
 ## Erratum 1: firing rule, key repeat, permission flow
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision: approve erratum 1 and start Batch 1 (2026-10-25)
+**Approved-date:** 2026-10-25
 
 Found while analyzing Batch 0, not by a test. It corrects the design section and does not change the approved mechanism.
 
