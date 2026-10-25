@@ -30,12 +30,14 @@ final class SettingsGroupPluginTests: XCTestCase {
 
     private func mountedTabs(mounting ids: [String]) async throws -> (tabs: [SettingsTab], runtime: PluginRuntime) {
         let fixture = PluginRegistration(descriptor: PluginDescriptor(id: "fixture.data",
-            provides: [IntegrationServices.clients.reference, DataServices.configuration.reference])) { context, _ in
+            provides: [IntegrationServices.clients.reference, DataServices.configuration.reference,
+                       IntegrationServices.diagnostics.reference])) { context, _ in
             try context.provide(IntegrationServices.clients, value: Clients())
             try context.provide(DataServices.configuration, value: Configuration())
+            try context.provide(IntegrationServices.diagnostics, value: TestDiagnostics.service)
         }
         let runtime = PluginRuntime(catalog: try PluginCatalog([fixture, PresentationPlugins.catalog(),
-            PresentationPlugins.integrations(), PresentationPlugins.configuration()]))
+            PresentationPlugins.integrations(), PresentationPlugins.remoteMic(), PresentationPlugins.configuration()]))
         try await runtime.start((["fixture.data", "presentation.catalog"] + ids).map { PluginSelection($0) })
         let catalog = try runtime.service(PresentationServices.catalog)
         return (SettingsTabLayout.tabs(from: catalog.contributions(for: .settings)), runtime)
@@ -55,5 +57,34 @@ final class SettingsGroupPluginTests: XCTestCase {
         let (onlyIntegrations, second) = try await mountedTabs(mounting: ["presentation.integrations"])
         XCTAssertEqual(onlyIntegrations.first?.members.map(\.id), ["presentation.integrations"])
         try await second.stop()
+    }
+
+    func testRemoteMicSectionSitsBetweenIntegrationsAndPlugins() async throws {
+        let (tabs, runtime) = try await mountedTabs(mounting: [
+            "presentation.configuration", "presentation.remote-mic", "presentation.integrations"])
+        XCTAssertEqual(tabs.map(\.id), [SettingsGroup.integrations.id])
+        XCTAssertEqual(tabs.first?.members.map(\.id),
+                       ["presentation.integrations", "presentation.remote-mic", "presentation.configuration"])
+        try await runtime.stop()
+    }
+
+    func testDisablingRemoteMicLeavesTheOtherSectionsInTheTab() async throws {
+        let (tabs, runtime) = try await mountedTabs(mounting: ["presentation.configuration", "presentation.integrations"])
+        XCTAssertEqual(tabs.first?.members.map(\.id), ["presentation.integrations", "presentation.configuration"])
+        try await runtime.stop()
+    }
+
+    func testDisablingIntegrationsLeavesRemoteMicAndPlugins() async throws {
+        let (tabs, runtime) = try await mountedTabs(mounting: ["presentation.configuration", "presentation.remote-mic"])
+        XCTAssertEqual(tabs.map(\.id), [SettingsGroup.integrations.id])
+        XCTAssertEqual(tabs.first?.members.map(\.id), ["presentation.remote-mic", "presentation.configuration"])
+        try await runtime.stop()
+    }
+
+    func testRemoteMicAloneStillGetsTheIntegrationsTab() async throws {
+        let (tabs, runtime) = try await mountedTabs(mounting: ["presentation.remote-mic"])
+        XCTAssertEqual(tabs.map(\.id), [SettingsGroup.integrations.id])
+        XCTAssertEqual(tabs.first?.members.map(\.id), ["presentation.remote-mic"])
+        try await runtime.stop()
     }
 }

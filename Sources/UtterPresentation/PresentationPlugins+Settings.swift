@@ -54,6 +54,14 @@ extension PresentationPlugins {
                 return { _ in AnyView(IntegrationsSettingsView(registry: clients)) }
             }
     }
+    package static func remoteMic() -> PluginRegistration {
+        contribution(id: "presentation.remote-mic", role: .settings, order: 5, label: "settings.remote_mic",
+            symbol: "dot.radiowaves.left.and.right", group: SettingsGroup.integrations.id,
+            requires: platformRequirements) { context, _ in
+                let platform = try platform(context)
+                return { _ in AnyView(RemoteMicSettingsView(platform: platform)) }
+            }
+    }
     package static func about() -> PluginRegistration {
         contribution(id: "presentation.about", role: .settings, order: 50, label: "tab.about", symbol: "info.circle",
             requires: platformRequirements) { context, _ in
