@@ -1,8 +1,8 @@
 # Spec: Move the Xiaomi remote microphone controls into Integrations
 
-**Status:** pending approval            # draft | pending approval | approved | rejected | blocked
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准 (design D1 to D6 as written, including the answers to intent questions 1 to 5)
+**Approved-date:** 2026-10-25
 **Upstream:** intent.md (approved 2026-10-25)
 **Risk:** Medium. User-visible Settings placement and one help string. No permission, data format, signing or release change.
 
