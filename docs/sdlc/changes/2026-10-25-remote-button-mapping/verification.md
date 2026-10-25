@@ -71,3 +71,28 @@ Test strength was checked by mutation: changing `deadline <= time` to `<`, the r
 
 **Interpretation to confirm.** Erratum 1 says that with a double click bound and no long press, single fires "when W after the first press passes with no second press". The recognizer fires single at that moment only if the key was already released. A key still held when W ends is resolved at its release, so a key that is down never fires a single. The two readings agree for every press shorter than W (about 0.4 s); they differ only for holds between W and the long-press threshold on a button that has a double click bound and no long press. Changing it is one line plus one test.
 
+## Batch 2: policy and controller generalization (implemented 2026-10-25)
+
+Scope: the key remapping now owns a set of sources that can change while running, instead of the single F5 entry. Nothing in the app calls `setOwnedSources` yet, so behavior of PR #130 is unchanged until Batch 6 wires it.
+
+- **Ownership is source based.** An entry is ours iff its destination is 0 and its source is F5 or one of the 11 remote button sources. A crash leftover written for a different profile is therefore recognized, repaired and cleaned on disable.
+- **Editing is not a conflict.** When the desired set differs from the applied set the controller starts a fresh attempt (no re-apply counted, no conflict). Another tool overwriting an owned key still gets one re-apply and then a reported conflict, as in PR #130.
+- **Restore is limited to what we silenced.** `applying` puts back an original entry only for a key we owned before and no longer want, and only when nothing else is on that source. This was found while writing tests: the first version also resurrected an unrelated original entry that another tool had removed meanwhile.
+- **Read-back must match exactly.** A first version accepted any read-back that contained everything desired, which hid a released key left silenced after a failed write. `isSynced` now also rejects stale entries of ours.
+
+Tests: 36 existing PR #130 mapping tests unchanged and passing; 14 new policy tests and 17 new controller tests; module total 172, 0 failures.
+
+Mutation checks (each applied alone, then reverted, sources diffed identical to the original):
+
+| Mutation | Caught by |
+|---|---|
+| a profile edit is not recognized | 4 controller tests |
+| read-back ignores stale entries | 3 tests |
+| ownership ignores destination 0 | 5+ tests |
+| disable ignores the carried state of a failed attempt | `testGivingUpAfterARetargetFailureStillRestoresOnDisable` |
+| unknown sources accepted | 2 tests |
+
+`bash scripts/ci-basic-checks.sh` and `bash scripts/sdlc-checks.sh` pass.
+
+Not covered by Batch 2 (by design): the permission flow, the press source, the coordinator and any real device write. Those start in Batch 4; the real-device checks are still the Batch 9 verifier's.
+

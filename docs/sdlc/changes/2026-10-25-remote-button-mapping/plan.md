@@ -33,9 +33,10 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 ### Batch 2: policy and controller generalization
 
-- [ ] `RemoteKeyMappingPolicy` from one constant entry to an owned entry set that always contains F5 → nothing. `containsOurs`, `snapshot`, `applying`, `restoring` per owned source, foreign entries and other devices untouched.
-- [ ] `RemoteKeyMappingController`: a desired set that changes at runtime. A profile edit starts a fresh attempt and does not count as a re-apply, so editing is never reported as a conflict.
+- [x] `RemoteKeyMappingPolicy` from one constant entry to an owned entry set that always contains F5 → nothing. `containsOurs`, `snapshot`, `applying`, `restoring` per owned source, foreign entries and other devices untouched.
+- [x] `RemoteKeyMappingController`: a desired set that changes at runtime. A profile edit starts a fresh attempt and does not count as a re-apply, so editing is never reported as a conflict.
 - Tests: the existing PR #130 cases keep passing unchanged; new cases for set apply and restore, leftover entries from a crash treated as ours, foreign entry for an owned source restored, edit without conflict, F5 invariant. Focused filter: `RemoteKeyMapping`.
+- Done 2026-10-25: ownership became source based (an entry is ours iff destination is 0 and the source is F5 or a known remote button), `applying` takes the previously owned entries so it only restores what we silenced, read-back requires no stale entry of ours (`isSynced`). The 36 PR #130 tests pass unchanged; 31 new tests.
 
 ### Batch 3: settings
 
