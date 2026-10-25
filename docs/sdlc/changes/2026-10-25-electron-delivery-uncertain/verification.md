@@ -5,7 +5,7 @@
 **Approved-date:** —
 **Upstream:** [plan](plan.md)
 
-Intent, spec and plan were approved together on 2026-10-25 18:50 UTC+8. Only Batch 0 (measurement gate) has run. Batches 1–5 have not started; the gate decision below belongs to the user.
+Intent, spec and plan were approved together on 2026-10-25 18:50 UTC+8. Batch 0 (measurement gate) ran first. After its report the user decided to continue with Batches 1–4 unchanged (chat: 直接开始 Batch 1–4, spec erratum to follow). Batches 1–4 are implemented and unit-tested; **Batch 5 (hardware verification by an independent verifier) has not started**, so nothing here shows the fix works on a real Mac yet.
 
 ## Batch 0 — measurement gate (run 2026-10-25, 18:55–19:28 UTC+8)
 
@@ -65,7 +65,7 @@ It is not "only the first paste works" (input succeeds at position 3) and not pu
 | Does D3's `"\n"` rule matter? | Not in Dia |
 | Does Safari need its own rule (D6)? | Not measured |
 
-Gate decision: **pending the user** (continue unchanged, revise D1/D3, or open a Safari rule; also whether to measure the unmeasured rows first).
+Gate decision: **continue with Batches 1–4 unchanged**, chosen by the user after this report (the offered alternatives were: submit the spec erratum first, measure Safari/Feishu/real Utter first, or stop). The spec erratum below is still owed.
 
 ### Spec follow-ups required (spec is approved; edits need a new approval)
 
@@ -84,6 +84,36 @@ Gate decision: **pending the user** (continue unchanged, revise D1/D3, or open a
 
 All logs are under [`evidence/`](evidence/) as `batch0-*.txt`: per-field runs (`dia-*`, `dia-click-*`, `dia-f-*`), `readonly-check`, the sweeps, `dia-addressbar`, `dia-findbar`, and the invalid run.
 
-## Batches 1–5
+## Implementation log (Batches 1–4)
 
-Not started.
+Each batch ran `swift build`, `swift test --filter UtterMacServicesTests` and `bash scripts/ci-basic-checks.sh` before its commit.
+
+| Batch | Commit | What | Tests |
+|---|---|---|---|
+| 1 | `672988e` | Pure `DeliveryExpectation.expectedDocument` | 8 new, module 62 passing |
+| 2 | `69cb79a` | `WebContentEditorSignature` (`ChromeAXNodeId`), `isWebContentEditor` on the target, transaction skips the AX write for web editors | module 71 passing |
+| 3 | `1a81fad` | `DeliveryCompletion.path`/`target`, `logSummary`, hidden kill switch `deliveryWebEditorPasteDisabled` | module 75 passing |
+| 4 | this commit | README troubleshooting entry (EN and ZH), this log | docs only |
+
+Full `swift test` after Batch 3: 15 test bundles, 1215 tests, 18 skipped, 0 failures. The output contains CoreData `NSXPCStore` log noise from tests unrelated to this change; no test failed. `scripts/sdlc-checks.sh` and `scripts/ci-basic-checks.sh` pass.
+
+Mutation check: with the `!target.isWebContentEditor` guard removed from `TextDeliveryTransaction`, the three new web-editor transaction tests fail (AX write reached, paste not used); restored afterwards.
+
+### Differences from the approved plan and spec (disclosed)
+
+1. **Guard in two places.** The plan said `supportsSelectionWrite` returns false for web editors. It does, and `TextDeliveryTransaction` also checks `isWebContentEditor` itself so a target cannot reach the ineffective write by mistake and the tests can prove it with a fake.
+2. **D3 narrowed.** The placeholder rule applies only when the caret is at `0,0` and the replacement is non-empty. Batch 0 measured neither another caret position nor a delete in an empty field; those cases use the normal computation and can only end `uncertain`. In Dia the empty value is `""`, so D3 changes nothing there.
+3. **"Editable" is part of the classification.** `isWebContentEditor` requires the Chromium node and a settable `AXSelectedText`. A read-only Chromium node keeps going through the paste path as before and logs `target=native`.
+4. **A fourth path label.** Deleting through a key press (undo/delete flows) logs `path=keyPress`, because calling it `paste` would mislead; the spec named three values.
+5. **No separate release-note file.** Release notes come from `git log --no-merges` subjects (`docs/sdlc/release-runbook.md`), so the Batch 2 and 3 commit subjects are the release-note lines. There was no troubleshooting document, so the entry lives in `README.md` and `README_zh.md`.
+6. **Kill switch read per delivery** from `UserDefaults.standard`; `defaults write` taking effect on the next dictation is claimed in the README and must be confirmed in Batch 5.
+
+### Not covered by any test yet
+
+- Anchor flows on web editors (`replaceAnchor`, `undoAnchor`): they select a range through AX and then paste or press delete. Whether Chromium honors the AX selection write was not measured. Expected worst case is `uncertain`; check in Batch 5.
+- Everything that needs a real Chromium field: classification by `ChromeAXNodeId`, the paste landing, the placeholder rule, clipboard restoration. Unit tests use fakes.
+- The consecutive-paste anomaly from Batch 0.
+
+## Batch 5 — independent verification
+
+Not started. Requires the release-style build (`bash scripts/build-app.sh`) and a verifier who is not the implementer.

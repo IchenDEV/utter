@@ -117,3 +117,15 @@ The user approved the earlier revision of this spec on 2026-10-25 (chat: 批准,
 ## Approval requested
 
 Please decide the revision as a whole: D1 and D5 extended to Chromium browsers and all Electron apps by the same signature; D6 (WebKit measured in Batch 0, not assumed); the added test matrix. D2, D3 and D4 stand as previously approved. Then this spec can move to `approved`; the plan (now including a measurement batch) is approved separately.
+
+## Erratum 2026-10-25 (proposed, pending approval)
+
+**Status of this erratum:** pending approval. **Approved-by:** — **Approved-date:** —. The approved text above is unchanged; the code in Batches 1–4 behaves as described here either way. Source: [`verification.md`](verification.md), "Batch 0".
+
+1. **The "Classification false positive" row is withdrawn as written.** It said Chromium browser UI carries `ChromeAXNodeId`, citing a Dia sidebar row. Measured in Dia, the **address bar and the find bar do not carry `ChromeAXNodeId`, and the AX selected-text write is effective there**, so they stay on the AX path. The sidebar row was not a text field. Remaining risk, unmeasured: other Chromium browsers may expose the id on their own UI fields. Batch 5 checks Dia only.
+2. **Evidence table, Dia row:** add that web `<input>`, `<textarea>` and `contenteditable` fields carry `ChromeAXNodeId`, report an empty value of `""` (not `"\n"`), and ignore the AX write (returns success, no effect).
+3. **D3 as implemented is narrower than written:** the placeholder rule applies only with the caret at `0,0` and a non-empty replacement. In Dia it never triggers because the empty value is `""`.
+4. **Known limit to state for approval:** after a page reload, 27/27 pastes landed in Dia; in a single page session without reloading, pastes into `textarea` and `contenteditable` fields often did not land (cause unknown, measured with synthetic clicks while the user was away). If this reproduces with real dictation, the user sees `uncertain` for those dictations and acceptance criterion "10 consecutive dictations" is not met by this design alone.
+5. **Implementation notes (no design change):** `isWebContentEditor` also requires a settable `AXSelectedText`; a fourth log value `path=keyPress` exists for delete flows.
+
+Please approve or reject this erratum separately from the verification stage.
