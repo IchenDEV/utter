@@ -1,8 +1,8 @@
 # Intent: Cut the Settings window to six tabs without rolling back any feature
 
-**Status:** pending approval            # draft | pending approval | approved | rejected | blocked
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准 (intent as written; the three open questions are answered by the spec, which gets its own approval; draft PR #131 is not touched by this approval)
+**Approved-date:** 2026-10-25
 **Upstream:** — (supersedes the "whole-product rollback" decision of `docs/sdlc/changes/2026-10-24-settings-tab-consolidation/`, which the owner withdrew on 2026-10-25: "功能不回退，只改菜单")
 **Risk:** Medium. User-visible Settings layout and navigation. No permission, privacy, data format, signing or release change.
 
