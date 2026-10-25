@@ -9,9 +9,9 @@
 
 ## Problem
 
-The remote's keys other than the voice key can only do what macOS does with them as keyboard keys. The previous app lists twelve for the Xiaomi Remote 2 Pro: power, four arrows, OK, back, home, menu, TV, volume up and volume down. Which of them the RC003 sends, and as which usages, is not yet measured here (open question 5). Utter offers no way to change that. The user previously used a separate app, `remote-mic-app` (SayAll), whose **Key Mapping** page lets every button run a chosen action, and wants that capability inside Utter so one app owns the remote.
+The remote's keys other than the voice key can only do what macOS does with them as keyboard keys. The previous app lists twelve for the Xiaomi Remote 2 Pro: power, four arrows, OK, back, home, menu, TV, volume up and volume down. Which of them the RC003 sends, and as which usages, is not yet measured here (open question 4). Utter offers no way to change that. The user previously used a separate app, `remote-mic-app` (SayAll), whose **Key Mapping** page lets every button run a chosen action, and wants that capability inside Utter so one app owns the remote.
 
-The previous app's behavior, inventoried from its public repository at `a5b272acc1` (2026-08-30): its README, one screenshot of the page, and the source files `RemoteButtons.swift`, `RemoteButtonGestureRecognizer.swift` and `RemoteMappingCanvas.swift`. The agent that drafted this intent read that source to build the inventory. No code, screenshot or string was copied into this repository, but the reading is disclosed here because it limits what "clean-room" can mean for that agent; the licensing owner decides whether it matters (open question 1).
+The previous app's behavior, inventoried from its public repository at `a5b272acc1` (2026-08-30): its README, one screenshot of the page, and the source files `RemoteButtons.swift`, `RemoteButtonGestureRecognizer.swift` and `RemoteMappingCanvas.swift`. The agent that drafted this intent read that source to build the inventory. No code, screenshot or string was copied into this repository, but the reading is disclosed here because it limits what "clean-room" can mean for that agent; the licensing owner decides whether it matters (see Decisions recorded below).
 
 - A page showing the remote with each key's actions; a master switch for custom mapping; "restore defaults"; "lock the key being edited while it is pressed".
 - Per key, three triggers: single click, double click, long press.
@@ -60,11 +60,17 @@ Two facts constrain a port:
 - If a required permission is denied, the page says what is missing and why, mapping stays inactive, and the remote and the voice key keep working.
 - `bash scripts/sdlc-checks.sh`, `bash scripts/ci-basic-checks.sh` and `swift test` pass. A verifier other than the implementer runs the real-remote matrix: pair, each key and trigger, rapid presses, sleep and wake, reconnect, quit and crash recovery, and permission denied.
 
+## Decisions recorded from the user (chat, 2026-10-25)
+
+These answer open questions and are not an approval of this intent.
+
+- **Licensing:** clean-room reimplementation from the observable behavior in this intent. No code, assets, screenshots or strings are taken from `remote-mic-app`. The drafting agent read the reference source to build the inventory above, so from here the spec and the implementation derive only from this inventory and from behavior measured on the RC003, and do not reopen the reference source. Whether that disclosure is enough, or a fresh implementer is needed, stays with the licensing owner.
+- **First slice:** the core slice named in Scope (twelve keys, three triggers; keyboard, system and media, recorded shortcut, open an installed app; RC003 only).
+- **Order relative to PR #130:** PR #130 stays open and unmerged for now. This branch is stacked on it and will be rebased when it merges.
+
 ## Open questions
 
-1. **Licensing owner decision.** Clean-room reimplementation is the recommended default. Alternatives: accept GPL-3.0-derived code with its consequences for Utter's license, or ask the other contributors of `HD838A/remote-mic-app` for permission. Needed before any code is written.
-2. **First slice.** Recommended: the slice named in Scope. Alternative: full parity including focus-input, recorded accessibility targets, long recording and macros.
-3. **Mechanism.** The previous app seizes the HID device and injects its own events. An alternative reuses PR #130's device-level key mapping to move each button to a private key and recognizes it in Utter's existing event tap, which avoids a seize and may avoid Input Monitoring. Decide in the spec after measuring both on the RC003.
-4. **Order relative to PR #130.** Recommended: merge PR #130 first, then rebase this branch. This branch is stacked on it because both change how the same device's keys are handled.
-5. **Which remotes.** Recommended: the RC003 only. The previous app's screenshots show the Xiaomi Remote 2 Pro, which may have a different product id.
-6. **Coexistence with `remote-mic-app`** when both are installed: detect and warn (recommended), or take over.
+1. **Mechanism.** The previous app seizes the HID device and injects its own events. An alternative reuses PR #130's device-level key mapping to move each button to a private key and recognizes it in Utter's existing event tap, which avoids a seize and may avoid Input Monitoring. Decide in the spec after measuring both on the RC003. Any new permission category sends this intent back for re-approval.
+2. **Which remotes beyond the RC003.** The previous app's screenshot shows the Xiaomi Remote 2 Pro, which may use a different product id. Out of the first slice.
+3. **Coexistence with `remote-mic-app`** when both are installed: detect and warn (recommended), or take over.
+4. **Which of the twelve keys the RC003 actually sends, and as which usages.** To be measured before the spec fixes the key table.
