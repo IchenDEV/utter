@@ -13,13 +13,15 @@ The branch is stacked on PR #130 (`cursor/swallow-remote-dictation-key`). Batche
 
 ### Batch 0: measurements (no production code; feeds Batches 1, 4 and 5)
 
+**Outcome (2026-10-25, details in [verification.md](verification.md)):** key table, observer under silence, timing and the Input Monitoring gate are measured; the granted-permission path and crash heal are not. Per spec D3 the starting values change to a **400 ms** double-click window (measured down to down) and keep **500 ms** for long press.
+
 The earlier hardware sessions failed when a script waited for presses on a timer. This one is **count-driven**: the user starts it, each key is announced by sound and name, and the script moves on after a counted press, not after a time. A scratch tool lives under `evidence/` and is not part of the product. It must restore the remote's mapping on exit, and a clear command is printed before it starts.
 
-- [ ] Key table: for every RC003 key except power, one counted press and one long press. Record the HID usage page and usage, and the CG keycode, flags or system-defined data it produces with no mapping. Fills `RemoteButton` and the native-emulation table. Power is never asked for.
-- [ ] Observer under silence: for two keys of different kinds, map each to nothing with `hidutil`, and confirm the non-seizing `IOHIDManager` still sees every press and release while the CG layer sees none. Include a consumer-page key if the volume keys are on page 12.
-- [ ] Permission behavior (spec D2): run the observer from a minimal ad hoc signed `.app` launched with `open`, so it carries none of Cursor's or Terminal's permissions. Record `IOHIDCheckAccess`, the `IOHIDManagerOpen` result and whether events arrive, before and after Input Monitoring is granted. This decides how the "no entries until live" gate is checked in Batch 4.
-- [ ] Crash heal: with two keys mapped, force-terminate the process and record how long the keys stay silent and what returns them (reconnect, sleep, the manual clear command).
-- [ ] Timing: ten natural double clicks and ten long presses on one key; record the observed intervals to confirm or adjust the 300 ms and 500 ms starting values.
+- [x] Key table: for every RC003 key except power, one counted press and one long press. Record the HID usage page and usage, and the CG keycode, flags or system-defined data it produces with no mapping. Fills `RemoteButton` and the native-emulation table. Power is never asked for.
+- [x] Observer under silence (two keyboard-page keys; a volume key is untested): for two keys of different kinds, map each to nothing with `hidutil`, and confirm the non-seizing `IOHIDManager` still sees every press and release while the CG layer sees none. Include a consumer-page key if the volume keys are on page 12.
+- [~] Permission behavior (spec D2), partly: open fails without permission and the state flips to denied without a prompt; the grant path was not completed by the user: run the observer from a minimal ad hoc signed `.app` launched with `open`, so it carries none of Cursor's or Terminal's permissions. Record `IOHIDCheckAccess`, the `IOHIDManagerOpen` result and whether events arrive, before and after Input Monitoring is granted. This decides how the "no entries until live" gate is checked in Batch 4.
+- [~] Crash heal, from PR #130's evidence only (mapping is lost at remote reconnect); sleep and idle disconnect unmeasured: with two keys mapped, force-terminate the process and record how long the keys stay silent and what returns them (reconnect, sleep, the manual clear command).
+- [x] Timing: ten natural double clicks and ten long presses on one key; record the observed intervals to confirm or adjust the 300 ms and 500 ms starting values.
 - **Gate:** if the observer does not see presses under a mapping for any key kind, or Input Monitoring cannot be checked reliably, stop and bring the evidence back for a spec revision. Results are copied into `evidence/` as `.txt` and summarized in `verification.md`.
 
 ### Batch 1: model and gesture recognizer (pure)
