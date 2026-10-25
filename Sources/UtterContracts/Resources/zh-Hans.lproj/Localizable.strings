@@ -621,3 +621,11 @@
 "benchmark.short" = "短句";
 "benchmark.medium" = "段落";
 "benchmark.long" = "长文本";
+
+"model.source.section" = "模型下载";
+"model.source.title" = "下载源";
+"model.source.huggingface" = "Hugging Face（官网）";
+"model.source.hf_mirror" = "HF-Mirror（国内镜像）";
+"model.source.help" = "更改仅影响之后开始的下载，进行中的下载继续使用原来源。";
+"model.source.mirror_help" = "公开模型将从 hf-mirror.com 下载，不向镜像发送已保存的 Hugging Face 凭证。";
+"model.source.confirm" = "下载源：%@";

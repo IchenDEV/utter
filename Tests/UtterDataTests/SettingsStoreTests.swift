@@ -4,6 +4,22 @@ import UtterContracts
 @testable import UtterData
 
 final class SettingsStoreTests: XCTestCase {
+    func testModelDownloadSourceDefaultsPersistsAndFallsBackForUnknownValues() {
+        let fixture = defaultsFixture()
+        defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }
+        let store = SettingsStore(defaults: fixture.defaults)
+        XCTAssertEqual(store.values.modelDownloadSource, .huggingFace)
+        var observed: [ModelDownloadSource] = []
+        let token = store.observe { observed.append($0.modelDownloadSource) }
+        store.update { $0.modelDownloadSource = .hfMirror }
+        XCTAssertEqual(observed, [.hfMirror])
+        XCTAssertEqual(fixture.defaults.string(forKey: "modelDownloadSource"), "hf-mirror")
+        XCTAssertEqual(SettingsStore(defaults: fixture.defaults).values.modelDownloadSource, .hfMirror)
+        store.removeObserver(token)
+        fixture.defaults.set("unsupported-site", forKey: "modelDownloadSource")
+        XCTAssertEqual(SettingsStore(defaults: fixture.defaults).values.modelDownloadSource, .huggingFace)
+    }
+
     func testSessionSnapshotStaysFrozenAndReopeningPreservesChanges() {
         let fixture = defaultsFixture()
         defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }

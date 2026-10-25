@@ -621,3 +621,11 @@
 "benchmark.short" = "Short";
 "benchmark.medium" = "Medium";
 "benchmark.long" = "Long";
+
+"model.source.section" = "Model downloads";
+"model.source.title" = "Download source";
+"model.source.huggingface" = "Hugging Face (official)";
+"model.source.hf_mirror" = "HF-Mirror (China mirror)";
+"model.source.help" = "Changes apply to downloads started afterward. Active downloads keep their source.";
+"model.source.mirror_help" = "Public models download from hf-mirror.com. Saved Hugging Face credentials are not sent to the mirror.";
+"model.source.confirm" = "Download source: %@";

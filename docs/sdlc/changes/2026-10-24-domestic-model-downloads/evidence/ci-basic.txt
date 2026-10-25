@@ -1,0 +1,144 @@
+
+==> Checking Package.swift
+Swift module boundaries passed.
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.004s
+
+OK
+Owned resources passed.
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.029s
+
+OK
+......error: app CFBundleShortVersionString is '0.0.57', expected '0.0.56'
+.error: the DMG must be named Utter-0.0.56.dmg, got Utter-0.0.99.dmg
+...error: the DMG does not exist: <temporary-path>
+error: cannot read the app Info.plist: [Errno 2] No such file or directory: '<temporary-path>
+...error: the EdDSA signature must be 64 bytes, got 0
+error: the EdDSA signature is not valid base64
+error: the EdDSA signature must be 64 bytes, got 5
+error: the EdDSA signature must be 64 bytes, got 65
+.error: release tag is not vMAJOR.MINOR.PATCH: 0.0.56
+error: tag v00.0.56 does not match version 0.0.56
+error: tag v0.0.56 does not match version 0.0.57
+error: release tag is not vMAJOR.MINOR.PATCH: v0.0.56-rc1
+..................................app SUFeedURL differs from the committed template
+app SUScheduledCheckInterval differs from the committed template
+app carries unexpected SUSkipVersionsAutomatically
+app carries forbidden key NSAppTransportSecurity
+app is missing SUPublicEDKey
+......inert build must not carry SUFeedURL
+inert build must not carry SUEnableAutomaticChecks
+.SUFeedURL must use https
+.SUFeedURL must use https
+...........
+----------------------------------------------------------------------
+Ran 67 tests in 82.397s
+
+OK
+Wrote <temporary-path> for v0.0.56 (http://127.0.0.1:8000/v0.0.56/Utter-0.0.56.dmg)
+Wrote <temporary-path> for v0.0.56 (https://github.com/IchenDEV/utter/releases/download/v0.0.56/Utter-0.0.56.dmg)
+Wrote <temporary-path> for v0.0.56 (https://github.com/IchenDEV/utter/releases/download/v0.0.56/Utter-0.0.56.dmg)
+Wrote <temporary-path> for v0.0.56 (https://github.com/IchenDEV/utter/releases/download/v0.0.56/Utter-0.0.56.dmg)
+Wrote <temporary-path> for v0.0.56 (https://github.com/IchenDEV/utter/releases/download/v0.0.56/Utter-0.0.56.dmg)
+Update keys passed.
+Update keys passed.
+Update keys passed.
+Update keys merged.
+
+==> Checking SDLC artifacts and harness regression tests
+==> Checking docs/sdlc/changes/2026-08-25-ai-native-sdlc/
+==> Checking docs/sdlc/changes/2026-08-26-dmg-installer-polish/
+==> Checking docs/sdlc/changes/2026-08-29-espresso-ane/
+==> Checking docs/sdlc/changes/2026-08-30-dev-app-icon-packaging/
+==> Checking docs/sdlc/changes/2026-08-30-history-mode-switch/
+==> Checking docs/sdlc/changes/2026-08-30-model-type-selection/
+==> Checking docs/sdlc/changes/2026-08-30-settings-window-layout/
+==> Checking docs/sdlc/changes/2026-08-30-system-settings-groups/
+==> Checking docs/sdlc/changes/2026-08-31-ane-lm-runtime/
+==> Checking docs/sdlc/changes/2026-08-31-settings-semantic-background/
+==> Checking docs/sdlc/changes/2026-08-31-shell-sdlc-gate/
+==> Checking docs/sdlc/changes/2026-08-31-website-native-redesign/
+==> Checking docs/sdlc/changes/2026-09-03-release-p12-openssl3/
+==> Checking docs/sdlc/changes/2026-09-18-nightly-release-pipeline/
+==> Checking docs/sdlc/changes/2026-09-21-model-download-retry-recovery/
+==> Checking docs/sdlc/changes/2026-09-21-remote-mic-integration/
+==> Checking docs/sdlc/changes/2026-09-21-settings-surface-parity/
+==> Checking docs/sdlc/changes/2026-09-23-confucius4-r2t2-mlx/
+==> Checking docs/sdlc/changes/2026-09-23-input-session-ownership/
+==> Checking docs/sdlc/changes/2026-09-23-silent-input-insertion/
+==> Checking docs/sdlc/changes/2026-09-24-industry-lexicon-expansion/
+==> Checking docs/sdlc/changes/2026-09-24-release-workflow-permissions/
+==> Checking docs/sdlc/changes/2026-09-28-release-input-contract/
+==> Checking docs/sdlc/changes/2026-09-30-firered-asr-download-completeness/
+==> Checking docs/sdlc/changes/2026-10-01-clamshell-mic-failover/
+==> Checking docs/sdlc/changes/2026-10-01-stable-prompt-prefix-cache/
+==> Checking docs/sdlc/changes/2026-10-03-builtin-plugin-composition/
+==> Checking docs/sdlc/changes/2026-10-03-promo-videos/
+==> Checking docs/sdlc/changes/2026-10-04-voice-input-reliability/
+==> Checking docs/sdlc/changes/2026-10-07-desktop-numeral-list-fidelity/
+==> Checking docs/sdlc/changes/2026-10-07-xiaomi-remote-connection/
+==> Checking docs/sdlc/changes/2026-10-15-developer-id-ci/
+==> Checking docs/sdlc/changes/2026-10-16-dmg-developer-id-signing/
+==> Checking docs/sdlc/changes/2026-10-16-preparation-responsiveness-test/
+==> Checking docs/sdlc/changes/2026-10-17-auto-update/
+==> Checking docs/sdlc/changes/2026-10-24-domestic-model-downloads/
+SDLC checks passed.
+Build version tests passed.
+Release version tests passed.
+Nightly release plan tests passed.
+From <temporary-path>
+ * branch            main       -> FETCH_HEAD
+From <temporary-path>
+ * branch            main       -> FETCH_HEAD
+Signing mode: developer-id
+Utter-0.0.54.dmg: OK
+Signing mode: self-signed
+Utter-0.0.54.dmg: OK
+Release workflow contract tests passed.
+signature verified: payload.bin (2048 bytes)
+signature verified: feed.xml (436 bytes)
+Update signature contract tests passed.
+
+==> Linting property lists and localized strings
+Resources/Info.plist: OK
+Resources/OpenType.entitlements: OK
+Resources/UpdateInfo.plist: OK
+Sources/UtterContracts/Resources/en.lproj/Localizable.strings: OK
+Sources/UtterContracts/Resources/zh-Hans.lproj/Localizable.strings: OK
+
+==> Linting the committed update template
+Update keys passed.
+
+==> Checking brand and compatibility identifiers
+
+==> Checking localization key parity
+
+==> Checking industry vocabulary
+Building for debugging...
+[Pre-planning 1 / 181]
+[Planning deferred tasks]
+[1 / 11]
+[2 / 12] UtterRuntime
+[6 / 14] UtterContracts
+[10 / 16] UtterData
+Build complete! (1.68秒)
+Industry lexicon deterministic evaluation passed
+  baseline term recall: 20.59%
+  treatment term recall: 100.00%
+  absolute improvement: 79.41 points
+  non-target preservation: 100.00%
+
+==> Checking required app resources
+
+==> Checking bundled helper names
+
+==> Checking for conflict markers
+
+==> Checking tracked secret-bearing file types
+
+==> Checking for broken symlinks
+
+Basic CI checks passed.

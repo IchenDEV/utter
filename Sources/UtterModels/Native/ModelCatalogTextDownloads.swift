@@ -38,6 +38,7 @@ extension ModelCatalog {
         let watchdog = makeStallWatchdog(key: key, token: token, kind: .llm, modelID: id)
         let signal = DownloadProgressSignal()
 
+        let source = settings.modelDownloadSource
         let staging = storage.generationStaging(for: token)
         defer { ModelStorage.removeGenerationStaging(staging) }
 
@@ -51,7 +52,7 @@ extension ModelCatalog {
             let tracker = DownloadProgressTracker(
                 initialBytes: ModelStorage.directorySize(at: repoDir)
             )
-            try await textDownloads.download(id, staging) { [weak self, progressTasks] progress in
+            try await textDownloads.download(id, source, staging) { [weak self, progressTasks] progress in
                 progressTasks.enqueue {
                     guard let self,
                           self.downloadTasks.isCurrent(key, token: token),

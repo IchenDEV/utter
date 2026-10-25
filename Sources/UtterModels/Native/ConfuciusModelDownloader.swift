@@ -33,13 +33,15 @@ package enum ConfuciusModelDownloader {
         .init(name: "vocab.json", size: 2_776_833, sha256: "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"),
     ]
 
-    package static func downloadRepository(to directory: URL, onProgress: @escaping @Sendable (Int64) -> Void) async throws {
-        let base = "https://huggingface.co/\(QwenASRModel.confuciusR2T2ID)/resolve/\(QwenASRModel.confuciusRevision)"
+    package static func downloadRepository(to directory: URL, source: ModelDownloadSource, session: URLSession? = nil,
+                                           onProgress: @escaping @Sendable (Int64) -> Void) async throws {
+        let base = "\(source.endpoint)/\(QwenASRModel.confuciusR2T2ID)/resolve/\(QwenASRModel.confuciusRevision)"
         var completedBytes: Int64 = 0
         for file in smallFiles {
             let previousBytes = completedBytes
             try await download(
                 to: directory.appendingPathComponent(file.name),
+                session: session,
                 source: URL(string: "\(base)/\(file.name)")!,
                 size: file.size,
                 sha256: file.sha256
@@ -47,7 +49,9 @@ package enum ConfuciusModelDownloader {
             completedBytes += file.size
         }
         let previousBytes = completedBytes
-        try await download(to: directory.appendingPathComponent("model.safetensors")) {
+        try await download(to: directory.appendingPathComponent("model.safetensors"),
+                           session: session,
+                           source: URL(string: "\(base)/model.safetensors")!) {
             onProgress(previousBytes + $0)
         }
     }
@@ -55,7 +59,7 @@ package enum ConfuciusModelDownloader {
     package static func download(
         to destination: URL,
         session: URLSession? = nil,
-        source: URL = URL(string: "https://huggingface.co/\(QwenASRModel.confuciusR2T2ID)/resolve/\(QwenASRModel.confuciusRevision)/model.safetensors")!,
+        source: URL,
         size: Int64 = QwenASRModel.confuciusWeightBytes,
         sha256: String = QwenASRModel.confuciusWeightSHA256,
         partSize: Int64 = 2 * 1_024 * 1_024,

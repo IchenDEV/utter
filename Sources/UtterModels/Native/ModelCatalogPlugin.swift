@@ -21,8 +21,8 @@ extension ModelPlugins {
                 log: Log(service: try context.require(IntegrationServices.diagnostics)),
                 access: try context.require(ModelServices.resourceAccess),
                 textDownloads: TextModelDownloadOperations(
-                    download: { id, staging, progress in
-                        try await downloads.download(id, downloadBase: staging.downloadBase,
+                    download: { id, source, staging, progress in
+                        try await downloads.download(id, source: source, downloadBase: staging.downloadBase,
                                                      cacheDirectory: staging.hubCache.cacheDirectory, progress: progress)
                     }, validate: { try await downloads.validate($0) }
                 ), speechDescriptors: { speech?.descriptors ?? [] }

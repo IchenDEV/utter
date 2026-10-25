@@ -1,0 +1,32 @@
+Test Suite 'All tests' passed at 2026-10-25 21:45:03.421.
+	 Executed 36 tests, with 0 failures (0 unexpected) in 0.018 (0.024) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:03.891.
+	 Executed 58 tests, with 0 failures (0 unexpected) in 0.250 (0.258) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:04.005.
+	 Executed 26 tests, with 0 failures (0 unexpected) in 0.011 (0.014) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:04.169.
+	 Executed 54 tests, with 0 failures (0 unexpected) in 0.017 (0.024) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:05.011.
+	 Executed 89 tests, with 0 failures (0 unexpected) in 0.034 (0.038) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:05.547.
+	 Executed 107 tests, with 0 failures (0 unexpected) in 0.432 (0.439) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:05.782.
+	 Executed 34 tests, with 0 failures (0 unexpected) in 0.097 (0.100) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:06.365.
+	 Executed 54 tests, with 0 failures (0 unexpected) in 0.485 (0.490) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:06.489.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.032 (0.034) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:06.580.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.002 (0.004) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:06.891.
+	 Executed 60 tests, with 0 failures (0 unexpected) in 0.215 (0.220) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:07.423.
+	 Executed 123 tests, with 0 failures (0 unexpected) in 0.415 (0.423) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:07.866.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:45:07.988.
+	 Executed 20 tests, with 0 failures (0 unexpected) in 0.003 (0.005) seconds
+Test Suite 'All tests' passed at 2026-10-25 21:47:27.660.
+	 Executed 520 tests, with 23 tests skipped and 0 failures (0 unexpected) in 139.293 (139.337) seconds
+Total across 15 XCTest bundles: 1202 tests, 23 skipped, 0 failures; process exit 0.
+Full log kept locally: /private/tmp/utter-domestic-full-tests.log. Contacts service XPC diagnostics were emitted; no XCTest failure.

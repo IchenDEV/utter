@@ -1,0 +1,105 @@
+warning: '--skip-update' option is deprecated and will be removed in a future release
+Building for debugging...
+[Computing dependencies]
+[Using on-disk description]
+[1 / 2] swift-transformers_Hub
+[1 / 103] UtterDataTests-product
+[1 / 235] UtterSession
+[1 / 4] OpenTypeTests-product
+warning: missing creator for mutated node: ('<worktree>/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+Build complete! (1.90秒)
+Test Suite 'Selected tests' started at 2026-10-25 22:34:50.646.
+Test Suite 'UtterUpdatesTests.xctest' started at 2026-10-25 22:34:50.647.
+Test Suite 'UtterUpdatesTests.xctest' passed at 2026-10-25 22:34:50.647.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:50.647.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:50.722.
+Test Suite 'UtterSessionTests.xctest' started at 2026-10-25 22:34:50.723.
+Test Suite 'UtterSessionTests.xctest' passed at 2026-10-25 22:34:50.723.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:50.723.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:50.797.
+Test Suite 'UtterRuntimeTests.xctest' started at 2026-10-25 22:34:50.798.
+Test Suite 'UtterRuntimeTests.xctest' passed at 2026-10-25 22:34:50.798.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:50.798.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:50.875.
+Test Suite 'UtterRemoteMicTests.xctest' started at 2026-10-25 22:34:50.876.
+Test Suite 'UtterRemoteMicTests.xctest' passed at 2026-10-25 22:34:50.876.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:50.876.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:50.987.
+Test Suite 'UtterRemoteInferenceTests.xctest' started at 2026-10-25 22:34:50.988.
+Test Suite 'UtterRemoteInferenceTests.xctest' passed at 2026-10-25 22:34:50.988.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:50.988.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:51.065.
+Test Suite 'UtterProcessingTests.xctest' started at 2026-10-25 22:34:51.066.
+Test Suite 'UtterProcessingTests.xctest' passed at 2026-10-25 22:34:51.066.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:51.066.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:51.188.
+Test Suite 'UtterModelsTests.xctest' started at 2026-10-25 22:34:51.188.
+Test Suite 'UtterModelsTests.xctest' passed at 2026-10-25 22:34:51.189.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:51.189.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:51.268.
+Test Suite 'UtterMacServicesTests.xctest' started at 2026-10-25 22:34:51.268.
+Test Suite 'UtterMacServicesTests.xctest' passed at 2026-10-25 22:34:51.268.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:51.268.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:51.346.
+Test Suite 'UtterIngressTests.xctest' started at 2026-10-25 22:34:51.347.
+Test Suite 'UtterIngressTests.xctest' passed at 2026-10-25 22:34:51.347.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:51.347.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:51.423.
+Test Suite 'UtterEvaluationTests.xctest' started at 2026-10-25 22:34:51.424.
+Test Suite 'UtterEvaluationTests.xctest' passed at 2026-10-25 22:34:51.424.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:51.424.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:51.499.
+Test Suite 'UtterDataTests.xctest' started at 2026-10-25 22:34:51.500.
+Test Suite 'UtterDataTests.xctest' passed at 2026-10-25 22:34:51.500.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:51.500.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:51.576.
+Test Suite 'UtterContractsTests.xctest' started at 2026-10-25 22:34:51.577.
+Test Suite 'UtterContractsTests.xctest' passed at 2026-10-25 22:34:51.577.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:51.577.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:51.787.
+Test Suite 'UtterBuiltinsTests.xctest' started at 2026-10-25 22:34:51.788.
+Test Suite 'UtterBuiltinsTests.xctest' passed at 2026-10-25 22:34:51.788.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:51.788.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:51.869.
+Test Suite 'UtterAudioTests.xctest' started at 2026-10-25 22:34:51.870.
+Test Suite 'UtterAudioTests.xctest' passed at 2026-10-25 22:34:51.870.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:51.870.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 22:34:52.046.
+Test Suite 'OpenTypeTests.xctest' started at 2026-10-25 22:34:52.046.
+Test Suite 'ModelDownloadSourceWindowTests' started at 2026-10-25 22:34:52.046.
+Test Case '-[OpenTypeTests.ModelDownloadSourceWindowTests testRenderOnboardingSourceLayouts]' started.
+Test Case '-[OpenTypeTests.ModelDownloadSourceWindowTests testRenderOnboardingSourceLayouts]' passed (0.686 seconds).
+Test Suite 'ModelDownloadSourceWindowTests' passed at 2026-10-25 22:34:52.733.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.686 (0.687) seconds
+Test Suite 'OpenTypeTests.xctest' passed at 2026-10-25 22:34:52.733.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.686 (0.687) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 22:34:52.733.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.686 (0.687) seconds

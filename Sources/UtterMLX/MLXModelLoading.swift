@@ -18,11 +18,13 @@ package enum MLXModelLoading {
             extraEOSTokens: gemma4 ? ["<turn|>"] : [])
     }
 
-    package static func downloader(downloadBase: URL, cache: HubCache) -> any MLXLMCommon.Downloader {
+    package static func downloader(source: ModelDownloadSource, downloadBase: URL, cache: HubCache) -> any MLXLMCommon.Downloader {
         HubDownloader(
             hubApi: HubApi(
                 downloadBase: downloadBase,
-                cache: cache
+                cache: cache,
+                hfToken: source.hubTokenOverride,
+                endpoint: source.endpoint
             )
         )
     }
