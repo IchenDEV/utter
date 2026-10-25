@@ -16,8 +16,10 @@ HTTP and Plugins, as their own plugin `presentation.remote-mic`. General no long
 has them. The toggle, connection line and gain slider behave as before and write
 the same two settings keys. The help text now points at General instead of
 "above". All automated checks pass. **Not met: dark-appearance screenshots**,
-because the machine is in light mode and the dark attempts did not take effect
-(see "Open items for the owner"). The real Xiaomi remote was not tested.
+because the machine is in light mode and the dark attempts did not take effect.
+The owner chose in chat to accept that gap (option "accept the gap, keep light
+evidence only"); that choice is not an approval of this record. The real Xiaomi
+remote was not tested.
 
 ## Commits
 
@@ -74,7 +76,7 @@ captures were made with `screencapture -l` of the clone's Settings window.
 | Saved profile (on, 18 dB) shows in the new place; nothing else changes | Met, in zh and en | `05` (zh), `07` (en). `evidence/qa-defaults-diff.txt`: after minus before, the only additions are the window-frame autosave and the generated HTTP token; `remoteMicEnabled` and `remoteMicGainDB` are unchanged |
 | No string refers to a control "above" | Met | `testHelpTextPointsAtGeneralNotAtAControlAbove`: en "...chosen in General.", zh "...在“通用”页选择的 Mac 麦克风。", both contain the localized `tab.general`. Visible in `01` and `05` |
 | Plugin disabled omits the section; recovery shows only Plugins | Met | Unit tests for each member combination; `BuiltinCatalogTests` recovery cases unchanged and passing |
-| Real-window screenshots, zh and en, light and dark, six labels in full | **Partly met** | zh light (`05`, `06`) and en light (`01` to `04`, `07`, `08`): the tab row shows all six labels in full in every capture. **Dark: none**, see below |
+| Real-window screenshots, zh and en, light and dark, six labels in full | **Partly met** | zh light (`05`, `06`) and en light (`01` to `04`, `07`, `08`): the tab row shows all six labels in full in every capture. **Dark: none.** The owner accepted this gap in chat on 2026-10-25 |
 | `sdlc-checks`, `ci-basic-checks`, `swift test`; placement tests exist | Met | Tables above |
 | Real Xiaomi remote | **Not run** | Residual risk. The status line did show "Searching for the remote…" with the switch on, so scanning started, and no Bluetooth permission prompt appeared |
 
@@ -151,11 +153,11 @@ Isolation evidence:
 
 ## Open items for the owner
 
-1. **Dark appearance.** Producing dark screenshots needs the system appearance
-   flipped for about a minute (it would flip back), or waiting until Auto switches
-   it. The new section uses the same `Section`, `Toggle` and `Slider` components as
-   its neighbors in the same form, so the risk is low, but the criterion says
-   dark. Decide: flip temporarily, wait for the system, or accept the gap.
+1. **Dark appearance: gap accepted by the owner** (chat choice, 2026-10-25),
+   instead of flipping the system appearance for a minute or waiting for Auto to
+   switch it. The new section uses the same `Section`, `Toggle` and `Slider`
+   components as its neighbors in the same form, so the risk is low. It remains
+   listed under residual risks.
 2. **Real Xiaomi remote.** Turn it on in Integrations with the remote nearby, and
    check the connection line.
 3. **Landing.** Pushing, a PR, merging, tagging, releasing, or replacing the
