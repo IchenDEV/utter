@@ -12,10 +12,13 @@ package struct PresentationContribution {
     package let order: Int
     package let label: String
     package let symbol: String
+    /// Settings group this page belongs to. Members share one tab, ordered by their own `order`.
+    package let group: String?
     package let view: (PresentationContext) -> AnyView
     package init(id: String, role: PresentationRole, order: Int = 0, label: String = "", symbol: String = "",
-                 view: @escaping (PresentationContext) -> AnyView) {
-        self.id = id; self.role = role; self.order = order; self.label = label; self.symbol = symbol; self.view = view
+                 group: String? = nil, view: @escaping (PresentationContext) -> AnyView) {
+        self.id = id; self.role = role; self.order = order; self.label = label; self.symbol = symbol
+        self.group = group; self.view = view
     }
 }
 

@@ -6,8 +6,8 @@ import UtterRuntime
 @MainActor
 extension PresentationPlugins {
     package static func configuration() -> PluginRegistration {
-        contribution(id: "presentation.configuration", role: .settings, order: 60,
-            label: "plugins.title", symbol: "puzzlepiece.extension",
+        contribution(id: "presentation.configuration", role: .settings, order: 10,
+            label: "plugins.title", symbol: "puzzlepiece.extension", group: SettingsGroup.integrations.id,
             requires: [DataServices.configuration.required]) { context, _ in
                 let service = try context.require(DataServices.configuration)
                 return { _ in AnyView(PluginConfigurationView(service: service, isCurrent: { context.isCurrent })) }
@@ -23,17 +23,15 @@ private struct PluginConfigurationView: View {
     @State private var message = ""
     @State private var failed = false
     var body: some View {
-        Form {
-            Section(L("plugins.title")) {
-                Text(L("plugins.description")).foregroundStyle(.secondary)
-                TextEditor(text: $text).font(.system(.body, design: .monospaced)).frame(minHeight: 280)
-                HStack {
-                    Button(L("common.save")) { save() }.buttonStyle(.borderedProminent)
-                    Button(L("plugins.reset")) { reset() }
-                }
-                if !message.isEmpty { Text(message).foregroundStyle(failed ? .red : .secondary) }
+        Section(L("plugins.title")) {
+            Text(L("plugins.description")).foregroundStyle(.secondary).onAppear { reload() }
+            TextEditor(text: $text).font(.system(.body, design: .monospaced)).frame(minHeight: 280)
+            HStack {
+                Button(L("common.save")) { save() }.buttonStyle(.borderedProminent)
+                Button(L("plugins.reset")) { reset() }
             }
-        }.formStyle(.grouped).settingsPageSurface().onAppear { reload() }
+            if !message.isEmpty { Text(message).foregroundStyle(failed ? .red : .secondary) }
+        }
     }
     private func reload() {
         let encoder = JSONEncoder()
