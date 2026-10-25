@@ -1,8 +1,8 @@
 # Plan: Configurable remote button mapping in Settings → Remote
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision: approve plan and start Batch 0 now (2026-10-25)
+**Approved-date:** 2026-10-25
 **Upstream:** [spec](spec.md) (approved 2026-10-25)
 
 Each batch is one commit, small enough to review alone. Before every commit run `swift build`, the batch's focused `swift test --filter`, and `bash scripts/ci-basic-checks.sh`. Every new file stays under 300 lines. The implementer is one agent; the independent verifier in Batch 9 is a different person or agent named by the user. The reference app's source is not reopened at any batch.

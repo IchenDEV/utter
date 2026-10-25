@@ -1,0 +1,5 @@
+[  0.01] START mode=check pid=79636 bundle=com.opentype.batch0probe accessBeforeOpen=unknown
+[  0.01] OPEN result=0xe00002e2 matchedDevices=1 accessAfterOpen=denied
+[  0.01] READY
+[ 90.08] RESULT access=denied rawEventsSeen=0 presses=0
+[ 90.08] END

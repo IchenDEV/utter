@@ -1,0 +1,2 @@
+[  0.01] START mode=request pid=1610 bundle=com.opentype.batch0probe.b accessAtLaunch=unknown
+[  0.01] REQUEST returned=false accessBefore=unknown accessImmediately=denied
