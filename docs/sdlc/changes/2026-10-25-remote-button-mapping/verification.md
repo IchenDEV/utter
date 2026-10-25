@@ -5,7 +5,7 @@
 **Approved-date:** —
 **Upstream:** [plan.md](plan.md)
 
-Batch 0 (measurements) ran on 2026-10-25 and is **partly complete**. Batches 1 to 9 have not started. The implementer ran Batch 0, so none of this is independent verification.
+Batch 0 (measurements) ran on 2026-10-25 and is **partly complete**. Batches 1 to 8 are implemented (sections below); Batch 9, the independent verification, has not started. The implementer ran every batch, so none of this is independent verification.
 
 ## Batch 0 results
 
@@ -230,4 +230,5 @@ Not done: no screenshots of the system dialog (no real request was made here), a
 2. **Your approval of this `verification.md`**, then PR approval, then release approval. Nothing here is marked approved.
 3. **PR #130** is still unmerged and carries its own open verification record; this change is stacked on it and is not released before it.
 4. **Licensing owner** decision on the clean-room disclosure in the intent.
-5. Decisions listed in Batches 4 to 8 that need your answer: a key still held when the double-press window ends resolves at release; secure input also drops the native replay of an owned key (an owned OK cannot submit a password field); the "waiting for presses" state was not built; the button mapping depends on the voice-key remap setting; eleven keys not twelve; Chinese wording; `NSInputMonitoringUsageDescription`.
+5. Decisions approved by the user on 2026-10-26 and recorded as spec erratum 2: the button mapping depends on the voice-key remap setting; eleven keys, not twelve; `NSInputMonitoringUsageDescription`; the Chinese wording.
+6. Decisions from Batches 4 and 5 that have not been put to the user in a question of their own and are still open: a key still held when the double-press window ends resolves at release; secure input also drops the native replay of an owned key (an owned OK cannot submit a password field); the "waiting for presses" state from the spec was not built; synthetic modifier events pass through Utter's own hotkey tap.

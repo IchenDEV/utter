@@ -133,3 +133,15 @@ A press with no release for the hold ceiling ends the sequence. A third press af
 
 **Permission flow (from Batch 0).** (a) `IOHIDRequestAccess` is called before `IOHIDManagerOpen`: a first open silently turns the state from unknown into denied with no prompt. (b) When the state is already denied the prompt does not return, so the page offers a button that opens System Settings → Privacy & Security → Input Monitoring. (c) After a grant the open is retried on app activation and by a short poll while the page is visible; if it still fails with `kIOReturnNotPermitted`, the status line says to restart Utter. Whether a restart is needed was not measured (the user did not complete a grant) and is checked on the signed build in Batch 9. (d) The "no entry beyond F5 until the source is live" rule is unchanged: it is gated on a successful open.
 
+## Erratum 2: decisions found while building the page (Batches 6 to 8)
+
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准, in reply to the summary that listed these four decisions (2026-10-26)
+**Approved-date:** 2026-10-26
+
+The reply was a bare 批准 to a message that listed these four items under "needs your decision". It is read as approval of these four only. It does not approve `verification.md`, the PR or a release, and it does not name the independent verifier.
+
+1. **The button mapping depends on the voice-key remap.** It runs only while `remoteKeyRemapEnabled` and `remoteButtonMappingEnabled` are both on. The key mapping controller is the only writer of the device mapping and its off switch must stop every write, so the mapping cannot be independent of it. The page shows the mapping switch off and disabled, with a line saying why, while the voice-key remap is off; the stored choice is kept.
+2. **Eleven keys, not twelve.** The power key is not offered because it was deliberately not measured (it can sleep or shut down the Mac). This deviates from the approved intent's acceptance line ("the twelve keys"); the intent is left as approved and the deviation is recorded here. Adding power later needs a measurement and its own change.
+3. **`NSInputMonitoringUsageDescription` in `Resources/Info.plist`**, English only like the other usage descriptions, as the explanation text for the one permission D2 approved. Whether macOS shows it in the dialog is not measured.
+4. **Chinese wording** of the key names and the page text, as in the strings files at commit `bc9d1eb`.
