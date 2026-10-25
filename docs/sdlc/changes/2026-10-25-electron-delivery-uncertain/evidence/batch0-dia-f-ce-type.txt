@@ -1,0 +1,5 @@
+[  1.21] FIELD initial valueLen=0 isNewlineOnly=false selection=0,0 AXValue=settable AXSelectedText=settable AXSelectedTextRange=settable
+[  3.24] T2 posted Cmd+V
+[  4.25] T2 t=1.02 valueLen=13 containsMarker=true equalsMarker=true isNewlineOnly=false selection=13,0
+[  7.26] T2 t=4.02 valueLen=13 containsMarker=true equalsMarker=true isNewlineOnly=false selection=13,0
+[  7.26] RESULT label=dia-f-ce-type T1=ineffective T2=effective clipboardRestored=true

@@ -1,0 +1,15 @@
+[  0.02] AXIsProcessTrusted=true label=dia-f-textarea-skipT1 readOnly=false
+[  0.03] target app=Dia bundle=company.thebrowser.dia pid=1410
+[  0.07] focus requested via AX on domId=f-textarea AXError=0
+[  0.07] waiting up to 20 s for the target app in front with an eligible focused field
+[  0.07] focused role is now AXTextArea
+[  1.28] FIELD role=AXTextArea subrole=- domId=f-textarea attrs=49 ChromeAXNodeId=true AXDOMClassList=true EditableAncestor=true
+[  1.28] FIELD initial valueLen=0 isNewlineOnly=false selection=0,0 AXValue=settable AXSelectedText=settable AXSelectedTextRange=settable
+[  1.30] T1 skipped by --skip-t1 (isolates paste from any AX write side effect)
+[  1.34] T2 posted Cmd+V
+[  1.39] T2 t=0.05 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  2.36] T2 t=1.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  3.36] T2 t=2.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  5.36] T2 t=4.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  5.37] T2 effective=false clipboardRestoredIdentical=true itemsBefore=1
+[  5.37] RESULT label=dia-f-textarea-skipT1 T1=ineffective T2=ineffective clipboardRestored=true

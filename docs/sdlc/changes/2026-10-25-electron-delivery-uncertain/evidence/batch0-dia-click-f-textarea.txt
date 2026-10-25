@@ -1,0 +1,18 @@
+[  0.01] AXIsProcessTrusted=true label=dia-click-f-textarea readOnly=false
+[  0.02] target app=Dia bundle=company.thebrowser.dia pid=1410
+[  0.39] real click posted at the center of domId=f-textarea (cursor restored)
+[  0.39] waiting up to 20 s for the target app in front with an eligible focused field
+[  0.39] focused role is now AXTextArea
+[  1.20] FIELD role=AXTextArea subrole=- domId=f-textarea attrs=49 ChromeAXNodeId=true AXDOMClassList=true EditableAncestor=true
+[  1.20] FIELD initial valueLen=0 isNewlineOnly=false selection=0,0 AXValue=settable AXSelectedText=settable AXSelectedTextRange=settable
+[  3.21] T1 write returned AXError=0
+[  4.22] T1 t=1.01 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  5.23] T1 t=2.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  7.23] T1 t=4.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  7.23] T1 effective=false
+[  7.25] T2 posted Cmd+V
+[  8.26] T2 t=1.01 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  9.26] T2 t=2.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[ 11.27] T2 t=4.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[ 11.27] T2 effective=false clipboardRestoredIdentical=true itemsBefore=1
+[ 11.27] RESULT label=dia-click-f-textarea T1=ineffective T2=ineffective clipboardRestored=true

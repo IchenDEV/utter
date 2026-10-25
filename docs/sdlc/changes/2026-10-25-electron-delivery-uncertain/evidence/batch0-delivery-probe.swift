@@ -2,7 +2,8 @@ import AppKit
 import ApplicationServices
 
 // Batch 0 probe for the delivery spec (T1: AX selected-text write, T2: clipboard paste).
-// Usage: delivery-probe <app-name-substring> <label> [--read-only] [--allow-selected-all] [--wait=seconds]
+// Usage: delivery-probe <app-name-substring> <label> [--read-only] [--allow-selected-all] [--wait=seconds] [--dom=<id>] [--idle=<seconds>]
+// --dom focuses our own test-page field through AX (unattended); --idle (default 3) blocks writes while the user is active.
 // Safety: writes a fixed ASCII marker only into a focused field that is empty ("" or "\n") or, with
 // --allow-selected-all, whose whole value is selected. Never prints field values, only lengths and flags.
 // The clipboard is snapshotted before T2 and restored after it.
@@ -46,12 +47,67 @@ log("target app=\(app.localizedName ?? "?") bundle=\(app.bundleIdentifier ?? "?"
 
 func emptyEquivalent(_ v: String) -> Bool { v.isEmpty || v == "\n" }
 
+let textRoles: Set<String> = ["AXTextField", "AXTextArea", "AXComboBox", "AXSearchField"]
+var lastSeenRole = ""
+
 func focusedField() -> AXUIElement? {
     guard NSWorkspace.shared.frontmostApplication?.processIdentifier == pid,
-          let f = ax(appEl, kAXFocusedUIElementAttribute as String).1,
-          let v = value(f as! AXUIElement), let sel = selection(f as! AXUIElement) else { return nil }
+          let f = ax(appEl, kAXFocusedUIElementAttribute as String).1 else { return nil }
+    let role = ax(f as! AXUIElement, kAXRoleAttribute as String).1 as? String ?? "?"
+    if role != lastSeenRole { lastSeenRole = role; log("focused role is now \(role)\(textRoles.contains(role) ? "" : " (not a text input, waiting)")") }
+    // A web area or a row can also report an empty value; only text-input roles count.
+    guard textRoles.contains(role), let v = value(f as! AXUIElement), let sel = selection(f as! AXUIElement) else { return nil }
     if emptyEquivalent(v) { return (f as! AXUIElement) }
     return allowSelectedAll && sel.1 == v.utf16.count && sel.1 > 0 ? (f as! AXUIElement) : nil
+}
+
+// Do not write while the user is typing or moving the mouse.
+let idleRequired = args.compactMap { $0.hasPrefix("--idle=") ? Double($0.dropFirst(7)) : nil }.first ?? 3
+func userIdleSeconds() -> Double { CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: CGEventType(rawValue: ~0)!) }
+func waitForIdle() -> Bool {
+    let limit = Date().addingTimeInterval(60)
+    while userIdleSeconds() < idleRequired { if Date() > limit { return false }; Thread.sleep(forTimeInterval: 0.5) }
+    return true
+}
+
+// Unattended mode: focus one of our own test-page fields (by DOM id) through AX, or with --click through a real mouse click.
+func findByDomId(_ el: AXUIElement, _ id: String, _ visited: inout Int, depth: Int = 0) -> AXUIElement? {
+    guard visited < 4000, depth < 40 else { return nil }
+    visited += 1
+    if (ax(el, "AXDOMIdentifier").1 as? String) == id { return el }
+    for k in (ax(el, kAXChildrenAttribute as String).1 as? [AXUIElement]) ?? [] {
+        if let hit = findByDomId(k, id, &visited, depth: depth + 1) { return hit }
+    }
+    return nil
+}
+if let domArg = args.first(where: { $0.hasPrefix("--dom=") }).map({ String($0.dropFirst(6)) }) {
+    var visited = 0
+    let windows = (ax(appEl, kAXWindowsAttribute as String).1 as? [AXUIElement]) ?? []
+    let target = windows.lazy.compactMap { findByDomId($0, domArg, &visited) }.first
+    if let target, args.contains("--click") {
+        // Real mouse click at the field's center, as a user would; the cursor is put back afterwards.
+        func cg<T>(_ attr: String, _ type: AXValueType, _ zero: T) -> T? {
+            guard let v = ax(target, attr).1, CFGetTypeID(v) == AXValueGetTypeID() else { return nil }
+            var out = zero
+            return AXValueGetValue(v as! AXValue, type, &out) ? out : nil
+        }
+        if let pos = cg(kAXPositionAttribute as String, .cgPoint, CGPoint.zero), let size = cg(kAXSizeAttribute as String, .cgSize, CGSize.zero),
+           NSWorkspace.shared.frontmostApplication?.processIdentifier == pid, userIdleSeconds() >= idleRequired {
+            let p = CGPoint(x: pos.x + size.width / 2, y: pos.y + size.height / 2)
+            let saved = CGEvent(source: nil)?.location ?? .zero
+            let src = CGEventSource(stateID: .combinedSessionState)
+            CGWarpMouseCursorPosition(p)
+            for type in [CGEventType.leftMouseDown, .leftMouseUp] {
+                CGEvent(mouseEventSource: src, mouseType: type, mouseCursorPosition: p, mouseButton: .left)?.post(tap: .cghidEventTap)
+            }
+            Thread.sleep(forTimeInterval: 0.3)
+            CGWarpMouseCursorPosition(saved)
+            log("real click posted at the center of domId=\(domArg) (cursor restored)")
+        } else { log("click skipped: no frame, target not frontmost, or user active") }
+    } else if let target {
+        let e = AXUIElementSetAttributeValue(target, kAXFocusedAttribute as CFString, kCFBooleanTrue)
+        log("focus requested via AX on domId=\(domArg) AXError=\(e.rawValue)")
+    } else { log("no node with domId=\(domArg) found; falling back to waiting for a click") }
 }
 
 log("waiting up to \(Int(waitSeconds)) s for the target app in front with an eligible focused field")
@@ -90,25 +146,50 @@ func samples(_ tag: String, marker: String) -> Bool {
     return effective
 }
 
+guard waitForIdle(), focusedField() != nil else { log("RESULT label=\(label) status=user-active-or-focus-lost-before-T1"); exit(1) }
 let t1 = "UTTERPROBE-T1"
-let setErr = AXUIElementSetAttributeValue(el, kAXSelectedTextAttribute as CFString, t1 as CFString)
-log("T1 write returned AXError=\(setErr.rawValue)")
-let t1Effective = samples("T1", marker: t1)
-log("T1 effective=\(t1Effective)")
-if t1Effective { log("RESULT label=\(label) T1=effective T2=skipped"); exit(0) }
+if args.contains("--skip-t1") { log("T1 skipped by --skip-t1 (isolates paste from any AX write side effect)") } else {
+    let setErr = AXUIElementSetAttributeValue(el, kAXSelectedTextAttribute as CFString, t1 as CFString)
+    log("T1 write returned AXError=\(setErr.rawValue)")
+    let t1Effective = samples("T1", marker: t1)
+    log("T1 effective=\(t1Effective)")
+    if t1Effective { log("RESULT label=\(label) T1=effective T2=skipped"); exit(0) }
+}
 
-guard NSWorkspace.shared.frontmostApplication?.processIdentifier == pid else { log("RESULT label=\(label) T1=ineffective T2=skipped-target-not-frontmost"); exit(1) }
+guard NSWorkspace.shared.frontmostApplication?.processIdentifier == pid, waitForIdle(), focusedField() != nil else { log("RESULT label=\(label) T1=ineffective T2=skipped-not-frontmost-or-user-active-or-focus-lost"); exit(1) }
 let pb = NSPasteboard.general
 let snapshot: [[(NSPasteboard.PasteboardType, Data)]] = pb.pasteboardItems?.map { item in item.types.compactMap { t in item.data(forType: t).map { (t, $0) } } } ?? []
-let t2 = "UTTERPROBE-T2"
+// --marker2=<ascii> varies the pasted text; a page may treat repeated identical pastes differently from distinct ones.
+let t2 = args.first(where: { $0.hasPrefix("--marker2=") }).map { String($0.dropFirst(10)) } ?? "UTTERPROBE-T2"
 pb.clearContents(); pb.setString(t2, forType: .string)
 let src = CGEventSource(stateID: .combinedSessionState)
-for down in [true, false] {
-    let e = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: down)!
-    e.flags = .maskCommand
-    e.post(tap: .cghidEventTap)
+// Diagnostic variants for the same marker: cmdv (default, what Utter does), menu (Edit > Paste through System Events),
+// type (synthetic unicode key events, no clipboard use), cmdv-pid (Cmd+V posted to the target process only).
+let method = args.first(where: { $0.hasPrefix("--method=") }).map { String($0.dropFirst(9)) } ?? "cmdv"
+switch method {
+case "menu":
+    let p = Process(); p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+    p.arguments = ["-e", "tell application \"System Events\" to tell process \"\(app.localizedName ?? "")\" to click menu item \"Paste\" of menu \"Edit\" of menu bar 1"]
+    try? p.run(); p.waitUntilExit()
+    log("T2 menu Edit>Paste osascript exit=\(p.terminationStatus)")
+case "type":
+    for ch in t2.utf16 {
+        for down in [true, false] {
+            let e = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: down)!
+            var c = ch; e.keyboardSetUnicodeString(stringLength: 1, unicodeString: &c)
+            e.post(tap: .cghidEventTap)
+        }
+        Thread.sleep(forTimeInterval: 0.01)
+    }
+    log("T2 typed \(t2.count) synthetic characters")
+default:
+    for down in [true, false] {
+        let e = CGEvent(keyboardEventSource: src, virtualKey: 9, keyDown: down)!
+        e.flags = .maskCommand
+        if method == "cmdv-pid" { e.postToPid(pid) } else { e.post(tap: .cghidEventTap) }
+    }
+    log("T2 posted Cmd+V (\(method))")
 }
-log("T2 posted Cmd+V")
 let t2Effective = samples("T2", marker: t2)
 pb.clearContents()
 let restored = snapshot.map { entries -> NSPasteboardItem in
