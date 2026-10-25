@@ -145,6 +145,18 @@ If something looks wrong:
 - If Utter crashed and the voice key stays dead, reconnect the remote in System Settings → Bluetooth, or clear it by hand: `hidutil property --matching '{"VendorID":10007,"ProductID":12984}' --set '{"UserKeyMapping":[]}'`.
 - Without Utter, the workaround is System Settings → Keyboard → Dictation off.
 
+## Troubleshooting
+
+### Dictated text does not appear in a browser or Electron app
+
+In Chromium-based apps (Electron apps such as Cursor, Chromium browsers such as Dia) macOS accepts a direct Accessibility write into a web page field and reports success, yet nothing appears. For those fields Utter pastes instead, so **Settings → General → Allow clipboard paste** must be on; the previous clipboard contents are restored after a confirmed paste. With it off, those fields receive no insertion and Utter offers an explicit copy.
+
+If Utter cannot confirm that the paste landed, the HUD says the insertion could not be confirmed and offers to copy the text. Utter never inserts it a second time on its own, so paste it yourself with ⌘V.
+
+Fields that do not expose Chromium's accessibility node (for example Safari and Firefox) are not covered and keep using the direct write.
+
+To return to the previous behavior without a new build, run `defaults write com.opentype.voiceinput deliveryWebEditorPasteDisabled -bool true`; undo it with `defaults delete com.opentype.voiceinput deliveryWebEditorPasteDisabled`. It applies to the next dictation; restart Utter if it does not.
+
 ## Local Models
 
 Everything below runs on your Mac. Download a model once and dictation keeps working with the network off.

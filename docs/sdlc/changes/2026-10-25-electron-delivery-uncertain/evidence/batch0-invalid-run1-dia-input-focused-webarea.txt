@@ -1,0 +1,22 @@
+[  0.01] AXIsProcessTrusted=true label=dia-input readOnly=false
+[  0.02] target app=Dia bundle=company.thebrowser.dia pid=1410
+[  0.02] waiting up to 120 s for the target app in front with an eligible focused field
+[  0.86] FIELD role=AXWebArea subrole=- domId=<redacted> attrs=44 ChromeAXNodeId=true AXDOMClassList=true EditableAncestor=false
+[  0.86] FIELD initial valueLen=0 isNewlineOnly=false selection=0,0 AXValue=readonly AXSelectedText=readonly AXSelectedTextRange=readonly
+[  0.86] T1 write returned AXError=0
+[  0.91] T1 t=0.05 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  1.12] T1 t=0.26 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  1.37] T1 t=0.51 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  1.88] T1 t=1.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  2.88] T1 t=2.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  4.89] T1 t=4.03 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  4.89] T1 effective=false
+[  4.96] T2 posted Cmd+V
+[  5.01] T2 t=0.06 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  5.22] T2 t=0.26 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  5.47] T2 t=0.51 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  5.97] T2 t=1.01 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  6.98] T2 t=2.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  8.98] T2 t=4.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  8.98] T2 effective=false clipboardRestoredIdentical=true itemsBefore=1
+[  8.98] RESULT label=dia-input T1=ineffective T2=ineffective clipboardRestored=true

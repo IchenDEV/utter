@@ -1,0 +1,11 @@
+start prev=Mail 2026-10-25T11:25:18Z
+round1 f-input marker=PROBE-R1-N1 :: T2 t=4.02 valueLen=11 containsMarker=true equalsMarker=true isNewlineOnly=false selection=11,0 RESULT label=seq-r1-f-input T1=ineffective T2=effective clipboardRestored=true 
+round1 f-textarea marker=PROBE-R1-N2 :: T2 t=4.03 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0 RESULT label=seq-r1-f-textarea T1=ineffective T2=ineffective clipboardRestored=true 
+round1 f-ce marker=PROBE-R1-N3 :: T2 t=4.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0 RESULT label=seq-r1-f-ce T1=ineffective T2=ineffective clipboardRestored=true 
+round2 f-input marker=PROBE-R2-N1 :: T2 t=4.02 valueLen=11 containsMarker=true equalsMarker=true isNewlineOnly=false selection=11,0 RESULT label=seq-r2-f-input T1=ineffective T2=effective clipboardRestored=true 
+round2 f-textarea marker=PROBE-R2-N2 :: T2 t=4.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0 RESULT label=seq-r2-f-textarea T1=ineffective T2=ineffective clipboardRestored=true 
+round2 f-ce marker=PROBE-R2-N3 :: T2 t=4.02 valueLen=11 containsMarker=true equalsMarker=true isNewlineOnly=false selection=11,0 RESULT label=seq-r2-f-ce T1=ineffective T2=effective clipboardRestored=true 
+round3 f-input marker=PROBE-R3-N1 :: T2 t=4.02 valueLen=11 containsMarker=true equalsMarker=true isNewlineOnly=false selection=11,0 RESULT label=seq-r3-f-input T1=ineffective T2=effective clipboardRestored=true 
+round3 f-textarea marker=PROBE-R3-N2 :: T2 t=4.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0 RESULT label=seq-r3-f-textarea T1=ineffective T2=ineffective clipboardRestored=true 
+round3 f-ce marker=PROBE-R3-N3 :: T2 t=4.03 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0 RESULT label=seq-r3-f-ce T1=ineffective T2=ineffective clipboardRestored=true 
+DONE 2026-10-25T11:26:27Z

@@ -1,0 +1,11 @@
+start prev=Mail 2026-10-25T11:23:27Z
+round1 f-input :: RESULT label=seq-r1-f-input T1=ineffective T2=effective clipboardRestored=true 
+round1 f-textarea :: RESULT label=seq-r1-f-textarea T1=ineffective T2=ineffective clipboardRestored=true 
+round1 f-ce :: RESULT label=seq-r1-f-ce T1=ineffective T2=ineffective clipboardRestored=true 
+round2 f-input :: RESULT label=seq-r2-f-input T1=ineffective T2=effective clipboardRestored=true 
+round2 f-textarea :: RESULT label=seq-r2-f-textarea T1=ineffective T2=ineffective clipboardRestored=true 
+round2 f-ce :: RESULT label=seq-r2-f-ce T1=ineffective T2=effective clipboardRestored=true 
+round3 f-input :: RESULT label=seq-r3-f-input T1=ineffective T2=effective clipboardRestored=true 
+round3 f-textarea :: RESULT label=seq-r3-f-textarea T1=ineffective T2=ineffective clipboardRestored=true 
+round3 f-ce :: RESULT label=seq-r3-f-ce T1=ineffective T2=ineffective clipboardRestored=true 
+DONE 2026-10-25T11:24:37Z

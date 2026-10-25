@@ -25,11 +25,14 @@ final class NativeOutputBackend {
     private let log: Log
     private let isCurrent: () -> Bool
     private let pasteboard: NativeDeliveryPasteboard
+    private let defaults: UserDefaults
 
-    init(log: Log, isCurrent: @escaping () -> Bool, pasteboard: NSPasteboard = .general) {
+    init(log: Log, isCurrent: @escaping () -> Bool, pasteboard: NSPasteboard = .general,
+         defaults: UserDefaults = .standard) {
         self.log = log
         self.isCurrent = isCurrent
         self.pasteboard = NativeDeliveryPasteboard(pasteboard)
+        self.defaults = defaults
     }
 
     func deliver(_ request: DeliveryRequest, canCommit: @escaping () -> Bool,
@@ -54,7 +57,9 @@ final class NativeOutputBackend {
             return ClipboardPasteTransaction.copy(text, pasteboard: pasteboard, canCommit: canCommit, mark: markCommitted)
         }
         guard canCommit(), let target,
-              let destination = NativeDeliveryTarget(lease: target, anchor: anchor, requiresSelection: requiresSelection) else {
+              let destination = NativeDeliveryTarget(
+                lease: target, anchor: anchor, requiresSelection: requiresSelection,
+                classifiesWebContentEditors: DeliveryKillSwitch.webEditorPasteEnabled(defaults)) else {
             return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.target_changed"))
         }
         var result = await TextDeliveryTransaction.deliver(text, target: destination, pasteboard: pasteboard,
@@ -63,7 +68,7 @@ final class NativeOutputBackend {
         if result.disposition == .accepted, result.confirmation == .targetValue {
             result.anchor = destination.insertionAnchor(text, isCurrent: isCurrent)
         }
-        log.info("Delivery completed: \(result.disposition), confirmation: \(result.confirmation.rawValue)")
+        log.info(result.logSummary)
         return result
     }
 }
