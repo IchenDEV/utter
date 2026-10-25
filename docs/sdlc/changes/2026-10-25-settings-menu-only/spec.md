@@ -1,8 +1,8 @@
 # Spec: Cut the Settings window to six tabs without rolling back any feature
 
-**Status:** pending approval            # draft | pending approval | approved | rejected | blocked
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准 (design D1 to D7 as written, including the answers to intent questions 1 to 3: automatic tab style, the Remote section header, and leaving PR #131 untouched in this change)
+**Approved-date:** 2026-10-25
 **Upstream:** intent.md (approved 2026-10-25)
 **Risk:** Medium. User-visible Settings layout and navigation. No permission, privacy, data format, signing or release change.
 
