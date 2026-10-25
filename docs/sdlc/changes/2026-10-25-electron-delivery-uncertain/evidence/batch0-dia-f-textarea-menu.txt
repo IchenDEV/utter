@@ -1,0 +1,5 @@
+[  1.19] FIELD initial valueLen=0 isNewlineOnly=false selection=0,0 AXValue=settable AXSelectedText=settable AXSelectedTextRange=settable
+[  3.23] T2 posted Cmd+V
+[  4.24] T2 t=1.02 valueLen=13 containsMarker=true equalsMarker=true isNewlineOnly=false selection=13,0
+[  7.25] T2 t=4.03 valueLen=13 containsMarker=true equalsMarker=true isNewlineOnly=false selection=13,0
+[  7.25] RESULT label=dia-f-textarea-menu T1=ineffective T2=effective clipboardRestored=true

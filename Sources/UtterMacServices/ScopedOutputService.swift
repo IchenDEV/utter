@@ -6,6 +6,8 @@ struct DeliveryCompletion {
     var reason: String? = nil
     var anchor: (any OutputAnchor)? = nil
     var confirmation: DeliveryConfirmation = .none
+    var path: DeliveryPath? = nil
+    var target: DeliveryTargetKind = .native
 }
 
 @MainActor

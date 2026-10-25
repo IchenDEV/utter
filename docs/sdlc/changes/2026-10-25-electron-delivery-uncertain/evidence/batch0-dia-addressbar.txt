@@ -1,0 +1,6 @@
+[  0.05] focused role is now AXTextArea
+[  0.86] FIELD role=AXTextArea subrole=- domId=- attrs=24 ChromeAXNodeId=false AXDOMClassList=false EditableAncestor=false
+[  0.86] FIELD initial valueLen=158 isNewlineOnly=false selection=0,158 AXValue=settable AXSelectedText=settable AXSelectedTextRange=settable
+[  0.89] T1 write returned AXError=0
+[  4.90] T1 effective=true
+[  4.90] RESULT label=dia-addressbar T1=effective T2=skipped
