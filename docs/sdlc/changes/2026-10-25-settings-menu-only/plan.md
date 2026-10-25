@@ -1,8 +1,8 @@
 # Plan: Cut the Settings window to six tabs without rolling back any feature
 
-**Status:** pending approval            # draft | pending approval | approved | rejected | blocked
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准 (work items A to C, the real-window and dark-harness rules, and the stop conditions as written)
+**Approved-date:** 2026-10-25
 **Upstream:** spec.md (approved 2026-10-25)
 **Risk:** Medium. No independent verifier is required. None is claimed.
 
