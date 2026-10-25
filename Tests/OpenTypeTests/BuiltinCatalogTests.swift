@@ -19,6 +19,7 @@ import UtterData
 import UtterMediaContracts
 import UtterRuntime
 import UtterUpdates
+@testable import UtterPresentation
 
 @MainActor
 final class BuiltinCatalogTests: XCTestCase {
@@ -67,6 +68,39 @@ final class BuiltinCatalogTests: XCTestCase {
         XCTAssertThrowsError(try application.runtime.service(SessionServices.api))
         XCTAssertThrowsError(try application.runtime.service(UpdateServices.updater))
         XCTAssertEqual(try Data(contentsOf: url), original)
+        try await application.stop()
+    }
+
+    func testRecoveryLeavesTheIntegrationsTabWithOnlyThePluginsSection() async throws {
+        try await assertRecoveryTabs(writing: #"{"schemaVersion":999,"bundles":["desktop"]}"#)
+    }
+
+    func testRowUnknownToThisBuildStartsRecoveryOnTheSameTab() async throws {
+        try await assertRecoveryTabs(
+            writing: #"{"schemaVersion":1,"bundles":["desktop"],"plugins":[{"id":"presentation.removed-page"}]}"#)
+    }
+
+    private func assertRecoveryTabs(writing json: String, file: StaticString = #filePath, line: UInt = #line) async throws {
+        let suite = "BuiltinRecoveryTabs-" + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer {
+            defaults.removePersistentDomain(forName: suite)
+            try? FileManager.default.removeItem(at: directory)
+        }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appendingPathComponent("plugins.json")
+        let original = Data(json.utf8)
+        try original.write(to: url)
+        let application = try await BuiltinApplication.start(defaults: defaults, directory: directory)
+        XCTAssertNotNil(application.compositionFailure, file: file, line: line)
+        let catalog = try application.runtime.service(PresentationServices.catalog)
+        let tabs = SettingsTabLayout.tabs(from: catalog.contributions(for: .settings))
+        XCTAssertEqual(tabs.map(\.id), [SettingsGroup.integrations.id], file: file, line: line)
+        XCTAssertEqual(tabs.first?.members.map(\.id), ["presentation.configuration"], file: file, line: line)
+        XCTAssertEqual(SettingsTabLayout.selection("presentation.models", in: tabs), SettingsGroup.integrations.id,
+            file: file, line: line)
+        XCTAssertEqual(try Data(contentsOf: url), original, file: file, line: line)
         try await application.stop()
     }
 }

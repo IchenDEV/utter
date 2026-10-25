@@ -1,0 +1,24 @@
+[  0.02] AXIsProcessTrusted=true label=dia-f-input readOnly=false
+[  0.03] target app=Dia bundle=company.thebrowser.dia pid=1410
+[  0.07] focus requested via AX on domId=f-input AXError=0
+[  0.07] waiting up to 20 s for the target app in front with an eligible focused field
+[  0.07] focused role is now AXTextField
+[  0.88] FIELD role=AXTextField subrole=- domId=f-input attrs=49 ChromeAXNodeId=true AXDOMClassList=true EditableAncestor=true
+[  0.88] FIELD initial valueLen=0 isNewlineOnly=false selection=0,0 AXValue=settable AXSelectedText=settable AXSelectedTextRange=settable
+[  0.90] T1 write returned AXError=0
+[  0.95] T1 t=0.05 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  1.15] T1 t=0.25 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  1.41] T1 t=0.51 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  1.92] T1 t=1.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  2.92] T1 t=2.02 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  4.93] T1 t=4.03 valueLen=0 containsMarker=false equalsMarker=false isNewlineOnly=false selection=0,0
+[  4.93] T1 effective=false
+[  4.98] T2 posted Cmd+V
+[  5.03] T2 t=0.06 valueLen=13 containsMarker=true equalsMarker=true isNewlineOnly=false selection=13,0
+[  5.24] T2 t=0.26 valueLen=13 containsMarker=true equalsMarker=true isNewlineOnly=false selection=13,0
+[  5.49] T2 t=0.51 valueLen=13 containsMarker=true equalsMarker=true isNewlineOnly=false selection=13,0
+[  5.99] T2 t=1.01 valueLen=13 containsMarker=true equalsMarker=true isNewlineOnly=false selection=13,0
+[  7.00] T2 t=2.02 valueLen=13 containsMarker=true equalsMarker=true isNewlineOnly=false selection=13,0
+[  9.00] T2 t=4.02 valueLen=13 containsMarker=true equalsMarker=true isNewlineOnly=false selection=13,0
+[  9.00] T2 effective=true clipboardRestoredIdentical=true itemsBefore=1
+[  9.00] RESULT label=dia-f-input T1=ineffective T2=effective clipboardRestored=true

@@ -4,7 +4,7 @@ Utter 的内置功能由 SwiftPM 模块拥有，并通过插件注册到应用�
 桌面按键、HTTP、XPC 和 CLI 共用会话与交付服务。插件可替换其契约提供者，
 设置页和菜单项也由插件贡献；配置选择已经编入应用的插件。
 
-在“设置 → 插件”编辑并保存 JSON。配置文件位于
+在“设置 → 集成”的“插件组合”分区编辑并保存 JSON。配置文件位于
 `~/Library/Application Support/OpenType/plugins.json`，旧用户设置和模型目录保留。
 默认组合为：
 
