@@ -37,7 +37,7 @@ jobs:
       APPROVED_COMMIT_SHA: 7d3bbf3d45744c760714f955cf6c04a0f190904d
     steps:
       - name: Check out the approved commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: 7d3bbf3d45744c760714f955cf6c04a0f190904d
@@ -156,7 +156,7 @@ jobs:
 
       - name: Upload the verified app archive
         id: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.package.outputs.artifact_name }}
           path: ${{ runner.temp }}/utter-app-artifact
