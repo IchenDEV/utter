@@ -26,9 +26,9 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 ### Batch 1: model and gesture recognizer (pure)
 
-- [ ] `RemoteButton` table from Batch 0, `ButtonTrigger`, `ButtonAction`, `KeyChord`, `RemoteButtonProfile` with a versioned codec (an unknown action decodes to `native`).
-- [ ] `ButtonGestureRecognizer` with an injected clock: double-click window, long-press threshold, rapid repeats, release order, a second press during the wait, the hold ceiling.
-- [ ] `ButtonMappingPlan`: which buttons are owned.
+- [x] `RemoteButton` table from Batch 0, `ButtonTrigger`, `ButtonAction`, `KeyChord`, `RemoteButtonProfile` with a versioned codec (an unknown action decodes to `native`).
+- [x] `ButtonGestureRecognizer` with an injected clock: double-click window, long-press threshold, rapid repeats, release order, a second press during the wait, the hold ceiling.
+- [x] `ButtonMappingPlan`: which buttons are owned.
 - Tests: the recognizer table, codec round trip and unknown action, plan derivation. Focused filter: `RemoteButton`.
 
 ### Batch 2: policy and controller generalization

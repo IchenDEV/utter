@@ -62,3 +62,12 @@ Measured from a minimal ad hoc signed `.app` launched with `open`, so it carries
 ### Cleanup state
 
 Remote mapping read back as F5 → nothing (original). Volume restored to 69. Utter relaunched. Two ad hoc probe apps, `com.opentype.batch0probe` and `com.opentype.batch0probe.b`, may remain listed in System Settings → Privacy & Security → Input Monitoring as not enabled; they can be removed there.
+
+## Batch 1: model and gesture recognizer (implemented 2026-10-25)
+
+Files: `RemoteButton`, `ButtonAction`, `RemoteButtonProfile`, `ButtonGestureRecognizer`, `ButtonMappingPlan` in `Sources/UtterRemoteMic/` (all under 140 lines) and two test files, 45 tests. `swift test --filter UtterRemoteMicTests` runs 141 tests with no failure; `ci-basic-checks` passes.
+
+Test strength was checked by mutation: changing `deadline <= time` to `<`, the release boundary `<` to `<=`, and the unknown-action default from `native` to `showDesktop` each make the suite fail (the second only after the boundary test was added, because the first draft of the tests missed it).
+
+**Interpretation to confirm.** Erratum 1 says that with a double click bound and no long press, single fires "when W after the first press passes with no second press". The recognizer fires single at that moment only if the key was already released. A key still held when W ends is resolved at its release, so a key that is down never fires a single. The two readings agree for every press shorter than W (about 0.4 s); they differ only for holds between W and the long-press threshold on a button that has a double click bound and no long press. Changing it is one line plus one test.
+
