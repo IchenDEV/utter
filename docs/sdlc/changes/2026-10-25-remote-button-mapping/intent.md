@@ -1,8 +1,8 @@
 # Intent: Configurable remote button mapping in Settings → Remote
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准 (after the clean-room, core-slice and stacked-order decisions were recorded)
+**Approved-date:** 2026-10-25
 **Upstream:** User request in chat, 2026-10-25 ("在页面上也加一下相关的功能，可以改一下遥控器的映射，把那个之前的一版功能给迁过来"). Builds on [2026-10-24 swallow remote dictation key](../2026-10-24-swallow-remote-dictation-key/intent.md) (PR #130, which owns the device-level HID mapping this change extends) and [2026-09-21 remote mic integration](../2026-09-21-remote-mic-integration/intent.md) (which records the GPL/MIT licensing gate this change inherits).
 
 **Risk lane:** High — it intercepts a keyboard device's events, injects synthetic input, launches applications, and may need a permission Utter does not request today. Full bundle, independent verification on a real remote, and an explicit rollback are required.
