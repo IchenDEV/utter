@@ -61,6 +61,12 @@ struct AXTargetState {
         return NSRange(location: range.location, length: range.length)
     }
 
+    static func attributeNames(of element: AXUIElement) -> [String] {
+        var names: CFArray?
+        guard AXUIElementCopyAttributeNames(element, &names) == .success else { return [] }
+        return names as? [String] ?? []
+    }
+
     static func value(of element: AXUIElement) -> String? {
         var value: CFTypeRef?
         guard AXUIElementCopyAttributeValue(element, kAXValueAttribute as CFString, &value) == .success else { return nil }

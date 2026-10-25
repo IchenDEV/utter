@@ -5,6 +5,8 @@ import UtterContracts
 protocol DeliveryTextTarget: AnyObject {
     var isCurrent: Bool { get }
     var supportsSelectionWrite: Bool { get }
+    /// A Chromium web content editor: an Accessibility write there reports success without effect.
+    var isWebContentEditor: Bool { get }
     func prepareSelection() -> Bool
     func writeSelection(_ text: String) -> Bool
     func confirm(_ text: String) async -> Bool
@@ -28,7 +30,8 @@ enum TextDeliveryTransaction {
             if effect != .clipboard { documentEffect = true }
             return true
         }
-        if target.supportsSelectionWrite {
+        // Checked here as well as in the target so no target can reach the ineffective write by mistake.
+        if target.supportsSelectionWrite, !target.isWebContentEditor {
             guard mayWrite(), markDocument(.accessibility) else { return DeliveryCompletion(disposition: .notCommitted) }
             guard target.writeSelection(text) else {
                 return DeliveryCompletion(disposition: .uncertain, reason: L("delivery.unconfirmed"))

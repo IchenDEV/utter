@@ -11,6 +11,7 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
     private let document: String?
     private let replacementRange: NSRange?
     private var prepared = false
+    private let exposesChromiumNode: Bool
     private let clock: any DeliveryObservationClock
 
     init?(lease: any OutputTargetLease, anchor: (any OutputAnchor)?, requiresSelection: Bool,
@@ -29,6 +30,7 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
         identity = element
         original = state
         document = value
+        exposesChromiumNode = WebContentEditorSignature.matches(attributeNames: AXTargetState.attributeNames(of: element))
         self.clock = clock ?? ContinuousDeliveryClock()
     }
 
@@ -42,11 +44,15 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
         return lease.isCurrent
     }
 
-    var supportsSelectionWrite: Bool {
+    private var canWriteSelectedText: Bool {
         guard document != nil, replacementRange != nil else { return false }
         var settable = DarwinBoolean(false)
         return AXUIElementIsAttributeSettable(identity, kAXSelectedTextAttribute as CFString, &settable) == .success && settable.boolValue
     }
+
+    var isWebContentEditor: Bool { exposesChromiumNode && canWriteSelectedText }
+
+    var supportsSelectionWrite: Bool { canWriteSelectedText && !isWebContentEditor }
 
     func prepareSelection() -> Bool {
         guard isCurrent else { return false }
@@ -83,6 +89,7 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
 
     private func expectedDocument(_ text: String) -> String? {
         guard let document, let range = replacementRange else { return nil }
-        return DeliveryTextChange(document: document, range: range, replacement: text)?.expectedDocument
+        return DeliveryExpectation.expectedDocument(document: document, range: range, replacement: text,
+                                                    isWebContentEditor: isWebContentEditor)
     }
 }
