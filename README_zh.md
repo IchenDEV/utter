@@ -135,6 +135,18 @@ Utter 每天检查一次更新；也可以在 **设置 → 关于** 或菜单栏
 
 第一个带更新功能的版本需要手动安装一次；之后的版本会原地升级，权限、设置和历史都会保留。
 
+## 常见问题
+
+### 浏览器或 Electron 应用里听写的文字没有出现
+
+在基于 Chromium 的应用里(如 Cursor 这类 Electron 应用,以及 Dia 这类 Chromium 浏览器),系统会接受对网页输入框的辅助功能直接写入并报告成功,但页面上什么都不会出现。对这类输入框,Utter 改用粘贴,所以必须开启 **设置 → 通用 → 允许剪贴板粘贴**;确认粘贴成功后,原来的剪贴板内容会被恢复。关闭该选项时,这类输入框不会被写入,Utter 提供显式的复制。
+
+如果 Utter 无法确认粘贴是否生效,悬浮提示会说明无法确认写入,并提供复制文本。Utter 不会自行再写一次,请自己按 ⌘V 粘贴。
+
+没有暴露 Chromium 辅助功能节点的输入框(例如 Safari 和 Firefox)不在此范围内,仍使用直接写入。
+
+不重新安装就想回到之前的行为,可运行 `defaults write com.opentype.voiceinput deliveryWebEditorPasteDisabled -bool true`;恢复用 `defaults delete com.opentype.voiceinput deliveryWebEditorPasteDisabled`。对下一次听写生效;若没有生效,请重启 Utter。
+
 ## 本地模型
 
 以下模型都在你的 Mac 上运行。模型下载一次后，断网也能继续听写。

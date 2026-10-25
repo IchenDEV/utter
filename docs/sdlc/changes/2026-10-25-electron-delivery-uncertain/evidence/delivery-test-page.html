@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Utter delivery test page</title>
+<style>
+  body { font: 16px -apple-system, sans-serif; margin: 32px; max-width: 560px; }
+  label { display: block; margin: 20px 0 6px; font-weight: 600; }
+  input, textarea, div[contenteditable] { width: 100%; box-sizing: border-box; font: inherit; padding: 8px; border: 1px solid #888; border-radius: 6px; }
+  textarea { height: 90px; }
+  div[contenteditable] { min-height: 90px; }
+</style>
+</head>
+<body>
+<h1>Utter delivery test page</h1>
+<p>Static page for Batch 0. Three empty fields, no scripts, no network. Reload the page to clear them.</p>
+<label for="f-input">1. Single-line input</label>
+<input id="f-input" type="text">
+<label for="f-textarea">2. Textarea</label>
+<textarea id="f-textarea"></textarea>
+<label id="f-ce-label">3. Contenteditable</label>
+<div id="f-ce" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="f-ce-label"></div>
+</body>
+</html>

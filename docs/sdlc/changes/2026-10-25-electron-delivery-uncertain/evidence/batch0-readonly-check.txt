@@ -1,0 +1,9 @@
+[  0.02] AXIsProcessTrusted=true label=readonly-check readOnly=true
+[  0.02] target app=Dia bundle=company.thebrowser.dia pid=1410
+[  0.05] focus requested via AX on domId=f-input AXError=0
+[  0.05] waiting up to 20 s for the target app in front with an eligible focused field
+[  0.05] focused role is now AXWebArea (not a text input, waiting)
+[  0.46] focused role is now AXTextField
+[  1.27] FIELD role=AXTextField subrole=- domId=f-input attrs=49 ChromeAXNodeId=true AXDOMClassList=true EditableAncestor=true
+[  1.27] FIELD initial valueLen=0 isNewlineOnly=false selection=0,0 AXValue=settable AXSelectedText=settable AXSelectedTextRange=settable
+[  1.27] RESULT label=readonly-check status=read-only-done

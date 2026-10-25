@@ -1,0 +1,5 @@
+[  0.02] AXIsProcessTrusted=true label=dia-input readOnly=false
+[  0.03] target app=Dia bundle=company.thebrowser.dia pid=1410
+[  0.03] waiting up to 180 s for the target app in front with an eligible focused field
+[  0.06] focused role is now AXWebArea (not a text input, waiting)
+[180.08] RESULT label=dia-input status=no-eligible-field-before-timeout
