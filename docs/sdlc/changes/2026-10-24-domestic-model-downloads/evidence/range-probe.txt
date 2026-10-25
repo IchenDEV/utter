@@ -1,0 +1,3 @@
+Pinned Confucius weight probe: hf-mirror.com -> huggingface.co -> us.aws.cdn.hf.co; HTTP 206; bytes 0-63/2463307541; body 64 bytes.
+Pinned .gitattributes probe: hf-mirror.com -> huggingface.co -> relative resolve-cache path; HTTP 206; bytes 0-1569/1570; body 1570 bytes.
+Redirect hosts from separate curl probes; no signed query strings stored. These probes do not establish the complete production transfer redirect chain.

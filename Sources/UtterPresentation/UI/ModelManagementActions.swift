@@ -161,7 +161,7 @@ extension ModelManagementView {
             action.model.displayName,
             sizeText,
             storage.root.path
-        )
+        ) + "\n" + String(format: L("model.source.confirm"), settings.modelDownloadSource.displayName)
         if let warning = action.model.compatibility.message {
             message += "\n\n⚠️ " + warning
         }

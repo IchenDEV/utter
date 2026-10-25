@@ -35,7 +35,7 @@ package protocol ModelCatalogService: AnyObject {
 }
 
 package protocol TextModelDownloadService: Sendable {
-    func download(_ id: String, downloadBase: URL, cacheDirectory: URL,
+    func download(_ id: String, source: ModelDownloadSource, downloadBase: URL, cacheDirectory: URL,
                   progress: @escaping @Sendable (Progress) -> Void) async throws
     func validate(_ directory: URL) async throws
 }

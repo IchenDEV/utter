@@ -1,0 +1,35 @@
+Test Suite 'Selected tests' started at 2026-10-25 21:36:27.546.
+Test Suite 'OpenTypeTests.xctest' started at 2026-10-25 21:36:27.548.
+Test Suite 'ModelDownloadSourceLiveTests' started at 2026-10-25 21:36:27.548.
+Test Case '-[OpenTypeTests.ModelDownloadSourceLiveTests testMirrorASRDownloadAndOfflineLoad]' started.
+[Mirror verification] asr production catalog download
+[Mirror ASR] 0%
+[Mirror ASR] 10%
+[Mirror ASR] 20%
+[Mirror ASR] 30%
+[Mirror ASR] 40%
+[Mirror ASR] 50%
+[Mirror ASR] 60%
+[Mirror ASR] 70%
+[Mirror ASR] 80%
+[Mirror ASR] 90%
+[Mirror ASR] 100%
+Test Suite 'Selected tests' started at 2026-10-25 21:49:42.529.
+Test Suite 'OpenTypeTests.xctest' started at 2026-10-25 21:49:42.531.
+Test Suite 'ModelDownloadSourceLiveTests' started at 2026-10-25 21:49:42.531.
+Test Case '-[OpenTypeTests.ModelDownloadSourceLiveTests testMirrorASRDownloadAndOfflineLoad]' started.
+[Mirror verification] asr offline load
+Test Case '-[OpenTypeTests.ModelDownloadSourceLiveTests testMirrorASRDownloadAndOfflineLoad]' passed (5.625 seconds).
+Test Suite 'ModelDownloadSourceLiveTests' passed at 2026-10-25 21:49:48.167.
+	 Executed 1 test, with 0 failures (0 unexpected) in 5.625 (5.636) seconds
+Test Suite 'OpenTypeTests.xctest' passed at 2026-10-25 21:49:48.169.
+	 Executed 1 test, with 0 failures (0 unexpected) in 5.625 (5.638) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:49:48.173.
+	 Executed 1 test, with 0 failures (0 unexpected) in 5.625 (5.644) seconds
+Test Case '-[OpenTypeTests.ModelDownloadSourceLiveTests testMirrorASRDownloadAndOfflineLoad]' passed (801.090 seconds).
+Test Suite 'ModelDownloadSourceLiveTests' passed at 2026-10-25 21:49:48.638.
+	 Executed 1 test, with 0 failures (0 unexpected) in 801.090 (801.090) seconds
+Test Suite 'OpenTypeTests.xctest' passed at 2026-10-25 21:49:48.639.
+	 Executed 1 test, with 0 failures (0 unexpected) in 801.090 (801.091) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:49:48.639.
+	 Executed 1 test, with 0 failures (0 unexpected) in 801.090 (801.093) seconds

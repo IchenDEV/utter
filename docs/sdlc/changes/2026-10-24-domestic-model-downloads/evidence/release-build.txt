@@ -1,0 +1,59 @@
+
+▶ Building Utter (Release, arm64)…
+2026-10-25 21:49:00.718 xcodebuild[21308:13746055] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:x86_64, id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:x86_64, variant:Mac Catalyst, id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:arm64e.x1, variant:Designed for [iPad,iPhone], id:00008132-001828593639001C, name:My Mac }
+{ platform:macOS, arch:arm64_32, variant:Designed for [iPad,iPhone], id:00008132-001828593639001C, name:My Mac }
+error: the following command failed with exit code 0 but produced no further output
+SwiftCompile normal arm64 (in target 'UtterModels' from project 'OpenType')
+<worktree>/Sources/UtterModels/Native/DownloadStallWatchdog.swift:24:59: warning: reference to property 'pollInterval' in closure requires explicit use of 'self' to make capture semantics explicit; this is an error in the Swift 6 language mode
+22 |         pollTask = Task { @MainActor [weak self] in
+23 |             while !Task.isCancelled {
+24 |                 try? await Task.sleep(nanoseconds: UInt64(pollInterval * 1_000_000_000))
+   |                                                           `- warning: reference to property 'pollInterval' in closure requires explicit use of 'self' to make capture semantics explicit; this is an error in the Swift 6 language mode
+25 |                 guard let self, !Task.isCancelled else { return }
+26 |                 guard Date().timeIntervalSince(self.lastActivity) >= self.timeout else { continue }
+  ✓ Build succeeded
+
+▶ Building Utter CLI helper (Release, arm64)…
+Building for production...
+[Planning deferred tasks]
+Build complete! (0.62秒)
+  ✓ CLI helper built
+
+▶ Assembling Utter.app…
+  ✓ App bundle assembled
+
+▶ Building AppIcon asset catalog (system appearances)…
+  ✓ AppIcon compiled to Assets.car (system appearances)
+
+▶ Code signing (hardened runtime + entitlements)…
+<worktree>/dist/Utter.app: replacing existing signature
+<worktree>/dist/Utter.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate: replacing existing signature
+<worktree>/dist/Utter.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app: replacing existing signature
+<worktree>/dist/Utter.app/Contents/Frameworks/Sparkle.framework: replacing existing signature
+<worktree>/dist/Utter.app: replacing existing signature
+  ✓ Signed with: Developer ID Application: Chen Li (G9L7H3T3D5) (hardened runtime)
+Owned resources passed.
+--prepared:<worktree>/dist/Utter.app/Contents/MacOS/opentype-cli
+--validated:<worktree>/dist/Utter.app/Contents/MacOS/opentype-cli
+--prepared:<worktree>/dist/Utter.app/Contents/Frameworks/Sparkle.framework/Versions/Current/.
+--prepared:<worktree>/dist/Utter.app/Contents/Frameworks/Sparkle.framework/Versions/Current/Autoupdate
+--validated:<worktree>/dist/Utter.app/Contents/Frameworks/Sparkle.framework/Versions/Current/Autoupdate
+--prepared:<worktree>/dist/Utter.app/Contents/Frameworks/Sparkle.framework/Versions/Current/Updater.app
+--validated:<worktree>/dist/Utter.app/Contents/Frameworks/Sparkle.framework/Versions/Current/Updater.app
+--validated:<worktree>/dist/Utter.app/Contents/Frameworks/Sparkle.framework/Versions/Current/.
+<worktree>/dist/Utter.app: valid on disk
+<worktree>/dist/Utter.app: satisfies its Designated Requirement
+Update keys passed.
+Release artifact verification passed.
+
+═══════════════════════════════════════════════════
+  Done!  <worktree>/dist/Utter.app
+═══════════════════════════════════════════════════

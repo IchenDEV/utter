@@ -42,8 +42,8 @@ extension ModelCatalog {
         self.init(
             settings: .shared, log: UtterContracts.Log(service: TestDiagnostics.service), access: LocalModelAccessGate(),
             textDownloads: TextModelDownloadOperations(
-                download: { id, staging, progress in
-                    try await MLXModelDownloads.download(id, downloadBase: staging.downloadBase, cache: staging.hubCache, progress: progress)
+                download: { id, source, staging, progress in
+                    try await MLXModelDownloads.download(id, source: source, downloadBase: staging.downloadBase, cache: staging.hubCache, progress: progress)
                 }, validate: { try await MLXModelDownloads.validate($0) }
             ), artifacts: MLXModelArtifacts.text + MLXModelArtifacts.speech,
             speechDescriptors: { MLXModelArtifacts.speechDescriptors }, startupStorageRoot: startupStorageRoot, startupCleanup: startupCleanup

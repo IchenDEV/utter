@@ -1,0 +1,647 @@
+warning: '--skip-update' option is deprecated and will be removed in a future release
+Building for debugging...
+[Computing dependencies]
+[Constructing description]
+[Pre-planning 1 / 2745]
+[Planning 1 / 2745]
+[Planning 2378 / 2745]
+[Planning deferred tasks]
+[Constructing 3003 / 6438]
+[Starting]
+warning: missing creator for mutated node: ('<worktree>/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+[2 / 3] mlx-swift_Cmlx
+[2 / 3] swift-transformers_Hub
+[2 / 44] UtterProcessingTests-product
+[2 / 211] UtterRemoteMic
+[20 / 60] UtterBuiltinsTests-product
+[40 / 58] UtterIngressTests-product
+[40 / 51] OpenTypeTests-product
+[43 / 54] OpenTypeTests-product
+<worktree>/Tests/OpenTypeTests/UpdatePluginFixtures.swift:108:43: warning: main actor-isolated static property 'enabledEnvironment' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+102 |     @MainActor final class Counter { var value = 0 }
+103 |
+104 |     static let enabledEnvironment = UpdateEnvironment(
+    |                `- note: static property declared here
+105 |         isApplicationBundle: true, isAdHocSigned: false,
+106 |         feedURL: "https://example.com/appcast.xml", publicKey: Data(repeating: 9, count: 32).base64EncodedString())
+107 |
+108 |     init(environment: UpdateEnvironment = enabledEnvironment, automaticChecks: Bool = true) throws {
+    |                                           `- warning: main actor-isolated static property 'enabledEnvironment' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+109 |         let settings = RemotePluginSettings()
+110 |         settings.values.automaticUpdateChecks = automaticChecks
+[49 / 53] OpenTypeTests-product
+[51 / 53] OpenTypeTests-product
+Build complete! (7.37秒)
+Test Suite 'Selected tests' started at 2026-10-25 21:14:44.741.
+Test Suite 'UtterUpdatesTests.xctest' started at 2026-10-25 21:14:44.742.
+Test Suite 'UtterUpdatesTests.xctest' passed at 2026-10-25 21:14:44.742.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:44.742.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:44.848.
+Test Suite 'UtterSessionTests.xctest' started at 2026-10-25 21:14:44.849.
+Test Suite 'UtterSessionTests.xctest' passed at 2026-10-25 21:14:44.849.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:44.849.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:44.929.
+Test Suite 'UtterRuntimeTests.xctest' started at 2026-10-25 21:14:44.929.
+Test Suite 'UtterRuntimeTests.xctest' passed at 2026-10-25 21:14:44.929.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:44.930.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:45.012.
+Test Suite 'UtterRemoteMicTests.xctest' started at 2026-10-25 21:14:45.013.
+Test Suite 'UtterRemoteMicTests.xctest' passed at 2026-10-25 21:14:45.013.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:45.013.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:45.135.
+Test Suite 'UtterRemoteInferenceTests.xctest' started at 2026-10-25 21:14:45.136.
+Test Suite 'UtterRemoteInferenceTests.xctest' passed at 2026-10-25 21:14:45.136.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:45.136.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:45.219.
+Test Suite 'UtterProcessingTests.xctest' started at 2026-10-25 21:14:45.220.
+Test Suite 'UtterProcessingTests.xctest' passed at 2026-10-25 21:14:45.220.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:45.220.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:45.337.
+Test Suite 'UtterModelsTests.xctest' started at 2026-10-25 21:14:45.338.
+Test Suite 'ModelDownloadDrainTests' started at 2026-10-25 21:14:45.338.
+Test Case '-[UtterModelsTests.ModelDownloadDrainTests testAlreadyCancelledCallerDoesNotCreateWriter]' started.
+Test Case '-[UtterModelsTests.ModelDownloadDrainTests testAlreadyCancelledCallerDoesNotCreateWriter]' passed (0.001 seconds).
+Test Case '-[UtterModelsTests.ModelDownloadDrainTests testCancelledExclusiveWaiterReturnsWithoutInterruptingWriter]' started.
+Test Case '-[UtterModelsTests.ModelDownloadDrainTests testCancelledExclusiveWaiterReturnsWithoutInterruptingWriter]' passed (0.001 seconds).
+Test Case '-[UtterModelsTests.ModelDownloadDrainTests testShutdownRejectsPublicationAndDrainsCurrentAndRetiredWriters]' started.
+Test Case '-[UtterModelsTests.ModelDownloadDrainTests testShutdownRejectsPublicationAndDrainsCurrentAndRetiredWriters]' passed (0.053 seconds).
+Test Suite 'ModelDownloadDrainTests' passed at 2026-10-25 21:14:45.394.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.056 (0.056) seconds
+Test Suite 'UtterModelsTests.xctest' passed at 2026-10-25 21:14:45.394.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.056 (0.056) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:45.394.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.056 (0.057) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:45.529.
+Test Suite 'UtterMacServicesTests.xctest' started at 2026-10-25 21:14:45.531.
+Test Suite 'UtterMacServicesTests.xctest' passed at 2026-10-25 21:14:45.531.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:45.531.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:45.661.
+Test Suite 'UtterIngressTests.xctest' started at 2026-10-25 21:14:45.662.
+Test Suite 'UtterIngressTests.xctest' passed at 2026-10-25 21:14:45.662.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:45.662.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:45.744.
+Test Suite 'UtterEvaluationTests.xctest' started at 2026-10-25 21:14:45.745.
+Test Suite 'UtterEvaluationTests.xctest' passed at 2026-10-25 21:14:45.745.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:45.745.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:45.827.
+Test Suite 'UtterDataTests.xctest' started at 2026-10-25 21:14:45.828.
+Test Suite 'SettingsStoreTests' started at 2026-10-25 21:14:45.828.
+Test Case '-[UtterDataTests.SettingsStoreTests testAutomaticUpdateChecksDefaultOnAndPersistOptOut]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testAutomaticUpdateChecksDefaultOnAndPersistOptOut]' passed (0.019 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testCompoundUpdateNotifiesOnceAfterPersistenceAndHotkeyNormalization]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testCompoundUpdateNotifiesOnceAfterPersistenceAndHotkeyNormalization]' passed (0.007 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testLegacyMigrationAndExplicitZeroGainRemainCompatible]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testLegacyMigrationAndExplicitZeroGainRemainCompatible]' passed (0.007 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testModelDownloadSourceDefaultsPersistsAndFallsBackForUnknownValues]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testModelDownloadSourceDefaultsPersistsAndFallsBackForUnknownValues]' passed (0.008 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testReentrantMutationKeepsNotificationSnapshotsInOrder]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testReentrantMutationKeepsNotificationSnapshotsInOrder]' passed (0.006 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testSessionSnapshotStaysFrozenAndReopeningPreservesChanges]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testSessionSnapshotStaysFrozenAndReopeningPreservesChanges]' passed (0.007 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testTokenRotationKeepsOriginalKeyAndDoesNotChangeComposition]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testTokenRotationKeepsOriginalKeyAndDoesNotChangeComposition]' passed (0.008 seconds).
+Test Suite 'SettingsStoreTests' passed at 2026-10-25 21:14:45.890.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.062 (0.062) seconds
+Test Suite 'UtterDataTests.xctest' passed at 2026-10-25 21:14:45.890.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.062 (0.062) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:45.890.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.062 (0.063) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:45.976.
+Test Suite 'UtterContractsTests.xctest' started at 2026-10-25 21:14:45.976.
+Test Suite 'UtterContractsTests.xctest' passed at 2026-10-25 21:14:45.976.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:45.976.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:46.202.
+Test Suite 'UtterBuiltinsTests.xctest' started at 2026-10-25 21:14:46.203.
+Test Suite 'UtterBuiltinsTests.xctest' passed at 2026-10-25 21:14:46.203.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:46.203.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:46.286.
+Test Suite 'UtterAudioTests.xctest' started at 2026-10-25 21:14:46.287.
+Test Suite 'UtterAudioTests.xctest' passed at 2026-10-25 21:14:46.287.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:14:46.287.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-25 21:14:46.505.
+Test Suite 'OpenTypeTests.xctest' started at 2026-10-25 21:14:46.506.
+Test Suite 'ConfuciusASRTests' started at 2026-10-25 21:14:46.506.
+Test Case '-[OpenTypeTests.ConfuciusASRTests testApplicationCatalogDownloadsAndDeletesModel]' started.
+<worktree>/Tests/OpenTypeTests/ConfuciusASRTests.swift:114: -[OpenTypeTests.ConfuciusASRTests testApplicationCatalogDownloadsAndDeletesModel] : Test skipped - Set OPENTYPE_CONFUCIUS_LIVE_DOWNLOAD=1 for the live catalog download
+Test Case '-[OpenTypeTests.ConfuciusASRTests testApplicationCatalogDownloadsAndDeletesModel]' skipped (0.002 seconds).
+Test Case '-[OpenTypeTests.ConfuciusASRTests testDownloadedModelTranscribesChineseAndEnglish]' started.
+<worktree>/Tests/OpenTypeTests/ConfuciusASRTests.swift:77: -[OpenTypeTests.ConfuciusASRTests testDownloadedModelTranscribesChineseAndEnglish] : Test skipped - Set OPENTYPE_CONFUCIUS_MODEL_PATH to run the model integration test
+Test Case '-[OpenTypeTests.ConfuciusASRTests testDownloadedModelTranscribesChineseAndEnglish]' skipped (0.000 seconds).
+Test Case '-[OpenTypeTests.ConfuciusASRTests testModelRequiresCompleteMLXFilesAndLicenseNotices]' started.
+Test Case '-[OpenTypeTests.ConfuciusASRTests testModelRequiresCompleteMLXFilesAndLicenseNotices]' passed (0.007 seconds).
+Test Case '-[OpenTypeTests.ConfuciusASRTests testQwenCompatibleModelsShareOneSpeechEngine]' started.
+Test Case '-[OpenTypeTests.ConfuciusASRTests testQwenCompatibleModelsShareOneSpeechEngine]' passed (0.012 seconds).
+Test Case '-[OpenTypeTests.ConfuciusASRTests testTailPaddingAddsHalfSecondOfSilence]' started.
+Test Case '-[OpenTypeTests.ConfuciusASRTests testTailPaddingAddsHalfSecondOfSilence]' passed (0.045 seconds).
+Test Suite 'ConfuciusASRTests' passed at 2026-10-25 21:14:46.572.
+	 Executed 5 tests, with 2 tests skipped and 0 failures (0 unexpected) in 0.066 (0.066) seconds
+Test Suite 'ConfuciusModelDownloaderTests' started at 2026-10-25 21:14:46.572.
+Test Case '-[OpenTypeTests.ConfuciusModelDownloaderTests testCorruptRangeCannotPublishAWeight]' started.
+Test Case '-[OpenTypeTests.ConfuciusModelDownloaderTests testCorruptRangeCannotPublishAWeight]' passed (0.006 seconds).
+Test Case '-[OpenTypeTests.ConfuciusModelDownloaderTests testFullResponseIsRejectedWhenRangeWasRequested]' started.
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8b60 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b476850 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8b60 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b476bb0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8b60>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8e60 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b484a80 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8e60 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b484ba0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8e60>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8d00 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/A0A72000-7356-4A26-9289-F189FEE3F346/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b285950 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8d00 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/A0A72000-7356-4A26-9289-F189FEE3F346/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b484ed0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/Sources/A0A72000-7356-4A26-9289-F189FEE3F346/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8d00>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8b20 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b31e3a0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8ed0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/A0A72000-7356-4A26-9289-F189FEE3F346/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b48bba0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+Test Case '-[OpenTypeTests.ConfuciusModelDownloaderTests testFullResponseIsRejectedWhenRangeWasRequested]' passed (15.236 seconds).
+Test Case '-[OpenTypeTests.ConfuciusModelDownloaderTests testParallelRangesReassembleExactWeightAndReportProgress]' started.
+Test Case '-[OpenTypeTests.ConfuciusModelDownloaderTests testParallelRangesReassembleExactWeightAndReportProgress]' passed (0.005 seconds).
+Test Suite 'ConfuciusModelDownloaderTests' passed at 2026-10-25 21:15:01.819.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 15.246 (15.247) seconds
+Test Suite 'LiveDownloadVerificationTests' started at 2026-10-25 21:15:01.819.
+Test Case '-[OpenTypeTests.LiveDownloadVerificationTests testApplicationModelCatalogResumePath]' started.
+<worktree>/Tests/OpenTypeTests/LiveDownloadVerificationTests.swift:381: -[OpenTypeTests.LiveDownloadVerificationTests testApplicationModelCatalogResumePath] : Test skipped - Set OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1 to run this live download test
+Test Case '-[OpenTypeTests.LiveDownloadVerificationTests testApplicationModelCatalogResumePath]' skipped (0.001 seconds).
+Test Suite 'LiveDownloadVerificationTests' passed at 2026-10-25 21:15:01.820.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'ModelCatalogArtifactTests' started at 2026-10-25 21:15:01.820.
+Test Case '-[OpenTypeTests.ModelCatalogArtifactTests testProductionCatalogUsesRegisteredArtifactsAndTheirValidationContract]' started.
+Test Case '-[OpenTypeTests.ModelCatalogArtifactTests testProductionCatalogUsesRegisteredArtifactsAndTheirValidationContract]' passed (0.017 seconds).
+Test Suite 'ModelCatalogArtifactTests' passed at 2026-10-25 21:15:01.837.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.017 (0.017) seconds
+Test Suite 'ModelCatalogLifetimeTests' started at 2026-10-25 21:15:01.837.
+Test Case '-[OpenTypeTests.ModelCatalogLifetimeTests testCloseWaitsForAdmittedCleanupAndRejectsPreferenceMutation]' started.
+Test Case '-[OpenTypeTests.ModelCatalogLifetimeTests testCloseWaitsForAdmittedCleanupAndRejectsPreferenceMutation]' passed (0.007 seconds).
+Test Case '-[OpenTypeTests.ModelCatalogLifetimeTests testColdCatalogDoesNotRepairPreferencesOrStartCleanup]' started.
+Test Case '-[OpenTypeTests.ModelCatalogLifetimeTests testColdCatalogDoesNotRepairPreferencesOrStartCleanup]' passed (0.008 seconds).
+Test Case '-[OpenTypeTests.ModelCatalogLifetimeTests testDeleteRetainsItsAdmittedPathWhenStorageChangesWhileWaiting]' started.
+Test Case '-[OpenTypeTests.ModelCatalogLifetimeTests testDeleteRetainsItsAdmittedPathWhenStorageChangesWhileWaiting]' passed (0.015 seconds).
+Test Case '-[OpenTypeTests.ModelCatalogLifetimeTests testModelMaintenanceWaitsForAnActiveResourceLease]' started.
+Test Case '-[OpenTypeTests.ModelCatalogLifetimeTests testModelMaintenanceWaitsForAnActiveResourceLease]' passed (0.008 seconds).
+Test Suite 'ModelCatalogLifetimeTests' passed at 2026-10-25 21:15:01.875.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.038 (0.038) seconds
+Test Suite 'ModelDownloadFailureMessageTests' started at 2026-10-25 21:15:01.875.
+Test Case '-[OpenTypeTests.ModelDownloadFailureMessageTests testDiskSpaceMessageProvidesStorageAction]' started.
+Test Case '-[OpenTypeTests.ModelDownloadFailureMessageTests testDiskSpaceMessageProvidesStorageAction]' passed (0.000 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadFailureMessageTests testTimeoutMessageExplainsResumeBehavior]' started.
+Test Case '-[OpenTypeTests.ModelDownloadFailureMessageTests testTimeoutMessageExplainsResumeBehavior]' passed (0.000 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadFailureMessageTests testWrappedNetworkErrorIsRecognized]' started.
+Test Case '-[OpenTypeTests.ModelDownloadFailureMessageTests testWrappedNetworkErrorIsRecognized]' passed (0.001 seconds).
+Test Suite 'ModelDownloadFailureMessageTests' passed at 2026-10-25 21:15:01.876.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'ModelDownloadRecoveryTests' started at 2026-10-25 21:15:01.876.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testCleanupRestoresAFlatCacheFileThatWasRenamedAfterRelocation]' started.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testCleanupRestoresAFlatCacheFileThatWasRenamedAfterRelocation]' passed (0.002 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testFindsIncompleteFilesInsideHiddenCacheDirectories]' started.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testFindsIncompleteFilesInsideHiddenCacheDirectories]' passed (0.001 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testHubCacheRepoNameMatchesPythonLayout]' started.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testHubCacheRepoNameMatchesPythonLayout]' passed (0.000 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testLLMArtifactsCoverMaterializedRepoAndSharedCache]' started.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testLLMArtifactsCoverMaterializedRepoAndSharedCache]' passed (0.001 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testPurgeIgnoresAlreadyRemovedFiles]' started.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testPurgeIgnoresAlreadyRemovedFiles]' passed (0.001 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testRelocationIsolatesOnlyTheRequestedWhisperGeneration]' started.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testRelocationIsolatesOnlyTheRequestedWhisperGeneration]' passed (0.003 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testRelocationKeepsGenerationsSeparateAndCleanupScoped]' started.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testRelocationKeepsGenerationsSeparateAndCleanupScoped]' passed (0.002 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testWhisperArtifactsAreScopedToTheRequestedVariant]' started.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testWhisperArtifactsAreScopedToTheRequestedVariant]' passed (0.002 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testWhisperArtifactsPreserveFinalFilesAndOtherRepositories]' started.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testWhisperArtifactsPreserveFinalFilesAndOtherRepositories]' passed (0.002 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testWhisperFlatCacheNamesUseExactVariantBoundaries]' started.
+Test Case '-[OpenTypeTests.ModelDownloadRecoveryTests testWhisperFlatCacheNamesUseExactVariantBoundaries]' passed (0.001 seconds).
+Test Suite 'ModelDownloadRecoveryTests' passed at 2026-10-25 21:15:01.892.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.015 (0.016) seconds
+Test Suite 'ModelDownloadSourceRoutingTests' started at 2026-10-25 21:15:01.892.
+Test Case '-[OpenTypeTests.ModelDownloadSourceRoutingTests testProductionRequestsUseSelectedSourceWithoutLeakingCredentials]' started.
+Test Suite 'Selected tests' started at 2026-10-25 21:15:02.443.
+Test Suite 'OpenTypeTests.xctest' started at 2026-10-25 21:15:02.444.
+Test Suite 'ModelDownloadSourceRoutingTests' started at 2026-10-25 21:15:02.444.
+Test Case '-[OpenTypeTests.ModelDownloadSourceRoutingTests testProductionRequestsUseSelectedSourceWithoutLeakingCredentials]' started.
+[Source request] huggingface whisperkit-coreml
+[Source request] huggingface utter-source/recognizer
+[Source request] huggingface utter-source/formatter
+[Source request] huggingface mlx-community/Confucius4-R2T2-8bit
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8b20 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b48bd50 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8b20>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8ed0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/A0A72000-7356-4A26-9289-F189FEE3F346/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b48be70 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/Sources/A0A72000-7356-4A26-9289-F189FEE3F346/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8ed0>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b92c0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b8008d0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8d40 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b4ce040 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b92c0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b8007e0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b92c0>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8d40 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b4ce2b0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8d40>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b9030 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b481c50 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b94d0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b802a60 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b9030 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b802c10 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b9030>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b94d0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b802d30 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b94d0>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8dc0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b480090 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b94a0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b502a00 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8dc0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b4801e0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8dc0>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b94a0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b502c70 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b94a0>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8db0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b475530 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+[Source request] huggingface openai/whisper-
+[Source request] hf-mirror whisperkit-coreml
+[Source request] hf-mirror utter-source/recognizer
+[Source request] hf-mirror utter-source/formatter
+[Source request] hf-mirror mlx-community/Confucius4-R2T2-8bit
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b9880 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b3ea8b0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8db0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b3ea910 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8db0>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b9880 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b3eaa90 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b9880>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+2026-10-25 21:15:21.107 xctest[98884:13614004] Error obtaining permanent ID: Error Domain=NSCocoaErrorDomain Code=134020 "用来打开储存的型号配置与用来创建该储存的型号配置不兼容。"
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8e20 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b475380 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8bd0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b477480 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8e20 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b487cf0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8e20>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8bd0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b280690 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8bd0>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8dc0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b475530 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8040 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b481980 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8dc0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b481860 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8dc0>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8040 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b475560 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/Sources/F1353A4B-3EC4-47D0-9D4D-775E9C440C3F/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8040>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b91b0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b503360 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8120 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b4bffc0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b91b0 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b4bfb70 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b91b0>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+[Source request] hf-mirror openai/whisper-
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8120 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b4bfba0 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+CoreData: warning: Caught exception trying to load store metadata during error recovery: NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (4097)
+CoreData: error: userInfo:
+CoreData: error: 	NSUnderlyingException : NSXPCStoreServerEndpointFactory failed to provide an endpoint
+CoreData: error: 	NSUnderlyingError : Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: storeType: NSXPCStore
+CoreData: error: configuration: (null)
+CoreData: error: URL: file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb
+CoreData: annotation: options:
+CoreData: annotation: 	NSReadOnlyPersistentStoreOption : 0
+CoreData: annotation: 	NSXPCStoreServerEndpointFactory : <CNCDRemotePersistentStoreEndpointFactory: 0x762a6b8120>
+CoreData: annotation: 	skipModelCheck : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+[Source request] frozen multi-repository source
+Test Case '-[OpenTypeTests.ModelDownloadSourceRoutingTests testProductionRequestsUseSelectedSourceWithoutLeakingCredentials]' passed (31.157 seconds).
+Test Suite 'ModelDownloadSourceRoutingTests' passed at 2026-10-25 21:15:33.602.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.157 (31.158) seconds
+Test Suite 'OpenTypeTests.xctest' passed at 2026-10-25 21:15:33.603.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.157 (31.158) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:15:33.603.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.157 (31.160) seconds
+Test Case '-[OpenTypeTests.ModelDownloadSourceRoutingTests testProductionRequestsUseSelectedSourceWithoutLeakingCredentials]' passed (31.749 seconds).
+Test Suite 'ModelDownloadSourceRoutingTests' passed at 2026-10-25 21:15:33.641.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.749 (31.749) seconds
+Test Suite 'ModelDownloadSourceWindowTests' started at 2026-10-25 21:15:33.641.
+Test Case '-[OpenTypeTests.ModelDownloadSourceWindowTests testInteractiveSourceWindows]' started.
+<worktree>/Tests/OpenTypeTests/ModelDownloadSourceWindowTests.swift:13: -[OpenTypeTests.ModelDownloadSourceWindowTests testInteractiveSourceWindows] : Test skipped - Opt-in native window verification
+Test Case '-[OpenTypeTests.ModelDownloadSourceWindowTests testInteractiveSourceWindows]' skipped (0.005 seconds).
+Test Suite 'ModelDownloadSourceWindowTests' passed at 2026-10-25 21:15:33.647.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'ModelDownloadTasksTests' started at 2026-10-25 21:15:33.647.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testApplicationCancelAllowsResumeBeforeOldWriterReturns]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testApplicationCancelAllowsResumeBeforeOldWriterReturns]' passed (0.059 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testApplicationCatalogResumeEntryStartsBeforeOldDependencyReturns]' started.
+CoreData: error: Unable to create token NSXPCConnection.  NSXPCStoreServerEndpointFactory 0x762a6b8e40 -newEndpointWithError returned error Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}
+CoreData: error: NSXPCStoreConnectionManager failed to initialize any connections for store at file://<user-home>/Library/Application%20Support/AddressBook/AddressBook-v22.abcddb with error = Error Domain=NSCocoaErrorDomain Code=4097 "无法与帮助程序通信。" UserInfo={NSUnderlyingError=0x762b48b420 {Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.contactsd.persistence" UserInfo={NSDebugDescription=connection to service named com.apple.contactsd.persistence}}}
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testApplicationCatalogResumeEntryStartsBeforeOldDependencyReturns]' passed (0.217 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testCancelledGenerationCannotPublishAfterReplacement]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testCancelledGenerationCannotPublishAfterReplacement]' passed (0.034 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testCancelledRunIsNoLongerCurrent]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testCancelledRunIsNoLongerCurrent]' passed (0.004 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testCancelPropagatesToActiveDownloadTask]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testCancelPropagatesToActiveDownloadTask]' passed (0.008 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testDeleteArbitratesAgainstLateCancelledWriter]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testDeleteArbitratesAgainstLateCancelledWriter]' passed (0.019 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testDeleteRunsWhenNoDownloadIsActive]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testDeleteRunsWhenNoDownloadIsActive]' passed (0.001 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testDeleteRunsWhileCancelledStagedWriterDrains]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testDeleteRunsWhileCancelledStagedWriterDrains]' passed (0.041 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testDuplicateJoinedBeforeCancelDoesNotRestart]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testDuplicateJoinedBeforeCancelDoesNotRestart]' passed (0.013 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testDuplicateRequestsShareOneDownloadTask]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testDuplicateRequestsShareOneDownloadTask]' passed (0.064 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testLaterRequestAfterNormalCompletionStartsANewDownload]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testLaterRequestAfterNormalCompletionStartsANewDownload]' passed (0.004 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testRetryAfterCancelStartsBeforeOriginalWriterReturns]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testRetryAfterCancelStartsBeforeOriginalWriterReturns]' passed (0.006 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testTwoConcurrentRetriesAfterCancelStartOnlyOneWriter]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testTwoConcurrentRetriesAfterCancelStartOnlyOneWriter]' passed (0.074 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testTwoConcurrentRetriesWithoutCancelStartOnlyOneWriter]' started.
+Test Case '-[OpenTypeTests.ModelDownloadTasksTests testTwoConcurrentRetriesWithoutCancelStartOnlyOneWriter]' passed (0.087 seconds).
+Test Suite 'ModelDownloadTasksTests' passed at 2026-10-25 21:15:34.289.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.629 (0.642) seconds
+Test Suite 'RemoteMicPluginTests' started at 2026-10-25 21:15:34.290.
+Test Case '-[OpenTypeTests.RemoteMicPluginTests testSettingsProjectionReceivesDiagnosticsAndDisposesItsObservers]' started.
+Test Case '-[OpenTypeTests.RemoteMicPluginTests testSettingsProjectionReceivesDiagnosticsAndDisposesItsObservers]' passed (0.015 seconds).
+Test Suite 'RemoteMicPluginTests' passed at 2026-10-25 21:15:34.306.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.015 (0.016) seconds
+Test Suite 'SettingsProjectionTests' started at 2026-10-25 21:15:34.306.
+Test Case '-[OpenTypeTests.SettingsProjectionTests testModelDownloadSourceSelectionSharesOneAuthorityAcrossViews]' started.
+Test Case '-[OpenTypeTests.SettingsProjectionTests testModelDownloadSourceSelectionSharesOneAuthorityAcrossViews]' passed (0.170 seconds).
+Test Case '-[OpenTypeTests.SettingsProjectionTests testProjectionWritesThroughToTheInjectedAuthority]' started.
+Test Case '-[OpenTypeTests.SettingsProjectionTests testProjectionWritesThroughToTheInjectedAuthority]' passed (0.093 seconds).
+Test Case '-[OpenTypeTests.SettingsProjectionTests testReadOnlyComputedValuesAndWritableBindingsUseTheSameSnapshot]' started.
+Test Case '-[OpenTypeTests.SettingsProjectionTests testReadOnlyComputedValuesAndWritableBindingsUseTheSameSnapshot]' passed (0.486 seconds).
+Test Suite 'SettingsProjectionTests' passed at 2026-10-25 21:15:35.062.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.749 (0.756) seconds
+Test Suite 'UpdatePluginTests' started at 2026-10-25 21:15:35.062.
+Test Case '-[OpenTypeTests.UpdatePluginTests testRelaunchWaitsForDictationAndModelDownloadsToFinish]' started.
+Test Case '-[OpenTypeTests.UpdatePluginTests testRelaunchWaitsForDictationAndModelDownloadsToFinish]' passed (0.024 seconds).
+Test Suite 'UpdatePluginTests' passed at 2026-10-25 21:15:35.087.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.024 (0.025) seconds
+Test Suite 'UtilityTests' started at 2026-10-25 21:15:35.087.
+Test Case '-[OpenTypeTests.UtilityTests testModelCatalogInitializerStartupCleanupKeepsMainActorResponsive]' started.
+Test Case '-[OpenTypeTests.UtilityTests testModelCatalogInitializerStartupCleanupKeepsMainActorResponsive]' passed (0.373 seconds).
+Test Suite 'UtilityTests' passed at 2026-10-25 21:15:35.460.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.373 (0.374) seconds
+Test Suite 'WhisperOfflineLoadingTests' started at 2026-10-25 21:15:35.460.
+Test Case '-[OpenTypeTests.WhisperOfflineLoadingTests testMissingLocalTokenizerNeverEntersTheSDKHubLoader]' started.
+Test Case '-[OpenTypeTests.WhisperOfflineLoadingTests testMissingLocalTokenizerNeverEntersTheSDKHubLoader]' passed (0.006 seconds).
+Test Suite 'WhisperOfflineLoadingTests' passed at 2026-10-25 21:15:35.467.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.006 (0.007) seconds
+Test Suite 'OpenTypeTests.xctest' passed at 2026-10-25 21:15:35.467.
+	 Executed 50 tests, with 4 tests skipped and 0 failures (0 unexpected) in 48.936 (48.961) seconds
+Test Suite 'Selected tests' passed at 2026-10-25 21:15:35.467.
+	 Executed 50 tests, with 4 tests skipped and 0 failures (0 unexpected) in 48.936 (48.962) seconds

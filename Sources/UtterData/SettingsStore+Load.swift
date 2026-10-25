@@ -20,6 +20,7 @@ extension SettingsStore {
         case qwenASRModel, qwenASRModelPath
         case preloadSpeechModelOnLaunch, preloadFormattingModelOnLaunch
         case modelStoragePath, localWhisperModelPaths, localLLMModelPaths
+        case modelDownloadSource
         case developerInterfaceEnabled, developerHTTPPort, developerHTTPToken
         case automaticUpdateChecks
     }
@@ -127,6 +128,7 @@ extension SettingsStore {
         values.preloadSpeechModelOnLaunch = ud.object(forKey: Key.preloadSpeechModelOnLaunch.rawValue) as? Bool ?? true
         values.preloadFormattingModelOnLaunch = ud.object(forKey: Key.preloadFormattingModelOnLaunch.rawValue) as? Bool ?? true
         values.modelStoragePath = ud.string(forKey: Key.modelStoragePath.rawValue) ?? DataLocations.models.path
+        values.modelDownloadSource = ModelDownloadSource(rawValue: ud.string(forKey: Key.modelDownloadSource.rawValue) ?? "") ?? .huggingFace
         values.localWhisperModelPaths = ud.dictionary(forKey: Key.localWhisperModelPaths.rawValue) as? [String: String] ?? [:]
         values.localLLMModelPaths = ud.dictionary(forKey: Key.localLLMModelPaths.rawValue) as? [String: String] ?? [:]
         values.developerInterfaceEnabled = ud.object(forKey: Key.developerInterfaceEnabled.rawValue) as? Bool ?? false

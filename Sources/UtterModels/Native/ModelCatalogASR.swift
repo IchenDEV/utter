@@ -61,6 +61,7 @@ extension ModelCatalog {
 
         let watchdog = makeStallWatchdog(key: key, token: token, kind: .asr, modelID: id)
         let signal = DownloadProgressSignal()
+        let source = settings.modelDownloadSource
         let staging = storage.generationStaging(for: token)
         defer { ModelStorage.removeGenerationStaging(staging) }
 
@@ -75,7 +76,7 @@ extension ModelCatalog {
             for (repositoryIndex, repositoryID) in repositories.enumerated() {
                 if repositoryID == QwenASRModel.confuciusR2T2ID {
                     let directory = ModelStorage.asrRepoDir(repositoryID, downloadBase: staging.downloadBase)
-                    try await ConfuciusModelDownloader.downloadRepository(to: directory) { [weak self, progressTasks] bytes in
+                    try await ConfuciusModelDownloader.downloadRepository(to: directory, source: source) { [weak self, progressTasks] bytes in
                         progressTasks.enqueue {
                             guard let self,
                                   self.downloadTasks.isCurrent(key, token: token),
@@ -93,7 +94,8 @@ extension ModelCatalog {
                         }
                     }
                 } else {
-                    let api = HubApi(downloadBase: staging.downloadBase, cache: staging.hubCache)
+                    let api = HubApi(downloadBase: staging.downloadBase, cache: staging.hubCache,
+                                     hfToken: source.hubTokenOverride, endpoint: source.endpoint)
                     _ = try await api.snapshot(from: ModelStorage.hubModelRepo(repositoryID)) { [weak self, progressTasks] progress in
                         progressTasks.enqueue {
                             guard let self,

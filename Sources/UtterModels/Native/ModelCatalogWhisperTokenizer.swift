@@ -13,14 +13,15 @@ extension ModelCatalog {
         try Task.checkCancellation()
     }
 
-    func installWhisperTokenizer(model: String, directory: URL, staging: ModelDownloadStaging) async throws {
+    func installWhisperTokenizer(model: String, directory: URL, staging: ModelDownloadStaging, source: ModelDownloadSource) async throws {
         try Task.checkCancellation()
         if (try? WhisperTokenizerAssets.read(at: directory, expectedModel: model)) != nil { return }
         guard let repository = WhisperTokenizerAssets.repository(for: model)
             ?? WhisperTokenizerAssets.repository(for: directory.lastPathComponent) else {
             throw CocoaError(.fileReadCorruptFile)
         }
-        let downloaded = try await HubApi(downloadBase: staging.downloadBase, cache: staging.hubCache)
+        let downloaded = try await HubApi(downloadBase: staging.downloadBase, cache: staging.hubCache,
+                                          hfToken: source.hubTokenOverride, endpoint: source.endpoint)
             .snapshot(from: repository, matching: ["tokenizer.json", "tokenizer_config.json"])
         try Task.checkCancellation()
         let destination = directory.appendingPathComponent(WhisperTokenizerAssets.directoryName, isDirectory: true)

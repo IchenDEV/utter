@@ -38,6 +38,10 @@ struct ModelManagementView: View {
                 deviceInfoSection
             }
 
+            Section(L("model.source.section")) {
+                ModelDownloadSourcePicker()
+            }
+
             Section(L("model.speech_recognition")) {
                 enginePickerSection
                 selectedRecognitionConfiguration
