@@ -65,9 +65,10 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 ### Batch 7: settings page and strings
 
-- [ ] `RemoteButtonMappingView`: master switch, twelve-key grid with three pickers per key, shortcut recorder, restore defaults, status line, and the permission explanation shown before the request. Split into small files.
-- [ ] Strings in `en.lproj` and `zh-Hans.lproj` with parity.
+- [x] `RemoteButtonMappingView`: master switch, twelve-key grid with three pickers per key, shortcut recorder, restore defaults, status line, and the permission explanation shown before the request. Split into small files.
+- [x] Strings in `en.lproj` and `zh-Hans.lproj` with parity.
 - [ ] Real-window visual QA at the default size: off, active, needs permission, conflict; light and dark; English and Chinese. Screenshots under `evidence/`.
+- Done 2026-10-25 except the last item. Built as `RemoteButtonMappingRow` (switch, status, permission button), `RemoteButtonGrid`, `RemoteButtonActionMenu` (one cell), `ShortcutRecorder`, and pure text in `RemoteButtonText`. The grid has **eleven** keys, not twelve: the power key was deliberately not measured, so it is not offered. The visual QA item stays open: every required state, both languages and both appearances were rendered through an AppKit window, and one on-screen window was captured, but no menu, popover, file panel or permission button was operated on screen (see `verification.md`, Batch 7). That is left to the independent verifier in Batch 9.
 
 ### Batch 8: docs and runbook
 

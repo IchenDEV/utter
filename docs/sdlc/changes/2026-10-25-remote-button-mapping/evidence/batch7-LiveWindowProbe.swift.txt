@@ -1,0 +1,69 @@
+import AppKit
+import SwiftUI
+import XCTest
+import UtterContracts
+import UtterMediaContracts
+import UtterPresentationContracts
+@testable import UtterPresentation
+
+@MainActor
+private final class LiveRemote: RemoteMicControlService {
+    var state: RemoteMicBridgeState = .idle
+    var diagnostics = RemoteMicDiagnostics(keyRemap: .active, buttonMapping: .needsPermission(canAsk: true))
+    var permissionRequests = 0
+    func reconnect() {}
+    func observeDiagnostics(_ callback: @escaping (RemoteMicDiagnostics) -> Void) -> UUID {
+        callback(diagnostics)
+        return UUID()
+    }
+    func setEnabled(_ enabled: Bool) {}
+    func setVoiceCallbacks(pressed: ((UInt64) -> Void)?, released: (() -> Void)?, stopped: (() -> Void)?) {}
+    func observe(_ callback: @escaping (RemoteMicBridgeState) -> Void) -> UUID { UUID() }
+    func removeObserver(_ id: UUID) {}
+    func requestButtonMappingPermission() { permissionRequests += 1 }
+}
+
+/// Shows the real page in an on-screen window for a few seconds so it can be driven by hand or by
+/// UI automation. Runs only when UTTER_LIVE_SECONDS is set. Writes the resulting profile to
+/// UTTER_LIVE_OUT when the window closes.
+@MainActor
+final class LiveWindowProbe: XCTestCase {
+    func testLiveWindow() throws {
+        guard let seconds = ProcessInfo.processInfo.environment["UTTER_LIVE_SECONDS"].flatMap(Double.init) else {
+            throw XCTSkip("set UTTER_LIVE_SECONDS to open the live window")
+        }
+        Loc.use(.english)
+        let store = RemotePluginSettings()
+        store.values.remoteKeyRemapEnabled = true
+        store.values.remoteButtonMappingEnabled = true
+        let settings = AppSettings(service: store)
+        let remote = LiveRemote()
+        let platform = PlatformProjection(remote: remote, login: nil, devices: nil, screen: nil,
+                                          diagnostics: RemotePluginDiagnostics())
+        let app = NSApplication.shared
+        app.setActivationPolicy(.regular)
+        let window = NSWindow(contentRect: NSRect(x: 80, y: 80, width: 640, height: 760),
+                              styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        window.title = "Utter live probe"
+        window.contentView = NSHostingView(rootView: RemoteMicSettingsView()
+            .environmentObject(settings).environmentObject(platform))
+        window.makeKeyAndOrderFront(nil)
+        app.activate(ignoringOtherApps: true)
+        app.finishLaunching()
+        let deadline = Date().addingTimeInterval(seconds)
+        while Date() < deadline {
+            if let event = app.nextEvent(matching: .any, until: Date().addingTimeInterval(0.1), inMode: .default, dequeue: true) {
+                app.sendEvent(event)
+            }
+        }
+        let profile = store.values.remoteButtonProfile
+        let summary = RemoteButton.allCases.map { button -> String in
+            let b = profile.bindings(for: button)
+            return "\(button.rawValue): \(b.single) | \(b.double) | \(b.long)"
+        }.joined(separator: "\n") + "\npermissionRequests: \(remote.permissionRequests)\n"
+        if let out = ProcessInfo.processInfo.environment["UTTER_LIVE_OUT"] {
+            try summary.write(toFile: out, atomically: true, encoding: .utf8)
+        }
+        window.close()
+    }
+}
