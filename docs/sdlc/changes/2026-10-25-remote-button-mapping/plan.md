@@ -59,8 +59,9 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 ### Batch 6: plugin wiring and diagnostics
 
-- [ ] `RemoteMicPlugins` drives the coordinator from `onReady`, `onRevoke`, `onDispose` and the two settings; diagnostics carry button, trigger and action identifiers only.
+- [x] `RemoteMicPlugins` drives the coordinator from `onReady`, `onRevoke`, `onDispose` and the two settings; diagnostics carry button, trigger and action identifiers only.
 - Tests: plugin lifecycle with fakes, including revoke and dispose restoring.
+- Done 2026-10-25. `RemoteButtonMappingRuntime` applies the settings in the one safe order (mapping off before the remap is restored, on after it is written). Diagnostics carry the mapping state only; button, trigger and action kind are in the executor's log line. Decision to confirm: the button mapping runs only while the existing remote key remap setting is on, because that controller is the only writer of the device mapping.
 
 ### Batch 7: settings page and strings
 

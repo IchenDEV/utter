@@ -157,3 +157,20 @@ Tests: 26 (15 planner, 11 executor): exact event counts for every action and for
 
 Mutation checks (each alone, reverted): secure input ignored, secure input also blocking open app, posting continues after failure, bundle id in the log, modifiers released in press order, app switcher with flags only, Show Desktop without fn, fn treated as a modifier key, disabled shortcut ignored, next and previous swapped, modifier release skipped on failure. Each is caught.
 
+## Batch 6: plugin wiring and diagnostics (implemented 2026-10-25)
+
+Scope: `RemoteButtonMappingRuntime` and `RemoteButtonMappingParts` (new, `Native/`), `RemoteMicPlugins`, `RemoteMicController`, `RemoteMicDiagnostics.buttonMapping`, `RemoteMicControlService.requestButtonMappingPermission()` and `refreshButtonMapping()` (default no-op, so existing conformers are unchanged), `PlatformProjection` pass-throughs. Batches 4 and 5 are now connected: coordinator commands run through the executor and the real poster.
+
+**Behavior, as built.**
+- The button mapping is wanted only while the remote key remap setting is on **and** the button mapping setting is on. Turning the remap off removes the mapping first, then restores the device; turning it on writes F5 first, then starts the mapping. Revoke and dispose shut both down in that order.
+- Input Monitoring is asked for only when the user turns the mapping on from off while the plugin is running. Applying the stored settings at launch never asks.
+- The page can ask again (`requestButtonMappingPermission`) and re-check (`refreshButtonMapping`); both do nothing after revoke.
+- The diagnostics value carries the mapping state only. The executor's log line carries button, trigger and action kind (Batch 5 rules).
+
+**Decision to confirm.** The button mapping works only while the existing remote key remap setting is on. That controller is the only writer of the device mapping and its off switch must stop every write, so the mapping cannot be independent of it. Batch 7 has to show this on the page (the master switch for the buttons explains why it is off, rather than silently doing nothing).
+
+**Not measured in this batch.** Nothing here ran against the real remote, a real HID manager or a real permission grant: the plugin tests use a scripted press source, a recording poster and the in-memory device. The signed-build behaviors listed in Batches 0 and 4 are still open for Batch 9.
+
+Tests: 13 new, all in `OpenTypeTests` (11 plugin lifecycle, 2 projection). Plugin: off never opens the source or writes a button entry; launch with stored settings silences without asking; turning on asks exactly once and reports the result; no permission silences nothing and the page can ask again; refresh from the page re-checks; remap off removes the silence before the observer stops and on restores it; kill switch off touches nothing; stopping restores foreign entries and stops the observer; profile edits retarget without counting a reapply; a press runs the bound action through the poster and nothing after stop; the state follows the key mapping when the remote appears late. The 7 existing remap plugin tests still pass. Full run: 536 tests, 0 failures (19 skipped, none of them new).
+
+Mutation checks (each alone, reverted): kill switch ignored, mapping not turned off before the remap restores, shutdown keeps the mapping on, commands not wired to the executor, permission asked on every apply, remap changes not forwarded to the coordinator, state not published to diagnostics, permission request not wired, refresh not wired, launch treated as a user change, revoke without shutdown. Each is caught (2 to 8 failing tests each).

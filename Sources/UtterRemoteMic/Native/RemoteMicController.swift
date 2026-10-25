@@ -19,7 +19,10 @@ final class RemoteMicController: RemoteMicControlService {
     private var diagnosticsObservers: [UUID: (RemoteMicDiagnostics) -> Void] = [:]
     private var keyRemap = RemoteKeyRemapState.off
     private var keyRemapReapplyCount = 0
+    private var buttonMapping = RemoteButtonMappingState.off
     var onBridgeReady: (() -> Void)?
+    var onButtonMappingPermissionRequest: (() -> Void)?
+    var onButtonMappingRefresh: (() -> Void)?
 
     init(bridge: XiaomiRemoteMicBridge, isReady: @escaping () -> Bool) {
         self.bridge = bridge
@@ -59,8 +62,26 @@ final class RemoteMicController: RemoteMicControlService {
         for observer in Array(diagnosticsObservers.values) { observer(current) }
     }
 
+    func setButtonMapping(_ state: RemoteButtonMappingState) {
+        guard !closed, state != buttonMapping else { return }
+        buttonMapping = state
+        let current = diagnostics
+        for observer in Array(diagnosticsObservers.values) { observer(current) }
+    }
+
+    func requestButtonMappingPermission() {
+        guard !closed else { return }
+        onButtonMappingPermissionRequest?()
+    }
+
+    func refreshButtonMapping() {
+        guard !closed else { return }
+        onButtonMappingRefresh?()
+    }
+
     private func merged(_ diagnostics: RemoteMicDiagnostics) -> RemoteMicDiagnostics {
         var result = diagnostics
+        result.buttonMapping = buttonMapping
         result.keyRemap = keyRemap
         result.keyRemapReapplyCount = keyRemapReapplyCount
         return result
@@ -123,6 +144,8 @@ final class RemoteMicController: RemoteMicControlService {
         released = nil
         stopped = nil
         onBridgeReady = nil
+        onButtonMappingPermissionRequest = nil
+        onButtonMappingRefresh = nil
         bridge.revoke()
     }
 }

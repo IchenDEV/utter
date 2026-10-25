@@ -23,6 +23,8 @@ package final class PlatformProjection: ObservableObject {
     }
     package var hasScreenProvider: Bool { screen != nil }
     package func reconnectRemoteMic() { remote?.reconnect() }
+    package func requestButtonMappingPermission() { remote?.requestButtonMappingPermission() }
+    package func refreshButtonMapping() { remote?.refreshButtonMapping() }
     package var hasRemoteProvider: Bool { remote != nil }
     package var loginEnabled: Bool { login?.isEnabled ?? false }
     package var loginRequiresApproval: Bool { login?.requiresApproval ?? false }
