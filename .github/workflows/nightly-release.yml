@@ -34,7 +34,7 @@ jobs:
       commit_summary: ${{ steps.plan.outputs.commit_summary }}
       head_sha: ${{ steps.plan.outputs.head_sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -89,7 +89,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
