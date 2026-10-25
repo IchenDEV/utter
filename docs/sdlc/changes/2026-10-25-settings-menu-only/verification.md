@@ -1,8 +1,8 @@
 # Verification: Cut the Settings window to six tabs without rolling back any feature
 
-**Status:** pending approval            # draft | pending approval | approved | rejected | blocked
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准 (the verification record as written, including its deviations, disclosed input mishaps and residual risks; pushing, opening or closing a PR, merging, tagging, releasing and replacing the installed Utter remain separate decisions)
+**Approved-date:** 2026-10-25
 **Upstream:** plan.md (approved 2026-10-25)
 **Risk:** Medium. No independent verifier was required and none was used. Every visual claim below was reviewed by the implementer only.
 
@@ -177,7 +177,6 @@ a record.
 
 ## Human gates still open
 
-- Approval of this record.
 - Closing draft PR #131 (asked separately, not done).
 - Pushing this branch, opening a PR, merging, tagging, releasing, or replacing your
   installed Utter.
