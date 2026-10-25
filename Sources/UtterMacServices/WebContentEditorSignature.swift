@@ -9,4 +9,9 @@ enum WebContentEditorSignature {
     static func matches(attributeNames: [String]) -> Bool {
         attributeNames.contains(attribute)
     }
+
+    /// `enabled == false` is the kill switch: every target is treated as native, as before this classification existed.
+    static func classifies(attributeNames: [String], enabled: Bool) -> Bool {
+        enabled && matches(attributeNames: attributeNames)
+    }
 }

@@ -13,6 +13,8 @@ final class TextDeliveryTransactionTests: XCTestCase {
                 allowsClipboardPaste: allowed, isSecureInput: { false }, prepareKeys: { _ in XCTFail("AX should write directly"); return nil },
                 canCommit: { true }, mark: { effects.insert($0).inserted })
             XCTAssertEqual(result.confirmation, .targetValue)
+            XCTAssertEqual(result.path, .accessibility)
+            XCTAssertEqual(result.target, .native)
             XCTAssertEqual(effects, [.accessibility])
             XCTAssertEqual(target.writes, ["new"])
             XCTAssertEqual(clipboard.changeCount, 0)
@@ -61,6 +63,7 @@ final class TextDeliveryTransactionTests: XCTestCase {
             allowsClipboardPaste: true, isSecureInput: { true }, prepareKeys: { _ in XCTFail("Secure input blocks keys"); return nil },
             canCommit: { true }, mark: { effects.insert($0).inserted })
         XCTAssertEqual(result.confirmation, .clipboardValue)
+        XCTAssertEqual(result.path, .clipboardOnly)
         XCTAssertEqual(effects, [.clipboard])
         XCTAssertEqual(clipboard.text, "new")
     }
@@ -89,6 +92,7 @@ final class TextDeliveryTransactionTests: XCTestCase {
         XCTAssertEqual(posts, 1)
         XCTAssertEqual(result.disposition, .uncertain)
         XCTAssertEqual(result.confirmation, .none)
+        XCTAssertEqual(result.path, .keyPress)
     }
 
     func testWebEditorNeverUsesTheIneffectiveAccessibilityWriteAndPastesExactlyOnce() async {
@@ -106,6 +110,8 @@ final class TextDeliveryTransactionTests: XCTestCase {
         XCTAssertEqual(effects, [.clipboard, .paste])
         XCTAssertEqual(result.disposition, .accepted)
         XCTAssertEqual(result.confirmation, .targetValue)
+        XCTAssertEqual(result.path, .paste)
+        XCTAssertEqual(result.target, .web)
         XCTAssertEqual(clipboard.restores, 1)
     }
 
@@ -136,6 +142,8 @@ final class TextDeliveryTransactionTests: XCTestCase {
             canCommit: { true }, mark: { effects.insert($0).inserted })
         XCTAssertEqual(result.disposition, .notCommitted)
         XCTAssertEqual(result.reason, L("delivery.unavailable"))
+        XCTAssertNil(result.path, "no route was taken")
+        XCTAssertEqual(result.target, .web)
         XCTAssertTrue(effects.isEmpty)
         XCTAssertTrue(target.writes.isEmpty)
         XCTAssertEqual(clipboard.changeCount, 0)
@@ -151,6 +159,8 @@ final class TextDeliveryTransactionTests: XCTestCase {
             allowsClipboardPaste: true, isSecureInput: { true }, prepareKeys: { _ in XCTFail("Secure input blocks keys"); return nil },
             canCommit: { true }, mark: { effects.insert($0).inserted })
         XCTAssertEqual(result.confirmation, .clipboardValue)
+        XCTAssertEqual(result.path, .clipboardOnly)
+        XCTAssertEqual(result.target, .web)
         XCTAssertEqual(effects, [.clipboard])
         XCTAssertTrue(target.writes.isEmpty)
     }

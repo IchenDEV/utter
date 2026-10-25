@@ -15,7 +15,7 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
     private let clock: any DeliveryObservationClock
 
     init?(lease: any OutputTargetLease, anchor: (any OutputAnchor)?, requiresSelection: Bool,
-          clock: (any DeliveryObservationClock)? = nil) {
+          classifiesWebContentEditors: Bool = true, clock: (any DeliveryObservationClock)? = nil) {
         guard lease.isCurrent, let (pid, element) = AXTargetState.focusedIdentity(), pid == lease.processIdentifier else { return nil }
         let state = AXTargetState.capture()
         let value = AXTargetState.value(of: element)
@@ -30,7 +30,8 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
         identity = element
         original = state
         document = value
-        exposesChromiumNode = WebContentEditorSignature.matches(attributeNames: AXTargetState.attributeNames(of: element))
+        exposesChromiumNode = WebContentEditorSignature.classifies(
+            attributeNames: AXTargetState.attributeNames(of: element), enabled: classifiesWebContentEditors)
         self.clock = clock ?? ContinuousDeliveryClock()
     }
 
