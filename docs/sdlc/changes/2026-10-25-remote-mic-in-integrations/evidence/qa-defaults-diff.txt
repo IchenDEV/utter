@@ -1,0 +1,13 @@
+## Launch 1 (zh, light), QA defaults domain after minus before
+6a7,10
+> 	<key>NSWindow Frame UtterSettingsWindow</key>
+> 	<string>692 478 760 680 0 0 2056 1290 </string>
+> 	<key>developerHTTPToken</key>
+> 	<string>a6PS/xbMysmTW0L/xD0y/LU1AqWeviSf6pA+Gu2e6eY=</string>
+
+## Launch 2 (en, light), QA defaults domain after minus before
+4a5,8
+> 	<key>NSWindow Frame UtterSettingsWindow</key>
+> 	<string>692 478 760 680 0 0 2056 1290 </string>
+> 	<key>developerHTTPToken</key>
+> 	<string>arOSo2xiimYMgckCmGeK/SLZVI+S5+4zSg/T/8mQ0OI=</string>
