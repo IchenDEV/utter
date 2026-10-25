@@ -108,3 +108,26 @@ Mutation checks (applied alone, reverted, sources diffed identical): default fli
 
 `bash scripts/ci-basic-checks.sh` and `bash scripts/sdlc-checks.sh` pass.
 
+## Batch 4: press source and coordinator (implemented 2026-10-25)
+
+Scope: `RemoteHIDPressSource` (non-seizing `IOHIDManager`), `RemoteButtonMappingCoordinator`, `RemoteButtonMappingState`. Nothing in the app creates them yet (Batch 6), so the shipped behavior is still PR #130's.
+
+**The safety rule, as built.** A button is given to the key mapping controller only while the press source is `live` (Input Monitoring granted, manager open, a matching device present). Not live means an empty set, so only F5 stays silenced. Disabling hands the controller an empty set first and stops the observer second. Actions are emitted only while the key mapping reports `active`, so a key that is not yet silenced cannot fire its native event and the action together.
+
+**Permission flow, as built (erratum 1).** `IOHIDCheckAccess` first; the system is asked (`IOHIDRequestAccess`) only when the user just turned the feature on or pressed the button on the page, and only if it has never been asked; the manager is opened only when access is granted, because a first open silently turns "not asked" into "denied". Granted yet refused (`kIOReturnNotPermitted`) is reported as `needsRestart`. The coordinator re-checks every second, when a device appears or disappears, and when the page asks.
+
+**Decoding (from the Batch 0 raw log).** Each press arrives as a named element (usage = key, value 1 or 0) plus a rollover element (usage 1) and an array element (usage `0xFFFFFFFF`, value = the usage or a shifted copy). Only the named element with value 0 or 1 is an edge. A replay test feeds real raw values for one right and one OK press and expects exactly four edges.
+
+Tests: 29 coordinator tests in 3 files (permission and source gating, losing and regaining the source, disable order, profile edits, gesture dispatch, decoding). Module total 187 tests, 0 failures.
+
+Mutation checks (each alone, reverted, sources diffed identical): silence regardless of observation (9 tests fail), observer stopped before the silence is removed, no `active` gate on dispatch, pending gesture survives losing the source, recognizers rebuilt on every edit, always prompting, `evaluate` ignoring the enabled flag, state published on every call, decoder accepting any value. Each is caught.
+
+**Real device, run by the implementer, no buttons pressed** (`evidence/batch4-press-source-smoke.txt`): with the host process holding Input Monitoring and the remote connected, `refresh` returned `live`, a second `refresh` was idempotent, one device-matched callback arrived, `stop` then `refresh` reopened, and a double `stop` did not crash.
+
+**Not measured, and why it matters.**
+- A grant given to a **fresh process**: whether `IOHIDCheckAccess` turns granted without a restart, and whether the open then works. The host here already had permission. If a restart is needed the page shows `needsRestart` only when the check says granted; if the check itself stays denied until restart, the page will keep saying "needs permission". The status text in Batch 7 will therefore say "if it still does not work after allowing, restart Utter". The independent verifier measures this on the signed build.
+- Real presses through the new source while a mapping is active: Batch 0 measured raw edges under silence for right and OK only. The volume keys (media key path) were not measured under silence.
+- Sleep, wake and idle disconnect.
+
+`bash scripts/ci-basic-checks.sh` and `bash scripts/sdlc-checks.sh` pass.
+

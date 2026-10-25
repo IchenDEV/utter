@@ -46,9 +46,10 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 ### Batch 4: press source and coordinator
 
-- [ ] `RemoteHIDPressSource`: non-seizing `IOHIDManager` matched on vendor and product, emitting press and release edges; permission check and request as measured in Batch 0.
-- [ ] `RemoteButtonMappingCoordinator` (pure state, fakes for source, service and executor): off, needs permission, waiting for the remote, waiting for presses, active, conflict. **No entry beyond F5 is written until the source is confirmed live; losing the source or the permission removes them at once.**
+- [x] `RemoteHIDPressSource`: non-seizing `IOHIDManager` matched on vendor and product, emitting press and release edges; permission check and request as measured in Batch 0.
+- [x] `RemoteButtonMappingCoordinator` (pure state, fakes for source, service and executor): off, needs permission, waiting for the remote, waiting for presses, active, conflict. **No entry beyond F5 is written until the source is confirmed live; losing the source or the permission removes them at once.**
 - Tests: off makes zero writes, opens nothing and requests nothing; permission denied writes nothing; revoke removes owned entries but not F5; reconnect re-applies; quit restores. Focused filter: `RemoteButtonMappingCoordinator`.
+- Done 2026-10-25. Not wired into the plugin yet (Batch 6). Deviation, to be confirmed: the spec's "waitingForPresses after a quiet period" state was not built, because a quiet period cannot tell "not pressed" from "starved by another tool"; `active` means the source is live and the keys are silenced and read back.
 
 ### Batch 5: action executor
 
