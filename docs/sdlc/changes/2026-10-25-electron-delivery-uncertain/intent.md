@@ -1,9 +1,9 @@
 # Intent: Dictated text must land in web content editors (Electron apps and Chromium browsers), not end "uncertain" with nothing inserted
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
-**Previously approved:** User, 都批准, 2026-10-25 00:18 UTC+8, for the narrower scope "Electron/Chromium chat inputs". Reopened on 2026-10-25 14:18 UTC+8 because the user reported a wider scope; see "Revision 2026-10-25 (scope widened)" below.
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准 (intent、spec、plan 一起), 2026-10-25 18:50 UTC+8, for the widened scope in "Revision 2026-10-25 (scope widened)" below
+**Approved-date:** 2026-10-25
+**Previously approved:** User, 都批准, 2026-10-25 00:18 UTC+8, for the narrower scope "Electron/Chromium chat inputs". Reopened on 2026-10-25 14:18 UTC+8 because the user reported a wider scope.
 (The directory name keeps the original slug so existing links stay valid.)
 **Upstream:** [Stop the Xiaomi remote's voice key from triggering macOS Dictation](../2026-10-24-swallow-remote-dictation-key/intent.md) (this problem was first suspected to be a side effect of that one, then separated by evidence)
 

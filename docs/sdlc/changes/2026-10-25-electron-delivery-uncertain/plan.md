@@ -1,10 +1,10 @@
 # Plan: Dictated text must land in web content editors (Electron apps and Chromium browsers)
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准 (intent、spec、plan 一起), 2026-10-25 18:50 UTC+8, including Batch 0 as a measurement gate whose result returns to the user before batches 1 to 4
+**Approved-date:** 2026-10-25
 **Previously approved:** none (the earlier draft of this plan was never approved; it was replaced because the intent and spec scope were widened on 2026-10-25).
-**Upstream:** [spec](spec.md) (revision 2026-10-25, pending approval)
+**Upstream:** [spec](spec.md) (revision 2026-10-25, approved 2026-10-25)
 
 Each code batch is one commit. Before every commit run `swift build`, the batch's focused `swift test --filter UtterMacServicesTests`, and `bash scripts/ci-basic-checks.sh`. Every file stays under 300 lines. The implementer is one agent; the independent verifier in batch 5 is a different one. All changes are in `UtterMacServices`; `DeliveryCompletion` is internal to that module, so no contract in `UtterContracts` changes.
 
@@ -67,7 +67,7 @@ The spec's classification is measured only in Cursor and read-only in T3 Code an
 
 ## Human gates
 
-- Each stage artifact (`intent`, `spec`, `plan`, then `verification`) needs explicit approval before the next stage starts. All three upstream artifacts are currently `pending approval` after the scope revision.
+- Each stage artifact (`intent`, `spec`, `plan`, then `verification`) needs explicit approval before the next stage starts. Intent, spec and plan were approved on 2026-10-25 18:50 UTC+8 after the scope revision.
 - The Batch 0 gate decision (above) is the user's: continue unchanged, revise D1/D3, or open a Safari rule.
 - PR approval, then release approval, for this high-risk change; the release is not cut without the independent verifier's recorded result.
 - A need to change the classification beyond `ChromeAXNodeId` (for example WebKit targets) or to add any app-name rule returns to the user as a spec revision.

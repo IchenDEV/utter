@@ -1,10 +1,10 @@
 # Spec: Dictated text must land in web content editors (Electron apps and Chromium browsers)
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
-**Previously approved:** User, 批准, 2026-10-25 00:30 UTC+8, for the narrower scope (Chromium web-content editors, evidenced in Cursor). Reopened on 2026-10-25 because the intent's scope was widened; D1 and D5 were extended, D6 and the evidence table were added, and the test matrix grew. D2, D3 and D4 are unchanged. See "Revision 2026-10-25" at the end.
-**Upstream:** [intent](intent.md) (revision 2026-10-25, pending approval)
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准 (intent、spec、plan 一起), 2026-10-25 18:50 UTC+8, covering D1 and D5 extended to Chromium browsers and all Electron apps, D6 (WebKit measured, not assumed), and the added test matrix; D2, D3 and D4 stand as previously approved
+**Approved-date:** 2026-10-25
+**Previously approved:** User, 批准, 2026-10-25 00:30 UTC+8, for the narrower scope (Chromium web-content editors, evidenced in Cursor). Reopened on 2026-10-25 because the intent's scope was widened. See "Revision 2026-10-25" at the end.
+**Upstream:** [intent](intent.md) (revision 2026-10-25, approved 2026-10-25)
 
 ## Context
 
