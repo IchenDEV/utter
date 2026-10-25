@@ -67,10 +67,11 @@ These answer open questions and are not an approval of this intent.
 - **Licensing:** clean-room reimplementation from the observable behavior in this intent. No code, assets, screenshots or strings are taken from `remote-mic-app`. The drafting agent read the reference source to build the inventory above, so from here the spec and the implementation derive only from this inventory and from behavior measured on the RC003, and do not reopen the reference source. Whether that disclosure is enough, or a fresh implementer is needed, stays with the licensing owner.
 - **First slice:** the core slice named in Scope (twelve keys, three triggers; keyboard, system and media, recorded shortcut, open an installed app; RC003 only).
 - **Order relative to PR #130:** PR #130 stays open and unmerged for now. This branch is stacked on it and will be rebased when it merges.
+- **Permission re-approval (2026-10-25, with spec approval):** the user chose mechanism M3 in the spec and approved adding Input Monitoring, requested only on first enable after the page explains why. This is the re-approval the Permissions constraint requires. It covers Input Monitoring and nothing else.
 
 ## Open questions
 
-1. **Mechanism.** The previous app seizes the HID device and injects its own events. An alternative reuses PR #130's device-level key mapping to move each button to a private key and recognizes it in Utter's existing event tap, which avoids a seize and may avoid Input Monitoring. Decide in the spec after measuring both on the RC003. Any new permission category sends this intent back for re-approval.
+1. **Mechanism.** The previous app seizes the HID device and injects its own events. An alternative reuses PR #130's device-level key mapping to move each button to a private key and recognizes it in Utter's existing event tap, which avoids a seize and may avoid Input Monitoring. Decide in the spec after measuring both on the RC003. Any new permission category sends this intent back for re-approval. **Answered 2026-10-25:** spec D1 chose M3 and D2 approved Input Monitoring.
 2. **Which remotes beyond the RC003.** The previous app's screenshot shows the Xiaomi Remote 2 Pro, which may use a different product id. Out of the first slice.
 3. **Coexistence with `remote-mic-app`** when both are installed: detect and warn (recommended), or take over.
 4. **Which of the twelve keys the RC003 actually sends, and as which usages.** To be measured before the spec fixes the key table.

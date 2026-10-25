@@ -1,8 +1,8 @@
 # Spec: Configurable remote button mapping in Settings → Remote
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decisions: mechanism M3 and approve spec (2026-10-25)
+**Approved-date:** 2026-10-25
 **Upstream:** [intent.md](intent.md) (approved 2026-10-25). Implementation derives only from that intent's behavior inventory and from behavior measured on the RC003; the reference app's source is not reopened.
 
 ## Context
@@ -96,3 +96,12 @@ With M3 the permission is requested only when the user turns the feature on, aft
 - **D2** If M3, approval to add Input Monitoring, requested only on first enable.
 - **D3** The starting timings above.
 - **D4** A plain grid, not a drawn remote, for the first slice.
+
+## Decisions recorded at approval (chat, 2026-10-25)
+
+- **D1** Mechanism **M3**.
+- **D2** Input Monitoring approved, requested only when the user first turns the feature on, after the page explains why.
+- **D3** Starting timings accepted as starting values; Batch 0 may adjust them and the change is noted in the plan.
+- **D4** A plain grid, not a drawn remote, for the first slice.
+
+Intent open questions as this spec leaves them: (1) answered by D1; (2) remotes beyond the RC003 stay out of the first slice; (3) coexistence is handled by the observed symptoms in the failure-mode entry "Another tool holds the device or an entry", with no detection of the other app by bundle id in the first slice; (4) Batch 0. M1 measurements (Batch 0 item 3) are dropped because M1 was not chosen.
