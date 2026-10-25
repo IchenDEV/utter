@@ -216,3 +216,18 @@ What the docs state, and where each statement comes from:
 **Decision to confirm.** I added `NSInputMonitoringUsageDescription` to `Info.plist` so the permission request has an explanation. Whether macOS shows that text in the Input Monitoring dialog was not measured. If you would rather not touch `Info.plist` in this change, it is one added key and can be dropped without affecting anything else.
 
 Not done: no screenshots of the system dialog (no real request was made here), and `README` was not rendered or link-checked beyond `ci-basic-checks.sh`.
+
+## Whole-change checks after Batch 8 (2026-10-25)
+
+- `bash scripts/sdlc-checks.sh`: passed. `bash scripts/ci-basic-checks.sh`: passed (string parity, module boundaries, owned resources, plist lint).
+- `swift test`: 548 tests, 0 failures, 19 skipped. The skipped ones are existing integration, download and probe tests (ANE, Apple Speech analyzer, Confucius, Qwen, streaming, live downloads, prompt probes, and the existing remap render test that needs `UTTER_RENDER_DIR`); none belongs to this change.
+- Release-style smoke build: `bash scripts/build-app.sh --app-only --sign=-` exited 0, including the Sparkle checks and the release artifact verification, and the built `Info.plist` carries `NSInputMonitoringUsageDescription`. **This was ad-hoc signed, only to prove the app compiles and bundles with `xcodebuild`.** Ad-hoc builds lose permissions on every rebuild, so it says nothing about Input Monitoring behavior. It was not launched: a second Utter would write to the same remote as the copy that is running.
+- The module-level count for this change: `UtterRemoteMicTests` 213 tests (Batches 1 to 5), 13 plugin and projection tests (Batch 6), 12 page tests (Batch 7), plus the settings and profile tests.
+
+## Open items before this can ship
+
+1. **Independent verifier (Batch 9)**, named by you: the matrix in the plan on a stable-signed release-style build with a real RC003. This includes what is still unmeasured: a permission grant taking effect in a fresh process (or needing a restart), real presses through the new source while the mapping is active, volume-key silence, sleep and wake, crash-heal time, Show Desktop and the app switcher on real presses, the voice key with the mapping on, and on-screen operation of the page (menus, recorder popover, app file panel, Allow button).
+2. **Your approval of this `verification.md`**, then PR approval, then release approval. Nothing here is marked approved.
+3. **PR #130** is still unmerged and carries its own open verification record; this change is stacked on it and is not released before it.
+4. **Licensing owner** decision on the clean-room disclosure in the intent.
+5. Decisions listed in Batches 4 to 8 that need your answer: a key still held when the double-press window ends resolves at release; secure input also drops the native replay of an owned key (an owned OK cannot submit a password field); the "waiting for presses" state was not built; the button mapping depends on the voice-key remap setting; eleven keys not twelve; Chinese wording; `NSInputMonitoringUsageDescription`.

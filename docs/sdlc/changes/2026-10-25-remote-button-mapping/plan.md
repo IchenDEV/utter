@@ -85,11 +85,11 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 ## Verification plan
 
-- [ ] `bash scripts/sdlc-checks.sh`
-- [ ] `bash scripts/ci-basic-checks.sh`
-- [ ] `swift test`
-- [ ] Release-style build and the Batch 9 matrix on that build.
-- [ ] Real-window visual QA (Batch 7).
+- [x] `bash scripts/sdlc-checks.sh` (passed after Batch 8)
+- [x] `bash scripts/ci-basic-checks.sh` (passed after Batch 8)
+- [x] `swift test` (548 tests, 0 failures, 19 skipped, none of them new; run after Batch 8)
+- [ ] Release-style build and the Batch 9 matrix on that build. A smoke build with explicit ad-hoc signing (`--app-only --sign=-`) passed after Batch 8; it proves compile and bundle only. The matrix needs the stable-signed build and the verifier.
+- [ ] Real-window visual QA (Batch 7): partly done, see Batch 7 in `verification.md`.
 
 ## Human gates
 
