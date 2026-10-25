@@ -40,8 +40,9 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 ### Batch 3: settings
 
-- [ ] `remoteButtonMappingEnabled` (default false) and `remoteButtonProfile` in `SettingsValues`, `SettingsStore` load and persist.
+- [x] `remoteButtonMappingEnabled` (default false) and `remoteButtonProfile` in `SettingsValues`, `SettingsStore` load and persist.
 - Tests: defaults, round trip, a corrupt stored profile falls back to empty without crashing.
+- Done 2026-10-25. Module placement: the settings UI (`UtterPresentation`) and the persistence (`UtterData`) only see `UtterContracts`, so `RemoteButton`, `ButtonAction`, `KeyChord`, `ButtonTrigger`, `SystemKey` and `RemoteButtonProfile` moved there. `NativeKeyEvent` and `RemoteButton.nativeEvent` (key emulation) stay in `UtterRemoteMic`, together with the recognizer, the plan and the mapping controller. No behavior change from Batch 1.
 
 ### Batch 4: press source and coordinator
 

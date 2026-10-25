@@ -1,5 +1,5 @@
 import XCTest
-@testable import UtterRemoteMic
+@testable import UtterContracts
 
 final class RemoteButtonProfileTests: XCTestCase {
     private let copy = ButtonAction.key(KeyChord(keyCode: 8, modifiers: [.command]))
@@ -20,24 +20,10 @@ final class RemoteButtonProfileTests: XCTestCase {
         XCTAssertEqual(RemoteButton.ok.hidSource, 30_064_771_112)
     }
 
-    func testVoiceKeyIsNeverAButton() {
-        XCTAssertNil(RemoteButton(usagePage: 7, usage: 62))
-        XCTAssertFalse(RemoteButton.allCases.map(\.hidSource).contains(RemoteKeyMappingPolicy.voiceKeySource))
-    }
-
     func testLookupByUsageNeedsTheKeyboardPage() {
         XCTAssertEqual(RemoteButton(usagePage: 7, usage: 79), .right)
         XCTAssertNil(RemoteButton(usagePage: 12, usage: 79))
         XCTAssertNil(RemoteButton(usagePage: 7, usage: 4_294_967_295))
-    }
-
-    func testNativeEventsFollowTheMeasurements() {
-        XCTAssertEqual(RemoteButton.back.nativeEvent, NativeKeyEvent.none)
-        XCTAssertEqual(RemoteButton.volumeUp.nativeEvent, .media(0))
-        XCTAssertEqual(RemoteButton.volumeDown.nativeEvent, .media(1))
-        XCTAssertEqual(RemoteButton.ok.nativeEvent, .key(code: 36, flags: 0))
-        XCTAssertEqual(RemoteButton.home.nativeEvent, .key(code: 115, flags: 0x80_0000))
-        XCTAssertEqual(RemoteButton.up.nativeEvent, .key(code: 126, flags: 0xA0_0000))
     }
 
     // MARK: ownership
@@ -128,29 +114,12 @@ final class RemoteButtonProfileTests: XCTestCase {
         XCTAssertFalse(RemoteButtonProfile.decode(Data(json.utf8)).isOwned(.ok))
     }
 
-    // MARK: plan
-
-    func testPlanListsOwnedButtonsWithSourcesAndGestureBindings() {
+    func testEmptyProfileReportsEmptyOnlyWhenNothingIsOwned() {
         var profile = RemoteButtonProfile()
+        XCTAssertTrue(profile.isEmpty)
         profile.set(copy, for: .single, of: .ok)
-        profile.set(.showDesktop, for: .double, of: .home)
-        profile.set(.appSwitcher, for: .long, of: .home)
-        let plan = ButtonMappingPlan.make(from: profile)
-        XCTAssertEqual(plan.owned.map(\.button), [.ok, .home])
-        XCTAssertEqual(plan.sources, [RemoteButton.ok.hidSource, RemoteButton.home.hidSource])
-        XCTAssertEqual(plan.owned[0].gestures, GestureBindings(hasDouble: false, hasLong: false))
-        XCTAssertEqual(plan.owned[1].gestures, GestureBindings(hasDouble: true, hasLong: true))
-    }
-
-    func testEmptyProfileGivesAnEmptyPlanWithNoSources() {
-        let plan = ButtonMappingPlan.make(from: RemoteButtonProfile())
-        XCTAssertTrue(plan.isEmpty)
-        XCTAssertTrue(plan.sources.isEmpty)
-    }
-
-    func testPlanNeverContainsTheVoiceKey() {
-        var profile = RemoteButtonProfile()
-        for button in RemoteButton.allCases { profile.set(.showDesktop, for: .single, of: button) }
-        XCTAssertFalse(ButtonMappingPlan.make(from: profile).sources.contains(RemoteKeyMappingPolicy.voiceKeySource))
+        XCTAssertFalse(profile.isEmpty)
+        profile.set(.native, for: .single, of: .ok)
+        XCTAssertTrue(profile.isEmpty)
     }
 }

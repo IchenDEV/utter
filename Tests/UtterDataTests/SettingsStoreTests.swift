@@ -98,6 +98,50 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertFalse(SettingsStore(defaults: fixture.defaults).values.remoteKeyRemapEnabled)
     }
 
+    func testRemoteButtonMappingIsOffAndEmptyByDefaultAndStoresNothingUntouched() {
+        let fixture = defaultsFixture()
+        defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }
+        let store = SettingsStore(defaults: fixture.defaults)
+        XCTAssertFalse(store.values.remoteButtonMappingEnabled)
+        XCTAssertTrue(store.values.remoteButtonProfile.isEmpty)
+        XCTAssertNil(fixture.defaults.object(forKey: "remoteButtonMappingEnabled"))
+        XCTAssertNil(fixture.defaults.object(forKey: "remoteButtonProfile"))
+    }
+
+    func testRemoteButtonMappingRoundTripsAndAnEmptiedProfileIsRemovedFromDefaults() {
+        let fixture = defaultsFixture()
+        defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }
+        let store = SettingsStore(defaults: fixture.defaults)
+        let chord = ButtonAction.key(KeyChord(keyCode: 8, modifiers: [.command, .shift]))
+        store.update {
+            $0.remoteButtonMappingEnabled = true
+            $0.remoteButtonProfile.set(chord, for: .double, of: .ok)
+            $0.remoteButtonProfile.set(.openApp(bundleID: "com.apple.Safari"), for: .long, of: .tv)
+        }
+        let reloaded = SettingsStore(defaults: fixture.defaults).values
+        XCTAssertTrue(reloaded.remoteButtonMappingEnabled)
+        XCTAssertEqual(reloaded.remoteButtonProfile.ownedButtons, [.ok, .tv])
+        XCTAssertEqual(reloaded.remoteButtonProfile.bindings(for: .ok).double, chord)
+        XCTAssertEqual(reloaded.remoteButtonProfile, store.values.remoteButtonProfile)
+        store.update { $0.remoteButtonProfile.restoreDefaults() }
+        XCTAssertNil(fixture.defaults.object(forKey: "remoteButtonProfile"))
+        XCTAssertTrue(SettingsStore(defaults: fixture.defaults).values.remoteButtonProfile.isEmpty)
+    }
+
+    func testCorruptStoredRemoteButtonProfileLoadsEmptyWithoutAffectingOtherSettings() {
+        let fixture = defaultsFixture()
+        defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }
+        fixture.defaults.set(Data("{broken".utf8), forKey: "remoteButtonProfile")
+        fixture.defaults.set(true, forKey: "remoteButtonMappingEnabled")
+        fixture.defaults.set(false, forKey: "playSounds")
+        let values = SettingsStore(defaults: fixture.defaults).values
+        XCTAssertTrue(values.remoteButtonProfile.isEmpty)
+        XCTAssertTrue(values.remoteButtonMappingEnabled)
+        XCTAssertFalse(values.playSounds)
+        fixture.defaults.set("a string where data belongs", forKey: "remoteButtonProfile")
+        XCTAssertTrue(SettingsStore(defaults: fixture.defaults).values.remoteButtonProfile.isEmpty)
+    }
+
     func testTokenRotationKeepsOriginalKeyAndDoesNotChangeComposition() throws {
         let fixture = defaultsFixture()
         defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }

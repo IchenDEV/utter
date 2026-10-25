@@ -1,4 +1,5 @@
 import XCTest
+import UtterContracts
 @testable import UtterRemoteMic
 
 final class RemoteButtonMappingPolicyTests: XCTestCase {

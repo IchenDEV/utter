@@ -1,4 +1,5 @@
 import XCTest
+import UtterContracts
 @testable import UtterRemoteMic
 
 /// Default timing: double-click window 0.4 s (press to press), long press 0.5 s, hold ceiling 10 s.

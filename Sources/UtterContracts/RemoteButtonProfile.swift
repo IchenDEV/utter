@@ -41,6 +41,8 @@ package struct RemoteButtonProfile: Equatable, Sendable {
 
     package func bindings(for button: RemoteButton) -> ButtonBindings { bindings[button] ?? ButtonBindings() }
 
+    package var isEmpty: Bool { bindings.isEmpty }
+
     package func isOwned(_ button: RemoteButton) -> Bool { bindings[button] != nil }
 
     /// In the fixed order of `RemoteButton.allCases`, so the result never depends on dictionary order.

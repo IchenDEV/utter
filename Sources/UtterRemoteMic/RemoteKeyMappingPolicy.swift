@@ -1,4 +1,5 @@
 import Foundation
+import UtterContracts
 
 /// One `UserKeyMapping` entry: HID usage `source` is reported as `destination`
 /// (`0` means the key produces nothing).

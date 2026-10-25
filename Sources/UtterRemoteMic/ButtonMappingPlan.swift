@@ -1,4 +1,5 @@
 import Foundation
+import UtterContracts
 
 /// What the profile asks of the remote right now: which buttons Utter owns, and for each, the
 /// `UserKeyMapping` source that silences its native key and how its gestures resolve.

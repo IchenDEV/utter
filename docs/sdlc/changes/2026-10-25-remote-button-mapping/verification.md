@@ -96,3 +96,15 @@ Mutation checks (each applied alone, then reverted, sources diffed identical to 
 
 Not covered by Batch 2 (by design): the permission flow, the press source, the coordinator and any real device write. Those start in Batch 4; the real-device checks are still the Batch 9 verifier's.
 
+## Batch 3: settings (implemented 2026-10-25)
+
+- `remoteButtonMappingEnabled` defaults to **false**; `remoteButtonProfile` defaults to empty. Neither is written until the user changes something. Nothing reads them yet (Batch 6 wires the plugin), so an upgraded install behaves exactly as PR #130.
+- A stored profile that is corrupt, of the wrong type, or empty loads as an empty profile; other settings are unaffected. An emptied profile removes its key from `UserDefaults` instead of storing an empty blob.
+- **Where the types live.** The settings UI and the store only depend on `UtterContracts`, so the pure model moved there from `UtterRemoteMic` (`git mv`, no behavior change). Key emulation (`NativeKeyEvent`, `RemoteButton.nativeEvent`) stays in `UtterRemoteMic`. The Batch 1 tests were split the same way: model and codec tests in `UtterContractsTests`, key emulation, voice-key isolation and plan tests in `UtterRemoteMicTests`.
+
+Tests: 3 new `SettingsStoreTests` (defaults and nothing stored, round trip and removal, corrupt data), 1 new model test; full `swift test` 523 tests, 19 skipped (pre-existing), 0 failures.
+
+Mutation checks (applied alone, reverted, sources diffed identical): default flipped to on, empty profile written instead of removed, profile not loaded. Each is caught by name.
+
+`bash scripts/ci-basic-checks.sh` and `bash scripts/sdlc-checks.sh` pass.
+

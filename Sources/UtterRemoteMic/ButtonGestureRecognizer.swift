@@ -1,4 +1,5 @@
 import Foundation
+import UtterContracts
 
 package enum ButtonGesture: Equatable, Sendable {
     case single, double, long

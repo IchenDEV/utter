@@ -28,6 +28,8 @@ package struct SettingsValues: Equatable, Sendable {
     package var remoteMicEnabled: Bool = false
     package var remoteMicGainDB: Double = Self.defaultRemoteMicGainDB
     package var remoteKeyRemapEnabled: Bool = true
+    package var remoteButtonMappingEnabled: Bool = false
+    package var remoteButtonProfile = RemoteButtonProfile()
     package var audioGateSensitivity: AudioSensitivity = .standard
     package var audioWeakSpeechSensitivity: AudioSensitivity = .standard
     package var outputMode: OutputMode = .processed
