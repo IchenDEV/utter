@@ -1,0 +1,7 @@
+Batch 5 poster smoke: real SystemInputPoster, media keys with volume read back, unknown bundle id.
+secureInput=false
+symbolicHotKeys36=nil
+unknownApp posts=false
+volume start=69
+after volumeDown posts=[true, true] volume=63
+after volumeUp posts=[true, true] volume=69

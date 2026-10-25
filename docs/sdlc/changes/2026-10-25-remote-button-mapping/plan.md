@@ -53,8 +53,9 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 ### Batch 5: action executor
 
-- [ ] `ButtonActionExecutor`: key chords and system keys through `CGEvent` at `.cghidEventTap`, `showDesktop`, `appSwitcher`, `openApp` through `NSWorkspace`, `native` emulation from the Batch 0 table. Dropped with a log line while secure input is on. No shell, script or URL action.
+- [x] `ButtonActionExecutor`: key chords and system keys through `CGEvent` at `.cghidEventTap`, `showDesktop`, `appSwitcher`, `openApp` through `NSWorkspace`, `native` emulation from the Batch 0 table. Dropped with a log line while secure input is on. No shell, script or URL action.
 - Tests: a fake poster counts exactly the expected events per action; secure input drops; an unknown bundle id fails quietly.
+- Done 2026-10-25. Pure planning (`ButtonActionPlanner`) is separate from posting (`SystemInputPoster`), so every action's exact event sequence is unit tested. Measured on this Mac, not assumed: Show Desktop reacts to F11 **with the fn flag**, the app switcher needs **real modifier key events** (flags on the key alone do nothing), media keys change the volume. Show Desktop follows the user's own shortcut from `com.apple.symbolichotkeys` when it exists.
 
 ### Batch 6: plugin wiring and diagnostics
 

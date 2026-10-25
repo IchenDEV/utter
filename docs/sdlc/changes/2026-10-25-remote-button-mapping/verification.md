@@ -131,3 +131,29 @@ Mutation checks (each alone, reverted, sources diffed identical): silence regard
 
 `bash scripts/ci-basic-checks.sh` and `bash scripts/sdlc-checks.sh` pass.
 
+## Batch 5: action executor (implemented 2026-10-25)
+
+Scope: `ButtonActionPlanner` (pure), `ButtonActionExecutor`, `SystemInputPoster` (CGEvent, NSEvent, NSWorkspace). Not connected to the coordinator yet (Batch 6).
+
+**What was measured here** (evidence `batch5-*.txt`; probe `batch5-ActionProbe.swift`):
+- Show Desktop: synthetic F11 **with** the fn flag slid the probe window off screen and a second post restored it; F11 without fn did nothing. The system shortcut entry (hotkey 36) is not stored on this Mac, so the default is what ran. The executor reads the user's own entry when it exists (disabled turns the action off, a custom key is used).
+- App switcher: Cmd+Tab as **flags on the Tab key alone did nothing**. Cmd down, Tab down and up, Cmd up as separate events switched to the previous app, with and without 40 ms gaps. So every chord is posted as modifier events plus key events.
+- Media keys: volume down then up through the real poster read 69, 63, 69.
+- Unknown bundle id: the poster returns false without side effects; the executor logs the kind only.
+
+**Side effect of the measurement, disclosed.** In the first (broken) probe run the "undo" post of F11 went out while another app (Dia) was frontmost, because I had not yet guarded on the probe being frontmost. In a Chromium-based browser on macOS F11 does not toggle full screen, and Dia's window was afterwards an ordinary window of the usual size, so no visible effect was found. The probe now posts only while it is frontmost. While measuring, windows briefly slid away and the frontmost app changed.
+
+**Behavior rules, as built.**
+- While secure input is on every keyboard-shaped action is dropped with a log line: key chords, system keys, show desktop, app switcher and also the native replay of a silenced key. Opening an app is not keyboard input and still works. Consequence to confirm: an owned OK button cannot submit a password field while secure input is on.
+- A failed post stops the action, but modifiers already pressed are still released, so none stays held system-wide.
+- Logs contain the button, the trigger and the action kind. Not the key, not the bundle id.
+- No shell, script or URL action exists in the type, the codec or the executor.
+
+**Known limitations.**
+- Synthetic modifier events pass through Utter's own hotkey tap like physical ones. A chord whose only modifier is the user's dictation modifier (Ctrl, Option or Shift) can look like a tap of the dictation hotkey. The fn flag on F11 is on a key-down, which that tap ignores. Not mitigated; a tag-and-ignore would change `HotkeyManager` and was out of scope.
+- Show Desktop and the app switcher were measured only on this Mac's default shortcuts, one macOS version.
+
+Tests: 26 (15 planner, 11 executor): exact event counts for every action and for native emulation of each button, chord order and cumulative flags, media key numbers, secure input per kind and per moment, unknown app, partial failure, log privacy, the Show Desktop preference parser on default, disabled, custom, unassigned and malformed entries. Module total 213 tests.
+
+Mutation checks (each alone, reverted): secure input ignored, secure input also blocking open app, posting continues after failure, bundle id in the log, modifiers released in press order, app switcher with flags only, Show Desktop without fn, fn treated as a modifier key, disabled shortcut ignored, next and previous swapped, modifier release skipped on failure. Each is caught.
+

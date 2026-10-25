@@ -1,0 +1,9 @@
+Batch 5 probe, run 3 (Cmd+Tab with real modifier events), guarded: events are posted only while the probe is frontmost.
+[  1.7] BASELINE front=probe x=300 y=837 onscreen=true
+[  1.7] STEP Cmd+Tab with modifier events, no gaps: before front=probe x=300 y=837 onscreen=true
+[  3.7] STEP Cmd+Tab with modifier events, no gaps: after  front=com.openai.codex x=300 y=837 onscreen=true EFFECT=true
+[  4.5] STEP Cmd+Tab with modifier events, no gaps: reactivated front=probe
+[  4.6] STEP Cmd+Tab with modifier events, 40 ms gaps: before front=probe x=300 y=837 onscreen=true
+[  6.5] STEP Cmd+Tab with modifier events, 40 ms gaps: after  front=com.openai.codex x=300 y=837 onscreen=true EFFECT=true
+[  7.4] STEP Cmd+Tab with modifier events, 40 ms gaps: reactivated front=probe
+[  7.4] END
