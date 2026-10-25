@@ -72,7 +72,8 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 ### Batch 8: docs and runbook
 
-- [ ] Runbook entry: what the feature does, the Input Monitoring prompt, the manual clear command, what a crash looks like. Update the permission and privacy docs that list what Utter requests.
+- [x] Runbook entry: what the feature does, the Input Monitoring prompt, the manual clear command, what a crash looks like. Update the permission and privacy docs that list what Utter requests.
+- Done 2026-10-25. `docs/sdlc/release-runbook.md` (release gates, prompt, kill switch, withdrawing the permission, crash symptoms, manual clear, stop conditions), the permission table and a new section in `README.md` and `README_zh.md`, and `NSInputMonitoringUsageDescription` in `Resources/Info.plist` (English only like the other usage descriptions).
 
 ### Batch 9: verification (independent verifier)
 

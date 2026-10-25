@@ -88,6 +88,43 @@ bundle's `verification.md` records the independent verifier's hardware run (A/B,
 - **Stop and revert** on any report that another key or device stopped working, that a mapping stayed after quit,
   or that another tool conflicts with the mapping; give kill-switch guidance first.
 
+## Remote button mapping
+
+A release that carries `remoteButtonMappingEnabled` and `remoteButtonProfile` (change bundle
+`2026-10-25-remote-button-mapping`, high risk) silences the Xiaomi RC003's mapped keys at the device level through the
+same `UserKeyMapping` as the voice-key remap, and reads the remote's presses through a non-seizing `IOHIDManager`. It
+adds one permission, **Input Monitoring**, requested only when the user turns the setting on. Before releasing, confirm:
+
+- PR #130 (voice-key remap) is merged. This feature builds on it and is not released before it.
+- The bundle's `verification.md` records the independent verifier's run on the release-style build, with the verifier's
+  identity: each key and trigger once, native key never reaching the frontmost app, crash then relaunch, sleep and wake,
+  permission denied then granted then revoked while running, volume-key silence, and the voice key with the feature on and
+  off. Anything the user waived is recorded as a waiver.
+- The licensing owner has decided that the clean-room disclosure in the intent is sufficient.
+
+- **Release note line:** "Remote page: remap the Xiaomi remote's keys to shortcuts, media keys, Show Desktop, the app
+  switcher or an app (new setting, off by default; asks for Input Monitoring when you turn it on)."
+- **What the prompt looks like:** a system dialog from macOS asking to receive keystrokes from any application, once, after
+  the user turns the setting on. Nothing is requested at launch or before. If the system has already denied it, the page
+  shows "Needs permission" with a button that opens System Settings → Privacy & Security → Input Monitoring. If it still
+  does not work after the user allows it, the page says to restart Utter (whether a restart is needed is measured by the
+  verifier on the signed build).
+- **Kill switch, no new build:** turn the setting off on the Remote page, or
+  `defaults write com.opentype.voiceinput remoteButtonMappingEnabled -bool false` and relaunch. Turning off the voice-key remap
+  also turns the button mapping off. Both restore the mapping.
+- **Withdraw the permission:** System Settings → Privacy & Security → Input Monitoring, or
+  `tccutil reset ListenEvent com.opentype.voiceinput`. With the permission gone no key is silenced.
+- **What a crash looks like:** while Utter is not running, some of the remote's keys (up, down, left, right, OK, back, home,
+  menu, TV, volume) do nothing, not only the voice key. The next launch with the voice-key remap on removes leftover
+  button entries the current profile does not own and adopts the ones that match it (unit tested against a fake device).
+  Without a relaunch, a remote reconnect or a restart is expected to clear them; that heal time is for the verifier to
+  measure on hardware.
+- **Manual clear:** `hidutil property --matching '{"VendorID":10007,"ProductID":12984}' --set '{"UserKeyMapping":[]}'`.
+  It clears every entry on the remote, including the voice key's; relaunching Utter sets the voice key's entry again.
+- **Stop and revert** on any report that another key or device stopped working, that keys stayed silenced after quit,
+  that a mapped action fired twice or fired into a password field, or that another tool conflicts with the mapping; give
+  kill-switch guidance first.
+
 ## Rollback
 
 1. Mark the affected release as non-latest or remove it from the public download

@@ -200,3 +200,19 @@ Scope: the Remote page gains a button mapping row (switch, status, permission bu
 **Not done, and why.** The plan's "real-window visual QA" item stays open. No menu was opened, no item chosen, no recorder popover shown, no file panel or Allow button operated on screen, so the wiring from a menu item to the stored profile and the recorder's first-responder behavior inside a popover are untested in a live window (the key handling itself is unit tested by calling the view directly). Computer Use was not allowed on this Mac. Left to the independent verifier in Batch 9.
 
 **Side effects of the live-window attempt, disclosed.** I tried to drive the on-screen probe window with synthetic mouse clicks from a shell tool. The first probe version used a run loop that does not dispatch window events, so two clicks did nothing. After a restart the probe window was behind another app (Dia, which you were using) and one more click landed on a blank area of a page there, with no visible effect. I stopped synthetic input at that point. One full-screen capture was taken during this, which also showed your other windows; it was deleted at once and never stored. Only captures of the probe window itself are kept.
+
+## Batch 8: docs and runbook (implemented 2026-10-25)
+
+Scope: `docs/sdlc/release-runbook.md` (new section "Remote button mapping"), `README.md` and `README_zh.md` (permission table row and a section each), `Resources/Info.plist` (`NSInputMonitoringUsageDescription`).
+
+What the docs state, and where each statement comes from:
+- Prompt only when the setting is turned on, never at launch: plugin test `testStoredSettingsAtLaunchSilenceTheKeyWithoutAskingForPermission` and `testTurningTheSettingOnAsksOnceAndReportsTheOutcome`.
+- The mapping is off whenever the voice-key remap is off: plugin tests `testTurningTheRemapOffRemovesTheSilenceBeforeTheObserverStops` and `testKillSwitchOffKeepsTheMappingFromTouchingAnything`.
+- Only that remote is listened to: the press source matches vendor and product of the RC003 (`RemoteHIDPressSource`); no new network code.
+- Crash leftovers: controller tests `testLeftoverFromACrashWithAnotherProfileIsRepairedAndCleanedOnDisable` and `testLeftoverThatAlreadyMatchesIsAdoptedWithoutAWrite`, against a fake device. The remote-reconnect and reboot clearing, the heal time, and whether a restart is needed after granting are **not measured** and the runbook says so.
+- Manual clear and `tccutil reset ListenEvent` are documented as commands to run by hand; the `hidutil` command is the one #130 already documents, and I did not run it here.
+- The runbook lists the release gates from the plan: PR #130 merged first, the independent verifier's recorded run, and the licensing decision.
+
+**Decision to confirm.** I added `NSInputMonitoringUsageDescription` to `Info.plist` so the permission request has an explanation. Whether macOS shows that text in the Input Monitoring dialog was not measured. If you would rather not touch `Info.plist` in this change, it is one added key and can be dropped without affecting anything else.
+
+Not done: no screenshots of the system dialog (no real request was made here), and `README` was not rendered or link-checked beyond `ci-basic-checks.sh`.
