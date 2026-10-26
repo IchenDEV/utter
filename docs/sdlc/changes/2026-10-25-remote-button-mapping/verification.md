@@ -1,8 +1,8 @@
 # Verification: Configurable remote button mapping in Settings → Remote
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision: 批准 verification.md (2026-10-26), given with the Batch 9 waiver recorded below and the open items listed at the end
+**Approved-date:** 2026-10-26
 **Upstream:** [plan.md](plan.md)
 
 Batch 0 (measurements) ran on 2026-10-25 and is **partly complete**. Batches 1 to 8 are implemented (sections below). Batch 9, the independent verification, was **waived by the user** (see "Waiver" below); it was not run. The implementer ran every batch, so none of this is independent verification.
@@ -237,7 +237,7 @@ Not done: no screenshots of the system dialog (no real request was made here), a
 ## Open items before this can ship
 
 1. Batch 9 is waived (above). If you later want any of its items measured, the list under "This is not verification" is the checklist.
-2. **Your approval of this `verification.md`** (now `pending approval`), then PR approval, then release approval. Nothing here is marked approved. The release approval should say it accepts the waiver.
+2. **This `verification.md` is approved (2026-10-26).** That approves the verification stage as recorded here, including the Batch 9 waiver. It does not approve the PR or a release. Still to come: PR approval, then release approval, which should say it accepts the waiver.
 3. **PR #130** is still unmerged and carries its own open verification record; this change is stacked on it and is not released before it.
 4. **Licensing owner** decision on the clean-room disclosure in the intent.
 5. Decisions approved by the user on 2026-10-26: spec erratum 2 (the button mapping depends on the voice-key remap setting; eleven keys, not twelve; `NSInputMonitoringUsageDescription`; the Chinese wording) and spec erratum 3 (a held key resolves at release when W ends; secure input also drops the native replay of an owned key; no "waiting for presses" state; synthetic modifiers pass through Utter's hotkey tap, not mitigated).
