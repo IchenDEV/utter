@@ -1,0 +1,28 @@
+# Real-hardware probe of the real AudioCaptureManager (temporary XCTest, removed before commit)
+# Machine: MacBook Pro, macOS 27; built-in mic 44.1 kHz, engine default aggregate 48 kHz; lid open.
+# Each run: start(deviceID:), run loop for 4.5 s, stop, read the WAV back. Numeric output only.
+
+## Fixed code (this change)
+LOG: [AudioCapture] capture format 44100.0 Hz differs from engine format 48000.0 Hz; using hardware
+RESULT device=BuiltInMicrophoneDevice elapsed=4.8s frames=194040 peakRMS=0.006948081 fileRate=44100.0 fileFrames=194040 unavailable=[]
+LOG: [AudioCapture] capture format 44100.0 Hz differs from engine format 48000.0 Hz; using hardware
+RESULT device=default elapsed=4.7s frames=198450 peakRMS=0.006121378 fileRate=44100.0 fileFrames=198450 unavailable=[]
+
+## Old behavior simulated (tap with the engine's cached 48 kHz client format)
+Both runs: no frames; the retry then raised an Objective-C exception from installTap
+("Failed to create tap due to format mismatch") inside the liveness restart. This is why
+restartCapture refuses to tap without a usable hardware format (allowClientFallback: false).
+
+## Guardrail, first tap forced stale once (retry recovers)
+LOG: [AudioCapture] no audio frames after 1.5 s; restarting capture
+LOG: [AudioCapture] capture format 44100.0 Hz differs from engine format 48000.0 Hz; using hardware
+RESULT device=BuiltInMicrophoneDevice elapsed=4.8s frames=123480 peakRMS=0.0014817753 fileRate=48000.0 fileFrames=134373 unavailable=[]
+RESULT device=default elapsed=4.7s frames=123480 peakRMS=0.0016181973 fileRate=48000.0 fileFrames=134373 unavailable=[]
+# fileFrames ~= frames * 48000 / 44100: the recorder converted the 44.1 kHz buffers into the 48 kHz file.
+
+## Guardrail, tap never installed on restart (persistent stall)
+LOG: [AudioCapture] no audio frames after 1.5 s; restarting capture
+LOG-ERR: [AudioCapture] no audio frames after restart
+LOG-ERR: [AudioCapture] active input unavailable: noAudioReceived
+RESULT device=BuiltInMicrophoneDevice elapsed=4.7s frames=0 peakRMS=0.0 fileRate=48000.0 fileFrames=0 unavailable=[noAudioReceived]
+RESULT device=default elapsed=4.7s frames=0 peakRMS=0.0 fileRate=48000.0 fileFrames=0 unavailable=[noAudioReceived]

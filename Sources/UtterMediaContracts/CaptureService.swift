@@ -23,11 +23,12 @@ package struct CaptureCallbacks {
     package let level: (Float) -> Void
     package let buffer: ((AVAudioPCMBuffer) -> Void)?
     package let switchedInput: () -> Void
-    package let inputUnavailable: () -> Void
+    package let inputUnavailable: (AudioCaptureStartFailure) -> Void
 
     package init(
         level: @escaping (Float) -> Void = { _ in }, buffer: ((AVAudioPCMBuffer) -> Void)? = nil,
-        switchedInput: @escaping () -> Void = {}, inputUnavailable: @escaping () -> Void = {}
+        switchedInput: @escaping () -> Void = {},
+        inputUnavailable: @escaping (AudioCaptureStartFailure) -> Void = { _ in }
     ) {
         self.level = level
         self.buffer = buffer

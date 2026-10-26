@@ -8,15 +8,32 @@ import UtterMediaContracts
 extension AudioCaptureManager {
     // MARK: - Capture tap and file writing
 
-    func installCaptureTap() -> Bool {
+    /// Format to tap and record. Must be read after the input device is set and
+    /// is taken from the hardware: the node's cached client format can still
+    /// describe the default aggregate device and would not match the hardware.
+    ///
+    /// A restart passes `allowClientFallback: false`: on a node that already ran,
+    /// `installTap` with a format that disagrees with the hardware raises an
+    /// Objective-C exception, which Swift cannot catch, so no tap is attempted.
+    func currentCaptureFormat(allowClientFallback: Bool = true) -> AVAudioFormat? {
         let inputNode = engine.inputNode
-        let format = inputNode.outputFormat(forBus: 0)
-        guard format.sampleRate > 0, format.channelCount > 0 else {
-            log.error("[AudioCapture] invalid input format: \(format)")
-            return false
+        let hardware = inputNode.inputFormat(forBus: 0)
+        let client = inputNode.outputFormat(forBus: 0)
+        switch CaptureFormatChoice.choose(hardware: .init(hardware), client: .init(client)) {
+        case .hardware:
+            if hardware.sampleRate != client.sampleRate {
+                log.info("[AudioCapture] capture format \(hardware.sampleRate) Hz differs from engine format \(client.sampleRate) Hz; using hardware")
+            }
+            return hardware
+        case .client:
+            return allowClientFallback ? client : nil
+        case .unusable:
+            return nil
         }
+    }
 
-        inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
+    func installCaptureTap(format: AVAudioFormat) {
+        engine.inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
             guard let self else { return }
             self.recordingLock.lock()
             defer { self.recordingLock.unlock() }
@@ -36,7 +53,6 @@ extension AudioCaptureManager {
                 }
             }
         }
-        return true
     }
 
     /// Writes a buffer to the recording file, converting when a fallback device
@@ -118,4 +134,10 @@ extension AudioCaptureManager {
         return max(min(normalized, 1.0), 0.0)
     }
 
+}
+
+extension CaptureFormatTraits {
+    init(_ format: AVAudioFormat) {
+        self.init(sampleRate: format.sampleRate, channelCount: format.channelCount)
+    }
 }

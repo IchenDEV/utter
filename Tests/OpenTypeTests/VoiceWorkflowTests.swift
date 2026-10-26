@@ -43,11 +43,28 @@ final class VoiceWorkflowTests: XCTestCase {
         let driver = try fixture.runtime.service(SessionServices.execution)
         try driver.start(SessionIntent(input: .local))
         while driver.snapshot.phase != .recording { await Task.yield() }
-        fixture.capture.callbacks?.inputUnavailable()
+        fixture.capture.callbacks?.inputUnavailable(.noUsableInput)
         while driver.snapshot.isBusy { await Task.yield() }
         XCTAssertEqual(driver.snapshot.phase, .failed)
         XCTAssertEqual(driver.snapshot.error, AudioCaptureStartFailure.noUsableInput.localizedDescription)
         XCTAssertTrue(fixture.capture.recording.stopped)
+        XCTAssertTrue(fixture.capture.recording.closed)
+        XCTAssertTrue(fixture.output.requests.isEmpty)
+        try await fixture.runtime.stop()
+    }
+
+    func testSilentCaptureReportsNoAudioReceivedInsteadOfNoUsableInput() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        try await fixture.start()
+        let driver = try fixture.runtime.service(SessionServices.execution)
+        try driver.start(SessionIntent(input: .local))
+        while driver.snapshot.phase != .recording { await Task.yield() }
+        fixture.capture.callbacks?.inputUnavailable(.noAudioReceived)
+        while driver.snapshot.isBusy { await Task.yield() }
+        XCTAssertEqual(driver.snapshot.phase, .failed)
+        XCTAssertEqual(driver.snapshot.error, AudioCaptureStartFailure.noAudioReceived.localizedDescription)
+        XCTAssertNotEqual(driver.snapshot.error, AudioCaptureStartFailure.noUsableInput.localizedDescription)
         XCTAssertTrue(fixture.capture.recording.closed)
         XCTAssertTrue(fixture.output.requests.isEmpty)
         try await fixture.runtime.stop()
@@ -230,7 +247,7 @@ final class VoiceWorkflowTests: XCTestCase {
         let driver = try fixture.runtime.service(SessionServices.execution)
         try driver.start(SessionIntent(input: .local))
         while driver.snapshot.phase != .recording { await Task.yield() }
-        fixture.capture.callbacks?.inputUnavailable()
+        fixture.capture.callbacks?.inputUnavailable(.noUsableInput)
         while driver.snapshot.isBusy { await Task.yield() }
         XCTAssertEqual(driver.snapshot.phase, .failed)
         XCTAssertEqual(driver.snapshot.error, AudioCaptureStartFailure.noUsableInput.localizedDescription)
