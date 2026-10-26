@@ -97,6 +97,6 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 - This plan needs explicit approval before Batch 0 starts.
 - Batch 0 needs the user at the remote for about ten minutes, and its gate result goes back to the user before Batch 1 if it fails.
-- `verification` needs explicit approval, then PR approval, then release approval for this high-risk change. The release is not cut without the independent verifier's recorded result, and not while PR #130 is unmerged.
+- `verification` needs explicit approval, then PR approval, then release approval for this high-risk change. The release is not cut without the independent verifier's recorded result, and not while PR #130 is unmerged. (2026-10-26: the verifier's run was waived by the user and recorded as a waiver; PR #130 merged the same day.)
 - The licensing owner decides whether the clean-room disclosure in the intent is sufficient before this ships.
 - Any further permission beyond Input Monitoring is a new decision and returns to the user.
