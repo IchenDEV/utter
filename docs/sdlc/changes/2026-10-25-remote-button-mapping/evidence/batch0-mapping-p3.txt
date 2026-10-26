@@ -1,0 +1,15 @@
+RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    },
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771151;
+    },
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771112;
+    }
+)

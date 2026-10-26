@@ -1,0 +1,29 @@
+23:03:22 START original_volume=69
+23:03:34 P1 key=上 usage=7:82 hold=0.195 lines=4-16
+23:03:37 P1 key=下 usage=7:81 hold=0.18 lines=23-42
+23:03:41 P1 key=左 usage=7:80 hold=0.36 lines=42-52
+23:03:45 P1 key=右 usage=7:79 hold=0.286 lines=52-62
+23:03:49 P1 key=确定 usage=7:40 hold=0.18 lines=62-72
+23:03:53 P1 key=返回 usage=7:241 hold=0.135 lines=72-80
+23:03:57 P1 key=主页 usage=7:74 hold=0.21 lines=80-90
+23:04:01 P1 key=菜单 usage=7:101 hold=0.18 lines=90-100
+23:04:08 P1 key=电视 usage=7:101 hold=0.165 lines=100-120
+23:04:12 P1 key=音量加 usage=7:128 hold=0.165 lines=120-130
+23:04:15 P1 key=音量减 usage=7:129 hold=0.18 lines=130-140
+23:04:23 P2 key=上 usage=7:82 hold=1.814 lines=140-166
+23:04:29 P2 key=下 usage=7:81 hold=1.83 lines=166-192
+23:04:36 P2 key=左 usage=7:80 hold=1.77 lines=192-218
+23:04:41 P2 key=右 usage=7:79 hold=1.589 lines=218-242
+23:04:48 P2 key=确定 usage=7:40 hold=1.44 lines=242-264
+23:04:54 P2 key=返回 usage=7:241 hold=1.635 lines=264-272
+23:05:01 P2 key=主页 usage=7:74 hold=1.53 lines=272-295
+23:05:07 P2 key=菜单 usage=7:101 hold=1.831 lines=295-321
+23:05:15 P2 key=电视 usage=7:53 hold=1.906 lines=321-358
+23:05:21 P2 key=音量加 usage=7:128 hold=1.665 lines=358-382
+23:05:27 P2 key=音量减 usage=7:129 hold=1.846 lines=382-409
+23:05:32 P3 mapped A=右(30064771151) B=确定(30064771112)
+23:05:46 P3 key=右 presses=OK cg_events=13 volume_before=31 volume_after=0 lines=414-479
+23:05:52 P3 key=确定 presses=OK cg_events=0 volume_before=0 volume_after=0 lines=479-503
+23:06:27 P5 key=确定 doubles=OK lines=503-704
+23:06:28 DONE
+23:06:28 RESTORED mapping=original volume=69 utter_reopened=1

@@ -40,6 +40,8 @@
     <string>Utter needs microphone access to capture voice for transcription.</string>
     <key>NSBluetoothAlwaysUsageDescription</key>
     <string>Utter connects to a Xiaomi Bluetooth remote so you can use it as a wireless microphone without a separate app.</string>
+    <key>NSInputMonitoringUsageDescription</key>
+    <string>Utter listens to the buttons of your Xiaomi remote only, so it can run the actions you assign to them.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>Utter uses speech recognition to convert voice to text.</string>
     <key>NSAppleEventsUsageDescription</key>

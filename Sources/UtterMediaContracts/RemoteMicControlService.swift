@@ -12,6 +12,15 @@ package protocol RemoteMicControlService: AnyObject {
     func setVoiceCallbacks(pressed: ((UInt64) -> Void)?, released: (() -> Void)?, stopped: (() -> Void)?)
     func observe(_ callback: @escaping (RemoteMicBridgeState) -> Void) -> UUID
     func removeObserver(_ id: UUID)
+    /// The user asked to allow Input Monitoring from the page.
+    func requestButtonMappingPermission()
+    /// The page appeared or the app became active: re-check permission and the remote now.
+    func refreshButtonMapping()
+}
+
+extension RemoteMicControlService {
+    package func requestButtonMappingPermission() {}
+    package func refreshButtonMapping() {}
 }
 
 extension RemoteMicServices {

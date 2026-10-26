@@ -14,7 +14,8 @@ package enum RemoteMicPlugins {
 
     static func capture(
         makeBridge: @escaping (@escaping () -> Double) -> XiaomiRemoteMicBridge,
-        makeKeyRemap: @escaping @MainActor () -> RemoteKeyMappingController
+        makeKeyRemap: @escaping @MainActor () -> RemoteKeyMappingController,
+        makeButtonMapping: @escaping @MainActor () -> RemoteButtonMappingParts = { .system() }
     ) -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(
             id: "remote-mic.xiaomi",
@@ -22,34 +23,40 @@ package enum RemoteMicPlugins {
             provides: [RemoteMicServices.capture.reference, RemoteMicServices.control.reference]
         )) { context, _ in
             let settings = try context.require(DataServices.settings)
+            let log = Log(service: try context.require(IntegrationServices.diagnostics))
             let gain = RemoteMicGain(settings.values.remoteMicGainDB)
             let keyRemap = makeKeyRemap()
-            // The key remap follows its own setting and is independent of the remote-mic toggle.
+            let buttons = RemoteButtonMappingRuntime(parts: makeButtonMapping(), keys: keyRemap, log: log)
+            // The key remap and the button mapping follow their own settings and are independent of the remote-mic toggle.
             let observation = settings.observe {
                 gain.update($0.remoteMicGainDB)
-                if context.isReady { keyRemap.setEnabled($0.remoteKeyRemapEnabled) }
+                if context.isReady { buttons.apply($0, userChange: true) }
             }
             try context.scope.onDispose { settings.removeObserver(observation) }
             let bridge = makeBridge { gain.value }
-            let capture = RemoteMicCaptureManager(
-                bridge: bridge, log: Log(service: try context.require(IntegrationServices.diagnostics))
-            )
+            let capture = RemoteMicCaptureManager(bridge: bridge, log: log)
             let control = RemoteMicController(bridge: bridge, isReady: { context.isReady })
             control.setEnabled(settings.values.remoteMicEnabled)
-            keyRemap.onChange = { [weak control] state, count in control?.setKeyRemap(state, reapplyCount: count) }
+            keyRemap.onChange = { [weak control, weak buttons] state, count in
+                control?.setKeyRemap(state, reapplyCount: count)
+                buttons?.keyRemapChanged()
+            }
+            buttons.onStateChange = { [weak control] in control?.setButtonMapping($0) }
+            control.onButtonMappingPermissionRequest = { [weak buttons] in buttons?.requestPermission() }
+            control.onButtonMappingRefresh = { [weak buttons] in buttons?.refresh() }
             control.onBridgeReady = { keyRemap.expectRemote() }
             try context.scope.onRevoke {
-                keyRemap.setEnabled(false)
+                buttons.shutdown()
                 control.revoke()
                 capture.revoke()
             }
             try context.scope.onDispose {
-                keyRemap.setEnabled(false)
+                buttons.shutdown()
                 await bridge.close()
                 capture.close()
             }
             try context.scope.onReady {
-                keyRemap.setEnabled(settings.values.remoteKeyRemapEnabled)
+                buttons.apply(settings.values, userChange: false)
                 control.prepareIngress()
             }
             try context.provide(RemoteMicServices.capture, value: capture)

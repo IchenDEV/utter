@@ -1,0 +1,5 @@
+[   0.028] START hidOpen=0 matchedDevices=1
+[   0.051] TAP created
+[   1.117] CG keyDown code=80 flags=0x20800000 repeat=0
+[   1.117] CG keyUp code=80 flags=0x20800000 repeat=0
+[   4.084] END

@@ -60,6 +60,26 @@ struct RemoteMicSettingsView: View {
 
         Section { RemoteKeyRemapRow().environmentObject(platform) }
 
+        if platform.hasRemoteProvider {
+            Section {
+                RemoteButtonMappingRow()
+                    .environmentObject(platform)
+                    .onAppear { platform.refreshButtonMapping() }
+                    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                        platform.refreshButtonMapping()
+                    }
+            }
+            if settings.remoteKeyRemapEnabled, settings.remoteButtonMappingEnabled {
+                Section {
+                    RemoteButtonGrid()
+                } header: {
+                    Text(L("remote_buttons.grid.header"))
+                } footer: {
+                    Text(L("remote_buttons.notes"))
+                }
+            }
+        }
+
         if settings.remoteMicEnabled {
             connectionSection
             audioSection

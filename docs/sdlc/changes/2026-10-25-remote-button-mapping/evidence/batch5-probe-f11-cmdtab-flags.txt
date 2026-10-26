@@ -1,0 +1,11 @@
+Batch 5 probe, run 2 (F11 without and with the fn flag; Cmd+Tab with flags only). Run 1 had a broken baseline and is not evidence.
+[  1.7] BASELINE front=probe x=300 y=837 onscreen=true
+[  1.8] STEP F11 flags=0: before front=probe x=300 y=837 onscreen=true
+[  3.7] STEP F11 flags=0: after  front=company.thebrowser.dia x=300 y=837 onscreen=true EFFECT=true
+[  5.6] STEP F11 flags=0: undone front=company.thebrowser.dia x=300 y=837 onscreen=true
+[  6.5] STEP F11 flags=fn: before front=probe x=300 y=837 onscreen=true
+[  8.4] STEP F11 flags=fn: after  front=probe x=-508 y=1267 onscreen=true EFFECT=true
+[ 10.3] STEP F11 flags=fn: undone front=probe x=300 y=837 onscreen=true
+[ 11.2] STEP Cmd+Tab flags-only: before front=probe x=300 y=837 onscreen=true
+[ 13.1] STEP Cmd+Tab flags-only: after  front=probe x=300 y=837 onscreen=true EFFECT=false
+[ 13.7] END

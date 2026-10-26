@@ -125,6 +125,7 @@ The public app is `Utter.app`. The Swift package product remains `OpenType` so e
 | Accessibility | Global hotkey, text insertion (clipboard + simulated ⌘V), and reading the focused field for context | Yes |
 | Speech Recognition | Apple on-device ASR engine | Only if using Apple Speech |
 | Screen Recording | OCR for screen context and Voice Command mode | Optional |
+| Input Monitoring | Only if you turn on **Settings → Remote → Remap remote buttons**: to see which button of the Xiaomi remote was pressed. Utter listens to that remote only. It is requested when you turn that setting on, never before | Optional |
 | Network | Model downloads; remote LLM API calls; daily update checks | First run / remote LLM mode |
 
 ## Updates
@@ -144,6 +145,20 @@ If something looks wrong:
 - Turn the setting off, or run `defaults write com.opentype.voiceinput remoteKeyRemapEnabled -bool false` and relaunch Utter.
 - If Utter crashed and the voice key stays dead, reconnect the remote in System Settings → Bluetooth, or clear it by hand: `hidutil property --matching '{"VendorID":10007,"ProductID":12984}' --set '{"UserKeyMapping":[]}'`.
 - Without Utter, the workaround is System Settings → Keyboard → Dictation off.
+
+## Xiaomi Remote Button Mapping
+
+With **Settings → Remote → Remap remote buttons** on (off by default), each of the Xiaomi RC003's eleven keys (up, down, left, right, OK, back, home, menu, TV, volume up, volume down) can do something else on a press, a double press or a long press: a keyboard shortcut, a media key, Show Desktop, the app switcher, or opening an app. The voice key is not remappable. The setting needs **Keep the voice key from opening Dictation** above to be on.
+
+- **Permission.** Utter needs **Input Monitoring** to see which button was pressed. macOS asks once, when you turn the setting on; nothing is requested before that. Utter matches only that remote's device, so other keyboards are not listened to, and no key data leaves the Mac. If it still does not work after you allow it, restart Utter.
+- **Safety rule.** Utter turns a key off at the device level only while it can see that key's presses. Without the permission, or without the remote, every key keeps its normal job.
+- **Limits.** A mapped key triggers once per press and does not repeat while held. Keyboard shortcuts and system actions are not sent while a password field has the keyboard. Show Desktop follows your macOS shortcut. Volume buttons may still change the system volume while Utter handles them.
+
+If something looks wrong:
+
+- Turn the setting off, or run `defaults write com.opentype.voiceinput remoteButtonMappingEnabled -bool false` and relaunch Utter.
+- If Utter crashed and remote keys stay dead, reconnect the remote in System Settings → Bluetooth, or clear it by hand: `hidutil property --matching '{"VendorID":10007,"ProductID":12984}' --set '{"UserKeyMapping":[]}'` (this also clears the voice-key entry; relaunch Utter to set it again).
+- To withdraw the permission: System Settings → Privacy & Security → Input Monitoring → turn Utter off, or run `tccutil reset ListenEvent com.opentype.voiceinput`.
 
 ## Troubleshooting
 

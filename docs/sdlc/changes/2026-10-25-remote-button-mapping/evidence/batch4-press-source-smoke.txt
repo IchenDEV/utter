@@ -1,0 +1,7 @@
+Batch 4 smoke: real RemoteHIDPressSource on this Mac, host process (Cursor) holds Input Monitoring, remote connected, no buttons pressed.
+accessRaw=0 (0 granted, 1 denied, 2 unknown)
+refresh1=live
+refresh2(idempotent)=live
+afterWait=live edges=0 deviceChanges=1
+stopped; refresh3=live
+double stop ok
