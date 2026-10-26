@@ -23,7 +23,8 @@ final class NativeOutputAnchor: OutputAnchor {
     }
 
     var isCurrent: Bool {
-        guard isOwnerCurrent(), Date() < expiresAt, let current = AXTargetState.capture(), state.matches(current),
+        guard isOwnerCurrent(), target.isCurrent, Date() < expiresAt,
+              let current = AXTargetState.capture(), state.matches(current),
               let document = AXTargetState.value(of: current.element) else { return false }
         return RecentInsertionGuard.isReplacementSafe(sameTarget: true, currentSelection: current.selection,
             insertedRange: range, currentText: document, inserted: text)

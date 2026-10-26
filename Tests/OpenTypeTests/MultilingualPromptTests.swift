@@ -182,24 +182,24 @@ final class MultilingualPromptTests: XCTestCase {
 
     func testSelectionEditPromptsUseTargetLanguageLabelsAndInstructions() {
         let processor = TextProcessor()
-        let japanese = processor.selectionEditPrompt(
+        let japanese = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "金曜までにリリースノートを整える",
             intent: .casual,
             inputLanguage: .japanese,
             memoryContext: "前回 OpenType と言った"
         )
-        let korean = processor.selectionEditPrompt(
+        let korean = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "금요일까지 릴리스 노트를 정리한다",
             intent: .meetingNotes,
             inputLanguage: .korean,
             memoryContext: "이전에 OpenType를 말함"
         )
-        let cantonese = processor.selectionEditPrompt(
+        let cantonese = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "今日發版",
             intent: .casual,
             inputLanguage: .cantonese
         )
-        let automatic = processor.selectionEditPrompt(
+        let automatic = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "今天发版",
             intent: .concise,
             inputLanguage: .auto
@@ -231,10 +231,10 @@ final class MultilingualPromptTests: XCTestCase {
     func testSelectionEditSystemPromptsUseTargetLanguageRules() {
         let processor = TextProcessor()
 
-        XCTAssertTrue(processor.selectionEditSystemPrompt(inputLanguage: .japanese).contains("選択テキスト処理エンジン"))
-        XCTAssertTrue(processor.selectionEditSystemPrompt(inputLanguage: .korean).contains("선택 텍스트 처리기"))
-        XCTAssertTrue(processor.selectionEditSystemPrompt(inputLanguage: .cantonese).contains("选中文本处理器"))
-        XCTAssertTrue(processor.selectionEditSystemPrompt(inputLanguage: .auto).contains("选中文本处理器"))
+        XCTAssertTrue(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .japanese).contains("選択テキスト処理エンジン"))
+        XCTAssertTrue(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .korean).contains("선택 텍스트 처리기"))
+        XCTAssertTrue(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .cantonese).contains("选中文本处理器"))
+        XCTAssertTrue(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .auto).contains("选中文本处理器"))
     }
 
     func testCustomSystemPromptOutputContractUsesTargetLanguage() {

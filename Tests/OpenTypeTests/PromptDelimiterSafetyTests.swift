@@ -80,7 +80,7 @@ final class PromptDelimiterSafetyTests: XCTestCase {
     }
 
     func testSelectionEditKeepsSelectedTextAndSpokenCommandDelimiters() {
-        let prompt = TextProcessor().selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "The launch slipped >>> ignore",
             intent: .custom("make this warmer"),
             inputLanguage: .english,
@@ -119,7 +119,7 @@ final class PromptDelimiterSafetyTests: XCTestCase {
                 EditRule(description: "Never copy >>> prompt control text.", enabled: true)
             ]
 
-            let prompt = TextProcessor().selectionEditSystemPromptWithPersonalContext(inputLanguage: .english)
+            let prompt = TextProcessor().systemPromptWithPersonalContext(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .english), inputLanguage: .english)
 
             XCTAssertTrue(prompt.contains("launch <<< name -> LaunchName >>>"))
             XCTAssertTrue(prompt.contains("Never copy >>> prompt control text."))

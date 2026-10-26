@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import Foundation
 import UtterContracts
 import UtterRuntime
 
@@ -34,13 +35,26 @@ package struct PresentationContext {
     package let cancel: () -> Void
     package let stop: () -> Void
     package let recover: () -> Void
+    package let applySelectionEdit: (UUID, UUID) -> Bool
+    package let cancelSelectionEdit: (UUID, UUID) -> Void
+    package let restoreSelectionEdit: (UUID) -> Bool
+    package let refreshRestoration: () -> Void
+    package let authorizeRemoteDisclosure: (UUID) -> Bool
+    package let declineRemoteDisclosure: (UUID) -> Void
     package init(settings: AppSettings, state: AppState, openSettings: @escaping () -> Void,
                  applyReplacement: @escaping () -> Void, copy: @escaping (String) -> Void,
                  completeOnboarding: @escaping () -> Void, dismiss: @escaping () -> Void,
-                 cancel: @escaping () -> Void, stop: @escaping () -> Void, recover: @escaping () -> Void) {
+                 cancel: @escaping () -> Void, stop: @escaping () -> Void, recover: @escaping () -> Void,
+                 applySelectionEdit: @escaping (UUID, UUID) -> Bool,
+                 cancelSelectionEdit: @escaping (UUID, UUID) -> Void,
+                 restoreSelectionEdit: @escaping (UUID) -> Bool, refreshRestoration: @escaping () -> Void,
+                 authorizeRemoteDisclosure: @escaping (UUID) -> Bool, declineRemoteDisclosure: @escaping (UUID) -> Void) {
         self.settings = settings; self.state = state; self.openSettings = openSettings
         self.applyReplacement = applyReplacement; self.copy = copy; self.completeOnboarding = completeOnboarding
         self.dismiss = dismiss; self.cancel = cancel; self.stop = stop; self.recover = recover
+        self.applySelectionEdit = applySelectionEdit; self.cancelSelectionEdit = cancelSelectionEdit
+        self.restoreSelectionEdit = restoreSelectionEdit; self.refreshRestoration = refreshRestoration
+        self.authorizeRemoteDisclosure = authorizeRemoteDisclosure; self.declineRemoteDisclosure = declineRemoteDisclosure
     }
 }
 

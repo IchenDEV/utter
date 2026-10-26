@@ -24,6 +24,9 @@ final class UpdateFakeExecution: SessionExecutionService {
 
     @discardableResult func requestStop(_ id: UUID, at timestamp: Duration?) -> Bool { false }
     func promoteToTranslation(_ id: UUID, reason: HotkeyPromotion) -> Bool { false }
+    @discardableResult func applySelectionEdit(sessionID: UUID, proposalID: UUID) -> Bool { false }
+    func authorizeRemoteDisclosure(_ intentID: UUID) throws {}
+    func declineRemoteDisclosure(_ intentID: UUID) {}
     func reserve(_ intent: SessionIntent) throws {}
     func activate(_ id: UUID, input: SessionInput?) throws {}
     func waitForRecording(_ id: UUID) async throws {}

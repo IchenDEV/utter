@@ -124,11 +124,7 @@ private extension RemoteLLMResponseText {
             return RemoteLLMPayload.nonEmpty(text)
         }
         if let blocks = value as? [Any] {
-            let text = blocks
-                .compactMap(contentBlockText)
-                .joined(separator: "\n")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            return text.isEmpty ? nil : text
+            return joinedText(blocks.compactMap(contentBlockText))
         }
         if let object = value as? [String: Any] {
             return contentBlockText(object)
@@ -143,6 +139,11 @@ private extension RemoteLLMResponseText {
 
         if let type = object.value(forCaseInsensitiveKey: "type") as? String {
             if RemoteLLMPayload.matchesBlockType(type, in: textBlockTypes) {
+                if LLMFinalTextOutput.requiresExplicitFinalText,
+                   !RemoteLLMPayload.matchesBlockType(type, in: ["text"]),
+                   let json = RemoteLLMPayload.jsonString(from: object) {
+                    return json
+                }
                 return contentText(from: object.value(forCaseInsensitiveKey: "text"))
                     ?? contentText(from: object.value(forCaseInsensitiveKey: "content"))
                     ?? contentText(from: object.value(forCaseInsensitiveKey: "value"))
@@ -165,6 +166,9 @@ private extension RemoteLLMResponseText {
             return nil
         }
 
+        if LLMFinalTextOutput.requiresExplicitFinalText {
+            return actionableJSONText(from: object)
+        }
         if let text = contentText(from: object.value(forCaseInsensitiveKey: "text")) {
             return text
         }
@@ -179,11 +183,7 @@ private extension RemoteLLMResponseText {
 
     static func toolCallText(from value: Any?) -> String? {
         if let blocks = value as? [Any] {
-            let text = blocks
-                .compactMap(toolCallText)
-                .joined(separator: "\n")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            return text.isEmpty ? nil : text
+            return joinedText(blocks.compactMap(toolCallText))
         }
         guard let object = value as? [String: Any] else {
             return contentText(from: value)
@@ -233,6 +233,7 @@ private extension RemoteLLMResponseText {
     /// resolved to their text; command payloads keep their JSON shape so the
     /// spoken-edit resolver can parse them later.
     static func actionableText(from text: String) -> String? {
+        if LLMFinalTextOutput.requiresExplicitFinalText { return text }
         if let finalText = LLMFinalTextOutput.text(from: text) {
             return finalText
         }
@@ -242,7 +243,21 @@ private extension RemoteLLMResponseText {
         return nil
     }
 
+    static func joinedText(_ parts: [String]) -> String? {
+        if LLMFinalTextOutput.requiresExplicitFinalText {
+            let values = parts.map { (try? JSONSerialization.jsonObject(with: Data($0.utf8))) ?? $0 }
+            if values.contains(where: { $0 is [String: Any] || $0 is [Any] }) {
+                return RemoteLLMPayload.jsonString(from: values)
+            }
+        }
+        return RemoteLLMPayload.nonEmpty(parts.joined(separator: "\n"))
+    }
+
     static func structuredPayloadText(from value: Any?) -> String? {
+        if LLMFinalTextOutput.requiresExplicitFinalText,
+           let structured = RemoteLLMPayload.jsonString(from: value) {
+            return structured
+        }
         if let text = contentText(from: value) {
             return text
         }

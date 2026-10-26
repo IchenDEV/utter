@@ -172,24 +172,24 @@ final class AutoCantonesePromptTests: XCTestCase {
 
     func testAutoAndCantoneseSelectionEditPromptsKeepLanguageIntent() {
         let processor = TextProcessor()
-        let automatic = processor.selectionEditPrompt(
+        let automatic = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "Ship Friday, 金曜に出す",
             intent: .concise,
             inputLanguage: .auto
         )
-        let cantonese = processor.selectionEditPrompt(
+        let cantonese = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "啱啱講錯咗，唔係星期四，係星期五下晝開會。",
             intent: .formal,
             inputLanguage: .cantonese
         )
 
-        XCTAssertTrue(processor.selectionEditSystemPrompt(inputLanguage: .auto).contains("多语言选中文本处理器"))
-        XCTAssertTrue(processor.selectionEditSystemPrompt(inputLanguage: .auto).contains("保持选中文本原语言或自然混排方式"))
+        XCTAssertTrue(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .auto).contains("多语言选中文本处理器"))
+        XCTAssertTrue(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .auto).contains("保持选中文本原语言或自然混排方式"))
         XCTAssertTrue(automatic.contains("先判断选中文本主要语言"))
         XCTAssertTrue(automatic.contains("不要无故翻译"))
 
-        XCTAssertTrue(processor.selectionEditSystemPrompt(inputLanguage: .cantonese).contains("粤语选中文本处理器"))
-        XCTAssertTrue(processor.selectionEditSystemPrompt(inputLanguage: .cantonese).contains("不要默认改成普通话书面中文"))
+        XCTAssertTrue(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .cantonese).contains("粤语选中文本处理器"))
+        XCTAssertTrue(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .cantonese).contains("不要默认改成普通话书面中文"))
         XCTAssertTrue(cantonese.contains("自然粤语书面表达"))
         XCTAssertTrue(cantonese.contains("不要默认改成普通话书面中文"))
     }

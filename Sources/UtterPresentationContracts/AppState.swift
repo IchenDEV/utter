@@ -14,12 +14,17 @@ package enum VoiceInputMode: Equatable {
 
 @MainActor
 package final class AppState: ObservableObject {
+    @Published package var selectionEditCancelShortcut = false
+    @Published package var selectionEditRestoreShortcut = false
     @Published package var selectedSettingsID = "presentation.general"
     @Published package private(set) var phase: AppPhase = .idle
     @Published package private(set) var rawTranscription = ""
     @Published package private(set) var processedText = ""
     @Published package private(set) var audioLevel: Float = 0
     @Published package private(set) var statusMessage = L("status.ready")
+    @Published package private(set) var selectionEditProposal: SelectionEditProposal?
+    @Published package private(set) var selectionEditRestoration: SelectionEditRestoration?
+    @Published package private(set) var remoteDisclosure: SelectionEditRemoteConsent?
     @Published package private(set) var pendingReplacement: DeferredReplacement?
     @Published package private(set) var lastInsertedText = ""
     @Published package private(set) var activeInputMode: VoiceInputMode = .dictation
@@ -34,6 +39,8 @@ package final class AppState: ObservableObject {
 
     package func project(_ snapshot: SessionExecutionSnapshot) {
         self.snapshot = snapshot
+        selectionEditProposal = snapshot.selectionEditProposal
+        remoteDisclosure = snapshot.remoteDisclosure
         let presentation = SessionPresentation(snapshot)
         statusMessage = presentation.message
         rawTranscription = snapshot.transcript
@@ -60,6 +67,7 @@ package final class AppState: ObservableObject {
     }
 
     package func project(_ output: SessionOutputSnapshot) {
+        selectionEditRestoration = output.selectionEditRestoration
         pendingReplacement = output.pending
         lastInsertedText = output.recentText
     }

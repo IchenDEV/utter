@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>编辑选区 · 审阅原型(模拟)</title>
+<style>
+:root{color-scheme:light dark;--ink:CanvasText;--bg:Canvas;--mute:color-mix(in srgb,CanvasText 66%,Canvas);--tone:color-mix(in srgb,CanvasText 7%,Canvas);--sel:color-mix(in srgb,AccentColor 20%,Canvas);--bad:color-mix(in srgb,#c0392b 18%,Canvas);--warn:color-mix(in srgb,#b7791f 22%,Canvas);--ok:color-mix(in srgb,#2f855a 18%,Canvas)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px;display:grid;gap:16px}
+h1{font-size:17px;margin:0 0 4px}
+.note,.host{font-size:13px;color:var(--mute);margin:0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.cols{grid-template-columns:1fr}}
+.box{border-radius:8px;padding:10px 14px;min-width:0;background:var(--tone)}
+.box.c{background:var(--sel)}
+.box.dim.c{background:var(--tone)}
+.box .t{white-space:pre-wrap;overflow-wrap:anywhere;max-height:14em;overflow:auto;font-size:17px;line-height:1.7}
+.box.dim .t{color:var(--mute)}
+.lbl{font-size:13px;color:var(--mute);margin-bottom:2px}
+.instr{font-size:16px;overflow-wrap:anywhere}
+.msg{padding:8px 12px;border-radius:8px;font-size:14px}
+.msg.bad{background:var(--bad)}.msg.warn{background:var(--warn)}.msg.ok{background:var(--ok)}
+.msg:empty{display:none}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;min-height:32px;padding:3px 14px;border-radius:6px;border:0;background:var(--tone);color:var(--ink);cursor:pointer}
+button.p{background:var(--sel);font-weight:600}
+button.t{background:none;color:var(--mute)}
+button[hidden]{display:none}
+button:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:2px solid AccentColor;outline-offset:2px}
+.fx{padding-top:12px;margin-top:8px;display:grid;gap:8px}
+.fx fieldset{border:0;margin:0 0 4px;padding:0}
+.fx legend{font-size:13px;color:var(--mute);padding:0}
+.fx label{margin-right:12px;white-space:nowrap}
+</style>
+</head>
+<body>
+<main>
+<header><h1 id="h-main" tabindex="-1">编辑选区:审阅候选</h1>
+<p class="note" role="note">模拟原型:不使用麦克风、不连接宿主或模型。“录音”和“识别”只是按钮触发的固定演示数据。</p></header>
+
+<section aria-label="审阅">
+<p class="host" id="stage"></p>
+<p class="host" id="host"></p>
+<div class="cols">
+<section class="box o" aria-labelledby="lo"><div class="lbl" id="lo">原文(捕获的选区,确认前不变)</div><div class="t" id="orig" tabindex="0" role="region" aria-labelledby="lo"></div></section>
+<section class="box c" id="candbox" aria-labelledby="lc"><div class="lbl" id="lc">候选结果</div><div class="t" id="cand" tabindex="0" role="region" aria-labelledby="lc"></div></section>
+</div>
+<section aria-labelledby="li" style="margin-top:12px"><div class="lbl" id="li">识别到的口令</div><div class="instr" id="instr"></div></section>
+<div class="msg" id="msg" style="margin-top:12px"></div>
+<div class="row" id="acts" style="margin-top:12px">
+<button id="rec" type="button"></button>
+<button id="apply" type="button" class="p">应用到原选区</button>
+<button id="retry" type="button">重新生成候选</button>
+<button id="recapture" type="button">重新捕获选区</button>
+<button id="restore" type="button">恢复原文(仅一次)</button>
+<button id="cancel" type="button" class="t">取消 (Esc)</button>
+<button id="reopen" type="button" hidden>重新打开审阅</button>
+</div>
+<div id="live" role="status" aria-live="polite" style="position:absolute;left:-9999px"></div>
+<p class="host" style="margin-top:12px">文本区按 Enter 无效果,不会提交;焦点在按钮上时 Enter 等同点击该按钮。Esc 取消并保留原文。</p>
+</section>
+
+<section class="fx" aria-labelledby="h-fx">
+<h2 id="h-fx" class="host">模拟宿主与夹具(仅供评审,非产品界面;无真实宿主、麦克风、网络、剪贴板)</h2>
+<div class="box"><div class="lbl" id="lh">模拟宿主文本(应用/恢复真实改写这里,[ ]为选区)</div><div class="t" id="hostbox" role="region" aria-labelledby="lh" tabindex="0"></div><p class="host" id="hostmeta"></p></div>
+<fieldset><legend>候选生成结果</legend>
+<label><input type="radio" name="gen" value="ok" checked> 正常</label>
+<label><input type="radio" name="gen" value="empty"> 空结果</label>
+<label><input type="radio" name="gen" value="error"> 失败/超时</label></fieldset>
+<fieldset><legend>选区内容</legend>
+<label><input type="radio" name="len" value="short" checked> 示例句</label>
+<label><input type="radio" name="len" value="long"> 超长文本</label></fieldset>
+<fieldset><legend>点击应用时的宿主</legend>
+<label><input type="radio" name="app" value="ok" checked> 写入成功</label>
+<label><input type="radio" name="app" value="uncertain"> 结果不确定(不写入)</label></fieldset>
+<div class="row"><button id="hEdit" type="button">宿主:用户继续输入</button><button id="hTarget" type="button">宿主:切换目标</button><button id="hBlur" type="button">宿主:切换失焦/聚焦</button><button id="hSel" type="button">宿主:改变选区</button><button id="reset" type="button">重置原型(不清除未决警告)</button></div>
+</section>
+</main>
+<script>
+const ORIG="妈妈说周末一起吃饭，记得带上蛋糕🎂。",INSTR="改得更礼貌，保留时间和蛋糕",CAND="妈妈说周末想一起吃饭，麻烦记得带上蛋糕🎂，谢谢。";
+const LONG=ORIG.repeat(40).replace(/。/g,"。\n");
+const $=i=>document.getElementById(i),fx=n=>document.querySelector("input[name="+n+"]:checked").value;
+const END=["applied","restored","uncertain","cancelled"];
+const NAMES={captured:"已捕获选区",recording:"录音中",preview:"预览候选",applied:"已应用",restored:"已恢复原文",uncertain:"写入结果不确定",cancelled:"已取消"};
+const origText=()=>fx("len")==="long"?LONG:ORIG;
+let S,H,unres=false,closed=false,writes=0;
+const newHost=()=>{const o=origText(),pre="备忘:",post="(后文保留)";H={text:pre+o+post,sel:[pre.length,pre.length+o.length],target:"文档A",focus:true}};
+const reset=()=>{newHost();closed=false;S={ph:"captured",orig:null,cand:"",instr:"",err:"",rec:false,
+ T:{orig:origText(),target:H.target,start:H.sel[0],end:H.sel[1],snapshot:H.text,after:null,done:false,restored:false}};
+ render(unres?"":"已捕获选区。请开始录音说出修改口令。",!unres)};
+function say(m){$("live").textContent="";setTimeout(()=>$("live").textContent=m,30)}
+function gen(){const g=fx("gen"),T=S.T;S.err="";S.cand="";
+ if(g==="ok")S.cand=T.orig===LONG?LONG.replace(/周末一起/g,"周末想一起").replace(/，记得/g,"，麻烦记得").replace(/。/g,"，谢谢。"):CAND;
+ else S.err=g;S.ph="preview"}
+const same=()=>{const T=S.T;return H.target===T.target&&H.focus&&H.text===T.snapshot&&H.sel[0]===T.start&&H.sel[1]===T.end&&H.text.slice(T.start,T.end)===T.orig};
+const stale=()=>["captured","recording","preview"].includes(S.ph)&&!same();
+const canApply=()=>S.ph==="preview"&&!!S.cand.trim()&&!S.err&&!unres&&!S.T.done&&same();
+const canRestore=()=>{const T=S.T;return S.ph==="applied"&&T.done&&!T.restored&&!unres&&H.target===T.target&&H.focus&&H.text===T.after};
+function render(m,speak=true){
+ const p=S.ph,done=END.includes(p),st=stale(),T=S.T;
+ $("stage").textContent=unres?"未决:上次写入结果不确定":(NAMES[p]||"")+(st?" · 已失效":"");
+ $("host").textContent="目标:模拟宿主 · "+H.target+" · 纯文本选区 · 原文长度 "+[...T.orig].length+" 字符";
+ $("orig").textContent=S.orig??T.orig;
+ const hasC=S.cand&&!S.err;
+ $("cand").textContent=hasC?S.cand:p==="preview"?"(无可用候选)":"(尚未生成)";
+ $("candbox").classList.toggle("dim",!hasC);
+ $("instr").textContent=S.instr||"(尚未识别)";
+ const fail=S.err==="empty"?"模型返回空结果,不能应用。原选区未改动。可重新生成候选。":S.err==="error"?"候选生成失败(模拟超时)。原选区未改动。只会重算候选,不会写入宿主。":"";
+ let mm=m;const box=$("msg");box.className="msg";
+ if(p==="uncertain"){box.classList.add("warn");mm="写入结果不确定:无法确认宿主是否已改变。不会自动重试,请检查宿主文本。关闭或重新打开后此警告仍保留,直到你重新捕获选区并审阅。"}
+ else if(unres){box.classList.add("warn");mm="上次写入结果仍未确认,宿主文本可能已被改动。此状态不会因关闭或重置而消失;请检查宿主,然后“重新捕获选区”做新的审阅。"}
+ else if(st){box.classList.add("bad");mm="宿主目标、焦点、选区或文本已改变,原结果可能已不适用。已停止写入,原文保持不变,请恢复焦点或重新捕获选区。"}
+ else if(fail&&p==="preview"){box.classList.add("bad");mm=fail}
+ else if(p==="applied"&&!canRestore()&&m===""){box.classList.add("warn");mm="宿主已变化,不能恢复原文,以免覆盖你的新内容。"}
+ else if(p==="applied"||p==="restored")box.classList.add("ok");
+ else if(p==="cancelled")box.classList.add("warn");
+ box.textContent=mm;if(speak&&mm)say(mm);
+ const rec=$("rec");rec.textContent=S.rec?"停止并识别(模拟)":p==="preview"?"重新录音(模拟)":"开始录音(模拟)";
+ rec.hidden=!["captured","recording","preview"].includes(p)||st||unres;
+ $("apply").disabled=!canApply();$("apply").hidden=done;
+ $("retry").hidden=!(p==="preview"&&S.err&&!st&&!unres);
+ $("recapture").hidden=!(unres||(st&&!done)||p==="cancelled");
+ $("restore").hidden=p!=="applied";$("restore").disabled=!canRestore();
+ $("cancel").textContent=done?"关闭":"取消 (Esc)";
+ $("cancel").hidden=closed;$("reopen").hidden=!(closed&&p==="uncertain");
+ $("acts").querySelectorAll("button:not(#reopen)").forEach(b=>{if(closed)b.hidden=true});
+ const [s,e]=H.sel,x=[...H.text].length>0?H.text:"";
+ $("hostbox").textContent=H.text.slice(0,s)+"["+H.text.slice(s,e)+"]"+H.text.slice(e);
+ $("hostmeta").textContent="目标 "+H.target+" · "+(H.focus?"有焦点":"失焦")+" · 选区 "+s+"-"+e+" · 宿主写入次数 "+writes;
+}
+$("rec").onclick=()=>{
+ if(unres||stale())return;
+ if(!S.rec){S.rec=true;S.ph="recording";render("录音中(模拟)。说完后点击“停止并识别”。")}
+ else{S.rec=false;S.instr=INSTR;S.orig=S.T.orig;gen();render(S.err?"":"已识别口令并生成候选。请对照原文与候选,再决定是否应用。");$("h-main").focus()}
+};
+$("retry").onclick=()=>{if(unres||stale()||S.ph!=="preview")return;gen();render(S.err?"":"已重新生成候选。")};
+$("apply").onclick=()=>{
+ if(!canApply()){render();return}
+ if(fx("app")==="uncertain"){unres=true;S.ph="uncertain";render();$("h-main").focus();return}
+ const T=S.T;H.text=T.snapshot.slice(0,T.start)+S.cand+T.snapshot.slice(T.end);
+ T.after=H.text;T.cs=T.start+S.cand.length;H.sel=[T.cs,T.cs];T.done=true;writes++;
+ S.ph="applied";render("已应用:只替换了原选区。可在宿主未变化时恢复一次原文。");$("h-main").focus()};
+$("restore").onclick=()=>{
+ const T=S.T;
+ if(!canRestore()){T.restored=T.restored||S.ph==="applied";render("无法恢复:目标、焦点或文本已改变,为避免覆盖你的新内容,没有写入。");return}
+ H.text=T.after.slice(0,T.start)+T.orig+T.after.slice(T.cs);H.sel=[T.start,T.end];T.restored=true;writes++;
+ S.ph="restored";render("已恢复原文。恢复只能使用一次。");$("h-main").focus()};
+const cancel=()=>{
+ if(S.ph==="uncertain"){closed=true;render();return}
+ if(END.includes(S.ph)){reset();$("h-main").focus();return}
+ S.ph="cancelled";S.rec=false;S.cand="";S.err="";render("已取消。宿主原文未改动。");$("h-main").focus()};
+$("cancel").onclick=cancel;
+$("reopen").onclick=()=>{closed=false;render();$("h-main").focus()};
+$("recapture").onclick=()=>{unres=false;reset();say("已重新捕获选区,开始新的审阅。")};
+$("hEdit").onclick=()=>{H.text+="新输入";S.rec=false;render()};
+$("hTarget").onclick=()=>{H.target=H.target==="文档A"?"文档B":"文档A";S.rec=false;render()};
+$("hBlur").onclick=()=>{H.focus=!H.focus;render()};
+$("hSel").onclick=()=>{H.sel=[0,2];render()};
+$("reset").onclick=reset;
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape"&&!END.includes(S.ph)){e.preventDefault();cancel()}
+ else if(e.key==="Enter"&&e.target.tagName!=="BUTTON"&&e.target.tagName!=="INPUT")e.preventDefault()});
+document.querySelectorAll("input[name=len]").forEach(i=>i.onchange=reset);
+reset();
+</script>
+</body>
+</html>

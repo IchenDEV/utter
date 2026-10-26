@@ -52,7 +52,7 @@ final class RuntimeContextPromptTests: XCTestCase {
             screenContext: "",
             inputLanguage: .english
         )
-        let selection = TextProcessor().selectionEditPrompt(
+        let selection = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "ship tomorrow",
             intent: .formal,
             inputLanguage: .english

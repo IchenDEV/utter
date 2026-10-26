@@ -62,11 +62,18 @@ final class NativeOutputBackend {
                 classifiesWebContentEditors: DeliveryKillSwitch.webEditorPasteEnabled(defaults)) else {
             return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.target_changed"))
         }
+        let originalSelection: String?
+        if case .replaceSelection = request.command { originalSelection = target.selectedText }
+        else { originalSelection = nil }
         var result = await TextDeliveryTransaction.deliver(text, target: destination, pasteboard: pasteboard,
             allowsClipboardPaste: request.allowsClipboardPaste, isSecureInput: { NativeDeliveryKeys.isSecureInput },
             prepareKeys: NativeDeliveryKeys.prepare, canCommit: canCommit, mark: markCommitted)
         if result.disposition == .accepted, result.confirmation == .targetValue {
             result.anchor = destination.insertionAnchor(text, isCurrent: isCurrent)
+            if let originalSelection, !originalSelection.isEmpty, let anchor = result.anchor {
+                result.selectionEdit = SelectionEditReceipt(operationID: request.id,
+                    originalSelection: originalSelection, replacement: text, anchor: anchor)
+            }
         }
         log.info(result.logSummary)
         return result

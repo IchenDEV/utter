@@ -53,7 +53,7 @@ struct OverlayActionButton: View {
     }
 }
 
-private struct OverlayActionButtonStyle: ButtonStyle {
+struct OverlayActionButtonStyle: ButtonStyle {
     let kind: OverlayActionKind
     let isHovering: Bool
 

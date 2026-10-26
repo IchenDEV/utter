@@ -6,6 +6,51 @@ import UtterContracts
 final class DeliveryReceiptTests: XCTestCase {
     private func request() -> DeliveryRequest { DeliveryRequest(id: UUID(), command: .clipboard("fixture")) }
 
+    func testUnacknowledgedKeyboardInsertionIsConsumedWithoutRetry() async throws {
+        var insertions = 0
+        let service = ScopedOutputService(isCurrent: { true }) { _, _, mark in
+            if mark(.keyboardInsertion) { insertions += 1 }
+            return DeliveryCompletion(disposition: .accepted)
+        }
+        let request = DeliveryRequest(id: UUID(), command: .insert("候选 👩🏽‍💻"))
+        let delivery = try service.prepare(request, isSessionCurrent: { true })
+        let receipt = await delivery.commit()
+        XCTAssertEqual(receipt.effects, [.keyboardInsertion])
+        XCTAssertEqual(receipt.status, .uncertain)
+        XCTAssertFalse(receipt.isConfirmedInsertion)
+        await delivery.close()
+        let replay = try service.prepare(request, isSessionCurrent: { true })
+        let replayed = await replay.commit()
+        XCTAssertEqual(replayed.status, .uncertain)
+        XCTAssertEqual(insertions, 1)
+        await service.close()
+    }
+
+    func testReplayedSelectionReceiptRetainsStatusWithoutRestorationAuthorityOrOriginalText() async throws {
+        let anchor = SelectionReceiptAnchor()
+        var commits = 0
+        let service = ScopedOutputService(isCurrent: { true }) { request, _, mark in
+            commits += 1
+            XCTAssertTrue(mark(.accessibility))
+            return DeliveryCompletion(disposition: .accepted, anchor: anchor, confirmation: .targetValue,
+                selectionEdit: SelectionEditReceipt(operationID: request.id, originalSelection: "private original 👩🏽‍💻",
+                    replacement: anchor.text, anchor: anchor))
+        }
+        let request = DeliveryRequest(id: UUID(), command: .replaceSelection("candidate"), target: anchor.target)
+        let first = try service.prepare(request, isSessionCurrent: { true })
+        let original = await first.commit()
+        XCTAssertEqual(original.selectionEdit?.originalSelection, "private original 👩🏽‍💻")
+        XCTAssertTrue(original.anchor === anchor)
+        await first.close()
+        let replay = try service.prepare(request, isSessionCurrent: { true })
+        let receipt = await replay.commit()
+        XCTAssertEqual(receipt.status, .inserted)
+        XCTAssertNil(receipt.anchor)
+        XCTAssertNil(receipt.selectionEdit)
+        XCTAssertEqual(commits, 1)
+        await service.close()
+    }
+
     func testCancelledPreparationNeverCallsTheDriverOrCommits() async throws {
         var calls = 0
         let service = ScopedOutputService(isCurrent: { true }) { _, _, mark in
@@ -113,6 +158,25 @@ final class DeliveryReceiptTests: XCTestCase {
         XCTAssertEqual(effects, 0)
         await service.close()
     }
+}
+
+@MainActor
+private final class SelectionReceiptAnchor: OutputAnchor {
+    let target: any OutputTargetLease = SelectionReceiptTarget()
+    let range = NSRange(location: 0, length: 9)
+    let text = "candidate"
+    let expiresAt = Date().addingTimeInterval(15)
+    let isCurrent = true
+    func correctionSeed(context: InputContext) -> CorrectionCaptureSeed? { nil }
+}
+
+@MainActor
+private final class SelectionReceiptTarget: OutputTargetLease {
+    let id = UUID()
+    let processIdentifier: Int32 = 1
+    let context = InputContext(outputMode: .processed, inputLanguage: .english, source: .menuBar)
+    let isValid = true
+    let isCurrent = true
 }
 
 @MainActor

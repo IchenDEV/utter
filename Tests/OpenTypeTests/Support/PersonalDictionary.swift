@@ -17,7 +17,7 @@ import UtterData
 import UtterPresentationContracts
 
 extension PersonalDictionary {
-    static let shared = PersonalDictionary(directoryURL: DataLocations.applicationSupport)
+    static let shared = PersonalDictionary(directoryURL: TestFixtureRoot.root.appendingPathComponent("Dictionary", isDirectory: true))
 
     convenience init(directoryURL: URL? = nil) {
         self.init(service: DictionaryStore(directoryURL: directoryURL), lexicons: IndustryLexiconCatalog.shared)

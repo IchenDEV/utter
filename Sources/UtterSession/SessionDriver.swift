@@ -1,30 +1,36 @@
 import Foundation
 import UtterContracts
-
 @MainActor
 package final class SessionDriver: SessionExecutionService {
-    private struct Active {
+    struct Active {
         var intent: SessionIntent
         let job: any SessionJob
         let control: SessionControl
         let task: Task<Void, Never>
         let timing: SessionTiming
     }
+    private struct Disclosure {
+        let intent: SessionIntent
+        let activate: Bool
+        let rejection: SelectionEditRemoteDisclosureRequired
+        let timeout: Task<Void, Never>
+    }
     private let workflows: any SessionWorkflowFactory
     private let history: any HistoryService
     private let notifications: StateNotifications
     private let isReady: () -> Bool
     private let now: () -> Duration
-    private var active: Active?
-    private var closed = false
+    private(set) var active: Active?
+    private var disclosure: Disclosure?
+    private(set) var closed = false
     private var reserving = false
     private var settling = false
-    private var terminalFailures: [UUID: Error] = [:]
-    private var terminalSnapshots: [UUID: SessionExecutionSnapshot] = [:]
+    private(set) var terminalFailures: [UUID: Error] = [:]
+    private(set) var terminalSnapshots: [UUID: SessionExecutionSnapshot] = [:]
     private var admittedIDs: Set<UUID> = []
-    private var progressObservers: [UUID: (SessionIntent, SessionExecutionSnapshot) -> Void] = [:]
-    private var settlementObservers: [UUID: (SessionIntent, Result<SessionCompletion, Error>) -> Void] = [:]
-    private var observers: [UUID: (SessionExecutionSnapshot) -> Void] = [:]
+    var progressObservers: [UUID: (SessionIntent, SessionExecutionSnapshot) -> Void] = [:]
+    var settlementObservers: [UUID: (SessionIntent, Result<SessionCompletion, Error>) -> Void] = [:]
+    var observers: [UUID: (SessionExecutionSnapshot) -> Void] = [:]
     package private(set) var snapshot = SessionExecutionSnapshot()
 
     package init(workflows: any SessionWorkflowFactory, history: any HistoryService, notifications: StateNotifications,
@@ -37,16 +43,14 @@ package final class SessionDriver: SessionExecutionService {
     }
 
     package func reserve(_ intent: SessionIntent) throws { try admit(intent, activate: false) }
-
     package func start(_ intent: SessionIntent) throws { try admit(intent, activate: true) }
-
     package func promoteToTranslation(_ id: UUID, reason: HotkeyPromotion) -> Bool {
         guard var current = active, current.intent.id == id, current.control.isCurrent, !current.control.isStopped,
               current.intent.clientID == nil,
               snapshot.phase == .recording || (reason == .chordClassification && snapshot.phase == .preparing),
               let mode = current.job.promoteToTranslation() else { return false }
         current.intent = SessionIntent(id: id, clientID: nil, input: current.intent.input, request: current.intent.request,
-            mode: mode, operation: current.intent.operation)
+            mode: mode, operation: current.intent.operation, remoteSelectionConsent: current.intent.remoteSelectionConsent)
         active = current
         update(id, phase: snapshot.phase ?? .preparing, transcript: snapshot.transcript)
         return true
@@ -60,58 +64,37 @@ package final class SessionDriver: SessionExecutionService {
         if active.intent.input == .unselected {
             try active.job.bind(input: source)
             active.intent = SessionIntent(id: id, clientID: active.intent.clientID, input: source,
-                request: active.intent.request, mode: active.intent.mode, operation: active.intent.operation)
+                request: active.intent.request, mode: active.intent.mode, operation: active.intent.operation,
+                remoteSelectionConsent: active.intent.remoteSelectionConsent)
             self.active = active
         } else if source != active.intent.input {
             throw IntegrationError.invalidSessionState
         }
         workflows.willActivate(active.intent)
         active.control.activate()
-        publish(SessionExecutionSnapshot(id: id, phase: .preparing, isBusy: true))
+        publish(SessionExecutionSnapshot(id: id, phase: .preparing, isBusy: true,
+            isSelectionEditing: active.job.containsSelectedText))
     }
-
-    package func waitForRecording(_ id: UUID) async throws {
-        _ = try await waitForPhase(id, recording: true)
-    }
-
-    package func waitForCompletion(_ id: UUID) async throws -> SessionExecutionSnapshot {
-        try await waitForPhase(id, recording: false)
-    }
-
-    private func waitForPhase(_ id: UUID, recording: Bool) async throws -> SessionExecutionSnapshot {
-        guard let initial = terminalSnapshots[id] ?? (snapshot.id == id ? snapshot : nil) else {
-            throw IntegrationError.invalidSessionState
-        }
-        let (stream, continuation) = AsyncStream<SessionExecutionSnapshot>.makeStream(bufferingPolicy: .bufferingNewest(1))
-        let observation = observe { value in
-            if value.id == id { continuation.yield(value) }
-        }
-        defer { removeObserver(observation); continuation.finish() }
-        continuation.yield(initial)
-        for await value in stream {
-            if Task.isCancelled { break }
-            switch value.phase {
-            case .completed: return value
-            case .recording, .transcribing, .processing, .delivering: if recording { return value }
-            case .failed: throw terminalFailures[id] ?? IntegrationError.operationFailed
-            case .cancelled: throw CancellationError()
-            default: continue
-            }
-        }
-        if active?.intent.id == id {
-            cancel()
-            await stop()
-        }
-        throw CancellationError()
-    }
-
-    private func admit(_ intent: SessionIntent, activate: Bool) throws {
+    private func admit(_ intent: SessionIntent, activate: Bool, allowsDisclosure: Bool = true) throws {
         guard !closed, isReady() else { throw IntegrationError.developerInterfaceDisabled }
-        guard active == nil, !reserving, !settling else { throw IntegrationError.busy }
+        guard active == nil, disclosure == nil, !reserving, !settling else { throw IntegrationError.busy }
         guard !admittedIDs.contains(intent.id) else { throw IntegrationError.invalidSessionState }
         reserving = true
         defer { reserving = false }
-        let job = try workflows.make(intent)
+        let job: any SessionJob
+        do { job = try workflows.make(intent) }
+        catch let rejection as SelectionEditRemoteDisclosureRequired {
+            guard allowsDisclosure else { throw DeliveryError.invalidTarget }
+            let timeout = Task { [weak self] in
+                do { try await Task.sleep(for: .seconds(max(0, rejection.consent.expiresAt.timeIntervalSinceNow))) }
+                catch { return }
+                self?.declineRemoteDisclosure(intent.id)
+            }
+            disclosure = Disclosure(intent: intent, activate: activate, rejection: rejection, timeout: timeout)
+            publish(SessionExecutionSnapshot(id: intent.id, phase: .created, isBusy: true, mode: intent.mode,
+                remoteDisclosure: rejection.consent))
+            return
+        }
         if activate, intent.input == .unselected { try job.bind(input: .local) }
         let timing = SessionTiming(now: now)
         let control = SessionControl(isCurrent: { [weak self] in
@@ -132,15 +115,17 @@ package final class SessionDriver: SessionExecutionService {
         }
         admittedIDs.insert(intent.id)
         let frozen = SessionIntent(id: intent.id, clientID: intent.clientID, input: intent.input, request: intent.request,
-            mode: intent.mode ?? job.presentationMode, operation: intent.operation)
+            mode: intent.mode ?? job.presentationMode, operation: intent.operation,
+            remoteSelectionConsent: intent.remoteSelectionConsent)
         active = Active(intent: frozen, job: job, control: control, task: task, timing: timing)
         job.attach(control: control)
         if activate { workflows.willActivate(intent); control.activate() }
-        publish(SessionExecutionSnapshot(id: intent.id, phase: activate ? .preparing : .created, isBusy: true, mode: frozen.mode))
+        publish(SessionExecutionSnapshot(id: intent.id, phase: activate ? .preparing : .created, isBusy: true, mode: frozen.mode, isSelectionEditing: job.containsSelectedText))
     }
 
     @discardableResult
     package func requestStop(_ id: UUID, at timestamp: Duration? = nil) -> Bool {
+        if disclosure?.intent.id == id { declineRemoteDisclosure(id); return true }
         guard let active, active.intent.id == id, active.control.isCurrent, !active.control.isStopped,
               [.preparing, .recording].contains(snapshot.phase) else { return false }
         active.timing.stop(at: timestamp)
@@ -148,7 +133,15 @@ package final class SessionDriver: SessionExecutionService {
         return true
     }
 
+    @discardableResult
+    package func applySelectionEdit(sessionID: UUID, proposalID: UUID) -> Bool {
+        guard let active, active.intent.id == sessionID, snapshot.phase == .processing,
+              snapshot.selectionEditProposal?.id == proposalID else { return false }
+        return active.control.applySelectionEdit(proposalID)
+    }
+
     package func stop() async {
+        if let id = disclosure?.intent.id { declineRemoteDisclosure(id); return }
         guard let active else { return }
         if snapshot.phase == .created { cancel() }
         else { requestStop(active.intent.id) }
@@ -158,16 +151,19 @@ package final class SessionDriver: SessionExecutionService {
     }
 
     package func stop(_ id: UUID) async {
+        if disclosure?.intent.id == id { declineRemoteDisclosure(id); return }
         guard active?.intent.id == id else { return }
         await stop()
     }
 
     package func cancel(_ id: UUID) {
+        if disclosure?.intent.id == id { declineRemoteDisclosure(id); return }
         guard active?.intent.id == id else { return }
         cancel()
     }
 
     package func cancel() {
+        if let id = disclosure?.intent.id { declineRemoteDisclosure(id) }
         guard let active else { return }
         active.control.revoke()
         active.job.revoke()
@@ -180,46 +176,59 @@ package final class SessionDriver: SessionExecutionService {
         cancel()
     }
     package func close() async {
+        let timeout = disclosure?.timeout
         revoke()
+        await timeout?.value
         if let active { await active.task.value }
     }
 
-    package func observe(_ callback: @escaping (SessionExecutionSnapshot) -> Void) -> UUID {
-        let id = UUID()
-        if !closed { observers[id] = callback }
-        return id
+    package func authorizeRemoteDisclosure(_ intentID: UUID) throws {
+        guard let pending = disclosure, pending.intent.id == intentID else { throw IntegrationError.invalidSessionState }
+        guard !closed, isReady(), Date() < pending.rejection.consent.expiresAt,
+              pending.rejection.isTargetCurrent() else {
+            declineRemoteDisclosure(intentID)
+            throw DeliveryError.invalidTarget
+        }
+        pending.timeout.cancel(); disclosure = nil
+        let original = pending.intent
+        let authorized = SessionIntent(id: original.id, clientID: original.clientID, input: original.input,
+            request: original.request, mode: original.mode, operation: original.operation,
+            remoteSelectionConsent: pending.rejection.consent)
+        do { try admit(authorized, activate: pending.activate, allowsDisclosure: false) }
+        catch {
+            admittedIDs.insert(intentID); terminalFailures[intentID] = error
+            let value = SessionExecutionSnapshot(id: intentID, phase: .failed,
+                error: SessionFailurePresentation(error: error).message, mode: original.mode)
+            terminalSnapshots[intentID] = value; publish(value)
+            throw error
+        }
     }
-    package func removeObserver(_ id: UUID) { observers.removeValue(forKey: id) }
 
-    package func observeProgress(_ callback: @escaping (SessionIntent, SessionExecutionSnapshot) -> Void) -> UUID {
-        let id = UUID()
-        if !closed { progressObservers[id] = callback }
-        return id
+    package func declineRemoteDisclosure(_ intentID: UUID) {
+        guard let pending = disclosure, pending.intent.id == intentID else { return }
+        pending.timeout.cancel(); disclosure = nil; admittedIDs.insert(intentID)
+        let value = SessionExecutionSnapshot(id: intentID, phase: .cancelled, mode: pending.intent.mode)
+        terminalSnapshots[intentID] = value; publish(value)
     }
-    package func removeProgressObserver(_ id: UUID) { progressObservers.removeValue(forKey: id) }
-
-    package func observeSettlement(_ callback: @escaping (SessionIntent, Result<SessionCompletion, Error>) -> Void) -> UUID {
-        let id = UUID()
-        if !closed { settlementObservers[id] = callback }
-        return id
-    }
-    package func removeSettlementObserver(_ id: UUID) { settlementObservers.removeValue(forKey: id) }
 
     private func update(_ id: UUID, phase: SessionExecutionPhase, transcript: String) {
         guard let active, active.intent.id == id, active.control.isCurrent else { return }
         guard [.recording, .transcribing, .processing, .delivering].contains(phase) else { return }
         publish(SessionExecutionSnapshot(id: id, phase: phase, transcript: transcript, isBusy: true,
-            audioLevel: phase == .recording ? snapshot.audioLevel : 0, mode: active.intent.mode))
+            audioLevel: phase == .recording ? snapshot.audioLevel : 0, mode: active.intent.mode,
+            selectionEditProposal: active.control.selectionEditProposal, isSelectionEditing: active.job.containsSelectedText))
     }
 
     private func updateLevel(_ id: UUID, level: Float) {
         guard active?.intent.id == id, snapshot.phase == .recording else { return }
         publish(SessionExecutionSnapshot(id: id, phase: .recording, transcript: snapshot.transcript,
-            isBusy: true, audioLevel: level, mode: active?.intent.mode))
+            isBusy: true, audioLevel: level, mode: active?.intent.mode,
+            isSelectionEditing: active?.job.containsSelectedText == true))
     }
 
     private func finish(_ original: SessionIntent, result: Result<SessionCompletion, Error>) {
         guard let intent = active?.intent, intent.id == original.id else { return }
+        let privateText = hasTemporarySelectionContent(intent)
         let performance = active?.timing.finish(terminal(for: result))
         settling = true
         notifications.settle {
@@ -227,11 +236,11 @@ package final class SessionDriver: SessionExecutionService {
             switch result {
             case .success(let completion) where completion.accepted:
                 snapshot = SessionExecutionSnapshot(id: intent.id, phase: .completed,
-                    transcript: completion.transcript, text: completion.text, deliveryStatus: completion.acceptance.deliveryStatus,
+                    transcript: privateText ? "" : completion.transcript, text: privateText ? "" : completion.text, deliveryStatus: completion.acceptance.deliveryStatus,
                     performance: performance, mode: intent.mode, generationOutcome: completion.generationOutcome)
             case .success(let completion):
                 snapshot = SessionExecutionSnapshot(id: intent.id, phase: .failed,
-                    transcript: completion.transcript, text: completion.text,
+                    transcript: privateText ? "" : completion.transcript, text: privateText ? "" : completion.text,
                     error: completion.acceptance.deliveryReason,
                     deliveryStatus: completion.acceptance.deliveryStatus, performance: performance, mode: intent.mode,
                     generationOutcome: completion.generationOutcome)
@@ -239,12 +248,12 @@ package final class SessionDriver: SessionExecutionService {
                 terminalFailures[intent.id] = error
                 let failure = SessionFailurePresentation(error: error)
                 snapshot = SessionExecutionSnapshot(id: intent.id,
-                    phase: error is CancellationError ? .cancelled : .failed, transcript: snapshot.transcript, error: failure.message,
+                    phase: error is CancellationError ? .cancelled : .failed, transcript: privateText ? "" : snapshot.transcript, error: failure.message,
                     performance: performance, mode: intent.mode, recoveryAction: failure.recovery)
             }
             terminalSnapshots[intent.id] = snapshot
             for (id, callback) in Array(settlementObservers) where settlementObservers[id] != nil { callback(intent, result) }
-            if case .success(let completion) = result {
+            if !privateText, case .success(let completion) = result {
                 if completion.acceptance.deliveryStatus == .inserted, let replacement = completion.historyReplacement {
                     history.replaceRecord(recordID: replacement.recordID, processedText: completion.text,
                         context: replacement.context, formatKind: replacement.formatKind)
@@ -271,19 +280,6 @@ package final class SessionDriver: SessionExecutionService {
         }
     }
 
-    private func terminal(for result: Result<SessionCompletion, Error>) -> SessionPerformance.Terminal {
-        switch result {
-        case .failure(let error): return error is CancellationError ? .cancelled : .failed
-        case .success(let completion):
-            switch completion.acceptance.deliveryStatus {
-            case .inserted: return .inserted
-            case .copied: return .copied
-            case .uncertain: return .uncertain
-            case .notDelivered: return .notDelivered
-            case .none: return completion.accepted ? .returnedText : .failed
-            }
-        }
-    }
     private func enqueueSnapshot() {
         let value = snapshot
         for id in observers.keys.sorted(by: { $0.uuidString < $1.uuidString }) {

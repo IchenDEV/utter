@@ -95,20 +95,20 @@ package enum ConfuciusModelDownloader {
                             size: size,
                             session: sessions[slot]
                         )
-                        return (slot, try await writer.write(data, at: offset))
+                        try await writer.write(data, at: offset)
+                        return (slot, Int64(data.count))
                     }
                 }
                 for slot in 0..<min(maxConcurrent, partCount) {
                     addPart(nextPart, slot: slot)
                     nextPart += 1
                 }
-                while let (slot, completedBytes) = try await group.next() {
-                    onProgress(completedBytes)
+                try await consumePartResults(next: { try await group.next() }, onSlotFree: { slot in
                     if nextPart < partCount {
                         addPart(nextPart, slot: slot)
                         nextPart += 1
                     }
-                }
+                }, onProgress: onProgress)
             }
         } catch {
             try? await writer.close()
@@ -117,6 +117,16 @@ package enum ConfuciusModelDownloader {
         try await writer.close()
         guard try fileSHA256(destination) == sha256 else {
             throw Failure.checksumMismatch
+        }
+    }
+
+    static func consumePartResults(next: () async throws -> (Int, Int64)?,
+                                   onSlotFree: (Int) -> Void, onProgress: (Int64) -> Void) async throws {
+        var completedBytes: Int64 = 0
+        while let (slot, partBytes) = try await next() {
+            completedBytes += partBytes
+            onProgress(completedBytes)
+            onSlotFree(slot)
         }
     }
 
@@ -165,7 +175,6 @@ package enum ConfuciusModelDownloader {
 
 private actor WeightWriter {
     private let file: FileHandle
-    private var completedBytes: Int64 = 0
 
     package init(destination: URL, size: Int64) throws {
         FileManager.default.createFile(atPath: destination.path, contents: nil)
@@ -173,11 +182,9 @@ private actor WeightWriter {
         try file.truncate(atOffset: UInt64(size))
     }
 
-    package func write(_ data: Data, at offset: Int64) throws -> Int64 {
+    package func write(_ data: Data, at offset: Int64) throws {
         try file.seek(toOffset: UInt64(offset))
         try file.write(contentsOf: data)
-        completedBytes += Int64(data.count)
-        return completedBytes
     }
 
     package func close() throws {
