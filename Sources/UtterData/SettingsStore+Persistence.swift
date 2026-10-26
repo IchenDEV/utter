@@ -54,6 +54,7 @@ extension SettingsStore {
         defaults.set(values.preloadSpeechModelOnLaunch, forKey: Key.preloadSpeechModelOnLaunch.rawValue)
         defaults.set(values.preloadFormattingModelOnLaunch, forKey: Key.preloadFormattingModelOnLaunch.rawValue)
         defaults.set(values.modelStoragePath, forKey: Key.modelStoragePath.rawValue)
+        defaults.set(values.modelDownloadSource.rawValue, forKey: Key.modelDownloadSource.rawValue)
         defaults.set(values.localWhisperModelPaths, forKey: Key.localWhisperModelPaths.rawValue)
         defaults.set(values.localLLMModelPaths, forKey: Key.localLLMModelPaths.rawValue)
         defaults.set(values.developerInterfaceEnabled, forKey: Key.developerInterfaceEnabled.rawValue)

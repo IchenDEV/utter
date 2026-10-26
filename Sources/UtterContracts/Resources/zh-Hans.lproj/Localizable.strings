@@ -620,7 +620,7 @@
 "plugins.restart_required" = "已保存，请重启 Utter 应用插件组合。";
 "plugins.saved" = "已保存，新会话将使用更新后的配置。";
 "plugins.reset_saved" = "已保存默认配置并备份原文件，请重启 Utter 生效。";
-"plugins.recovery" = "插件组合无法启动，请在设置的插件组合页修正配置或恢复默认。";
+"plugins.recovery" = "插件组合无法启动，请在设置的集成页修正配置或恢复默认。";
 
 "common.save" = "保存";
 
@@ -632,3 +632,11 @@
 "benchmark.short" = "短句";
 "benchmark.medium" = "段落";
 "benchmark.long" = "长文本";
+
+"model.source.section" = "模型下载";
+"model.source.title" = "下载源";
+"model.source.huggingface" = "Hugging Face（官网）";
+"model.source.hf_mirror" = "HF-Mirror（国内镜像）";
+"model.source.help" = "更改仅影响之后开始的下载，进行中的下载继续使用原来源。";
+"model.source.mirror_help" = "公开模型将从 hf-mirror.com 下载，不向镜像发送已保存的 Hugging Face 凭证。";
+"model.source.confirm" = "下载源：%@";

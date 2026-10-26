@@ -39,7 +39,8 @@ final class RemoteKeyRemapRenderTests: XCTestCase {
         let control = RenderRemoteControl(RemoteMicDiagnostics(keyRemap: state))
         let platform = PlatformProjection(remote: control, login: nil, devices: nil, screen: nil,
                                           diagnostics: RemotePluginDiagnostics())
-        let view = RemoteMicSettingsView()
+        let view = Form { RemoteMicSettingsView(platform: platform) }
+            .formStyle(.grouped)
             .environmentObject(settings)
             .environmentObject(platform)
             .frame(width: 620, height: 360)

@@ -19,6 +19,23 @@ import UtterData
 import UtterPresentationContracts
 
 final class SettingsProjectionTests: XCTestCase {
+    func testModelDownloadSourceSelectionSharesOneAuthorityAcrossViews() {
+        let name = "ModelDownloadSourceProjection-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defer { defaults.removePersistentDomain(forName: name) }
+        let service = SettingsStore(defaults: defaults)
+        let first = AppSettings(service: service)
+        let second = AppSettings(service: service)
+        var observed: [ModelDownloadSource] = []
+        let observation = second.publisher(for: \.modelDownloadSource).sink { observed.append($0) }
+        first.modelDownloadSource = .hfMirror
+        XCTAssertEqual(second.modelDownloadSource, .hfMirror)
+        second.modelDownloadSource = .huggingFace
+        XCTAssertEqual(first.modelDownloadSource, .huggingFace)
+        XCTAssertEqual(observed, [.huggingFace, .hfMirror, .huggingFace])
+        withExtendedLifetime(observation) {}
+    }
+
     func testProjectionWritesThroughToTheInjectedAuthority() {
         let name = "SettingsProjection-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: name)!

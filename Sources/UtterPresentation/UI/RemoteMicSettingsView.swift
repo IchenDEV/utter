@@ -39,34 +39,31 @@ package enum RemoteMicSettingsText {
 
 struct RemoteMicSettingsView: View {
     @EnvironmentObject private var settings: AppSettings
-    @EnvironmentObject private var platform: PlatformProjection
+    @ObservedObject var platform: PlatformProjection
 
     var body: some View {
-        Form {
-            Section {
-                Toggle(isOn: $settings.remoteMicEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L("settings.remote_mic"))
-                        Text(L("settings.remote_mic_help"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+        Section {
+            Toggle(isOn: $settings.remoteMicEnabled) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L("settings.remote_mic"))
+                    Text(L("settings.remote_mic_help"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-                .disabled(!platform.hasRemoteProvider)
-            } footer: {
-                Text(L("remote_mic.page.usage"))
             }
-
-            Section { RemoteKeyRemapRow() }
-
-            if settings.remoteMicEnabled {
-                connectionSection
-                audioSection
-            }
+            .disabled(!platform.hasRemoteProvider)
+        } header: {
+            Text(L("tab.remote"))
+        } footer: {
+            Text(L("remote_mic.page.usage"))
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .settingsPageSurface()
+
+        Section { RemoteKeyRemapRow() }
+
+        if settings.remoteMicEnabled {
+            connectionSection
+            audioSection
+        }
     }
 
     private var connectionSection: some View {

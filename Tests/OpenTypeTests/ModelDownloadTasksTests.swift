@@ -230,7 +230,7 @@ final class ModelDownloadTasksTests: XCTestCase {
         var oldReturned = false
         var replacementStarted = false
         var releaseOld: (() -> Void)?
-        ModelCatalog.whisperDownloadOverride = { variant, _, _ in
+        ModelCatalog.whisperDownloadOverride = { variant, _, _, _ in
             guard variant == modelID else { return false }
             dependencyCalls += 1
             if dependencyCalls == 1 {

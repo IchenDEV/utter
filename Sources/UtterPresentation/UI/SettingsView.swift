@@ -26,16 +26,32 @@ struct SettingsView: View {
     let context: PresentationContext
 
     var body: some View {
-        TabView(selection: $state.selectedSettingsID) {
-            ForEach(sections, id: \.id) { section in
-                section.view(context)
-                    .tabItem { Label(L(section.label), systemImage: section.symbol) }
-                    .tag(section.id)
+        let tabs = SettingsTabLayout.tabs(from: sections)
+        TabView(selection: selection(in: tabs)) {
+            ForEach(tabs, id: \.id) { tab in
+                content(of: tab)
+                    .tabItem { Label(L(tab.label), systemImage: tab.symbol) }
+                    .tag(tab.id)
             }
         }
-        .tabViewStyle(.grouped)
         .frame(width: SettingsWindowLayout.width, height: SettingsWindowLayout.height)
         .background(SettingsSurface.page)
         .id(settings.uiLanguage)
+    }
+
+    @ViewBuilder
+    private func content(of tab: SettingsTab) -> some View {
+        if tab.isGroup {
+            SettingsGroupPage(members: tab.members, context: context)
+        } else if let page = tab.members.first {
+            page.view(context)
+        }
+    }
+
+    private func selection(in tabs: [SettingsTab]) -> Binding<String> {
+        Binding(
+            get: { SettingsTabLayout.selection(state.selectedSettingsID, in: tabs) ?? state.selectedSettingsID },
+            set: { state.selectedSettingsID = $0 }
+        )
     }
 }

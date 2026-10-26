@@ -36,8 +36,8 @@ extension NativeDesktopHost {
         closePopover()
         if let settingsWindow { activate(settingsWindow); return }
         let sections = catalog.contributions(for: .settings)
-        if !sections.contains(where: { $0.id == state.selectedSettingsID }), let first = sections.first {
-            state.selectedSettingsID = first.id
+        if let selection = SettingsTabLayout.selection(state.selectedSettingsID, in: SettingsTabLayout.tabs(from: sections)) {
+            state.selectedSettingsID = selection
         }
         let window = NSWindow(contentRect: NSRect(origin: .zero, size: SettingsWindowLayout.contentSize),
             styleMask: SettingsWindowLayout.styleMask, backing: .buffered, defer: false)
