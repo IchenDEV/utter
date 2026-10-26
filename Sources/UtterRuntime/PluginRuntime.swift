@@ -6,6 +6,11 @@ package final class PluginRuntime {
 
     package private(set) var state: State = .stopped
     package private(set) var generation: UUID?
+    package private(set) var disposingPluginID: String?
+    /// Plugins whose disposal has not finished, in the order they are disposed.
+    package var pendingDisposalPluginIDs: [String] {
+        scopes.reversed().filter(\.hasPendingDisposal).map(\.pluginID)
+    }
     private let catalog: PluginCatalog
     private var store = ServiceStore()
     private var scopes: [PluginScope] = []
@@ -100,7 +105,9 @@ package final class PluginRuntime {
 
     private func disposeScopes() async -> [PluginDisposalFailure] {
         var failures: [PluginDisposalFailure] = []
+        defer { disposingPluginID = nil }
         for scope in scopes.reversed() {
+            disposingPluginID = scope.pluginID
             failures.append(contentsOf: await scope.dispose())
             if !scope.hasPendingDisposal {
                 store.remove(owner: scope.pluginID)
