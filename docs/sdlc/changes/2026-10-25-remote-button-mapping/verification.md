@@ -237,7 +237,7 @@ Not done: no screenshots of the system dialog (no real request was made here), a
 ## Open items before this can ship
 
 1. Batch 9 is waived (above). If you later want any of its items measured, the list under "This is not verification" is the checklist.
-2. **This `verification.md` is approved (2026-10-26).** That approves the verification stage as recorded here, including the Batch 9 waiver. It does not approve the PR or a release. Still to come: PR approval, then release approval, which should say it accepts the waiver.
+2. **This `verification.md` is approved (2026-10-26)** (including the Batch 9 waiver), and **PR approval was given by the user on 2026-10-26** ("批准 PR"). That authorizes opening the PR stacked on #130. It does not authorize merging it before #130 or cutting a release. Still to come: release approval, which should say it accepts the waiver.
 3. **PR #130** is still unmerged and carries its own open verification record; this change is stacked on it and is not released before it.
 4. **Licensing owner** decision on the clean-room disclosure in the intent.
 5. Decisions approved by the user on 2026-10-26: spec erratum 2 (the button mapping depends on the voice-key remap setting; eleven keys, not twelve; `NSInputMonitoringUsageDescription`; the Chinese wording) and spec erratum 3 (a held key resolves at release when W ends; secure input also drops the native replay of an owned key; no "waiting for presses" state; synthetic modifiers pass through Utter's hotkey tap, not mitigated).
