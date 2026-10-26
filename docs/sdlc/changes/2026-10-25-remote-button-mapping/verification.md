@@ -1,11 +1,11 @@
 # Verification: Configurable remote button mapping in Settings → Remote
 
-**Status:** draft
+**Status:** pending approval
 **Approved-by:** —
 **Approved-date:** —
 **Upstream:** [plan.md](plan.md)
 
-Batch 0 (measurements) ran on 2026-10-25 and is **partly complete**. Batches 1 to 8 are implemented (sections below); Batch 9, the independent verification, has not started. The implementer ran every batch, so none of this is independent verification.
+Batch 0 (measurements) ran on 2026-10-25 and is **partly complete**. Batches 1 to 8 are implemented (sections below). Batch 9, the independent verification, was **waived by the user** (see "Waiver" below); it was not run. The implementer ran every batch, so none of this is independent verification.
 
 ## Batch 0 results
 
@@ -224,11 +224,20 @@ Not done: no screenshots of the system dialog (no real request was made here), a
 - Release-style smoke build: `bash scripts/build-app.sh --app-only --sign=-` exited 0, including the Sparkle checks and the release artifact verification, and the built `Info.plist` carries `NSInputMonitoringUsageDescription`. **This was ad-hoc signed, only to prove the app compiles and bundles with `xcodebuild`.** Ad-hoc builds lose permissions on every rebuild, so it says nothing about Input Monitoring behavior. It was not launched: a second Utter would write to the same remote as the copy that is running.
 - The module-level count for this change: `UtterRemoteMicTests` 213 tests (Batches 1 to 5), 13 plugin and projection tests (Batch 6), 12 page tests (Batch 7), plus the settings and profile tests.
 
+## Waiver: Batch 9 independent verification (2026-10-26)
+
+**Waived by:** User, explicit chat decision on 2026-10-26: "waive independent verification, record it as a waiver".
+
+**What is waived:** all of Batch 9 as the plan defines it: a named independent verifier, a real RC003, and the matrix on a stable-signed release-style build (each key and trigger delivering its action exactly once with the native key never reaching the frontmost app; rapid presses, sleep and wake, remote off and on, reconnect, quit, forced termination then relaunch, feature off, remote removed; permission denied then granted, and revoked while running; the voice key with the feature on and off).
+
+**This is not verification.** Nothing in this document was checked on the real remote by anyone other than the implementer, and the implementer's own hardware measurements are limited to Batch 0 and the Batch 5 action probes. These remain **unmeasured** and ship unmeasured unless someone measures them later: a permission grant taking effect in a fresh process or needing a restart; real presses through the new press source while the mapping is active; whether a mapped volume key is silenced; sleep and wake; crash-heal time on the button keys; Show Desktop and the app switcher on real presses and on other macOS versions or custom shortcuts; the voice key with the mapping on; on-screen operation of the page (menus, recorder popover, app file panel, Allow button).
+
+**What the waiver does not change.** The plan's human gates say the release is not cut without the independent verifier's recorded result. That result will not exist, so the release approval has to name this waiver explicitly. The other gates stand: approval of this document, PR approval, release approval, PR #130 merged first, and the licensing owner's decision. The page and the README already hedge the volume keys, the restart after granting, and the secure-input limits.
+
 ## Open items before this can ship
 
-1. **Independent verifier (Batch 9)**, named by you: the matrix in the plan on a stable-signed release-style build with a real RC003. This includes what is still unmeasured: a permission grant taking effect in a fresh process (or needing a restart), real presses through the new source while the mapping is active, volume-key silence, sleep and wake, crash-heal time, Show Desktop and the app switcher on real presses, the voice key with the mapping on, and on-screen operation of the page (menus, recorder popover, app file panel, Allow button).
-2. **Your approval of this `verification.md`**, then PR approval, then release approval. Nothing here is marked approved.
+1. Batch 9 is waived (above). If you later want any of its items measured, the list under "This is not verification" is the checklist.
+2. **Your approval of this `verification.md`** (now `pending approval`), then PR approval, then release approval. Nothing here is marked approved. The release approval should say it accepts the waiver.
 3. **PR #130** is still unmerged and carries its own open verification record; this change is stacked on it and is not released before it.
 4. **Licensing owner** decision on the clean-room disclosure in the intent.
-5. Decisions approved by the user on 2026-10-26 and recorded as spec erratum 2: the button mapping depends on the voice-key remap setting; eleven keys, not twelve; `NSInputMonitoringUsageDescription`; the Chinese wording.
-6. Decisions from Batches 4 and 5 that have not been put to the user in a question of their own and are still open: a key still held when the double-press window ends resolves at release; secure input also drops the native replay of an owned key (an owned OK cannot submit a password field); the "waiting for presses" state from the spec was not built; synthetic modifier events pass through Utter's own hotkey tap.
+5. Decisions approved by the user on 2026-10-26: spec erratum 2 (the button mapping depends on the voice-key remap setting; eleven keys, not twelve; `NSInputMonitoringUsageDescription`; the Chinese wording) and spec erratum 3 (a held key resolves at release when W ends; secure input also drops the native replay of an owned key; no "waiting for presses" state; synthetic modifiers pass through Utter's hotkey tap, not mitigated).

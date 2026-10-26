@@ -145,3 +145,14 @@ The reply was a bare 批准 to a message that listed these four items under "nee
 2. **Eleven keys, not twelve.** The power key is not offered because it was deliberately not measured (it can sleep or shut down the Mac). This deviates from the approved intent's acceptance line ("the twelve keys"); the intent is left as approved and the deviation is recorded here. Adding power later needs a measurement and its own change.
 3. **`NSInputMonitoringUsageDescription` in `Resources/Info.plist`**, English only like the other usage descriptions, as the explanation text for the one permission D2 approved. Whether macOS shows it in the dialog is not measured.
 4. **Chinese wording** of the key names and the page text, as in the strings files at commit `bc9d1eb`.
+
+## Erratum 3: gesture, secure-input and state decisions from Batches 4 and 5
+
+**Status:** approved
+**Approved-by:** User, explicit chat decision: approve all four as built (2026-10-26)
+**Approved-date:** 2026-10-26
+
+1. **A key still held when the double-press window W ends resolves at release.** For a button with a double binding and no long binding, if the first press is still down when W passes, the single action fires at release instead of at W. This reads the erratum 1 table for the case it does not spell out.
+2. **Secure input drops the native replay of an owned key too.** While a password field has the keyboard, key chords, system keys, Show Desktop, the app switcher and the native replay of an owned key are dropped with a log line. Consequence accepted: an owned OK button cannot submit a password field while secure input is on. Opening an app is not keyboard input and still works.
+3. **The "waiting for presses after a quiet period" state is not built.** A quiet period cannot tell "not pressed" from "starved by another tool". `active` means the press source is live and the keys are silenced and read back.
+4. **Known limitation, accepted and not mitigated:** synthetic modifier events pass through Utter's own hotkey tap like physical ones, so a chord whose only modifier is the user's dictation modifier (Ctrl, Option or Shift) can look like a tap of the dictation hotkey. Avoiding it would change `HotkeyManager`, which is out of scope.

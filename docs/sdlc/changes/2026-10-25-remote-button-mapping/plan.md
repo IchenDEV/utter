@@ -77,6 +77,8 @@ The earlier hardware sessions failed when a script waited for presses on a timer
 
 ### Batch 9: verification (independent verifier)
 
+**WAIVED by the user on 2026-10-26.** None of the items below was run; they stay unchecked on purpose. See the Waiver section in `verification.md`.
+
 - [ ] On the release-style build (`bash scripts/build-app.sh`), because permission behavior depends on the signed app: each key and trigger delivers the mapped action exactly once and the native key never reaches the frontmost app; unmapped keys unchanged.
 - [ ] Rapid presses, sleep and wake, remote off and on, reconnect, quit, forced termination then relaunch, feature off, remote removed: every key returns to native.
 - [ ] Permission denied and then granted; revoked while running.
