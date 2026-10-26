@@ -39,50 +39,50 @@ package enum RemoteMicSettingsText {
 
 struct RemoteMicSettingsView: View {
     @EnvironmentObject private var settings: AppSettings
-    @EnvironmentObject private var platform: PlatformProjection
+    @ObservedObject var platform: PlatformProjection
 
     var body: some View {
-        Form {
+        Section {
+            Toggle(isOn: $settings.remoteMicEnabled) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L("settings.remote_mic"))
+                    Text(L("settings.remote_mic_help"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!platform.hasRemoteProvider)
+        } header: {
+            Text(L("tab.remote"))
+        } footer: {
+            Text(L("remote_mic.page.usage"))
+        }
+
+        Section { RemoteKeyRemapRow().environmentObject(platform) }
+
+        if platform.hasRemoteProvider {
             Section {
-                Toggle(isOn: $settings.remoteMicEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L("settings.remote_mic"))
-                        Text(L("settings.remote_mic_help"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                RemoteButtonMappingRow()
+                    .environmentObject(platform)
+                    .onAppear { platform.refreshButtonMapping() }
+                    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                        platform.refreshButtonMapping()
                     }
-                }
-                .disabled(!platform.hasRemoteProvider)
-            } footer: {
-                Text(L("remote_mic.page.usage"))
             }
-
-            Section { RemoteKeyRemapRow() }
-
-            if platform.hasRemoteProvider {
-                Section { RemoteButtonMappingRow() }
-                if settings.remoteKeyRemapEnabled, settings.remoteButtonMappingEnabled {
-                    Section {
-                        RemoteButtonGrid()
-                    } header: {
-                        Text(L("remote_buttons.grid.header"))
-                    } footer: {
-                        Text(L("remote_buttons.notes"))
-                    }
+            if settings.remoteKeyRemapEnabled, settings.remoteButtonMappingEnabled {
+                Section {
+                    RemoteButtonGrid()
+                } header: {
+                    Text(L("remote_buttons.grid.header"))
+                } footer: {
+                    Text(L("remote_buttons.notes"))
                 }
-            }
-
-            if settings.remoteMicEnabled {
-                connectionSection
-                audioSection
             }
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-        .settingsPageSurface()
-        .onAppear { platform.refreshButtonMapping() }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            platform.refreshButtonMapping()
+
+        if settings.remoteMicEnabled {
+            connectionSection
+            audioSection
         }
     }
 

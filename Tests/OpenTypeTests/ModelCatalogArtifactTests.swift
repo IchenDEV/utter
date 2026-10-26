@@ -65,7 +65,7 @@ final class ModelCatalogArtifactTests: XCTestCase {
 }
 
 private struct ArtifactTestDownloads: TextModelDownloadService {
-    func download(_ id: String, downloadBase: URL, cacheDirectory: URL, progress: @escaping @Sendable (Progress) -> Void) async throws {}
+    func download(_ id: String, source: ModelDownloadSource, downloadBase: URL, cacheDirectory: URL, progress: @escaping @Sendable (Progress) -> Void) async throws {}
     func validate(_ directory: URL) async throws {}
 }
 private struct ArtifactTestLog: DiagnosticsService {

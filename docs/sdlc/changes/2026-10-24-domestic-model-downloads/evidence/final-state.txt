@@ -1,0 +1,49 @@
+Validation snapshot captured before the user requested PR publication.
+Final UI recheck: 2026-10-25
+Branch: t3/support-domestic-model-sites
+Baseline HEAD: 467e9349e7ec70b452c7330a12e945b0eda8db24
+Full suite after UI fixes: 1202 tests, 23 skipped, 0 failures, process exit 0.
+Final layout render: passed.
+Basic CI and SDLC checks: passed.
+Final release-style build: passed after retry of Apple timestamp service; same Developer ID identity.
+git diff --check: exit 0.
+Changed/new Swift, Python, Markdown, strings whitespace and terminal newline checks: passed.
+New Swift files: below 300 lines.
+Package.swift and Package.resolved: unchanged.
+Native UI host finished normally; isolated QA settings/cache retained.
+No commit, push, PR, merge, notarization or release performed.
+
+Worktree status:
+ M Sources/UtterContracts/ModelCatalogService.swift
+ M Sources/UtterContracts/Resources/en.lproj/Localizable.strings
+ M Sources/UtterContracts/Resources/zh-Hans.lproj/Localizable.strings
+ M Sources/UtterContracts/SettingsValues.swift
+ M Sources/UtterData/SettingsStore+Load.swift
+ M Sources/UtterData/SettingsStore+Persistence.swift
+ M Sources/UtterMLX/MLXModelDownloadPlugin.swift
+ M Sources/UtterMLX/MLXModelDownloads.swift
+ M Sources/UtterMLX/MLXModelLoading.swift
+ M Sources/UtterModels/Native/ConfuciusModelDownloader.swift
+ M Sources/UtterModels/Native/ModelCatalogASR.swift
+ M Sources/UtterModels/Native/ModelCatalogDownloads.swift
+ M Sources/UtterModels/Native/ModelCatalogPlugin.swift
+ M Sources/UtterModels/Native/ModelCatalogTextDownloads.swift
+ M Sources/UtterModels/Native/ModelCatalogWhisperTokenizer.swift
+ M Sources/UtterModels/Native/TextModelDownloadOperations.swift
+ M Sources/UtterPresentation/UI/ModelManagementActions.swift
+ M Sources/UtterPresentation/UI/ModelManagementView.swift
+ M Sources/UtterPresentation/UI/OnboardingModels.swift
+ M Tests/OpenTypeTests/ModelCatalogArtifactTests.swift
+ M Tests/OpenTypeTests/ModelCatalogLifetimeTests.swift
+ M Tests/OpenTypeTests/ModelDownloadTasksTests.swift
+ M Tests/OpenTypeTests/SettingsProjectionTests.swift
+ M Tests/OpenTypeTests/Support/ModelCatalogFixtures.swift
+ M Tests/UtterDataTests/SettingsStoreTests.swift
+?? Sources/UtterContracts/ModelDownloadSource.swift
+?? Sources/UtterPresentation/UI/ModelDownloadSourcePicker.swift
+?? Tests/OpenTypeTests/ModelDownloadSourceLiveTests.swift
+?? Tests/OpenTypeTests/ModelDownloadSourceRoutingTests.swift
+?? Tests/OpenTypeTests/ModelDownloadSourceWindowTests.swift
+?? Tests/OpenTypeTests/Support/ModelSourceIntegration.swift
+?? docs/sdlc/changes/2026-10-24-domestic-model-downloads/
+?? scripts/probe-model-source-headers.py

@@ -1,0 +1,32 @@
+Test Suite 'All tests' passed at 2026-10-25 22:31:59.689.
+	 Executed 36 tests, with 0 failures (0 unexpected) in 0.010 (0.015) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:00.244.
+	 Executed 58 tests, with 0 failures (0 unexpected) in 0.411 (0.420) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:00.422.
+	 Executed 26 tests, with 0 failures (0 unexpected) in 0.016 (0.021) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:00.580.
+	 Executed 54 tests, with 0 failures (0 unexpected) in 0.013 (0.018) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:01.779.
+	 Executed 89 tests, with 0 failures (0 unexpected) in 0.044 (0.050) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:02.305.
+	 Executed 107 tests, with 0 failures (0 unexpected) in 0.418 (0.424) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:02.565.
+	 Executed 34 tests, with 0 failures (0 unexpected) in 0.098 (0.101) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:03.164.
+	 Executed 54 tests, with 0 failures (0 unexpected) in 0.493 (0.498) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:03.320.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.034 (0.036) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:03.464.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.008 (0.011) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:03.967.
+	 Executed 60 tests, with 0 failures (0 unexpected) in 0.325 (0.334) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:04.494.
+	 Executed 123 tests, with 0 failures (0 unexpected) in 0.381 (0.391) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:05.854.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:32:05.950.
+	 Executed 20 tests, with 0 failures (0 unexpected) in 0.002 (0.004) seconds
+Test Suite 'All tests' passed at 2026-10-25 22:33:12.938.
+	 Executed 520 tests, with 23 tests skipped and 0 failures (0 unexpected) in 66.607 (66.640) seconds
+Final full suite after UI fixes: 1202 tests, 23 skipped, 0 failures; process exit 0.
+Raw log: /private/tmp/utter-domestic-full-tests-ui-final.log

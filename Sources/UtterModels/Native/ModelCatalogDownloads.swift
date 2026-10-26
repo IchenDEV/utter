@@ -18,6 +18,7 @@ extension ModelCatalog {
     /// setup, cancellation arbitration, and cleanup path.
     package typealias WhisperDownloadOverride = @MainActor (
         String,
+        ModelDownloadSource,
         URL,
         @Sendable (Progress) -> Void
     ) async throws -> Bool
@@ -37,6 +38,7 @@ extension ModelCatalog {
             return
         }
 
+        let source = settings.modelDownloadSource
         let staging = storage.generationStaging(for: token)
         defer { ModelStorage.removeGenerationStaging(staging) }
         prepareCacheForRetry(kind: .whisper, modelID: id, status: whisperModels[idx].status)
@@ -82,7 +84,7 @@ extension ModelCatalog {
             }
             let handledByOverride: Bool
             if let override = Self.whisperDownloadOverride {
-                handledByOverride = try await override(id, staging.downloadBase, progressCallback)
+                handledByOverride = try await override(id, source, staging.downloadBase, progressCallback)
             } else {
                 handledByOverride = false
             }
@@ -92,9 +94,10 @@ extension ModelCatalog {
                     try await stageExistingWhisper(from: installed, to: modelDir)
                 } else {
                     _ = try await WhisperKit.download(variant: id,
-                        downloadBase: staging.downloadBase, progressCallback: progressCallback)
+                        downloadBase: staging.downloadBase, token: source.hubTokenOverride,
+                        endpoint: source.endpoint, progressCallback: progressCallback)
                 }
-                try await installWhisperTokenizer(model: id, directory: modelDir, staging: staging)
+                try await installWhisperTokenizer(model: id, directory: modelDir, staging: staging, source: source)
             }
             watchdog.stop()
             try Task.checkCancellation()

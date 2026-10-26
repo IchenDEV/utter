@@ -1,11 +1,11 @@
 # Verification: Stop the Xiaomi remote's voice key from triggering macOS Dictation
 
-**Status:** draft
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit chat decision (2026-10-26): approve this verification with the hardware checks waived as recorded in "Waiver (2026-10-26)" at the end
+**Approved-date:** 2026-10-26
 **Upstream:** [plan](plan.md)
 
-Batches 0 to 7 are implemented and committed. Batch 8 (independent hardware verification) was run **only in part**: the code review and the hidutil-based lifecycle checks ran, but every check that needs the user to press the remote (A/B control, stress presses, reconnect, sleep/wake, prompts) produced no data because no remote key presses reached the probe. This stage cannot be approved until those checks are re-run with the user at the Mac. Everything under "Implementer's results" was produced by the implementer and does not replace the independent verifier's run.
+Batches 0 to 7 are implemented and committed. Batch 8 (independent hardware verification) was run **only in part**: the code review and the hidutil-based lifecycle checks ran, but every check that needs the user to press the remote (A/B control, stress presses, reconnect, sleep/wake, prompts) produced no data because no remote key presses reached the probe. Those checks were not re-run; the user waived them on 2026-10-26 (see "Waiver (2026-10-26)" at the end), and that waiver, not a pass, is what this approval rests on. Everything under "Implementer's results" was produced by the implementer and does not replace the independent verifier's run.
 
 ## Batch 0 — feasibility gate (2026-10-25, spike code only, nothing shipped)
 
@@ -140,3 +140,24 @@ The verifier's text above is kept unedited. This section is the implementer's re
 **5. State after the run (checked by the implementer, not only the verifier).** `/Applications/Utter.app` running (new PID 33917; the old PID 44932 was the pre-run process), `remoteKeyRemapEnabled` absent, remote `UserKeyMapping` is exactly F5→0 on `1000da8ae`, working tree has no stray files. A stray `''` file the verifier created by a shell redirect was renamed to `evidence/batch8-lifecycle-raw.txt`. The repository ignores `*.log`, so all `batch8-*.log` evidence was renamed to `.txt` so it can be committed.
 
 **6. Still required before this stage can go to approval:** a re-run with the user at the Mac, covering C1 (positive control F5 > 0), C2 (at least 50 voice-key presses including long presses, F5 = 0, arrows/Return/volume still work), F (reconnect), G (sleep/wake, optional), H (any permission prompt), and ideally I and J. Status stays `draft`.
+
+## Waiver (2026-10-26)
+
+On 2026-10-25 the user said the remaining hardware verification was not needed ("算了，不用验证了，应该没什么大的问题"). On 2026-10-26 the user chose, in answer to an explicit question, to approve this `verification.md` with those checks waived and to merge PR #130 (answer: approve, waive the hardware items). This section is the record. **It is a waiver, not verification.**
+
+Not run, and not claimed:
+
+- the voice-key A/B control (setting off versus on) with real presses, and at least 50 voice-key presses;
+- the reconnect leak window and the 1 s re-apply window with real presses;
+- sleep and wake;
+- arrow keys, Return and volume keys pressed on the remote while the mapping is active;
+- the permission and prompt paths on a release-signed build;
+- the independent verifier's conclusion above stays as written: its hardware A/B and reconnect/sleep gates did not meet the spec's high-risk sign-off condition.
+
+What this change was verified with instead: the Batch 0 hardware gate (no prompt, mapping lost on reconnect and re-applied within one poll, 0 F5 over 420 s), the independent verifier's code review and hidutil lifecycle checks (E1, E2, E4), unit and fake-device tests, and render harness screenshots.
+
+Merge state recorded at the same time: `main` was merged into the branch on 2026-10-26 (one conflict, `RemoteMicSettingsView.swift`, resolved by keeping the new Settings layout and adding the remap row as its own section; one test updated for the new `RemoteMicSettingsView(platform:)` initializer). `swift test` after the merge: 548 tests, 0 failures, 24 skipped.
+
+Defect found by that merge and fixed before it landed: `main` now builds the page as `RemoteMicSettingsView(platform: platform)` and no longer injects `platform` into the environment, but `RemoteKeyRemapRow` reads `PlatformProjection` with `@EnvironmentObject`. The merged tree would have trapped when the Remote page opened. The existing render test hid it because it injected the environment object itself. Fix: the page injects `platform` into the row. Regression guard: `RemoteKeyRemapRenderTests.testRemotePageBuildsWithOnlyTheSettingsEnvironment` builds the page with only the settings environment (it trapped with signal 5 before the fix and passes after), and it is not skipped in a normal run.
+
+Residual risk accepted by the user with this waiver: a crash or SIGTERM leaves F5 mapped to nothing until the HID service is recreated; the re-apply window after a reconnect is up to about 1 s; the unmeasured items above. Rollback is unchanged (turn the Remote-page row off, `defaults write … remoteKeyRemapEnabled -bool false`, hidutil clear, revert the commits).

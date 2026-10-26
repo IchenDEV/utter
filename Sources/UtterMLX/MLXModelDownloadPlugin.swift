@@ -18,9 +18,9 @@ extension MLXPlugins {
 
 private struct MLXTextModelDownloads: TextModelDownloadService {
     let access: any ModelResourceAccess
-    func download(_ id: String, downloadBase: URL, cacheDirectory: URL,
+    func download(_ id: String, source: ModelDownloadSource, downloadBase: URL, cacheDirectory: URL,
                   progress: @escaping @Sendable (Progress) -> Void) async throws {
-        try await MLXModelDownloads.download(id, downloadBase: downloadBase,
+        try await MLXModelDownloads.download(id, source: source, downloadBase: downloadBase,
                                             cache: HubCache(cacheDirectory: cacheDirectory), progress: progress)
     }
     func validate(_ directory: URL) async throws {

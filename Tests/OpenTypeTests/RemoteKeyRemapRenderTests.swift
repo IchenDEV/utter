@@ -39,7 +39,8 @@ final class RemoteKeyRemapRenderTests: XCTestCase {
         let control = RenderRemoteControl(RemoteMicDiagnostics(keyRemap: state))
         let platform = PlatformProjection(remote: control, login: nil, devices: nil, screen: nil,
                                           diagnostics: RemotePluginDiagnostics())
-        let view = RemoteMicSettingsView()
+        let view = Form { RemoteMicSettingsView(platform: platform) }
+            .formStyle(.grouped)
             .environmentObject(settings)
             .environmentObject(platform)
             .frame(width: 620, height: 360)
@@ -54,6 +55,24 @@ final class RemoteKeyRemapRenderTests: XCTestCase {
         host.cacheDisplay(in: host.bounds, to: rep)
         let png = try XCTUnwrap(rep.representation(using: .png, properties: [:]))
         try png.write(to: url)
+    }
+
+    /// `PresentationPlugins.remote()` hands the page its `platform` as an argument and injects nothing else, so
+    /// no row on the page may read `PlatformProjection` from the environment. A missing environment object is a
+    /// fatal error at layout time, which this test would turn into a crash instead of a runtime surprise.
+    func testRemotePageBuildsWithOnlyTheSettingsEnvironment() {
+        let settings = AppSettings(service: RemotePluginSettings())
+        let platform = PlatformProjection(
+            remote: RenderRemoteControl(RemoteMicDiagnostics(keyRemap: .active)), login: nil, devices: nil, screen: nil,
+            diagnostics: RemotePluginDiagnostics())
+        let host = NSHostingView(rootView: Form { RemoteMicSettingsView(platform: platform) }
+            .formStyle(.grouped).environmentObject(settings).frame(width: 620, height: 360))
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 620, height: 360),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView = host
+        window.layoutIfNeeded()
+        host.layoutSubtreeIfNeeded()
+        XCTAssertNotNil(host.bitmapImageRepForCachingDisplay(in: host.bounds))
     }
 
     func testRenderRemotePageVariants() throws {

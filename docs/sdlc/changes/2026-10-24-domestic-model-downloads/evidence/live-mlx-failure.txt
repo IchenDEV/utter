@@ -1,0 +1,5 @@
+[Mirror verification] mlx production catalog download
+[ModelCatalog] LLM download failed: Invalid metadata: File metadata must have been retrieved from server
+[Mirror verification] mlx offline load
+Test Case '-[OpenTypeTests.ModelDownloadSourceLiveTests testMirrorMLXDownloadAndOfflineLoad]' failed (3.063 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadSourceLiveTests testMirrorMLXDownloadAndOfflineLoad]' failed (11.346 seconds).

@@ -64,9 +64,11 @@ final class RemoteButtonMappingRenderTests: XCTestCase {
         let platform = PlatformProjection(remote: control, login: nil, devices: nil, screen: nil,
                                           diagnostics: RemotePluginDiagnostics())
         let size = NSSize(width: 620, height: 1020)
-        let view = RemoteMicSettingsView()
+        // Same wiring as `PresentationPlugins.remote()`: the page gets `platform` as an argument and nothing else
+        // is injected, so a row that reads it from the environment traps here instead of in the shipped app.
+        let view = Form { RemoteMicSettingsView(platform: platform) }
+            .formStyle(.grouped)
             .environmentObject(settings)
-            .environmentObject(platform)
             .frame(width: size.width, height: size.height)
         let host = NSHostingView(rootView: view)
         let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.titled],

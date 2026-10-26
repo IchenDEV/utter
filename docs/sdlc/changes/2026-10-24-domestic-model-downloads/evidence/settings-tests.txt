@@ -1,0 +1,806 @@
+warning: '--skip-update' option is deprecated and will be removed in a future release
+Building for debugging...
+[Computing dependencies]
+[Pre-planning 1 / 2745]
+[Planning 1 / 2745]
+[Planning 2637 / 2745]
+[Planning deferred tasks]
+[Constructing 3889 / 6438]
+[21 / 1626] mlx-swift_Cmlx
+warning: missing creator for mutated node: ('<worktree>/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+[567 / 1626] mlx-swift_Cmlx
+[573 / 1626]
+[575 / 1626] UtterUpdatesTests-product
+[576 / 1626] yyjson
+[621 / 1637]
+[630 / 1637] UtterUpdatesTests-product
+[643 / 1637]
+[653 / 1640] mlx-swift_Cmlx
+[677 / 1641] OpenType_UtterMacServices
+[682 / 1659] _AtomicsShims
+[697 / 1663] _NIODataStructures
+[698 / 1678]
+[707 / 1678]
+[718 / 1721]
+[725 / 1721] RealModule
+[728 / 1721]
+[738 / 1757]
+[749 / 1757] OpenType_UtterMacServices
+[759 / 1761] InternalCollectionsUtilities
+[763 / 1771] Cmlx
+In file included from <worktree>/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/steel_attention.metal:6:
+In file included from <worktree>/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:3:
+In file included from <worktree>/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/attn.h:6:
+In file included from <worktree>/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/../../steel/attn/mma.h:11:
+<worktree>/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/../../steel/utils/integral_constant.h:108:6: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+  if constexpr (start < stop) {
+     ^
+In file included from <worktree>/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/steel_attention.metal:6:
+<worktree>/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:356:16: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+            if constexpr (is_bool) {
+               ^
+<worktree>/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:426:14: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+          if constexpr (BD == 128) {
+             ^
+<worktree>/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:436:14: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+          if constexpr (BD == 128) {
+             ^
+4 warnings generated.
+[767 / 1779]
+[770 / 1779] Cmlx
+[775 / 1811] NIOConcurrencyHelpers
+[782 / 1811]
+[785 / 1811]
+[804 / 1811] Cmlx
+[809 / 1811] Cmlx
+[812 / 1811]
+[814 / 1811]
+[817 / 1811]
+[821 / 1811]
+[826 / 1811]
+[828 / 1811]
+[830 / 1811]
+[836 / 1811]
+[839 / 1811]
+[841 / 1811] Cmlx
+[843 / 1811]
+[848 / 1811] Cmlx
+[860 / 1811]
+[864 / 1811]
+[870 / 1811] Cmlx
+[872 / 1811]
+[878 / 1811] Crypto
+[885 / 1811] Cmlx
+[892 / 1811] mlx-swift_Cmlx
+[896 / 1811] Cmlx
+[900 / 1811] Cmlx
+[902 / 1811] Cmlx
+[903 / 1811] Cmlx
+[909 / 1811] Cmlx
+[911 / 1811] Cmlx
+[914 / 1811] Cmlx
+[916 / 1811] Cmlx
+[917 / 1811] Cmlx
+[918 / 1811] Cmlx
+[920 / 1811] Cmlx
+[924 / 1811] Cmlx
+[926 / 1811] Cmlx
+[927 / 1811]
+[929 / 1811] OpenTypeCLI-product
+[929 / 1811] Cmlx
+[931 / 1811] Cmlx
+[934 / 1811] Cmlx
+[935 / 1811] Cmlx
+[938 / 1811] Cmlx
+[939 / 1811] Cmlx
+[940 / 1811] Cmlx
+[942 / 1811] Cmlx
+[943 / 1811] Cmlx
+[945 / 1811] Cmlx
+[947 / 1811] Cmlx
+[948 / 1811] Cmlx
+[950 / 1811] Cmlx
+[951 / 1811] Cmlx
+[953 / 1811] Cmlx
+[955 / 1811] Cmlx
+[956 / 1811] Cmlx
+[958 / 1811] Cmlx
+[959 / 1811] Cmlx
+[961 / 1811] Cmlx
+[964 / 1811] Cmlx
+[966 / 1811] Cmlx
+[968 / 1811] Cmlx
+[971 / 1811] Cmlx
+[974 / 1811] Cmlx
+[978 / 1811] Cmlx
+[980 / 1811] Cmlx
+[983 / 1811] Cmlx
+[987 / 1811] Cmlx
+[989 / 1811] Cmlx
+[990 / 1811] Cmlx
+[991 / 1811] Cmlx
+[994 / 1811] Cmlx
+[995 / 1811] Cmlx
+[999 / 1811] Cmlx
+[1002 / 1811] Cmlx
+[1003 / 1811] Cmlx
+[1005 / 1811] Cmlx
+[1008 / 1811] Cmlx
+[1009 / 1811] Cmlx
+[1010 / 1811] Cmlx
+[1013 / 1811] Cmlx
+[1014 / 1811] Cmlx
+[1016 / 1811] Cmlx
+[1017 / 1811] Cmlx
+[1019 / 1811] Cmlx
+[1021 / 1811] Cmlx
+[1022 / 1811] Cmlx
+[1023 / 1811] Cmlx
+[1026 / 1811] Cmlx
+[1027 / 1811] Cmlx
+[1028 / 1811] Cmlx
+[1032 / 1811] Cmlx
+[1035 / 1811] Cmlx
+[1036 / 1811] Cmlx
+[1038 / 1811] yyjson
+[1041 / 1811] _NIODataStructures
+[1043 / 1811] UtterRuntime
+[1044 / 1811] UtterRuntime
+[1045 / 1811] UtterRuntime
+[1048 / 1811] UtterRuntimeTests-product
+[1050 / 1811] UtterRuntime
+[1051 / 1811] UtterRuntime
+[1053 / 1811] UtterRuntime
+[1062 / 1811] NIOConcurrencyHelpers
+[1065 / 1811] NIOConcurrencyHelpers
+[1069 / 1811] InternalCollectionsUtilities
+[1074 / 1811] OrderedCollections
+[1080 / 1811] Crypto
+[1083 / 1811] Crypto-product
+[1087 / 1811] InternalCollectionsUtilities
+[1104 / 1813] InternalCollectionsUtilities
+[1120 / 1825] ANELMRuntime
+[1125 / 1825] Atomics
+[1127 / 1856] ANELMRuntime
+[1129 / 1882]
+[1131 / 1882]
+[1133 / 1882]
+[1135 / 1882]
+[1144 / 1882]
+[1149 / 1882] ANELMRuntime
+[1164 / 1882]
+[1170 / 1882]
+[1184 / 1907]
+[1193 / 1907]
+[1201 / 1907] Atomics
+[1208 / 1907]
+[1213 / 1907] CNIODarwin
+[1220 / 1907]
+[1226 / 1907] ArgmaxCore
+[1228 / 1907] Atomics
+[1234 / 1907] ANELMRuntime
+[1238 / 1907] ArgmaxCore
+[1245 / 1907] WhisperKit
+[1252 / 1908] mlx-swift_Cmlx
+[1259 / 1912] OrderedCollections
+[1260 / 1912]
+[1263 / 1945] Cmlx
+[1266 / 1977]
+[1269 / 1990] ComplexModule
+[1277 / 1990]
+[1282 / 1990]
+[1287 / 1990] UtterContracts
+[1297 / 1990] UtterContracts
+[1300 / 1990] UtterUpdates
+[1302 / 1990] UtterRuntimeTests-product
+[1318 / 1990] UtterRuntimeTests-product
+[1320 / 1990]
+[1322 / 1990] UtterRuntimeTests-product
+[1329 / 1990] UtterContracts
+[1330 / 1990] UtterRuntimeTests-product
+[1331 / 1990] UtterContracts
+[1333 / 1990] UtterContracts
+[1338 / 1990] OrderedCollections
+[1343 / 1990] WhisperKit
+[1347 / 1990] WhisperKit
+[1348 / 1990] WhisperKit
+[1350 / 1990] WhisperKit
+[1354 / 1990] WhisperKit
+[1359 / 1990] OrderedCollections
+[1360 / 1990] OrderedCollections
+[1361 / 1990] WhisperKit
+[1365 / 1990] WhisperKit
+[1371 / 1990] Cmlx
+[1386 / 1997] Jinja
+[1389 / 1999] ComplexModule
+[1392 / 2010] Numerics
+[1402 / 2010] ContainersPreview
+[1415 / 2047] UtterEvaluation
+[1426 / 2072]
+[1444 / 2072] UtterUpdatesTests-product
+[1450 / 2072] UtterUpdates
+[1456 / 2072] UtterData
+[1466 / 2072] Jinja
+[1472 / 2072]
+[1476 / 2072] UtterData
+[1478 / 2072] UtterData
+[1482 / 2072] Jinja-product
+[1486 / 2072]
+[1488 / 2072] ContainersPreview
+[1492 / 2072] ContainersPreview
+[1505 / 2073]
+[1516 / 2075] Jinja
+[1527 / 2078] UtterEvaluationTests-product
+[1528 / 2089] UtterLexiconCheck-product
+[1531 / 2091] MLX
+[1537 / 2103] MLX
+[1539 / 2103] UtterMediaContracts
+[1546 / 2121] UtterMediaContracts
+[1553 / 2124] UtterEvaluationTests-product
+[1571 / 2124] UtterContractsTests-product
+[1576 / 2124] UtterMacServices
+[1586 / 2124] UtterUpdatesTests-product
+[1588 / 2124] CNIOAtomics
+[1595 / 2124] UtterContractsTests-product
+[1597 / 2124] UtterContractsTests-product
+[1600 / 2124] MLX
+[1609 / 2124] UtterContractsTests-product
+[1610 / 2124] MLXNN
+[1613 / 2124] MLX-product
+[1624 / 2124] Jinja
+[1626 / 2124] MLX
+[1628 / 2124] DequeModule-product
+[1632 / 2124] CNIOAtomics
+[1639 / 2126]
+[1644 / 2130] UtterProcessing
+[1645 / 2130] UtterDataTests-product
+[1649 / 2131]
+[1653 / 2166]
+[1657 / 2178] UtterRemoteInference
+[1659 / 2189]
+[1676 / 2202] UtterSession
+[1688 / 2213] UtterDataTests-product
+[1692 / 2213] UtterProcessing
+[1714 / 2213] UtterSession
+[1717 / 2213] UtterRemoteMic
+[1721 / 2213] UtterWhisper
+[1723 / 2213] UtterWhisper
+[1726 / 2213] UtterRemoteMic
+[1728 / 2213] UtterSession
+[1735 / 2213] UtterRemoteInference
+[1737 / 2213] UtterRemoteInference
+[1740 / 2213] UtterProcessing
+[1743 / 2213] UtterProcessingTests-product
+[1745 / 2213] UtterRemoteInference
+[1748 / 2213] UtterRemoteInference
+[1751 / 2213] UtterDataTests-product
+<worktree>/Sources/UtterProcessing/Native/TextProcessor+FactSupport.swift:29:34: warning: reference to captured var 'checkOptions' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+27 |                 try await withOperationDeadline(for: ProcessingDeadlines.factSupport) {
+28 |                     try await self.generateText(prompt: prompt, systemPrompt: PromptCatalog.factSupportSystemPrompt,
+29 |                         options: checkOptions, maxTokens: 768, temperature: 0)
+   |                                  `- warning: reference to captured var 'checkOptions' in concurrently-executing code; this is an error in the Swift 6 language mode [#SendableClosureCaptures]
+30 |                 }
+31 |             }
+
+<worktree>/Sources/UtterProcessing/Native/TextProcessor+Generation.swift:60:43: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+ 58 |             maxTokens: maxTokens, temperature: temperature
+ 59 |         )
+ 60 |         let primary = try await providers.create(id: providerID, request: .inference)
+    |                                           `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+ 61 |         try Task.checkCancellation()
+ 62 |         guard usesANE else {
+
+<worktree>/Sources/UtterProcessing/Native/TextProcessor+Generation.swift:81:65: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+ 79 |                     prepareForMLXFallback: { await primary.unload() },
+ 80 |                     mlx: {
+ 81 |                         let fallback = try await self.providers.create(id: options.fallbackProviderID, request: .inference)
+    |                                                                 `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+ 82 |                         try Task.checkCancellation()
+ 83 |                         return try await ProcessingObservations.$generationStage.withValue(.fallback) {
+
+<worktree>/Sources/UtterProcessing/Native/TextProcessor+Generation.swift:128:49: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+126 |         )
+127 |         guard let imageProviders else { throw GenerationServiceError.unsupportedOperation }
+128 |         let provider = try await imageProviders.create(id: providerID, request: .inference)
+    |                                                 `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+129 |         try Task.checkCancellation()
+130 |         let result = try await ProcessingObservations.$generationStage.withValue(.image) {
+
+<worktree>/Sources/UtterProcessing/Native/TextProcessor+ModelPreparation.swift:11:52: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+ 9 |             maxTokens: 1, temperature: 0, usesANE: usesANE)
+10 |         return try await withLocalModelAccess {
+11 |             let primary = try await self.providers.create(id: id, request: .inference)
+   |                                                    `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+12 |             guard usesANE else { try await primary.prepare(request); return nil }
+13 |             let result = try await GenerationFallback.run(fallbackEnabled: options.fallbackToMLXOnEspressoFailure,
+
+<worktree>/Sources/UtterProcessing/Native/TextProcessor+ModelPreparation.swift:16:61: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+14 |                 espresso: { try await primary.prepare(request) }, prepareForMLXFallback: { await primary.unload() },
+15 |                 mlx: {
+16 |                     let fallback = try await self.providers.create(id: options.fallbackProviderID, request: .inference)
+   |                                                             `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+17 |                     let request = self.generationRequest(prompt: "", systemPrompt: nil, options: options, maxTokens: 1, temperature: 0)
+18 |                     try await fallback.prepare(request)
+
+<worktree>/Sources/UtterProcessing/Native/TextProcessor+Models.swift:37:42: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+35 |         try await withLocalModelAccess {
+36 |             for descriptor in await self.providers.descriptors {
+37 |                 try await self.providers.reset(id: descriptor.id)
+   |                                          `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+38 |             }
+39 |             if let images = self.imageProviders {
+
+<worktree>/Sources/UtterProcessing/Native/TextProcessor+Models.swift:40:79: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+38 |             }
+39 |             if let images = self.imageProviders {
+40 |                 for descriptor in await images.descriptors { try await images.reset(id: descriptor.id) }
+   |                                                                               `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+41 |             }
+42 |         }
+
+[#IsolatedConformances]: <https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances>
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[1753 / 2213] UtterDataTests-product
+<worktree>/Sources/UtterProcessing/Native/TextProcessor+Benchmark.swift:29:53: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+27 |             }
+28 |         return try await withLocalModelAccess {
+29 |             let provider = try await self.providers.create(id: "generation.mlx", request: .benchmark)
+   |                                                     `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+30 |             return try await ModelBenchmarkSuite.run(workloads: workloads, provider: provider)
+31 |         }
+
+[#IsolatedConformances]: <https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances>
+[1758 / 2213] UtterDataTests-product
+[1763 / 2213]
+[1774 / 2214] UtterRemoteInference
+[1789 / 2221] MLXNN
+[1790 / 2221] MLXFast
+[1791 / 2221] UtterSessionTests-product
+[1800 / 2246]
+[1802 / 2255] UtterMacServices
+[1806 / 2281]
+[1812 / 2302] UtterRemoteMicTests-product
+[1815 / 2302]
+[1829 / 2302] UtterSessionTests-product
+[1851 / 2302] UtterSessionTests-product
+[1854 / 2302] MLXNN
+[1860 / 2302] UtterRemoteMicTests-product
+[1862 / 2302] UtterRemoteMicTests-product
+[1866 / 2302] UtterRemoteMicTests-product
+[1868 / 2302] UtterMacServices
+<worktree>/Sources/UtterMacServices/CorrectionCaptureRegion.swift:75:5: warning: 'package' modifier conflicts with extension's default access of 'private'
+73 | }
+74 | private extension CorrectionCaptureRegionLocator {
+75 |     package func nearbyRange(
+   |     `- warning: 'package' modifier conflicts with extension's default access of 'private'
+76 |         of needle: String,
+77 |         in text: NSString,
+[1877 / 2302] UtterMacServices
+<worktree>/Tests/UtterSessionTests/OpenTypeServiceTests.swift:18:31: warning: result of call to 'createSession(_:clientID:)' is unused [#NoUsage]
+ 16 |
+ 17 |         await assertThrowsIntegrationError(.developerInterfaceDisabled) {
+ 18 |             try await service.createSession(request(), clientID: clientID)
+    |                               `- warning: result of call to 'createSession(_:clientID:)' is unused [#NoUsage]
+ 19 |         }
+ 20 |     }
+
+<worktree>/Tests/UtterSessionTests/OpenTypeServiceTests.swift:31:31: warning: result of call to 'createSession(_:clientID:)' is unused [#NoUsage]
+ 29 |
+ 30 |         await assertThrowsIntegrationError(.unauthorizedClient) {
+ 31 |             try await service.createSession(request(), clientID: clientID)
+    |                               `- warning: result of call to 'createSession(_:clientID:)' is unused [#NoUsage]
+ 32 |         }
+ 33 |     }
+
+<worktree>/Tests/UtterSessionTests/OpenTypeServiceTests.swift:61:31: warning: result of call to 'createSession(_:clientID:)' is unused [#NoUsage]
+ 59 |
+ 60 |         await assertThrowsIntegrationError(.busy) {
+ 61 |             try await service.createSession(request(), clientID: clientID)
+    |                               `- warning: result of call to 'createSession(_:clientID:)' is unused [#NoUsage]
+ 62 |         }
+ 63 |         XCTAssertEqual(try service.session(first.id, clientID: clientID)?.state, .recording)
+
+<worktree>/Tests/UtterSessionTests/OpenTypeServiceTests.swift:250:31: warning: result of call to 'createSession(_:clientID:)' is unused [#NoUsage]
+248 |
+249 |         await assertThrowsIntegrationError(.developerInterfaceDisabled) {
+250 |             try await service.createSession(request(), clientID: clientID)
+    |                               `- warning: result of call to 'createSession(_:clientID:)' is unused [#NoUsage]
+251 |         }
+252 |     }
+
+<worktree>/Tests/UtterSessionTests/OpenTypeServiceTests.swift:269:31: warning: result of call to 'createSession(_:clientID:)' is unused [#NoUsage]
+267 |
+268 |         await assertThrowsIntegrationError(.unauthorizedClient) {
+269 |             try await service.createSession(request(), clientID: oldClientID)
+    |                               `- warning: result of call to 'createSession(_:clientID:)' is unused [#NoUsage]
+270 |         }
+271 |         let newSession = try await service.createSession(request(), clientID: newClientID)
+
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+[1880 / 2302] UtterRemoteMicTests-product
+[1882 / 2302] UtterSessionTests-product
+<worktree>/Sources/UtterMacServices/CorrectionCaptureRegion.swift:75:5: warning: 'package' modifier conflicts with extension's default access of 'private'
+73 | }
+74 | private extension CorrectionCaptureRegionLocator {
+75 |     package func nearbyRange(
+   |     `- warning: 'package' modifier conflicts with extension's default access of 'private'
+76 |         of needle: String,
+77 |         in text: NSString,
+[1884 / 2302] UtterMacServicesTests-product
+[1886 / 2302] UtterDataTests-product
+[1888 / 2302] UtterRemoteMicTests-product
+[1890 / 2302] UtterAudio
+[1890 / 2302] UtterSessionTests-product
+[1894 / 2302] UtterAudioTests-product
+[1897 / 2302] UtterAppleSpeech
+[1900 / 2302] UtterPresentationContracts
+[1903 / 2302] UtterPresentationContracts
+[1907 / 2302] UtterPresentationContracts
+[1915 / 2302] UtterPresentation
+[1920 / 2302] UtterAudio
+[1923 / 2302] NIOCore
+[1924 / 2302] NIOCore
+[1928 / 2302] UtterAppleSpeech
+[1933 / 2302] MLXNN
+[1934 / 2302] NIOCore
+[1941 / 2302] NIOCore
+[1945 / 2302] MLXNN
+[1947 / 2302] MLXNN
+[1949 / 2302] MLXFast-product
+[1966 / 2302]
+[1978 / 2305]
+[1988 / 2307] UtterDataTests-product
+[1989 / 2308] UtterDataTests-product
+[1992 / 2310] UtterAudioTests-product
+[1995 / 2310] MLXOptimizers
+[2004 / 2333] UtterIngress
+[2009 / 2360] UtterMacServicesTests-product
+[2024 / 2360] UtterIngress
+[2034 / 2360] UtterProcessingTests-product
+[2039 / 2360] UtterProcessingTests-product
+[2043 / 2360] UtterMacServicesTests-product
+[2047 / 2360] UtterIngress
+<worktree>/Tests/UtterMacServicesTests/HotkeyGestureControllerTests.swift:88:18: warning: weak variable 'retired' was never mutated; consider changing to 'let' constant [#VariableNeverMutated::WeakMutability]
+ 86 |         var controller: HotkeyGestureController? = HotkeyGestureController(settings: { SettingsValues() },
+ 87 |             onStart: { _ in }, onStop: { _ in }, onPromote: { _ in true }, onCancel: {})
+ 88 |         weak var retired = controller
+    |                  `- warning: weak variable 'retired' was never mutated; consider changing to 'let' constant [#VariableNeverMutated::WeakMutability]
+ 89 |         controller?.process(primaryPressed: true, translationModifierPressed: false)
+ 90 |         controller = nil
+
+[#VariableNeverMutated]: <https://docs.swift.org/compiler/documentation/diagnostics/variable-never-mutated>
+[#WeakMutability]: <https://docs.swift.org/compiler/documentation/diagnostics/weak-mutability>
+[2051 / 2360] UtterIngress
+[2055 / 2360] UtterProcessingTests-product
+[2061 / 2360] UtterPresentation
+[2064 / 2360] UtterPresentation
+<worktree>/Sources/UtterIngress/Native/IntegrationXPCServer.swift:97:61: warning: variable 'handler' was written to, but never read
+ 95 |         connection.exportedInterface = NSXPCInterface(with: OpenTypeXPCProtocol.self)
+ 96 |         connection.exportedObject = handler
+ 97 |         connection.invalidationHandler = { [weak self, weak handler] in
+    |                                                             `- warning: variable 'handler' was written to, but never read
+ 98 |             Task { @MainActor in
+ 99 |                 self?.retire(id)
+
+<worktree>/Sources/UtterIngress/Native/IntegrationXPCServer.swift:102:61: warning: variable 'handler' was written to, but never read
+100 |             }
+101 |         }
+102 |         connection.interruptionHandler = { [weak self, weak handler] in
+    |                                                             `- warning: variable 'handler' was written to, but never read
+103 |             Task { @MainActor in
+104 |                 self?.retire(id)
+[2065 / 2360] UtterPresentation
+[2067 / 2360] UtterPresentation
+[2069 / 2360] UtterMacServicesTests-product
+[2072 / 2360] UtterAudioTests-product
+[2074 / 2360] UtterPresentation
+[2081 / 2360] UtterPresentation
+[2094 / 2360] UtterIngress
+[2105 / 2363]
+[2107 / 2363] MLX-product
+[2108 / 2363] EventSource
+[2111 / 2368] UtterAudioTests-product
+[2113 / 2368] EventSource
+[2125 / 2386] UtterPresentation
+[2130 / 2390]
+[2132 / 2390]
+[2140 / 2390] EventSource
+[2141 / 2390] UtterIngressTests-product
+[2149 / 2414]
+[2152 / 2414]
+[2153 / 2414] UtterPresentation
+[2160 / 2414] MLXLMCommon
+[2160 / 2414] UtterIngressTests-product
+[2162 / 2414] MLXLMCommon
+[2165 / 2414] UtterPresentation
+[2177 / 2416] MLXLLM
+[2177 / 2416]
+[2179 / 2416] MLXLMCommon
+[2179 / 2416] MLXVLM
+[2185 / 2427] MLXVLM
+[2187 / 2438] MLXVLM
+[2190 / 2438] MLXVLM
+[2191 / 2438] MLXVLM
+[2192 / 2438] MLXVLM
+[2196 / 2438] MLXVLM
+[2202 / 2438] MLXVLM
+[2206 / 2438] MLXLLM
+[2214 / 2438] MLXLLM-product
+[2215 / 2438] MLXLLM-product
+[2216 / 2438] MLXLLM-product
+[2218 / 2438] HuggingFace
+[2219 / 2438] HuggingFace
+[2220 / 2438] HuggingFace
+[2223 / 2438] HuggingFace
+[2226 / 2438] HuggingFace
+[2228 / 2438] HuggingFace
+[2230 / 2438] MLXLLM
+[2230 / 2438]
+[2231 / 2438] MLXLLM
+[2232 / 2438] MLXLLM
+[2232 / 2438] HuggingFace
+[2240 / 2440] HuggingFace
+[2240 / 2440] Hub
+[2244 / 2462] HuggingFace
+[2246 / 2462]
+[2253 / 2462] Hub
+[2261 / 2464]
+[2261 / 2464] Hub
+[2261 / 2464] Tokenizers
+[2269 / 2475] Tokenizers
+[2271 / 2487] Tokenizers
+[2273 / 2487] Tokenizers
+[2281 / 2489] Generation
+[2283 / 2489] Hub
+[2283 / 2489] Tokenizers
+[2290 / 2489] UtterModels
+[2293 / 2505] Generation
+[2295 / 2505] UtterModels
+[2310 / 2505] UtterModels
+[2319 / 2505] UtterANE
+[2322 / 2505] Tokenizers
+<worktree>/Sources/UtterModels/Native/DownloadStallWatchdog.swift:24:59: warning: reference to property 'pollInterval' in closure requires explicit use of 'self' to make capture semantics explicit; this is an error in the Swift 6 language mode
+22 |         pollTask = Task { @MainActor [weak self] in
+23 |             while !Task.isCancelled {
+24 |                 try? await Task.sleep(nanoseconds: UInt64(pollInterval * 1_000_000_000))
+   |                                                           `- warning: reference to property 'pollInterval' in closure requires explicit use of 'self' to make capture semantics explicit; this is an error in the Swift 6 language mode
+25 |                 guard let self, !Task.isCancelled else { return }
+26 |                 guard Date().timeIntervalSince(self.lastActivity) >= self.timeout else { continue }
+[2328 / 2505] UtterANE
+[2336 / 2505] UtterModelsTests-product
+[2351 / 2508] UtterRemoteInferenceTests-product
+[2353 / 2508]
+[2358 / 2512] UtterRemoteInferenceTests-product
+[2365 / 2523] UtterModelsTests-product
+[2367 / 2534] Models
+[2383 / 2534] UtterModelsTests-product
+[2390 / 2534] UtterRemoteInferenceTests-product
+[2395 / 2534] UtterModelsTests-product
+[2400 / 2534] Transformers-product
+[2401 / 2534] UtterModelsTests-product
+[2403 / 2534]
+[2412 / 2534] UtterRemoteInferenceTests-product
+[2415 / 2534] MLXAudioCore
+[2424 / 2536] MLXAudioCore
+[2426 / 2536] UtterModelsTests-product
+[2428 / 2536] MLXAudioCore
+[2440 / 2547] MLXAudioVAD
+[2441 / 2559]
+[2442 / 2559]
+[2449 / 2559] MLXAudioVAD
+[2451 / 2559] MLXAudioVAD
+[2456 / 2559] MLXAudioVAD
+[2459 / 2559]
+[2466 / 2560]
+[2468 / 2560] MLXAudioCodecs
+[2468 / 2560] MLXAudioSTT
+[2475 / 2571] MLXAudioSTT
+[2476 / 2571] MLXAudioSTT
+[2479 / 2571] MLXAudioSTT
+[2480 / 2571] MLXAudioSTT
+[2487 / 2571] MLXAudioSTT
+[2488 / 2572]
+[2488 / 2572] MLXAudioSTT
+[2495 / 2583] UtterMLX
+[2499 / 2583] UtterMLX
+[2508 / 2584]
+[2509 / 2585] UtterMLX
+[2510 / 2585] MLXAudioSTT
+[2512 / 2585] MLXAudioSTT
+[2523 / 2596] UtterBuiltins
+[2531 / 2596] UtterVoiceEval-product
+[2537 / 2598] UtterVoiceEval-product
+[2551 / 2599] OpenType-product
+[2555 / 2603] OpenType-product
+[2567 / 2606] OpenType
+[2569 / 2606] UtterBuiltinsTests-product
+[2579 / 2606] UtterVoiceEval-product
+[2580 / 2606] OpenType-product
+[2583 / 2606] OpenType-product
+[2596 / 2607] OpenTypeTests-product
+[2607 / 2618] OpenTypeTests-product
+<worktree>/Tests/OpenTypeTests/Support/LegacyGenerationCatalog.swift:33:14: warning: main actor-isolated property 'unload' can not be mutated from a nonisolated context; this is an error in the Swift 6 language mode
+23 |     private let values: [String: Value]
+24 |     private let benchmarkValues: [String: Value]
+25 |     private let unload: @MainActor (Value) async -> Void
+   |                 `- note: mutation of this property is only permitted within the actor
+26 |     let descriptors: [ProviderDescriptor]
+27 |
+   :
+31 |         self.benchmarkValues = benchmarkValues
+32 |         self.descriptors = descriptors ?? values.keys.sorted().map { ProviderDescriptor(id: $0, displayName: $0) }
+33 |         self.unload = unload
+   |              `- warning: main actor-isolated property 'unload' can not be mutated from a nonisolated context; this is an error in the Swift 6 language mode
+34 |     }
+35 |
+<worktree>/Tests/OpenTypeTests/UpdatePluginFixtures.swift:108:43: warning: main actor-isolated static property 'enabledEnvironment' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+102 |     @MainActor final class Counter { var value = 0 }
+103 |
+104 |     static let enabledEnvironment = UpdateEnvironment(
+    |                `- note: static property declared here
+105 |         isApplicationBundle: true, isAdHocSigned: false,
+106 |         feedURL: "https://example.com/appcast.xml", publicKey: Data(repeating: 9, count: 32).base64EncodedString())
+107 |
+108 |     init(environment: UpdateEnvironment = enabledEnvironment, automaticChecks: Bool = true) throws {
+    |                                           `- warning: main actor-isolated static property 'enabledEnvironment' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+109 |         let settings = RemotePluginSettings()
+110 |         settings.values.automaticUpdateChecks = automaticChecks
+<worktree>/Tests/OpenTypeTests/RemoteMicPluginTests.swift:120:16: warning: result of call to 'ownedTask' is unused [#NoUsage]
+118 |         let release = RemoteLifetimeSignal()
+119 |         let startedClose = RemoteLifetimeSignal()
+120 |         bridge.ownedTask {
+    |                `- warning: result of call to 'ownedTask' is unused [#NoUsage]
+121 |             entered.send()
+122 |             await release.wait()
+
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+[2612 / 2618] OpenTypeTests-product
+<worktree>/Tests/OpenTypeTests/UpdatePluginFixtures.swift:108:43: warning: main actor-isolated static property 'enabledEnvironment' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+102 |     @MainActor final class Counter { var value = 0 }
+103 |
+104 |     static let enabledEnvironment = UpdateEnvironment(
+    |                `- note: static property declared here
+105 |         isApplicationBundle: true, isAdHocSigned: false,
+106 |         feedURL: "https://example.com/appcast.xml", publicKey: Data(repeating: 9, count: 32).base64EncodedString())
+107 |
+108 |     init(environment: UpdateEnvironment = enabledEnvironment, automaticChecks: Bool = true) throws {
+    |                                           `- warning: main actor-isolated static property 'enabledEnvironment' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+109 |         let settings = RemotePluginSettings()
+110 |         settings.values.automaticUpdateChecks = automaticChecks
+<worktree>/Tests/OpenTypeTests/EspressoFallbackTests.swift:114:66: warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+112 |                 if index == 0 {
+113 |                     outcome = await processor.consumeEspressoOutcome()
+114 |                     let espresso = try await processor.providers.create(id: "generation.ane", request: .inference)
+    |                                                                  `- warning: conformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context [#IsolatedConformances]
+115 |                     let espressoIsLoaded = await espresso.isLoaded
+116 |                     XCTAssertFalse(espressoIsLoaded)
+
+<worktree>/Tests/OpenTypeTests/IndustryLexiconTests.swift:38:27: warning: 'init(contentsOf:)' was deprecated in macOS 15: Use `init(contentsOf:encoding:)` instead [#DeprecatedDeclaration]
+ 36 |     func testImportedPacksHaveLicensedTermsWithoutAutomaticRewrites() throws {
+ 37 |         let license = try XCTUnwrap(DataResources.bundle.url(forResource: "THUOCL-LICENSE", withExtension: "txt"))
+ 38 |         XCTAssertTrue(try String(contentsOf: license).contains("Copyright (c) 2018 THUNLP"))
+    |                           `- warning: 'init(contentsOf:)' was deprecated in macOS 15: Use `init(contentsOf:encoding:)` instead [#DeprecatedDeclaration]
+ 39 |         for pack in catalog.packs {
+ 40 |             let curatedCount = pack.id == .technology ? 32 : 30
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[#IsolatedConformances]: <https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances>
+[2614 / 2618] OpenTypeTests-product
+[2616 / 2618] OpenTypeTests-product
+Build complete! (88.64秒)
+Test Suite 'Selected tests' started at 2026-10-24 23:40:28.577.
+Test Suite 'UtterUpdatesTests.xctest' started at 2026-10-24 23:40:28.579.
+Test Suite 'UtterUpdatesTests.xctest' passed at 2026-10-24 23:40:28.579.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:28.579.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:28.667.
+Test Suite 'UtterSessionTests.xctest' started at 2026-10-24 23:40:28.667.
+Test Suite 'UtterSessionTests.xctest' passed at 2026-10-24 23:40:28.667.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:28.667.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:28.738.
+Test Suite 'UtterRuntimeTests.xctest' started at 2026-10-24 23:40:28.739.
+Test Suite 'UtterRuntimeTests.xctest' passed at 2026-10-24 23:40:28.739.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:28.739.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:28.811.
+Test Suite 'UtterRemoteMicTests.xctest' started at 2026-10-24 23:40:28.812.
+Test Suite 'UtterRemoteMicTests.xctest' passed at 2026-10-24 23:40:28.812.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:28.812.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:28.912.
+Test Suite 'UtterRemoteInferenceTests.xctest' started at 2026-10-24 23:40:28.912.
+Test Suite 'UtterRemoteInferenceTests.xctest' passed at 2026-10-24 23:40:28.912.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:28.912.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:28.983.
+Test Suite 'UtterProcessingTests.xctest' started at 2026-10-24 23:40:28.984.
+Test Suite 'UtterProcessingTests.xctest' passed at 2026-10-24 23:40:28.984.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:28.984.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:29.106.
+Test Suite 'UtterModelsTests.xctest' started at 2026-10-24 23:40:29.106.
+Test Suite 'UtterModelsTests.xctest' passed at 2026-10-24 23:40:29.106.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:29.106.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:29.179.
+Test Suite 'UtterMacServicesTests.xctest' started at 2026-10-24 23:40:29.180.
+Test Suite 'UtterMacServicesTests.xctest' passed at 2026-10-24 23:40:29.180.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:29.180.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:29.251.
+Test Suite 'UtterIngressTests.xctest' started at 2026-10-24 23:40:29.252.
+Test Suite 'UtterIngressTests.xctest' passed at 2026-10-24 23:40:29.252.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:29.252.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:29.322.
+Test Suite 'UtterEvaluationTests.xctest' started at 2026-10-24 23:40:29.322.
+Test Suite 'UtterEvaluationTests.xctest' passed at 2026-10-24 23:40:29.322.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:29.322.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:29.394.
+Test Suite 'UtterDataTests.xctest' started at 2026-10-24 23:40:29.394.
+Test Suite 'SettingsStoreTests' started at 2026-10-24 23:40:29.394.
+Test Case '-[UtterDataTests.SettingsStoreTests testAutomaticUpdateChecksDefaultOnAndPersistOptOut]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testAutomaticUpdateChecksDefaultOnAndPersistOptOut]' passed (0.010 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testCompoundUpdateNotifiesOnceAfterPersistenceAndHotkeyNormalization]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testCompoundUpdateNotifiesOnceAfterPersistenceAndHotkeyNormalization]' passed (0.005 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testLegacyMigrationAndExplicitZeroGainRemainCompatible]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testLegacyMigrationAndExplicitZeroGainRemainCompatible]' passed (0.002 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testModelDownloadSourceDefaultsPersistsAndFallsBackForUnknownValues]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testModelDownloadSourceDefaultsPersistsAndFallsBackForUnknownValues]' passed (0.004 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testReentrantMutationKeepsNotificationSnapshotsInOrder]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testReentrantMutationKeepsNotificationSnapshotsInOrder]' passed (0.004 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testSessionSnapshotStaysFrozenAndReopeningPreservesChanges]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testSessionSnapshotStaysFrozenAndReopeningPreservesChanges]' passed (0.006 seconds).
+Test Case '-[UtterDataTests.SettingsStoreTests testTokenRotationKeepsOriginalKeyAndDoesNotChangeComposition]' started.
+Test Case '-[UtterDataTests.SettingsStoreTests testTokenRotationKeepsOriginalKeyAndDoesNotChangeComposition]' passed (0.007 seconds).
+Test Suite 'SettingsStoreTests' passed at 2026-10-24 23:40:29.433.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.038 (0.038) seconds
+Test Suite 'UtterDataTests.xctest' passed at 2026-10-24 23:40:29.433.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.038 (0.038) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:29.433.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.038 (0.039) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:29.506.
+Test Suite 'UtterContractsTests.xctest' started at 2026-10-24 23:40:29.507.
+Test Suite 'UtterContractsTests.xctest' passed at 2026-10-24 23:40:29.507.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:29.507.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:29.707.
+Test Suite 'UtterBuiltinsTests.xctest' started at 2026-10-24 23:40:29.707.
+Test Suite 'UtterBuiltinsTests.xctest' passed at 2026-10-24 23:40:29.707.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:29.707.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:29.781.
+Test Suite 'UtterAudioTests.xctest' started at 2026-10-24 23:40:29.782.
+Test Suite 'UtterAudioTests.xctest' passed at 2026-10-24 23:40:29.782.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:29.782.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-24 23:40:29.982.
+Test Suite 'OpenTypeTests.xctest' started at 2026-10-24 23:40:29.983.
+Test Suite 'SettingsProjectionTests' started at 2026-10-24 23:40:29.983.
+Test Case '-[OpenTypeTests.SettingsProjectionTests testModelDownloadSourceSelectionSharesOneAuthorityAcrossViews]' started.
+Test Case '-[OpenTypeTests.SettingsProjectionTests testModelDownloadSourceSelectionSharesOneAuthorityAcrossViews]' passed (0.010 seconds).
+Test Case '-[OpenTypeTests.SettingsProjectionTests testProjectionWritesThroughToTheInjectedAuthority]' started.
+Test Case '-[OpenTypeTests.SettingsProjectionTests testProjectionWritesThroughToTheInjectedAuthority]' passed (0.005 seconds).
+Test Case '-[OpenTypeTests.SettingsProjectionTests testReadOnlyComputedValuesAndWritableBindingsUseTheSameSnapshot]' started.
+Test Case '-[OpenTypeTests.SettingsProjectionTests testReadOnlyComputedValuesAndWritableBindingsUseTheSameSnapshot]' passed (0.004 seconds).
+Test Suite 'SettingsProjectionTests' passed at 2026-10-24 23:40:30.003.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.019 (0.020) seconds
+Test Suite 'OpenTypeTests.xctest' passed at 2026-10-24 23:40:30.003.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.019 (0.020) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 23:40:30.003.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.019 (0.020) seconds

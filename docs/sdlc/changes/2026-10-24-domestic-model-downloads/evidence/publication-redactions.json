@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-25",
+  "redactions": [
+    "local worktree and home paths",
+    "per-user temporary paths",
+    "URL query strings",
+    "trailing whitespace and blank lines at end of public text normalized"
+  ],
+  "logs": [
+    {
+      "raw_name": "approval-sdlc.log",
+      "raw_sha256": "d43a9eadc5ea5d97d905a9c087cfd396d3cb48dcdfd15820aa077fdb3e490140",
+      "published_name": "approval-sdlc.txt",
+      "published_sha256": "d43a9eadc5ea5d97d905a9c087cfd396d3cb48dcdfd15820aa077fdb3e490140"
+    },
+    {
+      "raw_name": "ci-basic.log",
+      "raw_sha256": "59550f7f466257753168181e28fc6b1d718c30b67a22be0d4aa654ddfdb3d6cb",
+      "published_name": "ci-basic.txt",
+      "published_sha256": "a3c7046f78d4dfbbe6e04a088739a7909fec16e782402b4ff1cc7b97b038bc87"
+    },
+    {
+      "raw_name": "ci-ui-final.log",
+      "raw_sha256": "ed46d2612eeb0484576168722b872352ec5a6504e2ed91da10c7927be67b0ea7",
+      "published_name": "ci-ui-final.txt",
+      "published_sha256": "37767fa8fe9f295ad23a77d0a4449d83d367f347b8305f1f26013e827d2cf181"
+    },
+    {
+      "raw_name": "focused-tests.log",
+      "raw_sha256": "da8012ca9f0e9d125eed2770cef78b3e7814afc3f64bb8e67857910c04e6b7f0",
+      "published_name": "focused-tests.txt",
+      "published_sha256": "9b9225854262b9283ce1b0509e20831f7e9ea5c6e8c2cd43722ba2b0c61f86ed"
+    },
+    {
+      "raw_name": "layout-render.log",
+      "raw_sha256": "83dc49f935765d163113116d8b036508f486170af38341510b78c6fc5c2250d9",
+      "published_name": "layout-render.txt",
+      "published_sha256": "eb26b659a2083e882d4e98c2196363e84886799c82e51fdc61e3ff86e9a29db4"
+    },
+    {
+      "raw_name": "layout-ui-final.log",
+      "raw_sha256": "4f3c1afe4a451e85fd9d06026f70b3d9cc2b9eebbd7e344309f5a7d07afd4794",
+      "published_name": "layout-ui-final.txt",
+      "published_sha256": "0e767569f4f3e63031e53d9adeb9afe9fc549bf72a8656a559e1ff9540273c70"
+    },
+    {
+      "raw_name": "live-asr.log",
+      "raw_sha256": "bac50c5a8f4cd7183975b606a8821b5ee19ab57d4dde84b570e9860e273734f8",
+      "published_name": "live-asr.txt",
+      "published_sha256": "bac50c5a8f4cd7183975b606a8821b5ee19ab57d4dde84b570e9860e273734f8"
+    },
+    {
+      "raw_name": "release-build.log",
+      "raw_sha256": "ef38079b1d99b588f3e1ad80504663656bbb4122d74455bd12082aa138a6fa44",
+      "published_name": "release-build.txt",
+      "published_sha256": "390f63780ab30f35afc7039d620c4d5b3caf931bc2f7aed6873fb81d813f2f84"
+    },
+    {
+      "raw_name": "release-ui-final.log",
+      "raw_sha256": "b75fb8a37e7bb63ce9deacac6188e21cb3bc9d9d9591a3b05a0e0d59c68b9fae",
+      "published_name": "release-ui-final.txt",
+      "published_sha256": "5980fea37cc223cb2db50fd61ddd6e847411b3d6546c9e018165cf006f974564"
+    },
+    {
+      "raw_name": "release-ui-timestamp-failure.log",
+      "raw_sha256": "63ab5e0e4498eac0186641267e7148cdf7963b39f37d9d34cf19d5aa1a7d3878",
+      "published_name": "release-ui-timestamp-failure.txt",
+      "published_sha256": "7fe89234a7bbf2bccb2b4e8e73323dc773545e654ac2d925568eafd5278ee6d4"
+    },
+    {
+      "raw_name": "request-routing.log",
+      "raw_sha256": "2d2ab0c0b5cd6708664243ebafdcf10b753f99e9d58306023f24ed015b9e5239",
+      "published_name": "request-routing.txt",
+      "published_sha256": "9edd9db3a202bf2d989639e1c5396ed6c996f4fb1bc651539652ad4029b2aae2"
+    },
+    {
+      "raw_name": "sdlc-handoff.log",
+      "raw_sha256": "d43a9eadc5ea5d97d905a9c087cfd396d3cb48dcdfd15820aa077fdb3e490140",
+      "published_name": "sdlc-handoff.txt",
+      "published_sha256": "d43a9eadc5ea5d97d905a9c087cfd396d3cb48dcdfd15820aa077fdb3e490140"
+    },
+    {
+      "raw_name": "sdlc-ui-final.log",
+      "raw_sha256": "d43a9eadc5ea5d97d905a9c087cfd396d3cb48dcdfd15820aa077fdb3e490140",
+      "published_name": "sdlc-ui-final.txt",
+      "published_sha256": "d43a9eadc5ea5d97d905a9c087cfd396d3cb48dcdfd15820aa077fdb3e490140"
+    },
+    {
+      "raw_name": "sdlc.log",
+      "raw_sha256": "d43a9eadc5ea5d97d905a9c087cfd396d3cb48dcdfd15820aa077fdb3e490140",
+      "published_name": "sdlc.txt",
+      "published_sha256": "d43a9eadc5ea5d97d905a9c087cfd396d3cb48dcdfd15820aa077fdb3e490140"
+    },
+    {
+      "raw_name": "settings-tests.log",
+      "raw_sha256": "7fc45e2f321d31f537e671c6577e5871822e401d5ae3dd44dd0199f4fb84e899",
+      "published_name": "settings-tests.txt",
+      "published_sha256": "d28807fa66f79efa1853a9c6cbeadf5f0e1043a13f3ab709e9959cf4ce1e44b9"
+    }
+  ]
+}

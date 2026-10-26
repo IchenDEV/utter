@@ -69,6 +69,7 @@ package struct SettingsValues: Equatable, Sendable {
     package var preloadSpeechModelOnLaunch: Bool = true
     package var preloadFormattingModelOnLaunch: Bool = true
     package var modelStoragePath: String = DataLocations.models.path
+    package var modelDownloadSource: ModelDownloadSource = .huggingFace
     package var localWhisperModelPaths: [String: String] = [:]
     package var localLLMModelPaths: [String: String] = [:]
     package var developerInterfaceEnabled: Bool = false

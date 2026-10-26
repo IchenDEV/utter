@@ -672,7 +672,7 @@
 "plugins.restart_required" = "Saved. Restart Utter to apply the plugin combination.";
 "plugins.saved" = "Saved. New sessions will use the updated configuration.";
 "plugins.reset_saved" = "Default configuration saved. The previous file was backed up. Restart Utter to apply it.";
-"plugins.recovery" = "The plugin combination could not start. Open Plugins in Settings to correct it or restore defaults.";
+"plugins.recovery" = "The plugin combination could not start. Open Integrations in Settings to correct it or restore defaults.";
 
 "common.save" = "Save";
 
@@ -684,3 +684,11 @@
 "benchmark.short" = "Short";
 "benchmark.medium" = "Medium";
 "benchmark.long" = "Long";
+
+"model.source.section" = "Model downloads";
+"model.source.title" = "Download source";
+"model.source.huggingface" = "Hugging Face (official)";
+"model.source.hf_mirror" = "HF-Mirror (China mirror)";
+"model.source.help" = "Changes apply to downloads started afterward. Active downloads keep their source.";
+"model.source.mirror_help" = "Public models download from hf-mirror.com. Saved Hugging Face credentials are not sent to the mirror.";
+"model.source.confirm" = "Download source: %@";

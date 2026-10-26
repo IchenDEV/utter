@@ -119,7 +119,7 @@ private struct CatalogFixture {
     func catalog(access: any ModelResourceAccess = LocalModelAccessGate(),
                  cleanup: @escaping ModelCatalog.StartupCleanupFactory = { _ in Task { 0 } }) -> ModelCatalog {
         ModelCatalog(settings: settings, log: Log(service: CatalogDiagnostics()), access: access,
-                     textDownloads: TextModelDownloadOperations(download: { _, _, _ in }, validate: { _ in }),
+                     textDownloads: TextModelDownloadOperations(download: { _, _, _, _ in }, validate: { _ in }),
                      artifacts: MLXModelArtifacts.text + MLXModelArtifacts.speech,
                      speechDescriptors: { MLXModelArtifacts.speechDescriptors }, startupStorageRoot: root, startupCleanup: cleanup)
     }

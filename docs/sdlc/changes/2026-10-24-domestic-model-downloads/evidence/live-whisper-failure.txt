@@ -1,0 +1,5 @@
+[Mirror verification] whisper production catalog download
+[ModelCatalog] Whisper download failed: Invalid metadata: File metadata must have been retrieved from server
+[Mirror verification] whisper offline load
+Test Case '-[OpenTypeTests.ModelDownloadSourceLiveTests testMirrorWhisperDownloadAndOfflineLoad]' failed (1.334 seconds).
+Test Case '-[OpenTypeTests.ModelDownloadSourceLiveTests testMirrorWhisperDownloadAndOfflineLoad]' failed (9.718 seconds).

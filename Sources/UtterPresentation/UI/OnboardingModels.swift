@@ -19,6 +19,8 @@ extension OnboardingView {
             }
             .padding(.top, 24)
 
+            ModelDownloadSourcePicker()
+
             if let model = catalog.llmModels.first(where: { $0.id == settings.llmModel }) {
                 HStack(spacing: 8) {
                     Text(model.displayName)
@@ -110,6 +112,7 @@ extension OnboardingView {
             }
         }
         .padding(.horizontal, 32)
+        .padding(.bottom, 12)
         .onAppear {
             catalog.refreshStatus(recheckingErrors: true)
         }
@@ -134,7 +137,7 @@ extension OnboardingView {
             model?.displayName ?? settings.llmModel,
             remaining.map(ModelCatalogProjection.formatBytes) ?? L("download.unknown"),
             storage.root.path
-        )
+        ) + "\n" + String(format: L("model.source.confirm"), settings.modelDownloadSource.displayName)
     }
 
     var canContinueFromModelPrep: Bool {

@@ -14,10 +14,10 @@ extension PresentationPlugins {
             }
     }
     package static func remote() -> PluginRegistration {
-        contribution(id: "presentation.remote", role: .settings, order: 35, label: "tab.remote", symbol: "appletvremote.gen4",
-            requires: platformRequirements) { context, _ in
+        contribution(id: "presentation.remote", role: .settings, order: 5, label: "tab.remote", symbol: "appletvremote.gen4",
+            group: SettingsGroup.integrations.id, requires: platformRequirements) { context, _ in
                 let platform = try platform(context)
-                return { _ in AnyView(RemoteMicSettingsView().environmentObject(platform)) }
+                return { _ in AnyView(RemoteMicSettingsView(platform: platform)) }
             }
     }
     package static func history() -> PluginRegistration {
@@ -55,8 +55,8 @@ extension PresentationPlugins {
             }
     }
     package static func integrations() -> PluginRegistration {
-        contribution(id: "presentation.integrations", role: .settings, order: 40, label: "settings.integrations", symbol: "point.3.connected.trianglepath.dotted",
-            requires: [IntegrationServices.clients.required]) { context, _ in
+        contribution(id: "presentation.integrations", role: .settings, order: 0, label: "settings.integrations", symbol: "point.3.connected.trianglepath.dotted",
+            group: SettingsGroup.integrations.id, requires: [IntegrationServices.clients.required]) { context, _ in
                 let clients = try context.require(IntegrationServices.clients)
                 return { _ in AnyView(IntegrationsSettingsView(registry: clients)) }
             }

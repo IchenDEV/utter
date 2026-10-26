@@ -1,0 +1,31 @@
+import AppKit
+import XCTest
+let application = NSApplication.shared
+application.setActivationPolicy(.regular)
+application.finishLaunching()
+let menu = NSMenu()
+let appItem = NSMenuItem()
+let appMenu = NSMenu(title: "Utter Source QA")
+appMenu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+appItem.submenu = appMenu
+menu.addItem(appItem)
+let windowItem = NSMenuItem(title: "Window", action: nil, keyEquivalent: "")
+let windowMenu = NSMenu(title: "Window")
+windowItem.submenu = windowMenu
+menu.addItem(windowItem)
+application.mainMenu = menu
+application.windowsMenu = windowMenu
+setenv("UTTER_SOURCE_UI_QA", "1", 1)
+setenv("UTTER_SOURCE_QA_SUITE", "UtterSourceQA-t3-8ad22555", 1)
+setenv("UTTER_SOURCE_QA_ROOT", "/private/tmp/utter-domestic-ui-models-t3-8ad22555", 1)
+setenv("UTTER_SOURCE_QA_KEEP", "1", 1)
+let bundle = Bundle(path: "<worktree>/.build/out/Products/Debug/OpenTypeTests.xctest")!
+do { try bundle.loadAndReturnError() }
+catch {
+    try? String(describing: error).write(toFile: "/private/tmp/utter-source-window-host-error.txt", atomically: true, encoding: .utf8)
+    exit(1)
+}
+let test = NSClassFromString("OpenTypeTests.ModelDownloadSourceWindowTests") as! XCTestCase.Type
+let suite = XCTestSuite(forTestCaseClass: test)
+suite.run()
+exit(suite.testRun?.hasSucceeded == true ? 0 : 1)
