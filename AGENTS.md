@@ -66,6 +66,24 @@ Utter is a macOS menu bar voice input app built with Swift 6 / SwiftUI / AppKit.
 - Keep repository automation under `scripts/`; do not create another top-level script directory
 - Comments: only non-obvious intent, no narrating code
 
+## Cursor Cloud specific instructions
+
+Cloud Agent VMs are Linux x86_64. Utter itself is a macOS 26 Apple Silicon menu bar app. `swift build`, `swift test`, `scripts/build-app.sh`, and `scripts/build-and-run.sh` need macOS 26: `Package.swift` sets `.macOS("26.0")`, and `OpenTypeCLI` imports AppKit (`no such module 'AppKit'` on Linux). PR CI runs those on `macos-26`. A Linux failure there is an environment limit, not a product regression.
+
+The Cloud Agent image provides Swift 6.2.4 (`swift-tools-version: 6.2` in `Package.swift`) at `/opt/swift`, with `swift` and `swiftc` on the default PATH via `/usr/local/bin`. No service has to be running at boot. The checked-in app does not listen on a port.
+
+These checks run on Linux:
+
+- `bash scripts/sdlc-checks.sh`
+- `bash scripts/tests/test_build_version.sh`
+- `bash scripts/tests/test_release_version.sh`
+- `bash scripts/test-industry-lexicons.sh` — `swiftc` compiles the vocabulary engine and evaluates `Sources/Resources/IndustryLexicons.json`
+- `python3 -m unittest scripts/tests/test_evaluate_voice_quality.py`
+
+`scripts/ci-basic-checks.sh` stops at `plutil`, which is not on Linux (`/usr/libexec/PlistBuddy` is macOS-only too). Run that script on macOS.
+
+The public site is the static tree in `docs/`. Preview it with `python3 -m http.server 8765 --directory docs`.
+
 ## Common Pitfalls
 
 - **Metal shaders**: `swift build` does NOT bundle `.metallib` files — always use `xcodebuild` for release builds
