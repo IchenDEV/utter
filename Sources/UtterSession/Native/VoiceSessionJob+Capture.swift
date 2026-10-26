@@ -53,10 +53,10 @@ extension VoiceSessionJob {
                     guard let self, let control, self.capturing, (try? self.check(control)) != nil else { return }
                     self.engine?.appendAudioBuffer(buffer)
                 }
-            } : nil, inputUnavailable: { [weak self, weak control] in
+            } : nil, inputUnavailable: { [weak self, weak control] reason in
                 callbackTasks.enqueue {
                     guard let self, let control, (try? self.check(control)) != nil else { return }
-                    self.captureFailure = CaptureError.startFailed(.noUsableInput)
+                    self.captureFailure = CaptureError.startFailed(reason)
                     control.cancel()
                 }
             }))

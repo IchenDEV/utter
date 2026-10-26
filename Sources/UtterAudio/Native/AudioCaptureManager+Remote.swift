@@ -62,7 +62,7 @@ extension AudioCaptureManager {
         if startLocal(deviceID: requestedDeviceID) == nil {
             onAutoSwitch?()
         } else {
-            onInputUnavailable?()
+            onInputUnavailable?(.noUsableInput)
         }
     }
 }
