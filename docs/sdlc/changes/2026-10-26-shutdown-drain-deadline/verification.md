@@ -1,8 +1,8 @@
 # Verification: Bound the shutdown drain so a stalled subsystem cannot strand the app
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, explicit approval in this conversation: 批准 (accepts the unmeasured items listed below)
+**Approved-date:** 2026-10-26
 **Upstream:** [plan.md](plan.md) (approved 2026-10-26)
 
 Commits on branch `cursor/33affdbd` (local, not pushed), base `origin/main` fd87c34:
