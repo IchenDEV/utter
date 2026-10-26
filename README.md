@@ -172,6 +172,12 @@ Fields that do not expose Chromium's accessibility node (for example Safari and 
 
 To return to the previous behavior without a new build, run `defaults write com.opentype.voiceinput deliveryWebEditorPasteDisabled -bool true`; undo it with `defaults delete com.opentype.voiceinput deliveryWebEditorPasteDisabled`. It applies to the next dictation; restart Utter if it does not.
 
+### Utter will not reopen after an update
+
+If the menu bar icon disappears during an update and opening Utter again does nothing, the previous copy never finished quitting and is still running, so the installer is waiting for it. Force-quit it once: in Activity Monitor select Utter and choose Force Quit, or run `pkill -9 -x Utter` in Terminal. The update then installs and Utter relaunches; if it does not, open Utter again.
+
+From 0.0.60 on, a quit that does not finish within 5 seconds ends on its own, and the system log (subsystem `com.opentype.voiceinput`, message starting `Shutdown exceeded`) names the part that held it up. Updating from an older version can still need the one force-quit above.
+
 ## Local Models
 
 Everything below runs on your Mac. Download a model once and dictation keeps working with the network off.

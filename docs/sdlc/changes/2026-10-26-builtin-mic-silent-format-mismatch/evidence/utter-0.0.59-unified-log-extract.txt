@@ -1,0 +1,6 @@
+2026-10-26 17:18:21.966 E   [com.apple.avfaudio:avae]            AVAEUtility.mm:176   Format mismatch: input hw <AVAudioFormat 0x…:  1 ch,  44100 Hz, Float32>, client format <AVAudioFormat 0x…:  1 ch,  48000 Hz, Float32>
+2026-10-26 17:18:21.967 E   [com.apple.avfaudio:avae]     AVAudioEngineGraph.mm:2058  Failed to create tap, config change pending!
+2026-10-26 17:18:24.822 E   [com.apple.avfaudio:avae]            AVAEUtility.mm:176   Format mismatch: input hw <AVAudioFormat 0x…:  1 ch,  44100 Hz, Float32>, client format <AVAudioFormat 0x…:  1 ch,  48000 Hz, Float32>
+2026-10-26 17:18:24.822 E   [com.apple.avfaudio:avae]     AVAudioEngineGraph.mm:2058  Failed to create tap, config change pending!
+2026-10-26 17:18:50.678 E   [com.apple.avfaudio:avae]            AVAEUtility.mm:176   Format mismatch: input hw <AVAudioFormat 0x…:  1 ch,  44100 Hz, Float32>, client format <AVAudioFormat 0x…:  1 ch,  48000 Hz, Float32>
+2026-10-26 17:18:50.678 E   [com.apple.avfaudio:avae]     AVAudioEngineGraph.mm:2058  Failed to create tap, config change pending!

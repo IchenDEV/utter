@@ -664,6 +664,7 @@
 "delivery.uncertain" = "Insertion unconfirmed";
 "delivery.notDelivered" = "Not inserted";
 "pipeline.mic_engine_failed" = "The microphone could not start. Check the selected input device.";
+"pipeline.mic_no_audio" = "The microphone is not delivering audio. Check the selected input device or whether another app is using it.";
 "capture.remote_unavailable" = "The remote microphone is unavailable.";
 
 "plugins.title" = "Plugins";

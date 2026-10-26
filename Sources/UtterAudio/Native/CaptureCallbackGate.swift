@@ -16,7 +16,7 @@ final class CaptureCallbackGate: @unchecked Sendable {
             level: { [self] value in perform { callbacks.level(value) } },
             buffer: callbacks.buffer.map { callback in { [self] buffer in perform { callback(buffer) } } },
             switchedInput: { [self] in perform(callbacks.switchedInput) },
-            inputUnavailable: { [self] in perform(callbacks.inputUnavailable) }
+            inputUnavailable: { [self] reason in perform { callbacks.inputUnavailable(reason) } }
         )
     }
 

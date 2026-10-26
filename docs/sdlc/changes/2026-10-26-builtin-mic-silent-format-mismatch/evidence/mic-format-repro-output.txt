@@ -1,0 +1,7 @@
+# Machine: MacBook Pro, macOS 27, built-in mic 44.1 kHz, default output 48 kHz
+# Command: swiftc -O mic-format-repro.swift -o repro && ./repro
+mic authorization status: 3 (3 = authorized)
+[current-code (outputFormat)] outputFormat=48000.0Hz/1ch  inputFormat(hw)=44100.0Hz/1ch
+[current-code (outputFormat)] tapFormat=48000.0Hz  frames=0  peak=0.0  configChanges=1
+[candidate-fix (inputFormat)] outputFormat=48000.0Hz/1ch  inputFormat(hw)=44100.0Hz/1ch
+[candidate-fix (inputFormat)] tapFormat=44100.0Hz  frames=83790  peak=0.027394675  configChanges=1

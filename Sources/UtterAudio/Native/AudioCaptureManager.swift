@@ -22,7 +22,7 @@ package final class AudioCaptureManager {
     package var onAutoSwitch: (() -> Void)?
     /// Called on the main run loop when the active input was lost and no other
     /// usable input exists.
-    package var onInputUnavailable: (() -> Void)?
+    package var onInputUnavailable: ((AudioCaptureStartFailure) -> Void)?
     var usesRemoteMic = false
     var remoteSilenceTask: Task<Void, Never>?
     var requestedDeviceID: String?
@@ -33,6 +33,9 @@ package final class AudioCaptureManager {
     var preferredInputUID: String?
     var activeInputUID: String?
     var failoverTimer: Timer?
+    /// Start of the current liveness window; reset whenever the tap is rebuilt.
+    var captureStartedAt = Date()
+    var livenessRetries = 0
     var recordingFormat: AVAudioFormat?
     var converter: AVAudioConverter?
     var converterSourceFormat: AVAudioFormat?
@@ -114,10 +117,8 @@ package final class AudioCaptureManager {
             setInputDevice(uid: uid)
         }
 
-        let inputNode = engine.inputNode
-        let format = inputNode.outputFormat(forBus: 0)
-        guard format.sampleRate > 0, format.channelCount > 0 else {
-            log.error("[AudioCapture] invalid input format: \(format)")
+        guard let format = currentCaptureFormat() else {
+            log.error("[AudioCapture] no usable input format")
             return .engineFailed
         }
 
@@ -139,10 +140,7 @@ package final class AudioCaptureManager {
             return .engineFailed
         }
 
-        guard installCaptureTap() else {
-            audioFile = nil
-            return .engineFailed
-        }
+        installCaptureTap(format: format)
 
         engine.prepare()
         do {
@@ -155,6 +153,8 @@ package final class AudioCaptureManager {
         }
 
         isRunning = true
+        captureStartedAt = Date()
+        livenessRetries = 0
         startFailoverMonitor()
         return nil
     }
@@ -181,6 +181,7 @@ package final class AudioCaptureManager {
         converterSourceFormat = nil
         preferredInputUID = nil
         activeInputUID = nil
+        livenessRetries = 0
         levelCallback = nil
         bufferCallback = nil
         isRunning = false

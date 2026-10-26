@@ -37,15 +37,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         terminating = true
         startup?.cancel()
         Task { [self] in
-            await startup?.value
-            do {
-                try await application?.stop()
-                sender.reply(toApplicationShouldTerminate: true)
-            } catch {
-                terminating = false
-                showFailure(L("error.operation_failed"))
-                sender.reply(toApplicationShouldTerminate: false)
-            }
+            await ApplicationShutdown.run(startup: startup, application: { self.application })
+            sender.reply(toApplicationShouldTerminate: true)
         }
         return .terminateLater
     }

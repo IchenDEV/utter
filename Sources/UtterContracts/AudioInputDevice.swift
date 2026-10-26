@@ -16,12 +16,14 @@ package enum AudioCaptureStartFailure: Error, Equatable, LocalizedError {
     case permissionDenied
     case noUsableInput
     case engineFailed
+    case noAudioReceived
 
     package var errorDescription: String? {
         switch self {
         case .permissionDenied: return L("pipeline.mic_failed_permissions")
         case .noUsableInput: return L("pipeline.mic_unavailable")
         case .engineFailed: return L("pipeline.mic_engine_failed")
+        case .noAudioReceived: return L("pipeline.mic_no_audio")
         }
     }
 }

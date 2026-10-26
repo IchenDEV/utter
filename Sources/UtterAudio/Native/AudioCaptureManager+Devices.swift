@@ -33,7 +33,7 @@ extension AudioCaptureManager {
         )
         switch action {
         case .keep:
-            break
+            evaluateLiveness()
         case .switchTo(let uid):
             switchInput(to: uid)
         case .fail:
@@ -41,33 +41,67 @@ extension AudioCaptureManager {
         }
     }
 
+    /// A tap that never receives frames leaves a "running" engine that records
+    /// silence. Rebuild it once from the hardware format, then report the failure.
+    func evaluateLiveness() {
+        switch CaptureLiveness.decide(
+            elapsed: Date().timeIntervalSince(captureStartedAt),
+            framesReceived: lastActivity.frameCount,
+            retriesUsed: livenessRetries
+        ) {
+        case .healthy, .wait:
+            break
+        case .retry:
+            livenessRetries += 1
+            log.info("[AudioCapture] no audio frames after \(CaptureLiveness.graceSeconds) s; restarting capture")
+            guard let uid = activeInputUID, restartCapture(on: uid) else {
+                handleInputUnavailable(.noAudioReceived)
+                return
+            }
+        case .fail:
+            log.error("[AudioCapture] no audio frames after restart")
+            handleInputUnavailable(.noAudioReceived)
+        }
+    }
+
     func switchInput(to uid: String) {
         let name = AudioInputDevices.available().first(where: { $0.uid == uid })?.name ?? uid
         log.info("[AudioCapture] switching to fallback input")
-        engine.inputNode.removeTap(onBus: 0)
-        engine.stop()
-        setInputDevice(uid: uid)
-        guard installCaptureTap() else {
+        guard restartCapture(on: uid) else {
             handleInputUnavailable()
             return
         }
-        engine.prepare()
-        do {
-            try engine.start()
-        } catch {
-            log.error("[AudioCapture] fallback engine start failed: \(error.localizedDescription)")
-            handleInputUnavailable()
-            return
-        }
-        activeInputUID = uid
         log.info("[AudioCapture] fallback input active: \(name)")
         onAutoSwitch?()
     }
 
-    func handleInputUnavailable() {
-        log.error("[AudioCapture] active input lost with no fallback")
+    /// Rebuilds the tap on `uid` with a freshly read hardware format.
+    func restartCapture(on uid: String) -> Bool {
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
+        setInputDevice(uid: uid)
+        guard let format = currentCaptureFormat(allowClientFallback: false) else {
+            log.error("[AudioCapture] no usable hardware format on restart")
+            return false
+        }
+        installCaptureTap(format: format)
+        engine.prepare()
+        do {
+            try engine.start()
+        } catch {
+            engine.inputNode.removeTap(onBus: 0)
+            log.error("[AudioCapture] engine restart failed: \(error.localizedDescription)")
+            return false
+        }
+        activeInputUID = uid
+        captureStartedAt = Date()
+        return true
+    }
+
+    func handleInputUnavailable(_ reason: AudioCaptureStartFailure = .noUsableInput) {
+        log.error("[AudioCapture] active input unavailable: \(reason)")
         stop()
-        onInputUnavailable?()
+        onInputUnavailable?(reason)
     }
 
     // MARK: - Device Management

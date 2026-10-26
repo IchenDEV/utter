@@ -172,6 +172,12 @@ Utter 每天检查一次更新；也可以在 **设置 → 关于** 或菜单栏
 
 不重新安装就想回到之前的行为,可运行 `defaults write com.opentype.voiceinput deliveryWebEditorPasteDisabled -bool true`;恢复用 `defaults delete com.opentype.voiceinput deliveryWebEditorPasteDisabled`。对下一次听写生效;若没有生效,请重启 Utter。
 
+### 更新后 Utter 打不开
+
+如果更新过程中菜单栏图标消失,之后再点开 Utter 也没有反应,说明旧版本没有真正退出、还在后台运行,安装程序正在等它。强制退出一次即可:在活动监视器中选中 Utter 并选择强制退出,或在终端运行 `pkill -9 -x Utter`。随后更新会自动安装并重新打开 Utter;若没有打开,请再手动打开一次。
+
+从 0.0.60 起,退出超过 5 秒仍未完成时会自行结束,并在系统日志(subsystem `com.opentype.voiceinput`,以 `Shutdown exceeded` 开头的消息)中写明是哪个部分拖住了退出。从更旧的版本更新时,仍可能需要上面这一次强制退出。
+
 ## 本地模型
 
 以下模型都在你的 Mac 上运行。模型下载一次后，断网也能继续听写。
