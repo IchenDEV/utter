@@ -121,4 +121,43 @@ final class PluginRuntimeTests: XCTestCase {
         XCTAssertEqual(try runtime.service(number), 2)
         try await runtime.stop()
     }
+
+    func testStalledDisposalIsNamedWhilePendingAndClearsOnceItEnds() async throws {
+        var trace: [String] = []
+        let gate = DisposalGate()
+        func plugin(_ id: String, stalls: Bool = false) -> PluginRegistration {
+            PluginRegistration(descriptor: PluginDescriptor(id: id)) { context, _ in
+                try context.scope.onDispose {
+                    if stalls { await gate.wait() }
+                    trace.append(id)
+                }
+            }
+        }
+        let runtime = PluginRuntime(catalog: try PluginCatalog([
+            plugin("a.first"), plugin("b.stalled", stalls: true), plugin("c.last"),
+        ]))
+        try await runtime.start(["a.first", "b.stalled", "c.last"].map { PluginSelection($0) })
+        XCTAssertNil(runtime.disposingPluginID)
+        XCTAssertEqual(runtime.pendingDisposalPluginIDs, ["c.last", "b.stalled", "a.first"])
+
+        let stop = Task { try await runtime.stop() }
+        while !gate.isWaiting { await Task.yield() }
+        XCTAssertEqual(runtime.disposingPluginID, "b.stalled")
+        XCTAssertEqual(runtime.pendingDisposalPluginIDs, ["b.stalled", "a.first"])
+
+        gate.release()
+        try await stop.value
+        XCTAssertNil(runtime.disposingPluginID)
+        XCTAssertEqual(runtime.pendingDisposalPluginIDs, [])
+        XCTAssertEqual(trace, ["c.last", "b.stalled", "a.first"])
+    }
+}
+
+@MainActor
+private final class DisposalGate {
+    private var continuation: CheckedContinuation<Void, Never>?
+    var isWaiting: Bool { continuation != nil }
+
+    func wait() async { await withCheckedContinuation { continuation = $0 } }
+    func release() { continuation?.resume(); continuation = nil }
 }
