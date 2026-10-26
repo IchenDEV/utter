@@ -36,10 +36,10 @@ final class RemoteMicPluginTests: XCTestCase {
             try context.provide(DataServices.settings, value: settings)
             try context.provide(IntegrationServices.diagnostics, value: RemotePluginDiagnostics())
         }
-        let plugin = RemoteMicPlugins.capture { gain in
+        let plugin = RemoteMicPlugins.capture(makeBridge: { gain in
             injectedGain = gain
             return bridge
-        }
+        }, makeKeyRemap: { RemoteKeyMappingController(provider: RemoteKeyProviderFake()) })
         let runtime = PluginRuntime(catalog: try PluginCatalog([dependencies, plugin]))
         return (runtime, bridge, settings, { transports })
     }

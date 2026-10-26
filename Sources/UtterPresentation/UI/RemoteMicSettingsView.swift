@@ -58,6 +58,8 @@ struct RemoteMicSettingsView: View {
             Text(L("remote_mic.page.usage"))
         }
 
+        Section { RemoteKeyRemapRow().environmentObject(platform) }
+
         if settings.remoteMicEnabled {
             connectionSection
             audioSection

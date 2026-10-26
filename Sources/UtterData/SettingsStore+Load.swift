@@ -6,6 +6,7 @@ extension SettingsStore {
         case hotkeyAccessibilityPrompted
         case hotkeyType, translationHotkeyModifier, activationMode, tapInterval, speechEngine, whisperModel, llmModel
         case microphoneID, remoteMicEnabled, remoteMicGainDB, outputMode, languageStyle, customStylePrompt, playSounds
+        case remoteKeyRemapEnabled
         case audioGateSensitivity, audioWeakSpeechSensitivity
         case enableStreamingRecognitionBeta
         case allowClipboardPaste
@@ -66,6 +67,7 @@ extension SettingsStore {
         values.remoteMicGainDB = ud.object(forKey: Key.remoteMicGainDB.rawValue) == nil
             ? SettingsValues.defaultRemoteMicGainDB
             : min(24, max(0, ud.double(forKey: Key.remoteMicGainDB.rawValue)))
+        values.remoteKeyRemapEnabled = ud.object(forKey: Key.remoteKeyRemapEnabled.rawValue) as? Bool ?? true
         values.audioGateSensitivity = AudioSensitivity(
             rawValue: ud.string(forKey: Key.audioGateSensitivity.rawValue) ?? ""
         ) ?? .standard

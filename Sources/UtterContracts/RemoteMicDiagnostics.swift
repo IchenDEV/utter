@@ -17,12 +17,17 @@ package struct RemoteMicDiagnostics: Equatable, Sendable {
     package var modelNumber: String?
     package var lowNibbleFirst: Bool
     package var lastCapture: RemoteMicCaptureSource?
+    package var keyRemap: RemoteKeyRemapState
+    package var keyRemapReapplyCount: Int
 
     package init(discovery: RemoteMicDiscoverySource? = nil, modelNumber: String? = nil,
-                 lowNibbleFirst: Bool = false, lastCapture: RemoteMicCaptureSource? = nil) {
+                 lowNibbleFirst: Bool = false, lastCapture: RemoteMicCaptureSource? = nil,
+                 keyRemap: RemoteKeyRemapState = .off, keyRemapReapplyCount: Int = 0) {
         self.discovery = discovery
         self.modelNumber = modelNumber
         self.lowNibbleFirst = lowNibbleFirst
         self.lastCapture = lastCapture
+        self.keyRemap = keyRemap
+        self.keyRemapReapplyCount = keyRemapReapplyCount
     }
 }

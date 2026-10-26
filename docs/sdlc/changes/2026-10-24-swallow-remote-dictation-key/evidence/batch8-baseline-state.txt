@@ -1,0 +1,28 @@
+Batch 8 baseline capture — 2026-10-25 (independent verifier)
+Worktree: /Users/chenli/.cursor/worktrees/opentype/remote-dictation-key
+HEAD: 0e3096d (baseline 467e934)
+
+pgrep -x Utter:
+44932 (installed /Applications/Utter.app, pre-change)
+
+defaults read com.opentype.voiceinput remoteKeyRemapEnabled:
+Error: Could not find key 'remoteKeyRemapEnabled' in domain 'com.opentype.voiceinput'.
+
+defaults read com.opentype.voiceinput remoteMicEnabled:
+1
+
+hidutil property --matching '{"VendorID":10007,"ProductID":12984}' --get UserKeyMapping:
+RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+
+codesign -dv dist/Utter.app:
+Executable=.../dist/Utter.app/Contents/MacOS/Utter
+Identifier=com.opentype.voiceinput
+Format=app bundle with Mach-O thin (arm64)
+Signature=adhoc
+Runtime Version=26.0.0

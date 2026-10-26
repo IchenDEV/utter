@@ -1,0 +1,2117 @@
+--- F5VerifyProbe ---
+[2026-10-24T18:23:58.958Z] MEASURE start label=C2-on sec=150.0
+[2026-10-24T18:23:59.032Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:23:59.071Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:23:59.585Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:00.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:00.585Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:01.084Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:01.578Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:02.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:02.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:03.084Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:03.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:04.076Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:04.587Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:05.079Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:05.585Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:06.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:06.577Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:07.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:07.579Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:08.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:08.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:09.080Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:09.588Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:10.079Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:10.585Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:11.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:11.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:12.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:12.580Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:13.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:13.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:14.075Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:14.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:15.084Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:15.585Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:16.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:16.577Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:17.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:17.575Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:18.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:18.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:19.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:19.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:20.080Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:20.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:21.096Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:21.573Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:22.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:22.609Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:23.078Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:23.585Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:24.080Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:24.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:25.086Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:25.574Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:26.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:26.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:27.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:27.587Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:28.072Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:28.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:29.079Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:29.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:30.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:30.587Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:31.084Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:31.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:32.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:32.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:33.084Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:33.585Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:34.087Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:34.588Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:35.075Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:35.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:36.079Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:36.589Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:37.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:37.580Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:38.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:38.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:39.086Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:39.588Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:40.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:40.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:41.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:41.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:42.087Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:42.580Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:43.084Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:43.579Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:44.087Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:44.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:45.087Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:45.590Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:46.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:46.587Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:47.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:47.587Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:48.076Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:48.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:49.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:49.577Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:50.080Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:50.578Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:51.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:51.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:52.074Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:52.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:53.076Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:53.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:54.079Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:54.588Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:55.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:55.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:56.084Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:56.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:57.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:57.585Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:58.080Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:58.587Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:59.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:24:59.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:00.074Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:00.587Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:01.089Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:01.579Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:02.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:02.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:03.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:03.590Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:04.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:04.588Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:05.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:05.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:06.086Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:06.579Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:07.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:07.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:08.086Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:08.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:09.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:09.588Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:10.079Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:10.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:11.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:11.579Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:12.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:12.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:13.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:13.589Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:14.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:14.588Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:15.087Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:15.580Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:16.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:16.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:17.084Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:17.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:18.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:18.589Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:19.080Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:19.588Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:20.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:20.589Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:21.087Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:21.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:22.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:22.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:23.084Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:23.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:24.079Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:24.585Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:25.084Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:25.587Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:26.144Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:26.580Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:27.088Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:27.578Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:28.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:28.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:29.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:29.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:30.075Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:30.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:31.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:31.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:32.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:32.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:33.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:33.578Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:34.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:34.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:35.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:35.585Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:36.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:36.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:37.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:37.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:38.087Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:38.580Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:39.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:39.578Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:40.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:40.579Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:41.086Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:41.586Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:42.075Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:42.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:43.086Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:43.580Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:44.078Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:44.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:45.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:45.580Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:46.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:46.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:47.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:47.577Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:48.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:48.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:49.078Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:49.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:50.075Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:50.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:51.079Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:51.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:52.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:52.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:53.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:53.577Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:54.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:54.580Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:55.078Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:55.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:56.075Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:56.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:57.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:57.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:58.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:58.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:59.085Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:25:59.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:00.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:00.575Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:01.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:01.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:02.078Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:02.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:03.075Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:03.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:04.078Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:04.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:05.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:05.578Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:06.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:06.575Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:07.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:07.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:08.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:08.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:09.077Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:09.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:10.073Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:10.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:11.078Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:11.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:12.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:12.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:13.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:13.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:14.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:14.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:15.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:15.580Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:16.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:16.587Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:17.079Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:17.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:18.075Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:18.587Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:19.074Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:19.583Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:20.078Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:20.584Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:21.080Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:21.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:22.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:22.578Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:23.083Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:23.575Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:24.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:24.576Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:25.081Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:25.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:26.078Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:26.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:27.074Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:27.582Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:28.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:28.581Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:29.082Z] MAPPING RegistryID  Key                   Value
+1000da8ae   UserKeyMapping   (
+        {
+        HIDKeyboardModifierMappingDst = 0;
+        HIDKeyboardModifierMappingSrc = 30064771134;
+    }
+)
+[2026-10-24T18:26:29.100Z] MEASURE end f5Down=0 f5Up=0 k126=0 ret36=0 volSys=0 other=[:]

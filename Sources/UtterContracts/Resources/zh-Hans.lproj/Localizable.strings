@@ -211,6 +211,17 @@
 "remote_mic.discovery.connected_voice" = "系统蓝牙连接";
 "remote_mic.discovery.connected_hid" = "系统蓝牙连接（键盘设备）";
 "remote_mic.discovery.scan" = "蓝牙扫描";
+"remote_key.title" = "语音键不再打开系统听写";
+"remote_key.help" = "遥控器的语音键还会发出 F5，macOS 把它当作系统听写键，并在输入框里打出多余的字。Utter 只在这支遥控器上关闭这一个键，其他按键和其他键盘不受影响；关闭此开关或退出 Utter 时，按键会自动恢复。";
+"remote_key.status" = "状态";
+"remote_key.state.off" = "已关闭";
+"remote_key.state.no_remote" = "遥控器未连接";
+"remote_key.state.waiting" = "正在准备…";
+"remote_key.state.active" = "已生效";
+"remote_key.state.conflict" = "有冲突";
+"remote_key.detail.conflict" = "另一个应用一直在改动这个按键，Utter 已停止以免互相覆盖。请退出该应用，或关闭此开关。";
+"remote_key.state.failed" = "未能生效";
+"remote_key.detail.failed" = "Utter 未能修改这个按键，语音键保持原样。可在系统设置 → 蓝牙中重新连接遥控器，或在系统设置 → 键盘中关闭听写。";
 "remote_mic.decoder.standard" = "标准";
 "remote_mic.decoder.low" = "遥控器 2 / 2 Pro（低半字节在前）";
 "remote_mic.capture.none" = "尚无录音";

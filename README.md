@@ -135,6 +135,16 @@ A check fetches the release feed from GitHub over HTTPS and may follow GitHub CD
 
 The first release that carries the updater has to be installed manually once. After that, updates apply in place and keep your permissions, settings and history.
 
+## Xiaomi Remote Voice Key
+
+The Xiaomi remote's voice key also sends F5, which macOS treats as the Dictation key and answers by typing stray text such as "I". While **Settings → Remote → Keep the voice key from opening Dictation** is on (the default), Utter turns off that one key on that remote only (Xiaomi RC003, vendor `0x2717`, product `0x32B8`). Other keys and other keyboards are untouched, no extra permission is needed, and the key comes back when you turn the setting off or quit Utter. The remote's own wireless-mic feature does not need to be on.
+
+If something looks wrong:
+
+- Turn the setting off, or run `defaults write com.opentype.voiceinput remoteKeyRemapEnabled -bool false` and relaunch Utter.
+- If Utter crashed and the voice key stays dead, reconnect the remote in System Settings → Bluetooth, or clear it by hand: `hidutil property --matching '{"VendorID":10007,"ProductID":12984}' --set '{"UserKeyMapping":[]}'`.
+- Without Utter, the workaround is System Settings → Keyboard → Dictation off.
+
 ## Troubleshooting
 
 ### Dictated text does not appear in a browser or Electron app

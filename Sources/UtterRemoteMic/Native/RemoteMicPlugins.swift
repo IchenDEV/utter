@@ -6,10 +6,16 @@ import UtterRuntime
 @MainActor
 package enum RemoteMicPlugins {
     package static func capture() -> PluginRegistration {
-        capture { XiaomiRemoteMicBridge(gainDB: $0) }
+        capture(
+            makeBridge: { XiaomiRemoteMicBridge(gainDB: $0) },
+            makeKeyRemap: { RemoteKeyMappingController(provider: RemoteHIDServiceProvider()) }
+        )
     }
 
-    static func capture(makeBridge: @escaping (@escaping () -> Double) -> XiaomiRemoteMicBridge) -> PluginRegistration {
+    static func capture(
+        makeBridge: @escaping (@escaping () -> Double) -> XiaomiRemoteMicBridge,
+        makeKeyRemap: @escaping @MainActor () -> RemoteKeyMappingController
+    ) -> PluginRegistration {
         PluginRegistration(descriptor: PluginDescriptor(
             id: "remote-mic.xiaomi",
             requires: [DataServices.settings.required, IntegrationServices.diagnostics.required],
@@ -17,7 +23,12 @@ package enum RemoteMicPlugins {
         )) { context, _ in
             let settings = try context.require(DataServices.settings)
             let gain = RemoteMicGain(settings.values.remoteMicGainDB)
-            let observation = settings.observe { gain.update($0.remoteMicGainDB) }
+            let keyRemap = makeKeyRemap()
+            // The key remap follows its own setting and is independent of the remote-mic toggle.
+            let observation = settings.observe {
+                gain.update($0.remoteMicGainDB)
+                if context.isReady { keyRemap.setEnabled($0.remoteKeyRemapEnabled) }
+            }
             try context.scope.onDispose { settings.removeObserver(observation) }
             let bridge = makeBridge { gain.value }
             let capture = RemoteMicCaptureManager(
@@ -25,15 +36,22 @@ package enum RemoteMicPlugins {
             )
             let control = RemoteMicController(bridge: bridge, isReady: { context.isReady })
             control.setEnabled(settings.values.remoteMicEnabled)
+            keyRemap.onChange = { [weak control] state, count in control?.setKeyRemap(state, reapplyCount: count) }
+            control.onBridgeReady = { keyRemap.expectRemote() }
             try context.scope.onRevoke {
+                keyRemap.setEnabled(false)
                 control.revoke()
                 capture.revoke()
             }
             try context.scope.onDispose {
+                keyRemap.setEnabled(false)
                 await bridge.close()
                 capture.close()
             }
-            try context.scope.onReady { control.prepareIngress() }
+            try context.scope.onReady {
+                keyRemap.setEnabled(settings.values.remoteKeyRemapEnabled)
+                control.prepareIngress()
+            }
             try context.provide(RemoteMicServices.capture, value: capture)
             try context.provide(RemoteMicServices.control, value: control)
         }

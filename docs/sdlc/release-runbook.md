@@ -73,6 +73,21 @@ If an upload or download verification fails, the workflow leaves a draft. Record
 the failure and inspect its assets before deleting that draft and rerunning; a
 published same-version release is never replaced.
 
+## Remote voice-key remap
+
+A release that carries `remoteKeyRemapEnabled` (change bundle `2026-10-24-swallow-remote-dictation-key`) writes a
+device-level `UserKeyMapping` on the Xiaomi remote's HID service while Utter runs. Before releasing, confirm the
+bundle's `verification.md` records the independent verifier's hardware run (A/B, lifecycle read-backs, other keys).
+
+- **Release note line:** "Remote page: Utter now keeps the Xiaomi remote's voice key from opening macOS Dictation
+  (new setting, on by default)."
+- **Kill switch, no new build:** turn the setting off on the Remote page, or
+  `defaults write com.opentype.voiceinput remoteKeyRemapEnabled -bool false` and relaunch. Both restore the mapping.
+- **Manual clear:** `hidutil property --matching '{"VendorID":10007,"ProductID":12984}' --set '{"UserKeyMapping":[]}'`.
+  A remote reconnect or reboot also clears a leftover mapping after a crash.
+- **Stop and revert** on any report that another key or device stopped working, that a mapping stayed after quit,
+  or that another tool conflicts with the mapping; give kill-switch guidance first.
+
 ## Rollback
 
 1. Mark the affected release as non-latest or remove it from the public download
