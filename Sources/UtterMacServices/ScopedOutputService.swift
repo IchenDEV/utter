@@ -8,6 +8,7 @@ struct DeliveryCompletion {
     var confirmation: DeliveryConfirmation = .none
     var path: DeliveryPath? = nil
     var target: DeliveryTargetKind = .native
+    var selectionEdit: SelectionEditReceipt? = nil
 }
 
 @MainActor
@@ -109,7 +110,7 @@ private final class OwnedDelivery: PreparedDelivery {
                     operationID: id, disposition: disposition, effect: .none,
                     reason: completion.reason,
                     anchor: completion.anchor,
-                    effects: committedEffects, confirmation: completion.confirmation
+                    effects: committedEffects, confirmation: completion.confirmation, selectionEdit: completion.selectionEdit
                 )
                 receipt = result
                 settle(result)

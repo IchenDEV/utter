@@ -20,7 +20,7 @@ import XCTest
 final class SelectionEditCustomIntentTests: XCTestCase {
     func testCustomSelectionEditPromptPassesNaturalLanguageInstructionToLLM() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "The launch slipped because QA found two blocking issues.",
             intent: .custom("turn this into a warm customer apology with one concrete next step"),
             inputLanguage: .english
@@ -35,7 +35,7 @@ final class SelectionEditCustomIntentTests: XCTestCase {
 
     func testCustomSelectionEditPromptKeepsAutoLanguagePolicy() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "Ship Friday, 金曜に出す",
             intent: .custom("改成适合发给客户的简短说明"),
             inputLanguage: .auto
@@ -49,12 +49,12 @@ final class SelectionEditCustomIntentTests: XCTestCase {
 
     func testCustomSelectionEditCanUseFactsExplicitlyProvidedByInstruction() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "Please send the update.",
             intent: .custom("append one sentence saying the deadline is 8 PM tonight"),
             inputLanguage: .english
         )
-        let chinesePrompt = processor.selectionEditPrompt(
+        let chinesePrompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "请同步进展。",
             intent: .custom("在末尾补一句今晚 8 点前反馈"),
             inputLanguage: .chinese
@@ -68,7 +68,7 @@ final class SelectionEditCustomIntentTests: XCTestCase {
 
     func testSelectionEditPromptIncludesOriginalSpokenCommandAsReferenceOnly() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "Please send the update.",
             intent: .custom("make this warmer and add the deadline"),
             inputLanguage: .english,
@@ -83,8 +83,8 @@ final class SelectionEditCustomIntentTests: XCTestCase {
 
     func testCustomSelectionEditOptionsUseGeneralRewriteBudget() {
         let processor = TextProcessor()
-        let short = processor.selectionEditOptions(for: "ship it", intent: .custom("make it persuasive"))
-        let long = processor.selectionEditOptions(
+        let short = SelectionEditRecipe.selectionEditOptions(for: "ship it", intent: .custom("make it persuasive"))
+        let long = SelectionEditRecipe.selectionEditOptions(
             for: String(repeating: "release note detail ", count: 40),
             intent: .custom("turn this into a structured customer update")
         )

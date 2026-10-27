@@ -50,11 +50,11 @@ final class TextDeliveryTransactionTests: XCTestCase {
             XCTAssertTrue(effects.isEmpty)
             XCTAssertEqual(clipboard.text, "old")
             XCTAssertEqual(clipboard.changeCount, 0)
-            XCTAssertEqual(target.restorations, 1)
+            XCTAssertEqual(target.restorations, secure ? 0 : 1)
         }
     }
 
-    func testEnabledClipboardFallbackCanCopyUnderSecureInputWithoutPostingKeys() async {
+    func testSecureTargetRefusalCannotAutomaticallyCopyEvenWhenPasteIsEnabled() async {
         let target = TransactionTarget()
         target.supportsSelectionWrite = false
         let clipboard = TransactionPasteboard()
@@ -62,10 +62,27 @@ final class TextDeliveryTransactionTests: XCTestCase {
         let result = await TextDeliveryTransaction.deliver("new", target: target, pasteboard: clipboard,
             allowsClipboardPaste: true, isSecureInput: { true }, prepareKeys: { _ in XCTFail("Secure input blocks keys"); return nil },
             canCommit: { true }, mark: { effects.insert($0).inserted })
+        XCTAssertEqual(result.disposition, .notCommitted)
+        XCTAssertEqual(result.confirmation, .none)
+        XCTAssertTrue(effects.isEmpty)
+        XCTAssertEqual(clipboard.text, "old")
+        XCTAssertEqual(clipboard.changeCount, 0)
+        XCTAssertEqual(target.restorations, 0)
+    }
+
+    func testUnsecureKeyPreparationFailureStillCopiesWhenPasteIsEnabled() async {
+        let target = TransactionTarget()
+        target.supportsSelectionWrite = false
+        let clipboard = TransactionPasteboard()
+        var effects: Set<DeliveryEffect> = []
+        let result = await TextDeliveryTransaction.deliver("new", target: target, pasteboard: clipboard,
+            allowsClipboardPaste: true, isSecureInput: { false }, prepareKeys: { _ in nil },
+            canCommit: { true }, mark: { effects.insert($0).inserted })
         XCTAssertEqual(result.confirmation, .clipboardValue)
         XCTAssertEqual(result.path, .clipboardOnly)
         XCTAssertEqual(effects, [.clipboard])
         XCTAssertEqual(clipboard.text, "new")
+        XCTAssertTrue(target.writes.isEmpty)
     }
 
     func testTargetChangeDuringSelectionPreparationCommitsNothing() async {
@@ -150,7 +167,7 @@ final class TextDeliveryTransactionTests: XCTestCase {
         XCTAssertEqual(target.restorations, 1)
     }
 
-    func testWebEditorUnderSecureInputOnlyCopiesWithoutPostingKeys() async {
+    func testWebEditorUnderSecureInputCommitsNothingAndDoesNotCopy() async {
         let target = TransactionTarget()
         target.isWebContentEditor = true
         let clipboard = TransactionPasteboard()
@@ -158,11 +175,14 @@ final class TextDeliveryTransactionTests: XCTestCase {
         let result = await TextDeliveryTransaction.deliver("new", target: target, pasteboard: clipboard,
             allowsClipboardPaste: true, isSecureInput: { true }, prepareKeys: { _ in XCTFail("Secure input blocks keys"); return nil },
             canCommit: { true }, mark: { effects.insert($0).inserted })
-        XCTAssertEqual(result.confirmation, .clipboardValue)
-        XCTAssertEqual(result.path, .clipboardOnly)
+        XCTAssertEqual(result.disposition, .notCommitted)
+        XCTAssertEqual(result.confirmation, .none)
+        XCTAssertNil(result.path, "no route was taken")
         XCTAssertEqual(result.target, .web)
-        XCTAssertEqual(effects, [.clipboard])
+        XCTAssertTrue(effects.isEmpty)
         XCTAssertTrue(target.writes.isEmpty)
+        XCTAssertEqual(clipboard.changeCount, 0)
+        XCTAssertEqual(target.restorations, 0)
     }
 
     func testWebEditorTargetChangeBeforeThePasteCommitsNothing() async {

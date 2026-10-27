@@ -20,6 +20,17 @@ import XCTest
 @testable import UtterPresentation
 
 final class ConfuciusModelDownloaderTests: XCTestCase {
+    func testTailFirstPartResultsEmitMonotonicTotal() async throws {
+        var parts: [(Int, Int64)] = [(6, 7), (5, 16), (4, 16), (3, 16), (2, 16), (1, 16), (0, 16)]
+        var progress: [Int64] = []
+        var freedSlots: [Int] = []
+        try await ConfuciusModelDownloader.consumePartResults(next: {
+            parts.isEmpty ? nil : parts.removeFirst()
+        }, onSlotFree: { freedSlots.append($0) }, onProgress: { progress.append($0) })
+        XCTAssertEqual(progress, [7, 23, 39, 55, 71, 87, 103])
+        XCTAssertEqual(freedSlots, [6, 5, 4, 3, 2, 1, 0])
+    }
+
     func testParallelRangesReassembleExactWeightAndReportProgress() async throws {
         let bytes = Data((0..<103).map { UInt8($0) })
         let session = rangeSession(bytes: bytes)
@@ -41,6 +52,11 @@ final class ConfuciusModelDownloaderTests: XCTestCase {
 
         XCTAssertEqual(try Data(contentsOf: output), bytes)
         XCTAssertEqual(progress.last, Int64(bytes.count))
+        let values = progress.snapshot
+        XCTAssertEqual(values.count, 7)
+        XCTAssertTrue(zip(values, values.dropFirst()).allSatisfy { $0 < $1 })
+        let increments = zip([0] + values, values).map { $1 - $0 }.sorted()
+        XCTAssertEqual(increments, [7, 16, 16, 16, 16, 16, 16])
     }
 
     func testCorruptRangeCannotPublishAWeight() async throws {
@@ -112,6 +128,12 @@ private final class ProgressValues: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         return values.last
+    }
+
+    var snapshot: [Int64] {
+        lock.lock()
+        defer { lock.unlock() }
+        return values
     }
 }
 

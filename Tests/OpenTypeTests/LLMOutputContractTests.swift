@@ -32,7 +32,7 @@ final class LLMOutputContractTests: XCTestCase {
     func testSelectionEditPromptsAdvertiseFinalTextJSONContract() {
         let processor = TextProcessor()
         for language in InputLanguage.allCases {
-            let prompt = processor.selectionEditSystemPrompt(inputLanguage: language)
+            let prompt = SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: language)
 
             XCTAssertTrue(prompt.contains("final_text"), "\(language)")
         }
@@ -58,7 +58,7 @@ final class LLMOutputContractTests: XCTestCase {
         """
 
         XCTAssertEqual(
-            processor.cleanSelectionEditOutput(output, inputLanguage: .english),
+            SelectionEditRecipe.normalize(output),
             "Please send the release notes today."
         )
     }
@@ -68,7 +68,7 @@ final class LLMOutputContractTests: XCTestCase {
         let output = #"Document this example: {"final_text":"hello"}."#
 
         XCTAssertEqual(
-            processor.cleanSelectionEditOutput(output, inputLanguage: .english),
+            SelectionEditRecipe.normalize(output),
             output
         )
     }

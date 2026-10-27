@@ -7,15 +7,19 @@ package struct SessionPresentation: Equatable, Sendable {
     package let status: Status
     package let message: String
     package let canCopy: Bool
-    package var keepsVisible: Bool { status == .failed || status == .uncertain }
+    private let isReviewing: Bool
+    package var keepsVisible: Bool { isReviewing || status == .failed || status == .uncertain }
 
     package init(_ snapshot: SessionExecutionSnapshot) {
+        isReviewing = snapshot.selectionEditProposal != nil || snapshot.remoteDisclosure != nil
         canCopy = !snapshot.isBusy && !snapshot.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         switch snapshot.phase {
-        case .created, .preparing: status = .preparing; message = L("pipeline.preparing_capture")
+        case .created, .preparing:
+            status = .preparing
+            message = L(snapshot.remoteDisclosure == nil ? "pipeline.preparing_capture" : "selection_edit.remote_disclosure_required")
         case .recording: status = .recording; message = L("pipeline.recording")
         case .transcribing: status = .transcribing; message = L("pipeline.transcribing")
-        case .processing: status = .processing; message = L("pipeline.formatting")
+        case .processing: status = .processing; message = L(snapshot.isSelectionEditing ? "selection_edit.processing" : isReviewing ? "selection_edit.review" : "pipeline.formatting")
         case .delivering: status = .delivering; message = L("pipeline.inserting")
         case .completed where snapshot.deliveryStatus == .inserted: status = .inserted; message = L("status.done")
         case .completed where snapshot.deliveryStatus == .copied: status = .copied; message = L("delivery.copied")

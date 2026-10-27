@@ -19,7 +19,7 @@ import UtterSession
 
 @MainActor
 final class VoiceTextInputTests: XCTestCase {
-    func testMissingTargetKeepsAutomaticOutputUnderTheProviderClipboardPolicy() async throws {
+    func testAuthorizedClientWithoutDesktopTargetReturnsTextWithoutDesktopEffects() async throws {
         for instant in [false, true] {
             let fixture = try VoiceWorkflowFixture()
             defer { fixture.remove() }
@@ -27,15 +27,17 @@ final class VoiceTextInputTests: XCTestCase {
             fixture.defaults.set(false, forKey: "allowClipboardPaste")
             fixture.defaults.set(instant, forKey: "enableInstantInsert")
             try await fixture.start()
+            let client = IntegrationClient.localCLI(executablePath: "/fixture/cli")
+            try fixture.runtime.service(IntegrationServices.clients).approve(client)
             let driver = try fixture.runtime.service(SessionServices.execution)
-            let intent = SessionIntent(input: .text("Synthetic dictation"), mode: .formatting)
+            let intent = SessionIntent(clientID: client.id, input: .text("Synthetic dictation"), mode: .formatting)
             try driver.start(intent)
-            _ = try await driver.waitForCompletion(intent.id)
-            let request = try XCTUnwrap(fixture.output.requests.first)
-            guard case .insert = request.command else { return XCTFail("Automatic output bypassed provider policy with a copy command") }
-            XCTAssertNil(request.target)
-            XCTAssertFalse(request.allowsClipboardPaste)
-            XCTAssertEqual(fixture.output.requests.count, 1)
+            let result = try await driver.waitForCompletion(intent.id)
+            XCTAssertEqual(result.phase, .completed)
+            XCTAssertEqual(result.text, "Synthetic dictation Formatted.")
+            XCTAssertEqual(fixture.recipe.requests.count, 1)
+            XCTAssertTrue(fixture.screen.requests.isEmpty)
+            XCTAssertTrue(fixture.output.requests.isEmpty)
             try await fixture.runtime.stop()
         }
     }
@@ -91,6 +93,86 @@ final class VoiceTextInputTests: XCTestCase {
         XCTAssertEqual(fixture.recipe.requests.first?.mode, mode)
         guard case .replaceSelection = fixture.output.requests.first?.command else { return XCTFail("Selection edit did not replace selection") }
         XCTAssertTrue(fixture.speechRequests.isEmpty)
+        XCTAssertEqual(fixture.output.requests.count, 1)
         try await fixture.runtime.stop()
     }
+
+    func testAutomaticSelectionCancellationAndStaleSelectionNeverPrepareHostOrClipboardWrites() async throws {
+        for change in 0..<3 {
+            let fixture = try VoiceWorkflowFixture()
+            defer { fixture.remove() }
+            let generation = HeldSelectionGeneration()
+            fixture.recipe.selectionProcessor = generation.process
+            fixture.target.selectedText = "原文 e\u{301} 👩🏽‍💻\n第二行"
+            try await fixture.start()
+            let driver = try fixture.runtime.service(SessionServices.execution)
+            let intent = SessionIntent(input: .text("Make concise"), mode: .selectionEdit(.concise, spokenCommand: "Make concise"))
+            try driver.start(intent)
+            try await generation.waitUntilEntered()
+            XCTAssertTrue(driver.snapshot.isSelectionEditing)
+            XCTAssertNil(driver.snapshot.selectionEditProposal)
+            XCTAssertTrue(fixture.output.requests.isEmpty)
+            if change == 0 { driver.cancel(intent.id) }
+            else if change == 1 { fixture.target.selectedText = "用户后续输入 🇸🇬" }
+            else { fixture.target.isCurrent = false }
+            generation.release()
+            do { _ = try await driver.waitForCompletion(intent.id); XCTFail("Cancelled or stale edit delivered") }
+            catch {
+                if change == 0 { XCTAssertTrue(error is CancellationError) }
+                else { XCTAssertEqual(error as? DeliveryError, .invalidTarget) }
+            }
+            XCTAssertTrue(fixture.output.requests.isEmpty)
+            XCTAssertNil(driver.snapshot.selectionEditProposal)
+            XCTAssertEqual(driver.snapshot.transcript, "")
+            XCTAssertTrue(fixture.capture.requests.isEmpty)
+            try await fixture.runtime.stop()
+        }
+    }
+
+    func testFailedAndEmptySelectionGenerationHasNoReviewAndLeavesTheOriginalIntact() async throws {
+        for fails in [false, true] {
+            let fixture = try VoiceWorkflowFixture()
+            defer { fixture.remove() }
+            fixture.target.selectedText = "original 👩🏽‍💻"
+            if fails { fixture.recipe.failure = GenerationServiceError.modelUnavailable }
+            else { fixture.recipe.generatedText = " \n " }
+            try await fixture.start()
+            let driver = try fixture.runtime.service(SessionServices.execution)
+            let intent = SessionIntent(input: .text("rewrite"), mode: .selectionEdit(.concise, spokenCommand: "rewrite"))
+            try driver.start(intent)
+            do { _ = try await driver.waitForCompletion(intent.id); XCTFail("Failed model was accepted") }
+            catch {}
+            XCTAssertEqual(driver.snapshot.phase, .failed)
+            XCTAssertNil(driver.snapshot.selectionEditProposal)
+            XCTAssertEqual(fixture.target.selectedText, "original 👩🏽‍💻")
+            XCTAssertTrue(fixture.output.requests.isEmpty)
+            try await fixture.runtime.stop()
+        }
+    }
+
+    func testRemoteSelectionPreflightDoesNotStartCaptureOrProcessingAndRechecksTheProvider() async throws {
+        let fixture = try VoiceWorkflowFixture()
+        defer { fixture.remove() }
+        fixture.defaults.set(true, forKey: "useRemoteLLM")
+        fixture.defaults.set("https://model.example.test/v1", forKey: "remoteBaseURL")
+        fixture.target.selectedText = "private selection 👩🏽‍💻"
+        try await fixture.start()
+        let driver = try fixture.runtime.service(SessionServices.execution)
+        let intent = SessionIntent(input: .local, mode: .selectionEdit(.concise, spokenCommand: "rewrite"))
+        try driver.start(intent)
+        XCTAssertEqual(driver.snapshot.remoteDisclosure?.providerHost, "model.example.test")
+        XCTAssertEqual(driver.snapshot.remoteDisclosure?.selectedText, "private selection 👩🏽‍💻")
+        XCTAssertTrue(fixture.recipe.requests.isEmpty)
+        XCTAssertTrue(fixture.capture.requests.isEmpty)
+        XCTAssertTrue(fixture.output.requests.isEmpty)
+        try fixture.runtime.service(DataServices.settings).update { $0.remoteBaseURL = "https://changed.example.test/v1" }
+        XCTAssertThrowsError(try driver.authorizeRemoteDisclosure(intent.id))
+        XCTAssertTrue(fixture.recipe.requests.isEmpty)
+        XCTAssertTrue(fixture.capture.requests.isEmpty)
+        XCTAssertTrue(fixture.output.requests.isEmpty)
+        XCTAssertFalse(driver.snapshot.isBusy)
+        try await fixture.runtime.stop()
+    }
+
+
 }

@@ -32,7 +32,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testSelectionEditPromptUsesSelectedTextAndInstruction() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "ship it today",
             intent: .formal,
             inputLanguage: .english
@@ -46,7 +46,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testChineseSelectionEditPromptUsesSelectedTextAndInstruction() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "今天发版",
             intent: .concise,
             inputLanguage: .chinese
@@ -68,14 +68,14 @@ final class SelectionEditPromptTests: XCTestCase {
             inputLanguage: .english,
             source: .menuBar
         )
-        let english = processor.selectionEditPrompt(
+        let english = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "please update the model name",
             intent: .formal,
             inputLanguage: .english,
             memoryContext: "Use OpenType and Qwen spelling.",
             inputContext: context
         )
-        let chinese = processor.selectionEditPrompt(
+        let chinese = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "把模型名改一下",
             intent: .formal,
             inputLanguage: .chinese,
@@ -95,8 +95,8 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testSelectionEditSystemPromptRejectsOutputWrappers() {
         let processor = TextProcessor()
-        let english = processor.selectionEditSystemPrompt(inputLanguage: .english)
-        let chinese = processor.selectionEditSystemPrompt(inputLanguage: .chinese)
+        let english = SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .english)
+        let chinese = SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .chinese)
 
         XCTAssertTrue(english.contains("labels/preambles/notes"))
         XCTAssertTrue(english.contains("code fences"))
@@ -107,7 +107,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testSelectionEditOutputDoesNotFallbackToOriginalSelection() {
         let processor = TextProcessor()
-        let cleaned = processor.cleanSelectionEditOutput("<think>trying to rewrite</think>", inputLanguage: .english)
+        let cleaned = SelectionEditRecipe.normalize("<think>trying to rewrite</think>")
         XCTAssertEqual(cleaned, "")
     }
 
@@ -123,8 +123,8 @@ final class SelectionEditPromptTests: XCTestCase {
             ]
 
             let processor = TextProcessor()
-            let chinese = processor.selectionEditSystemPromptWithPersonalContext(inputLanguage: .chinese)
-            let english = processor.selectionEditSystemPromptWithPersonalContext(inputLanguage: .english)
+            let chinese = processor.systemPromptWithPersonalContext(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .chinese), inputLanguage: .chinese)
+            let english = processor.systemPromptWithPersonalContext(SelectionEditRecipe.selectionEditSystemPrompt(inputLanguage: .english), inputLanguage: .english)
 
             XCTAssertTrue(chinese.contains("你是选中文本处理器"))
             XCTAssertTrue(chinese.contains("个人词库："))
@@ -141,14 +141,14 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testSelectionEditOptionsScaleWithIntentAndLength() {
         let processor = TextProcessor()
-        let shortMeetingNotes = processor.selectionEditOptions(for: "ship it", intent: .meetingNotes)
-        let longMeetingNotes = processor.selectionEditOptions(
+        let shortMeetingNotes = SelectionEditRecipe.selectionEditOptions(for: "ship it", intent: .meetingNotes)
+        let longMeetingNotes = SelectionEditRecipe.selectionEditOptions(
             for: String(repeating: "release notes ", count: 40),
             intent: .meetingNotes
         )
-        let title = processor.selectionEditOptions(for: String(repeating: "title ", count: 80), intent: .title)
-        let decisions = processor.selectionEditOptions(for: "ship after QA", intent: .decisions)
-        let friendlyReply = processor.selectionEditOptions(for: "sounds good", intent: .replyFriendly)
+        let title = SelectionEditRecipe.selectionEditOptions(for: String(repeating: "title ", count: 80), intent: .title)
+        let decisions = SelectionEditRecipe.selectionEditOptions(for: "ship after QA", intent: .decisions)
+        let friendlyReply = SelectionEditRecipe.selectionEditOptions(for: "sounds good", intent: .replyFriendly)
 
         XCTAssertEqual(shortMeetingNotes.maxTokens, 640)
         XCTAssertEqual(longMeetingNotes.maxTokens, 1536)
@@ -159,7 +159,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testSelectionCasualPromptKeepsMeaningNatural() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "Please provide the update when available.",
             intent: .casual,
             inputLanguage: .english
@@ -172,7 +172,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testChineseSelectionCasualPromptKeepsMeaningNatural() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "请在方便时同步进展。",
             intent: .casual,
             inputLanguage: .chinese
@@ -185,7 +185,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testSelectionExpandPromptDevelopsExistingPointsOnly() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "Ship the fix after tests pass.",
             intent: .expand,
             inputLanguage: .english
@@ -198,7 +198,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testChineseSelectionExpandPromptDevelopsExistingPointsOnly() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "测试通过后发版。",
             intent: .expand,
             inputLanguage: .chinese
@@ -211,7 +211,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testSelectionProofreadPromptKeepsCorrectionScopeNarrow() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "ship teh fix",
             intent: .proofread,
             inputLanguage: .english
@@ -224,7 +224,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testChineseSelectionProofreadPromptKeepsCorrectionScopeNarrow() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "今天发板",
             intent: .proofread,
             inputLanguage: .chinese
@@ -237,7 +237,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testSelectionBulletListPromptRequiresMarkdownBullets() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "fix login then run tests",
             intent: .bulletList,
             inputLanguage: .english
@@ -250,7 +250,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testChineseSelectionBulletListPromptRequiresMarkdownBullets() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "修登录 跑测试",
             intent: .bulletList,
             inputLanguage: .chinese
@@ -263,7 +263,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testSelectionNumberedListPromptRequiresMarkdownNumbers() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "open settings then choose model",
             intent: .numberedList,
             inputLanguage: .english
@@ -276,7 +276,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testChineseSelectionNumberedListPromptRequiresMarkdownNumbers() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "打开设置 选择模型",
             intent: .numberedList,
             inputLanguage: .chinese
@@ -289,7 +289,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testSelectionChecklistPromptRequiresMarkdownTasks() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "fix login and run tests",
             intent: .checklist,
             inputLanguage: .english
@@ -302,7 +302,7 @@ final class SelectionEditPromptTests: XCTestCase {
 
     func testChineseSelectionChecklistPromptRequiresMarkdownTasks() {
         let processor = TextProcessor()
-        let prompt = processor.selectionEditPrompt(
+        let prompt = SelectionEditRecipe.selectionEditPrompt(
             selectedText: "修登录 跑测试",
             intent: .checklist,
             inputLanguage: .chinese

@@ -1,6 +1,8 @@
 import Foundation
 
 package enum LLMFinalTextOutput {
+    // Selection generation scopes every upstream unwrap, including tool/SSE payloads.
+    @TaskLocal package static var requiresExplicitFinalText = false
     package static func text(from rawText: String) -> String? {
         wholeJSONText(from: rawText)
     }
@@ -23,7 +25,7 @@ private extension LLMFinalTextOutput {
         "output_text", "outputText", "result_text", "resultText",
     ]
     static let typedFinalTextValues = [
-        "output_text", "final_text", "formatted_text", "cleaned_text", "rewritten_text",
+        "output_text", "final_text", "formatted_text", "cleaned_text", "rewritten_text", "result_text",
     ]
     static let typedFinalTextPayloadKeys = [
         "text", "content", "value", "output", "data",
@@ -85,7 +87,7 @@ private extension LLMFinalTextOutput {
         if let text = responseWrapperText(in: object) {
             return text
         }
-        guard allowsAmbiguousKeys || hasMetadata(in: object) else { return nil }
+        guard !requiresExplicitFinalText && (allowsAmbiguousKeys || hasMetadata(in: object)) else { return nil }
         for key in ambiguousTextKeys {
             guard let rawValue = object.value(forCaseInsensitiveKey: key),
                   let text = finalTextValue(from: rawValue, allowsAmbiguousKeys: true) else {
@@ -163,6 +165,10 @@ private extension LLMFinalTextOutput {
         if let text = value as? String {
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { return nil }
+            if requiresExplicitFinalText,
+               let data = wholeJSONValueData(from: stripWrappingCodeFence(from: trimmed)) {
+                return finalText(from: data, allowsAmbiguousKeys: false)
+            }
             return nestedStructuredFinalText(in: trimmed) ?? trimmed
         }
         if let object = value as? [String: Any] {

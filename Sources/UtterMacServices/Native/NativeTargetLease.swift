@@ -1,5 +1,6 @@
 import AppKit
 import ApplicationServices
+import CryptoKit
 import Foundation
 import UtterContracts
 import UtterRuntime
@@ -10,6 +11,7 @@ final class NativeTargetLease: OutputTargetLease {
     let processIdentifier: Int32
     let context: InputContext
     private let state: AXTargetState?
+    private let documentFingerprint: SHA256.Digest?
     private let focusedElement: AXUIElement?
     private let isOwnerCurrent: () -> Bool
 
@@ -18,6 +20,7 @@ final class NativeTargetLease: OutputTargetLease {
         self.id = id
         self.processIdentifier = processIdentifier
         self.state = state
+        documentFingerprint = state.flatMap { AXTargetState.value(of: $0.element) }.map { SHA256.hash(data: Data($0.utf8)) }
         focusedElement = state?.element ?? AXTargetState.focusedIdentity()?.1
         self.context = context
         isOwnerCurrent = isCurrent
@@ -28,11 +31,12 @@ final class NativeTargetLease: OutputTargetLease {
     var isValid: Bool { isOwnerCurrent() && NSRunningApplication(processIdentifier: processIdentifier)?.isTerminated == false }
 
     var isCurrent: Bool {
-        guard isValid, let focusedElement, let (pid, element) = AXTargetState.focusedIdentity(),
+        guard !NativeDeliveryKeys.isSecureInput, isValid, let focusedElement, let (pid, element) = AXTargetState.focusedIdentity(),
               pid == processIdentifier, CFEqual(focusedElement, element) else { return false }
         guard let state else { return true }
         guard let current = AXTargetState.capture() else { return false }
-        return state.matches(current)
+        let fingerprint = AXTargetState.value(of: current.element).map { SHA256.hash(data: Data($0.utf8)) }
+        return state.matches(current) && documentFingerprint == fingerprint
     }
 }
 
@@ -51,10 +55,12 @@ private final class NativeTargetCapture: TargetCaptureService {
     init(isCurrent: @escaping () -> Bool) { self.isCurrent = isCurrent }
 
     func capture(_ request: TargetCaptureRequest) throws -> any OutputTargetLease {
-        guard isCurrent(), !Task.isCancelled, let app = NSWorkspace.shared.frontmostApplication else { throw DeliveryError.invalidTarget }
+        guard isCurrent(), !Task.isCancelled, !NativeDeliveryKeys.isSecureInput, let app = NSWorkspace.shared.frontmostApplication else { throw DeliveryError.invalidTarget }
         let state = AXTargetState.capture()
+        guard !NativeDeliveryKeys.isSecureInput else { throw DeliveryError.invalidTarget }
         let context = InputContext.capture(targetApp: app, screenContext: request.screenContext,
             outputMode: request.outputMode, inputLanguage: request.inputLanguage, source: request.source)
+        guard !NativeDeliveryKeys.isSecureInput else { throw DeliveryError.invalidTarget }
         return NativeTargetLease(processIdentifier: app.processIdentifier, state: state, context: context, isCurrent: isCurrent)
     }
 }

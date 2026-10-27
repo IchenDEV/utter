@@ -17,7 +17,7 @@ import UtterData
 import UtterPresentationContracts
 
 extension AppSettings {
-    static let shared = AppSettings(defaults: .standard)
+    static let shared = AppSettings(defaults: TestFixtureRoot.defaults)
 
     convenience init(defaults: UserDefaults) {
         let store = SettingsStore(defaults: defaults)

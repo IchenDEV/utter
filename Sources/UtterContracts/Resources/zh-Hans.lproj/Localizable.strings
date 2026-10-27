@@ -693,3 +693,29 @@
 "model.source.help" = "更改仅影响之后开始的下载，进行中的下载继续使用原来源。";
 "model.source.mirror_help" = "公开模型将从 hf-mirror.com 下载，不向镜像发送已保存的 Hugging Face 凭证。";
 "model.source.confirm" = "下载源：%@";
+
+"selection_edit.review" = "请审阅选区修改后再应用";
+"selection_edit.title" = "在 %@ 中修改选中文本";
+"selection_edit.title_generic" = "修改选中文本";
+"selection_edit.instruction" = "你的指令";
+"selection_edit.original" = "原文";
+"selection_edit.revised" = "修改后";
+"selection_edit.apply" = "应用";
+"selection_edit.apply_hint" = "将替换选中的文本。点击“应用”之前不会有任何改动。";
+"selection_edit.expired" = "此修改已过期，或选区已变化。未做任何改动。";
+"selection_edit.applied" = "选区已更新";
+"selection_edit.restore" = "恢复原文";
+"selection_edit.restore_failed" = "无法恢复，未做任何改动。";
+"selection_edit.remote_disclosure_required" = "选中的文本将发送到远程模型。目前尚未发送，需确认后才会发送。";
+"selection_edit.remote_title" = "要将选中的文本发送到 %@ 吗？";
+"selection_edit.remote_title_generic" = "要将选中的文本发送到远程模型吗？";
+"selection_edit.remote_lead" = "目前尚未录音或发送。继续后，选中的文本、你说的话以及应用中的附近上下文会发送到 %@。";
+"selection_edit.remote_no_provider" = "远程服务地址缺失。未录音，也未发送任何内容。";
+"selection_edit.remote_selected" = "选中的文本";
+"selection_edit.remote_continue_hint" = "开始录音。你说完后，选中的文本才会发送给该服务商。";
+"selection_edit.remote_failed" = "无法继续。未录音，也未发送任何内容。";
+"selection_edit.remote_not_confirmed" = "未及时确认，或选区已变化。未录音，也未发送任何内容。";
+
+"selection_edit.restore_shortcut" = "⌘⌥Z 恢复原文";
+"selection_edit.cancel_shortcut" = "Esc 取消修改";
+"selection_edit.processing" = "正在修改选区…";

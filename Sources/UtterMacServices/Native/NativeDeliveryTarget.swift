@@ -16,7 +16,8 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
 
     init?(lease: any OutputTargetLease, anchor: (any OutputAnchor)?, requiresSelection: Bool,
           classifiesWebContentEditors: Bool = true, clock: (any DeliveryObservationClock)? = nil) {
-        guard lease.isCurrent, let (pid, element) = AXTargetState.focusedIdentity(), pid == lease.processIdentifier else { return nil }
+        guard !NativeDeliveryKeys.isSecureInput, lease.isCurrent,
+              let (pid, element) = AXTargetState.focusedIdentity(), pid == lease.processIdentifier else { return nil }
         let state = AXTargetState.capture()
         let value = AXTargetState.value(of: element)
         if requiresSelection, (state?.selection.length ?? 0) == 0 { return nil }
@@ -36,7 +37,7 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
     }
 
     var isCurrent: Bool {
-        guard lease.isValid, let (pid, element) = AXTargetState.focusedIdentity(),
+        guard !NativeDeliveryKeys.isSecureInput, lease.isValid, let (pid, element) = AXTargetState.focusedIdentity(),
               pid == lease.processIdentifier, CFEqual(identity, element) else { return false }
         if let document, AXTargetState.value(of: identity) != document { return false }
         if let original {
@@ -46,7 +47,7 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
     }
 
     private var canWriteSelectedText: Bool {
-        guard document != nil, replacementRange != nil else { return false }
+        guard !NativeDeliveryKeys.isSecureInput, document != nil, replacementRange != nil else { return false }
         var settable = DarwinBoolean(false)
         return AXUIElementIsAttributeSettable(identity, kAXSelectedTextAttribute as CFString, &settable) == .success && settable.boolValue
     }
@@ -65,7 +66,8 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
     }
 
     func writeSelection(_ text: String) -> Bool {
-        AXUIElementSetAttributeValue(identity, kAXSelectedTextAttribute as CFString, text as CFString) == .success
+        guard !NativeDeliveryKeys.isSecureInput else { return false }
+        return AXUIElementSetAttributeValue(identity, kAXSelectedTextAttribute as CFString, text as CFString) == .success
     }
 
     func confirm(_ text: String) async -> Bool {
