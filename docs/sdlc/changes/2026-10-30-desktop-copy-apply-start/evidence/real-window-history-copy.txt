@@ -1,0 +1,27 @@
+# Real-window check, development build (dist/Utter.app from this worktree), 2026-10-30 15:54
+
+Build: bash scripts/build-and-run.sh --verify  (exit 0), pid 59204.
+Dictated text is deliberately not recorded here.
+
+1. Opened the menu bar popover (System Events AX press) and pressed its Settings
+   button (AXPress on the AXButton found by screen-position hit test).
+2. Settings -> Activity (History) -> Records tab.
+3. Clipboard set to a sentinel: `printf 'UTTER-COPY-SENTINEL-BEFORE' | pbcopy`.
+4. AXPress on the first row's Copy button (accessibility description "复制").
+5. Result:
+   - `pbpaste` no longer returns the sentinel; it returns the text of the first
+     (most recent) history row, 48 bytes, confirmed against a screenshot of the
+     list (row: the 15:15 WeChat dictation that the installed 0.0.60 had marked
+     "not written").
+   - `log show --last 3m --predicate 'subsystem == "com.opentype.voiceinput"'`:
+     `utter.session.performance {"performance":{"generations":[],"stages":[],"terminal":"copied"},...}`
+   - `log show --last 10m ...` filtered for `Desktop action could not start`:
+     0 occurrences. (The same filter on installed 0.0.60 had 11, see
+     installed-0.0.60-desktop-action-errors.txt.)
+6. Restored the previous clipboard text, quit the development build, relaunched
+   /Applications/Utter.app (pid 60512).
+
+Not exercised in the real window: overlay Copy, the three menu bar popover copy
+buttons, the History context menu, and the menu bar "replace with formatted text"
+button. They all call NativeDesktopHost.copy / applyReplacement, which the
+DesktopActionStartTests drive through the production factory.

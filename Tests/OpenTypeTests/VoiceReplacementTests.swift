@@ -23,7 +23,7 @@ final class VoiceReplacementTests: XCTestCase {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }
         try await fixture.start()
-        let (pending, original) = try installPending(fixture)
+        let (pending, original) = try fixture.installPending()
         fixture.targetAvailable = false
         let execution = try fixture.runtime.service(SessionServices.execution)
         let intent = SessionIntent(input: .local, operation: .applyReplacement(pending.id))
@@ -42,7 +42,7 @@ final class VoiceReplacementTests: XCTestCase {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }
         try await fixture.start()
-        let (pending, original) = try installPending(fixture)
+        let (pending, original) = try fixture.installPending()
         let history = try fixture.runtime.service(DataServices.history)
         let unrelated = InputRecord(rawText: "Other", processedText: "Other", wasProcessed: false)
         history.addRecord(unrelated)
@@ -69,7 +69,7 @@ final class VoiceReplacementTests: XCTestCase {
         let fixture = try VoiceWorkflowFixture()
         defer { fixture.remove() }
         try await fixture.start()
-        let (pending, original) = try installPending(fixture, createdAt: Date().addingTimeInterval(-20))
+        let (pending, original) = try fixture.installPending(createdAt: Date().addingTimeInterval(-20))
         let outputs = try fixture.runtime.service(SessionServices.outputs)
         let driver = try fixture.runtime.service(SessionServices.execution)
         let intent = SessionIntent(input: .local, operation: .applyReplacement(pending.id))
@@ -81,21 +81,5 @@ final class VoiceReplacementTests: XCTestCase {
         XCTAssertEqual(outputs.snapshot.recentText, "Quick text")
         XCTAssertEqual(outputs.snapshot.pending?.state, .copied)
         try await fixture.runtime.stop()
-    }
-
-    private func installPending(_ fixture: VoiceWorkflowFixture, createdAt: Date = Date()) throws -> (DeferredReplacement, InputRecord) {
-        let record = InputRecord(rawText: "Raw", processedText: "Quick text", wasProcessed: false)
-        try fixture.runtime.service(DataServices.history).addRecord(record)
-        let outputs = try fixture.runtime.service(SessionServices.outputs)
-        let anchor = EditingAnchor(target: fixture.target, text: "Quick text")
-        outputs.remember(SessionCompletion(transcript: "Raw", text: anchor.text, acceptance: .delivery(
-            DeliveryReceipt(operationID: UUID(), disposition: .accepted, effect: .paste, anchor: anchor, confirmation: .targetValue))), recordID: record.id)
-        var pending = DeferredReplacement(historyRecordID: record.id, rawText: "Raw", insertedText: anchor.text,
-            targetPID: fixture.target.processIdentifier, targetBundleIdentifier: fixture.target.context.bundleIdentifier,
-            message: "Ready", createdAt: createdAt)
-        pending.formattedText = "Formatted text"
-        pending.state = .ready
-        XCTAssertTrue(outputs.installPending(pending, anchor: anchor))
-        return (pending, record)
     }
 }

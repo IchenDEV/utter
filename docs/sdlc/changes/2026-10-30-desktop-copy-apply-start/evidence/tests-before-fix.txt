@@ -1,0 +1,10 @@
+# Baseline: new tests on origin/main 0e0f3c1 (before the fix)
+Tests/UtterSessionTests/SessionDriverInputBindingTests.swift:52: error: -[UtterSessionTests.SessionDriverInputBindingTests testOnlyInputOperationsBindALocalSourceToAnUnselectedIntent] : failed: caught error: "invalidSessionState"
+Test Case '-[UtterSessionTests.SessionDriverInputBindingTests testOnlyInputOperationsBindALocalSourceToAnUnselectedIntent]' failed (0.159 seconds).
+Tests/OpenTypeTests/DesktopActionStartTests.swift:86: error: -[OpenTypeTests.DesktopActionStartTests testDesktopApplyReplacementAfterExpiryCopiesInsteadOfReplacing] : XCTUnwrap failed: expected non-nil value of type "UUID" - The desktop apply-replacement action did not start a session
+Test Case '-[OpenTypeTests.DesktopActionStartTests testDesktopApplyReplacementAfterExpiryCopiesInsteadOfReplacing]' failed (1.205 seconds).
+Tests/OpenTypeTests/DesktopActionStartTests.swift:66: error: -[OpenTypeTests.DesktopActionStartTests testDesktopApplyReplacementStartsAndReplacesTheRememberedInsertion] : XCTUnwrap failed: expected non-nil value of type "UUID" - The desktop apply-replacement action did not start a session
+Test Case '-[OpenTypeTests.DesktopActionStartTests testDesktopApplyReplacementStartsAndReplacesTheRememberedInsertion]' failed (0.020 seconds).
+Test Case '-[OpenTypeTests.DesktopActionStartTests testDesktopCopyOfWhitespaceStartsNothing]' passed (0.022 seconds).
+Tests/OpenTypeTests/DesktopActionStartTests.swift:26: error: -[OpenTypeTests.DesktopActionStartTests testDesktopCopyStartsAndCopiesTheExactTextWithoutHistoryOrAnchorChange] : XCTUnwrap failed: expected non-nil value of type "UUID" - The desktop copy action did not start a session
+Test Case '-[OpenTypeTests.DesktopActionStartTests testDesktopCopyStartsAndCopiesTheExactTextWithoutHistoryOrAnchorChange]' failed (0.018 seconds).

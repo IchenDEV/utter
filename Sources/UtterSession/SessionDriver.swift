@@ -95,7 +95,7 @@ package final class SessionDriver: SessionExecutionService {
                 remoteDisclosure: rejection.consent))
             return
         }
-        if activate, intent.input == .unselected { try job.bind(input: .local) }
+        if activate, intent.input == .unselected, intent.operation == .input { try job.bind(input: .local) }
         let timing = SessionTiming(now: now)
         let control = SessionControl(isCurrent: { [weak self] in
             self?.active?.intent.id == intent.id && self?.closed == false && self?.isReady() == true && self?.active?.task.isCancelled == false
