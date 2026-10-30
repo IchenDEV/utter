@@ -1,0 +1,6 @@
+# After the fix: same tests
+Test Case '-[UtterSessionTests.SessionDriverInputBindingTests testOnlyInputOperationsBindALocalSourceToAnUnselectedIntent]' passed (0.005 seconds).
+Test Case '-[OpenTypeTests.DesktopActionStartTests testDesktopApplyReplacementAfterExpiryCopiesInsteadOfReplacing]' passed (0.031 seconds).
+Test Case '-[OpenTypeTests.DesktopActionStartTests testDesktopApplyReplacementStartsAndReplacesTheRememberedInsertion]' passed (0.019 seconds).
+Test Case '-[OpenTypeTests.DesktopActionStartTests testDesktopCopyOfWhitespaceStartsNothing]' passed (0.019 seconds).
+Test Case '-[OpenTypeTests.DesktopActionStartTests testDesktopCopyStartsAndCopiesTheExactTextWithoutHistoryOrAnchorChange]' passed (0.018 seconds).

@@ -1,0 +1,13 @@
+# Installed Utter 0.0.60 (pid 60570), unified log, subsystem com.opentype.voiceinput, 2026-10-30
+# Each failure follows a button click; no dictated text is present in these entries.
+2026-10-30 15:15:17.853 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
+2026-10-30 15:15:24.064 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
+2026-10-30 15:15:28.760 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
+2026-10-30 15:15:29.252 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
+2026-10-30 15:15:29.469 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
+2026-10-30 15:15:29.644 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
+2026-10-30 15:15:29.810 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
+2026-10-30 15:16:11.906 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
+2026-10-30 15:16:12.556 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
+2026-10-30 15:16:12.698 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
+2026-10-30 15:16:12.858 E  Utter[60570:6a73b06] [com.opentype.voiceinput:app] Desktop action could not start: The operation couldn’t be completed. (UtterContracts.IntegrationError error 8.)
