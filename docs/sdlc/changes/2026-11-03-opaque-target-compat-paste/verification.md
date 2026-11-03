@@ -46,6 +46,11 @@ Verdict: no consumer treats the receipt as a confirmed insertion; one needed a g
 ### Automated evidence
 
 - `swift test`: 631 tests, 26 skipped, 0 failures. `bash scripts/ci-basic-checks.sh` and `bash scripts/sdlc-checks.sh`: passed.
+- CI on this branch failed once in `DesktopOverlayDwellTests.testUnconfirmedNoticeLeavesAfterTheDwell` (a test from
+  the earlier compact-notice change, not touched by this feature): it slept 40 ms and asserted the 120 ms dwell
+  had not ended, and a stalled runner made that sleep outlast the dwell. The test now measures the elapsed time
+  until the notice leaves and requires it to be at least the dwell, so a stall can only make it pass. It passed three
+  local runs, and shortening the dwell to a quarter makes it fail (mutation kill); the mutation is restored.
 - New tests: `OpaquePasteDeliveryTests` (routing, every guard posts zero pastes, exactly one paste, clipboard not restored,
   clipboard overwritten before the paste, failed post, no key events, log line without text, backend with the switch on
   and off), `UnobservablePasteReceiptTests`, a presentation test, settings round-trip and snapshot tests.
