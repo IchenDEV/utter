@@ -25,6 +25,8 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     var settingsCommand: (item: NSMenuItem, target: AnyObject?, action: Selector?)?
     var subscriptions: Set<AnyCancellable> = []
     var hideTask: Task<Void, Never>?
+    /// How long an unconfirmed-insertion notice stays; a property so tests can shorten it.
+    var uncertainDwell: Duration = .seconds(8)
     var overlayVisible = false
     var restoreShown: UUID?
     var restoreDismissed: UUID?
@@ -114,14 +116,30 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
         guard snapshot.phase != nil, snapshot.phase != .cancelled else { hideOverlay(); return }
         if snapshot.isBusy { closePopover(); restoreShown = nil }
         showOverlay()
-        if !snapshot.isBusy && !state.presentation.keepsVisible {
+        guard !snapshot.isBusy else { return }
+        if state.presentation.autoDismisses {
+            scheduleHide(after: uncertainDwell, for: snapshot.id)
+        } else if !state.presentation.keepsVisible {
             if state.offersRestore { outputsChanged(); return }
-            hideTask = Task { [weak self] in
-                do { try await Task.sleep(for: .seconds(1.5)) } catch { return }
-                guard let self, !self.closed, self.isCurrent(), self.state.snapshot.id == snapshot.id,
-                      !self.state.offersRestore else { return }
-                self.hideOverlay()
-            }
+            scheduleHide(after: .seconds(1.5), for: snapshot.id)
+        }
+    }
+
+    /// A menu bar click while the last insertion is still unconfirmed brings the notice back with the same dwell.
+    func reshowUnconfirmedNotice() {
+        guard state.phase == .uncertain else { return }
+        showOverlay()
+        scheduleHide(after: uncertainDwell, for: state.snapshot.id)
+    }
+
+    /// Only the session that scheduled the hide may end it; a newer session's overlay is never hidden by an older timer.
+    func scheduleHide(after delay: Duration, for sessionID: UUID?) {
+        hideTask?.cancel()
+        hideTask = Task { [weak self] in
+            do { try await Task.sleep(for: delay) } catch { return }
+            guard let self, !self.closed, self.isCurrent(), self.state.snapshot.id == sessionID,
+                  !self.state.offersRestore else { return }
+            self.hideOverlay()
         }
     }
 
@@ -134,7 +152,7 @@ final class NativeDesktopHost: NSObject, DesktopPresentationService, NSPopoverDe
     @objc func togglePopover() {
         guard !closed, isCurrent(), let button = statusItem?.button else { return }
         if popover.isShown { closePopover(); return }
-        if state.phase == .uncertain { showOverlay() }
+        reshowUnconfirmedNotice()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         outsideClicks.start { [weak self] in self?.closePopover() }
     }

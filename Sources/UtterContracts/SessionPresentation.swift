@@ -9,6 +9,8 @@ package struct SessionPresentation: Equatable, Sendable {
     package let canCopy: Bool
     private let isReviewing: Bool
     package var keepsVisible: Bool { isReviewing || status == .failed || status == .uncertain }
+    /// An unconfirmed insertion is not an error to act on: the notice may leave on its own, unlike `failed`.
+    package var autoDismisses: Bool { status == .uncertain }
 
     package init(_ snapshot: SessionExecutionSnapshot) {
         isReviewing = snapshot.selectionEditProposal != nil || snapshot.remoteDisclosure != nil

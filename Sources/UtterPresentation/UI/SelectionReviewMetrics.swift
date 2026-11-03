@@ -40,7 +40,7 @@ enum SelectionReviewMetrics {
 }
 
 extension OverlayLayout {
-    enum Content: Equatable { case status, restore, disclosure, notice }
+    enum Content: Equatable { case status, restore, disclosure, notice, alert }
 
     init(content: Content, size: CGSize) {
         width = size.width; height = size.height
