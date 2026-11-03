@@ -1,0 +1,28 @@
+# Batch 0: Feishu and QQ focus probe (passive, shape only; partial, still running at the time of writing)
+# Source: /tmp/axprobe/watch3.swift (read-only AX queries, no writes; roles and character-class counts only).
+# Feishu (com.electron.lark) DOES expose a focused element (AXTextArea, selection settable): it is not an opaque target.
+# QQ (com.tencent.qq): no sample yet.
+
+23:22:08.477 target apps not frontmost
+23:27:46.308 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:27:47.307 target apps not frontmost
+23:28:27.961 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:28:31.348 target apps not frontmost
+23:31:46.970 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:31:48.099 target apps not frontmost
+23:32:37.656 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:32:39.416 target apps not frontmost
+23:33:26.379 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:33:28.380 target apps not frontmost
+23:35:08.469 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:35:09.592 target apps not frontmost
+23:43:39.413 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:43:39.539 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:43:40.667 target apps not frontmost
+23:51:16.820 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:51:16.945 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:51:28.988 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:51:29.113 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:51:30.366 ron.lark role=AXButton chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:51:30.503 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:51:37.799 target apps not frontmost
