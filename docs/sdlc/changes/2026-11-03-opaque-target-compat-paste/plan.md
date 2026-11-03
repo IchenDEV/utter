@@ -1,8 +1,8 @@
 # Plan: A compatibility switch for input boxes Utter cannot inspect
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** User, chat answer "批准" (23:28 UTC+8) to the compound question that named: (1) approval of this bundle's spec and plan (D1 to D9), (2) the assistant runs the hardware verification and the owner waives an independent verifier, (3) the assistant may replace the installed Utter 0.0.62 on the owner's machine with the owner re-granting permissions, (4) both fixes ship together as one release with the owner's `production` approval. Verification-stage approval, merge of the implementation and the release stay separate decisions
+**Approved-date:** 2026-11-03
 **Upstream:** [spec.md](spec.md)
 
 Nothing here starts until the spec is approved. Each item ends with its focused tests green before the next starts.
