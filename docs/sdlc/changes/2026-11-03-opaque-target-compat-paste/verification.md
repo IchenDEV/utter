@@ -70,10 +70,10 @@ Verdict: no consumer treats the receipt as a confirmed insertion; one needed a g
 ## Measurements so far
 
 - WeChat: no focused element in 7 of 7 samples (`evidence/batch0-wechat-focus.txt`).
-- Feishu: **does** expose a focused element (`evidence/batch0-feishu-qq-focus.txt`), so it is outside this path and is
-  checked only as an unchanged app.
-- QQ: not yet sampled. Per spec D7 the second opaque app is QQ if it turns out to be opaque; otherwise WeChat alone
-  covers this path and the owner may ask for another app.
+- Feishu: exposes a focused element in every sample, so it is outside this path and is checked only as an unchanged app.
+- QQ: one "no focused element" sample, then a focused text area 130 ms later in the same visit, so it is not an opaque
+  target either (`evidence/batch0-feishu-qq-focus.txt`). Per spec D7, with neither opaque, WeChat alone covers this
+  path; the owner may still ask for another app.
 
 ## H0 and hardware verification — NOT DONE
 
@@ -85,7 +85,7 @@ UTC+8). The verification stage itself still needs the owner's approval.
 |---|---|---|
 | H0: posted ⌘V lands in the WeChat chat input with no focused element (**stop rule: fewer than 9 of 10 means nothing ships**) | 10 | not run |
 | WeChat, switch on, dictation | 10 | not run |
-| Second opaque app (QQ if opaque) | 10 | not run |
+| Second opaque app: none found (Feishu and QQ both expose a focused element); recorded, not run | — | n/a |
 | WeChat, switch off | 3 | not run |
 | T3 Code, Cursor, ChatGPT, TextEdit unchanged | 1 each | not run |
 | Secure input (password field) with the switch on | 1 | not run |

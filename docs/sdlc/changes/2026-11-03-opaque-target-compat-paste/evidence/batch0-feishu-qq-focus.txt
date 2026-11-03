@@ -1,7 +1,8 @@
-# Batch 0: Feishu and QQ focus probe (passive, shape only; partial, still running at the time of writing)
-# Source: /tmp/axprobe/watch3.swift (read-only AX queries, no writes; roles and character-class counts only).
-# Feishu (com.electron.lark) DOES expose a focused element (AXTextArea, selection settable): it is not an opaque target.
-# QQ (com.tencent.qq): no sample yet.
+# Batch 0: Feishu and QQ focus probe (passive, shape only)
+# Source: /tmp/axprobe/watch3.swift (read-only AX queries, no writes; roles and character-class counts only). Ran 23:22 to 00:22 UTC+8, 2026-11-03/04.
+# Feishu (com.electron.lark): exposes a focused element (AXTextArea, selection settable) in every sample while frontmost: not an opaque target.
+# QQ (com.tencent.qq): one 'no focused element' sample at 00:06:45, then AXTextArea with a settable selection within 130 ms in the same visit: not an opaque target.
+# Result: neither is an opaque target; per spec D7 WeChat alone covers the compatibility path.
 
 23:22:08.477 target apps not frontmost
 23:27:46.308 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
@@ -26,3 +27,57 @@
 23:51:30.366 ron.lark role=AXButton chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
 23:51:30.503 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
 23:51:37.799 target apps not frontmost
+23:54:49.483 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:54:50.490 target apps not frontmost
+23:54:51.863 ron.lark role=AXTextArea chromeId=true selSettable=true sel=11,0 value=u16=16{ASCII=6,CJK=3,LF=3,SP=1,ZW=3} placeholder=none
+23:54:51.988 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:54:52.114 ron.lark role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=26{CJK=16,LF=1,SP=4,other=5} endLF placeholder=none
+23:54:53.363 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:54:58.380 ron.lark role=AXButton chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:10.823 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:15.343 ron.lark role=AXGroup chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:15.596 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:17.227 ron.lark role=AXWebArea chromeId=true selSettable=false sel=127,11 value=u16=0{} placeholder=none
+23:55:17.351 ron.lark role=AXWebArea chromeId=true selSettable=false sel=114,24 value=u16=0{} placeholder=none
+23:55:17.730 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:21.890 ron.lark role=AXRadioButton chromeId=true selSettable=false sel=0,0 value=none placeholder=none
+23:55:22.141 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:24.147 ron.lark role=AXButton chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:24.273 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:25.025 ron.lark role=AXTextField chromeId=true selSettable=true sel=0,0 value=u16=0{} placeholder=none
+23:55:26.405 ron.lark role=AXButton chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:26.530 ron.lark role=AXTextField chromeId=true selSettable=true sel=0,0 value=u16=0{} placeholder=none
+23:55:28.787 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:28.913 ron.lark role=AXTextField chromeId=true selSettable=true sel=0,0 value=u16=0{} placeholder=none
+23:55:30.665 ron.lark role=AXButton chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:30.790 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:32.171 ron.lark role=AXButton chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:32.424 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:34.193 target apps not frontmost
+23:55:36.448 ron.lark role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=26{CJK=16,LF=1,SP=4,other=5} endLF placeholder=none
+23:55:36.573 ron.lark role=AXGroup chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:37.578 ron.lark role=AXRadioButton chromeId=true selSettable=false sel=0,0 value=none placeholder=none
+23:55:37.830 ron.lark role=AXWebArea chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+23:55:39.335 target apps not frontmost
+23:56:01.347 ron.lark role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=26{CJK=16,LF=1,SP=4,other=5} endLF placeholder=none
+23:56:08.261 target apps not frontmost
+23:56:12.768 ron.lark role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=26{CJK=16,LF=1,SP=4,other=5} endLF placeholder=none
+23:56:14.651 target apps not frontmost
+23:56:49.410 ron.lark role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=26{CJK=16,LF=1,SP=4,other=5} endLF placeholder=none
+23:56:52.555 target apps not frontmost
+23:56:57.059 ron.lark role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=26{CJK=16,LF=1,SP=4,other=5} endLF placeholder=none
+23:56:58.444 target apps not frontmost
+23:57:33.110 ron.lark role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=26{CJK=16,LF=1,SP=4,other=5} endLF placeholder=none
+23:57:34.610 target apps not frontmost
+23:57:53.237 ron.lark role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=26{CJK=16,LF=1,SP=4,other=5} endLF placeholder=none
+23:57:54.743 target apps not frontmost
+00:06:45.346 ncent.qq no focused element
+00:06:45.472 ncent.qq role=AXTextArea chromeId=true selSettable=true sel=0,1 value=u16=1{LF=1} startLF endLF ONLY-LF placeholder=none
+00:06:47.976 ncent.qq role=AXGroup chromeId=true selSettable=false sel=0,0 value=u16=0{} placeholder=none
+00:06:48.102 ncent.qq role=AXTextArea chromeId=true selSettable=true sel=0,1 value=u16=1{LF=1} startLF endLF ONLY-LF placeholder=none
+00:06:55.037 target apps not frontmost
+00:09:42.860 ncent.qq role=AXTextArea chromeId=true selSettable=true sel=0,1 value=u16=1{LF=1} startLF endLF ONLY-LF placeholder=none
+00:09:44.503 target apps not frontmost
+00:18:11.230 ncent.qq role=AXTextArea chromeId=true selSettable=true sel=0,1 value=u16=1{LF=1} startLF endLF ONLY-LF placeholder=none
+00:18:13.626 target apps not frontmost
+done
