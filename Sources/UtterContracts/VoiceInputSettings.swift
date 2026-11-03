@@ -8,6 +8,8 @@ package struct VoiceInputSettings {
     package let outputMode: OutputMode
     package let enableInstantInsert: Bool
     package let allowClipboardPaste: Bool
+    /// Compatibility mode only means something while clipboard paste is allowed.
+    package let allowOpaqueTargetPaste: Bool
     package let translationTargetLanguage: TranslationLanguage
     package let enableMemory: Bool
     package let memoryWindowMinutes: Int
@@ -29,6 +31,7 @@ package struct VoiceInputSettings {
         outputMode = settings.outputMode
         enableInstantInsert = settings.enableInstantInsert
         allowClipboardPaste = settings.allowClipboardPaste
+        allowOpaqueTargetPaste = settings.allowOpaqueTargetPaste && settings.allowClipboardPaste
         translationTargetLanguage = settings.translationTargetLanguage
         enableMemory = settings.enableMemory
         memoryWindowMinutes = settings.memoryWindowMinutes

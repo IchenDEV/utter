@@ -26,4 +26,15 @@ final class VoiceInputSettingsTests: XCTestCase {
         XCTAssertEqual(snapshot.speech.model, "replacement-model")
         XCTAssertEqual(snapshot.dictionary.applyReplacements(to: "helo"), "hello")
     }
+
+    func testCompatibilityPasteNeedsClipboardPasteAndIsOffByDefault() {
+        let speech = SpeechSelection(providerID: "speech", type: .whisper, model: "model")
+        let dictionary = PersonalDictionarySnapshot(entries: [], editRules: [])
+        var preferences = SettingsValues()
+        XCTAssertFalse(VoiceInputSettings(settings: preferences, speech: speech, dictionary: dictionary).allowOpaqueTargetPaste)
+        preferences.allowOpaqueTargetPaste = true
+        XCTAssertTrue(VoiceInputSettings(settings: preferences, speech: speech, dictionary: dictionary).allowOpaqueTargetPaste)
+        preferences.allowClipboardPaste = false
+        XCTAssertFalse(VoiceInputSettings(settings: preferences, speech: speech, dictionary: dictionary).allowOpaqueTargetPaste)
+    }
 }

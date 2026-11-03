@@ -20,6 +20,21 @@ enum ClipboardPasteTransaction {
             confirmation: written && pasteboard.text == text ? .clipboardValue : .none)
     }
 
+    /// One paste into a target nobody can read. There is nothing to confirm, so the text stays on the clipboard
+    /// and nothing is ever retried.
+    static func pasteUnobserved(_ text: String, pasteboard: any DeliveryPasteboard,
+                                canCommit: () -> Bool, mark: (DeliveryEffect) -> Bool,
+                                postPaste: () -> Bool,
+                                beforePaste: () async -> Void = { await Task.yield() }) async -> DeliveryCompletion {
+        guard canCommit(), mark(.clipboard) else { return DeliveryCompletion(disposition: .notCommitted) }
+        guard pasteboard.write(text) else { return DeliveryCompletion(disposition: .uncertain) }
+        let ownedChange = pasteboard.changeCount
+        await beforePaste()
+        guard canCommit(), pasteboard.changeCount == ownedChange, pasteboard.text == text, mark(.paste),
+              postPaste() else { return DeliveryCompletion(disposition: .uncertain) }
+        return DeliveryCompletion(disposition: .accepted, confirmation: .unobservable)
+    }
+
     static func paste(_ text: String, pasteboard: any DeliveryPasteboard,
                       canCommit: () -> Bool, mark: (DeliveryEffect) -> Bool,
                       postPaste: () -> Bool, confirm: @escaping () async -> Bool,

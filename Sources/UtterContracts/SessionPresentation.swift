@@ -25,6 +25,7 @@ package struct SessionPresentation: Equatable, Sendable {
         case .delivering: status = .delivering; message = L("pipeline.inserting")
         case .completed where snapshot.deliveryStatus == .inserted: status = .inserted; message = L("status.done")
         case .completed where snapshot.deliveryStatus == .copied: status = .copied; message = L("delivery.copied")
+        case .completed where snapshot.deliveryStatus == .uncertain: status = .inserted; message = L("delivery.compat_pasted")
         case .completed where snapshot.deliveryStatus == nil: status = .idle; message = L("status.ready")
         case .failed where snapshot.deliveryStatus == .uncertain:
             status = .uncertain; message = snapshot.error ?? L("delivery.uncertain")
