@@ -81,6 +81,8 @@ final class OverlayPanel {
         }
     }
 
+    var windowFrame: NSRect? { window?.frame }
+
     @MainActor
     func hide() {
         if let excludedID { screen?.includeWindow(excludedID) }

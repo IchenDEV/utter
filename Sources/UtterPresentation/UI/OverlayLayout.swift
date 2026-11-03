@@ -65,13 +65,15 @@ struct OverlayLayout: Equatable {
             bottomPadding = appState.snapshot.isSelectionEditing ? 7 : 10
             stackSpacing = 6
         case .error, .uncertain:
-            width = 360
-            height = 96
-            outerCornerRadius = 18
-            horizontalPadding = 12
-            topPadding = 8
-            bottomPadding = 8
-            stackSpacing = 6
+            let size = OverlayAlertMetrics.plan(for: OverlayAlert(appState: appState)).size
+            content = .alert
+            width = size.width
+            height = size.height
+            outerCornerRadius = OverlayAlertMetrics.cornerRadius
+            horizontalPadding = OverlayAlertMetrics.horizontalPadding
+            topPadding = OverlayAlertMetrics.verticalPadding
+            bottomPadding = OverlayAlertMetrics.verticalPadding
+            stackSpacing = OverlayAlertMetrics.itemSpacing
         case .done where showsEspressoFallback:
             width = 288
             height = 56

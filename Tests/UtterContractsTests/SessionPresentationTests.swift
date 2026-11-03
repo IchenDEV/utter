@@ -17,6 +17,18 @@ final class SessionPresentationTests: XCTestCase {
         XCTAssertNotEqual(inserted.message, copied.message)
     }
 
+    func testOnlyAnUnconfirmedInsertionMayLeaveTheScreenOnItsOwn() {
+        func presentation(_ snapshot: SessionExecutionSnapshot) -> SessionPresentation { SessionPresentation(snapshot) }
+        let uncertain = presentation(SessionExecutionSnapshot(phase: .failed, text: "text", deliveryStatus: .uncertain))
+        XCTAssertTrue(uncertain.autoDismisses)
+        XCTAssertTrue(uncertain.keepsVisible, "Interactive controls stay available while it is shown")
+        XCTAssertFalse(presentation(SessionExecutionSnapshot(phase: .failed, error: "Model failed", recoveryAction: .models)).autoDismisses)
+        XCTAssertFalse(presentation(SessionExecutionSnapshot(phase: .failed, text: "text", error: "Clipboard off", deliveryStatus: .notDelivered)).autoDismisses)
+        XCTAssertFalse(presentation(SessionExecutionSnapshot(phase: .completed, text: "text", deliveryStatus: .inserted)).autoDismisses)
+        XCTAssertFalse(presentation(SessionExecutionSnapshot(phase: .completed, text: "text", deliveryStatus: .copied)).autoDismisses)
+        XCTAssertFalse(presentation(SessionExecutionSnapshot(phase: .recording, isBusy: true)).autoDismisses)
+    }
+
     func testPreparationAndReturnedAPITextDoNotClaimInsertion() {
         let preparing = SessionPresentation(SessionExecutionSnapshot(phase: .preparing, isBusy: true))
         XCTAssertEqual(preparing.status, .preparing)

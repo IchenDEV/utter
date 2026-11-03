@@ -27,7 +27,8 @@ final class PresentationRenderingTests: XCTestCase {
                 ("recording-compact", SessionExecutionSnapshot(phase: .recording, isBusy: true)),
                 ("recording", SessionExecutionSnapshot(phase: .recording, transcript: "今天确认三件事。", isBusy: true)),
                 ("copied", SessionExecutionSnapshot(phase: .completed, text: "今天确认 3 件事。", deliveryStatus: .copied)),
-                ("uncertain", SessionExecutionSnapshot(phase: .failed, text: "今天确认 3 件事。", deliveryStatus: .uncertain)),
+                ("uncertain", SessionExecutionSnapshot(phase: .failed, text: "今天确认 3 件事。", error: L("delivery.unconfirmed"), deliveryStatus: .uncertain)),
+                ("uncertain-short", SessionExecutionSnapshot(phase: .failed, text: "今天确认 3 件事。", deliveryStatus: .uncertain)),
                 ("models", SessionExecutionSnapshot(phase: .failed, error: L("pipeline.model_load_failed"), recoveryAction: .models)),
                 ("permissions", SessionExecutionSnapshot(phase: .failed, error: L("screen.permission_required"), recoveryAction: .screenPrivacy)),
                 ("clipboard-disabled", SessionExecutionSnapshot(phase: .failed, text: "今天确认 3 件事。",
@@ -42,11 +43,23 @@ final class PresentationRenderingTests: XCTestCase {
             }
         }
         Loc.use(.english)
-        let state = AppState()
-        state.project(SessionExecutionSnapshot(phase: .failed, error: L("pipeline.model_load_failed"), recoveryAction: .models))
-        let view = OverlayContentView(onLayoutChange: { _ in }, onCancel: {}, onConfirm: {},
-            onCopy: {}, onRecover: {}, onDismiss: {}).environmentObject(state)
-        try await render(AnyView(view), size: OverlayLayout(appState: state).panelSize, appearance: .aqua, file: "hud-models-english")
+        for name in [NSAppearance.Name.aqua, .darkAqua] {
+            let suffix = name == .aqua ? "light" : "dark"
+            for (label, snapshot) in [
+                ("models-english", SessionExecutionSnapshot(phase: .failed, error: L("pipeline.model_load_failed"), recoveryAction: .models)),
+                ("uncertain-english", SessionExecutionSnapshot(phase: .failed, text: "Confirm three things today.",
+                    error: L("delivery.unconfirmed"), deliveryStatus: .uncertain)),
+                ("permissions-english", SessionExecutionSnapshot(phase: .failed, error: L("screen.permission_required"), recoveryAction: .screenPrivacy)),
+                ("clipboard-disabled-english", SessionExecutionSnapshot(phase: .failed, text: "Confirm three things today.",
+                    error: L("delivery.unavailable"), deliveryStatus: .notDelivered)),
+            ] {
+                let state = AppState()
+                state.project(snapshot)
+                let view = OverlayContentView(onLayoutChange: { _ in }, onCancel: {}, onConfirm: {},
+                    onCopy: {}, onRecover: {}, onDismiss: {}).environmentObject(state)
+                try await render(AnyView(view), size: OverlayLayout(appState: state).panelSize, appearance: name, file: "hud-\(label)-\(suffix)")
+            }
+        }
     }
 
     func testOverlayExcludesItsActualWindowAndReleasesThatIdentityOnHide() throws {

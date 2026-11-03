@@ -25,11 +25,6 @@ struct OverlayContentView: View {
         OverlayLayout(appState: appState, notice: notice.key)
     }
 
-    private var isError: Bool {
-        if case .error = appState.phase { return true }
-        return false
-    }
-
     private var showsEspressoFallback: Bool {
         appState.phase == .done
             && appState.completionKind == .espressoFallback
@@ -38,7 +33,7 @@ struct OverlayContentView: View {
     var body: some View {
         content
             .frame(width: layout.width, height: layout.height, alignment: .center)
-            .background(OverlayPanelSurface(cornerRadius: layout.outerCornerRadius))
+            .background(OverlayPanelSurface(cornerRadius: layout.outerCornerRadius, tint: layout.content == .alert ? OverlayAlertMetrics.surfaceTint : 0.22))
             .clipShape(RoundedRectangle(cornerRadius: layout.outerCornerRadius, style: .continuous))
             .compositingGroup()
             .environment(\.colorScheme, .dark)
@@ -59,6 +54,8 @@ struct OverlayContentView: View {
             RestoreOfferView(restoration: restoration, callbacks: review, onClose: onDismiss).id(restoration.operationID)
         } else if layout.content == .notice, let key = notice.key {
             ReviewNoticeView(key: key, onClose: onDismiss)
+        } else if layout.content == .alert {
+            OverlayAlertView(alert: OverlayAlert(appState: appState), onCopy: onCopy, onRecover: onRecover, onDismiss: onDismiss)
         } else {
             hud
         }
@@ -92,8 +89,8 @@ struct OverlayContentView: View {
 
             Text(appState.statusMessage)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(.white.opacity(isError ? 0.94 : 0.88))
-                .lineLimit(isError ? 3 : showsEspressoFallback ? 2 : 1)
+                .foregroundStyle(.white.opacity(0.88))
+                .lineLimit(showsEspressoFallback ? 2 : 1)
                 .fixedSize(horizontal: false, vertical: true)
 
             Spacer(minLength: 4)
@@ -173,15 +170,9 @@ struct OverlayContentView: View {
         case .copied:
             Image(systemName: "doc.on.clipboard")
                 .foregroundStyle(.white.opacity(0.84))
-        case .uncertain:
-            Image(systemName: "exclamationmark.triangle")
-                .foregroundStyle(Color(nsColor: .systemOrange))
         case .done:
             Image(systemName: "checkmark")
                 .foregroundStyle(.white.opacity(0.84))
-        case .error:
-            Image(systemName: "exclamationmark")
-                .foregroundStyle(Color(nsColor: .systemRed).opacity(0.88))
         default:
             Image(systemName: "mic")
                 .foregroundStyle(.white.opacity(0.7))
@@ -191,6 +182,8 @@ struct OverlayContentView: View {
 
 struct OverlayPanelSurface: View {
     let cornerRadius: CGFloat
+    /// Opacity of the black layer over the material. Text-bearing notices use more, so they stay readable on a white window.
+    var tint: Double = 0.22
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorSchemeContrast) private var contrast
 
@@ -201,7 +194,7 @@ struct OverlayPanelSurface: View {
                 shape.fill(Color.black.opacity(0.92))
             } else {
                 shape.fill(.ultraThinMaterial)
-                shape.fill(Color.black.opacity(0.22))
+                shape.fill(Color.black.opacity(tint))
             }
         }
         .overlay {
