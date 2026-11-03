@@ -1,0 +1,20 @@
+# Batch 0: does the WeChat app expose a focused UI element? (passive probe, shape only)
+# Source: /tmp/axprobe/watch3.swift (read-only AX queries, no writes, no text). Times are UTC+8, 2026-11-03.
+# Each line: the probe saw WeChat frontmost and asked for AXFocusedUIElement.
+# Result: 7 of 7 samples = no focused element (several only seconds apart, so not 7 independent visits); 0 samples with a role.
+
+22:32:48.511 target apps not frontmost
+22:33:13.303 inWeChat no focused element
+22:33:26.303 target apps not frontmost
+22:33:34.294 inWeChat no focused element
+22:33:36.166 target apps not frontmost
+22:35:03.578 inWeChat no focused element
+22:35:12.586 target apps not frontmost
+22:35:13.837 inWeChat no focused element
+22:35:14.965 target apps not frontmost
+22:58:04.832 inWeChat no focused element
+22:58:46.569 target apps not frontmost
+23:08:46.086 inWeChat no focused element
+23:09:02.605 target apps not frontmost
+23:09:18.356 inWeChat no focused element
+23:09:20.237 target apps not frontmost
