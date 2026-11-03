@@ -1,0 +1,40 @@
+# Batch 0 measurements, 2026-11-03 (UTC+8). Shape only: character counts per class, never text.
+# Watcher: batch0-ax-shape-watcher.swift (reads the focused field of the frontmost target app; no writes).
+# 'DELTA' compares consecutive values of the same editable field: common prefix/suffix, removed and inserted counts.
+# tag ai.codex = ChatGPT desktop app, s.t3code = T3 Code (Nightly).
+
+## Empty-composer shapes (before any dictation)
+22:21:20.050 ai.codex role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=12{ASCII=10,LF=1,SP=1} endLF placeholder=none
+22:18:56.725 s.t3code role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=1{LF=1} startLF endLF ONLY-LF placeholder=u16=43{ASCII=30,SP=7,other=6}
+
+## Insertions (AXTextArea deltas)
+22:19:27.834 s.t3code role=AXTextArea chromeId=true selSettable=true sel=22,0 value=u16=22{ASCII=17,SP=4,other=1} DELTA oldLen=1 newLen=22 prefix=0 suffix=0 removed=1 inserted=u16=22{ASCII=17,SP=4,other=1}
+22:19:29.862 s.t3code role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=1{LF=1} startLF endLF ONLY-LF DELTA oldLen=22 newLen=1 prefix=0 suffix=0 removed=22 inserted=u16=1{LF=1} startLF endLF ONLY-LF
+22:19:54.812 s.t3code role=AXTextArea chromeId=true selSettable=true sel=115,0 value=u16=115{ASCII=1,CJK=104,CJKP=7,DIG=1,SP=2} DELTA oldLen=1 newLen=115 prefix=0 suffix=0 removed=1 inserted=u16=115{ASCII=1,CJK=104,CJKP=7,DIG=1,SP=2}
+22:19:58.488 s.t3code role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=1{LF=1} startLF endLF ONLY-LF DELTA oldLen=115 newLen=1 prefix=0 suffix=0 removed=115 inserted=u16=1{LF=1} startLF endLF ONLY-LF
+22:21:35.584 ai.codex role=AXTextArea chromeId=true selSettable=true sel=103,0 value=u16=103{ASCII=81,SP=17,other=5} DELTA oldLen=12 newLen=103 prefix=0 suffix=0 removed=12 inserted=u16=103{ASCII=81,SP=17,other=5}
+22:21:46.967 ai.codex role=AXTextArea chromeId=true selSettable=true sel=146,0 value=u16=146{ASCII=87,CJK=30,CJKP=3,SP=21,other=5} DELTA oldLen=103 newLen=146 prefix=103 suffix=0 removed=0 inserted=u16=43{ASCII=6,CJK=30,CJKP=3,SP=4}
+22:21:48.107 ai.codex role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=12{ASCII=10,LF=1,SP=1} endLF DELTA oldLen=146 newLen=12 prefix=0 suffix=0 removed=146 inserted=u16=12{ASCII=10,LF=1,SP=1} endLF
+22:22:34.374 s.t3code role=AXTextArea chromeId=true selSettable=true sel=52,0 value=u16=53{CJK=47,CJKP=4,LF=1,SP=1} DELTA oldLen=11 newLen=53 prefix=10 suffix=0 removed=1 inserted=u16=43{CJK=37,CJKP=4,LF=1,SP=1} startLF
+22:22:35.636 s.t3code role=AXTextArea chromeId=true selSettable=true sel=0,0 value=u16=1{LF=1} startLF endLF ONLY-LF DELTA oldLen=53 newLen=1 prefix=0 suffix=0 removed=53 inserted=u16=1{LF=1} startLF endLF ONLY-LF
+
+## Utter delivery log (Utter 0.0.62, local time)
+2026-11-03 22:22:37.347 I  Delivery completed: uncertain, confirmation: none, path: paste, target: web
+
+## Input history rows for the same dictations (status, text length in UTF-16 units, units before the caret; no text)
+14:15:19Z (22:15:19 local) T3 Code (Nightly) status=uncertain textUnits=19 caretPrefixUnits=17
+14:17:06Z (22:17:06 local) T3 Code (Nightly) status=inserted textUnits=62 caretPrefixUnits=98
+14:17:07Z (22:17:07 local) T3 Code (Nightly) status=notDelivered textUnits=4 caretPrefixUnits=161
+14:17:26Z (22:17:26 local) T3 Code (Nightly) status=inserted textUnits=56 caretPrefixUnits=98
+14:17:41Z (22:17:41 local) T3 Code (Nightly) status=uncertain textUnits=24 caretPrefixUnits=155
+14:19:27Z (22:19:27 local) T3 Code (Nightly) status=inserted textUnits=22 caretPrefixUnits=none
+14:19:54Z (22:19:54 local) T3 Code (Nightly) status=inserted textUnits=115 caretPrefixUnits=none
+14:21:38Z (22:21:38 local) ChatGPT status=uncertain textUnits=103 caretPrefixUnits=none
+14:21:46Z (22:21:46 local) ChatGPT status=inserted textUnits=43 caretPrefixUnits=103
+14:22:37Z (22:22:37 local) T3 Code (Nightly) status=uncertain textUnits=41 caretPrefixUnits=10
+
+## Second watcher run (edges added), 22:30-22:32 local, same shape-only rules
+# removedEdges/oldTailEdges/insertedEdges: first and last scalar of a segment; letters/digits/CJK only as a class, structural characters as hex.
+22:31:15.002 ai.codex role=AXTextArea chromeId=true selSettable=true sel=34,0 value=u16=34{ASCII=2,CJK=27,CJKP=3,SP=2} DELTA oldLen=12 newLen=34 prefix=0 suffix=0 removed=12 removedEdges=[first=alnum last=U+000A] oldTailEdges=[first=alnum last=U+000A] inserted=u16=34{ASCII=2,CJK=27,CJKP=3,SP=2} insertedEdges=[first=cjk last=U+3002]
+# history: 14:31:17Z ChatGPT status=uncertain textUnits=34 caretPrefixUnits=none (the delivery above)
+# 14:30:11Z WeChat status=notDelivered textUnits=14 (no watcher on WeChat yet; a WeChat watcher was started 22:32 for the next case)
