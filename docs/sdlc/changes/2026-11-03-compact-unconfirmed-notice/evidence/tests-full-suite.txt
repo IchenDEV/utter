@@ -1,0 +1,58 @@
+# swift test on 3748367 + working tree, 2026-11-03 (full suite, foreground)
+
+exit=0
+	 Executed 631 tests, with 26 tests skipped and 0 failures (0 unexpected) in 103.905 (103.946) seconds
+
+## Tests added or changed by this change
+UtterContractsTests.SessionPresentationTests testOnlyAnUnconfirmedInsertionMayLeaveTheScreenOnItsOwn passed (0.000 seconds).
+UtterContractsTests.SessionPresentationTests testPreparationAndReturnedAPITextDoNotClaimInsertion passed (0.000 seconds).
+UtterContractsTests.SessionPresentationTests testReceiptStatusDrivesDistinctTerminalPresentation passed (0.000 seconds).
+OpenTypeTests.DesktopOverlayDwellTests testConfirmedInsertionStillLeavesQuickly passed (1.511 seconds).
+OpenTypeTests.DesktopOverlayDwellTests testErrorsThatNeedActionStayUntilClosed passed (0.409 seconds).
+OpenTypeTests.DesktopOverlayDwellTests testMenuBarDoesNotShowANoticeWhenNothingIsUnconfirmed passed (0.004 seconds).
+OpenTypeTests.DesktopOverlayDwellTests testMenuBarReopensTheNoticeAndItLeavesAgain passed (0.258 seconds).
+OpenTypeTests.DesktopOverlayDwellTests testNewSessionKeepsItsOverlayWhenAnOlderTimerFires passed (0.317 seconds).
+OpenTypeTests.DesktopOverlayDwellTests testStartingARecordingReplacesTheNoticeImmediately passed (0.308 seconds).
+OpenTypeTests.DesktopOverlayDwellTests testUnconfirmedNoticeLeavesAfterTheDwell passed (0.133 seconds).
+OpenTypeTests.OverlayAlertLayoutTests testErrorsKeepTheirActionOnTheRowAndAreNotTallerThanThreeLines passed (0.005 seconds).
+OpenTypeTests.OverlayAlertLayoutTests testMessageSplitsIntoTitleAndDetailAtTheFirstSentence passed (0.000 seconds).
+OpenTypeTests.OverlayAlertLayoutTests testOnlyAMessageTooLongForTheRowStacksItsButtonsAndStillStaysBelowTheOldCard passed (0.002 seconds).
+OpenTypeTests.OverlayAlertLayoutTests testOtherPhasesDoNotUseTheAlertLayout passed (0.000 seconds).
+OpenTypeTests.OverlayAlertLayoutTests testRealPanelFrameMatchesTheNoticeAndStaysOnScreen passed (0.036 seconds).
+OpenTypeTests.OverlayAlertLayoutTests testUnconfirmedInsertionIsOneCompactRowInBothLanguages passed (0.002 seconds).
+OpenTypeTests.OverlayLayoutTests testLivePreviewExpandsWithoutReturningToTheLargeCard passed (0.000 seconds).
+OpenTypeTests.OverlayLayoutTests testOverlayHasNoTargetForWindowOutsideConnectedDisplays passed (0.000 seconds).
+OpenTypeTests.OverlayLayoutTests testOverlayPlacementCentersAboveVisibleScreenBottom passed (0.000 seconds).
+OpenTypeTests.OverlayLayoutTests testOverlayTargetsDisplayContainingFocusedWindow passed (0.000 seconds).
+OpenTypeTests.OverlayLayoutTests testOverlayTargetsDisplayWithMostOfFocusedWindow passed (0.000 seconds).
+OpenTypeTests.OverlayLayoutTests testRecordingOverlayUsesCompactCapsuleShape passed (0.000 seconds).
+OpenTypeTests.OverlayLayoutTests testWorkingOverlaysKeepTheRecordingCapsuleHeight passed (0.000 seconds).
+OpenTypeTests.PresentationProjectionTests testCopyAndUncertainReceiptsCannotProjectAsInserted passed (0.000 seconds).
+OpenTypeTests.PresentationProjectionTests testFailureKeepsCandidateAndRecoveryInTheVisibleOverlay passed (0.000 seconds).
+OpenTypeTests.PresentationProjectionTests testGenerationFallbackUsesTheCompletedSessionAndResetsForTheNextOne passed (0.000 seconds).
+OpenTypeTests.PresentationRenderingTests testOverlayExcludesItsActualWindowAndReleasesThatIdentityOnHide passed (0.010 seconds).
+OpenTypeTests.PresentationRenderingTests testSettingsAndDeliveryStatesRenderInLightAndDarkWindows passed (7.103 seconds).
+
+## Skipped (opt-in integration tests, unrelated)
+   1 Current test process has no bundle identifier
+   1 Opt-in headless layout evidence
+   1 Opt-in native window verification
+   1 Opt-in real mirror download: asr
+   1 Opt-in real mirror download: mlx
+   1 Opt-in real mirror download: whisper
+   1 Secure input is off; reading an unowned focused host is outside this probe
+   1 Secure input off; no unowned focused host capture permitted
+   1 Set OPENTYPE_ANE_MLX_FALLBACK_INTEGRATION=1 to run
+   1 Set OPENTYPE_APPLE_SPEECH_INTEGRATION=1 to run this integration test
+   1 Set OPENTYPE_CONFUCIUS_LIVE_DOWNLOAD=1 for the live catalog download
+   1 Set OPENTYPE_CONFUCIUS_MODEL_PATH to run the model integration test
+   1 Set OPENTYPE_DUMP_PROMPTS=1 to dump prompts
+   4 Set OPENTYPE_LIVE_DOWNLOAD_INTEGRATION=1 to run this live download test
+   1 Set OPENTYPE_QWEN_NATIVE_BENCHMARK=1 to run the native benchmark
+   1 Set OPENTYPE_QWEN_NATIVE_INTEGRATION=1 to run native Qwen integration tests
+   2 Set OPENTYPE_QWEN_NATIVE_INTEGRATION=1 to run the native Qwen integration test
+   1 Set OPENTYPE_STREAMING_INTEGRATION=volc or all to run this integration test
+   1 Set OPENTYPE_STREAMING_INTEGRATION=whisper or all to run this integration test
+   1 Set OPENTYPE_TEMPLATE_PROBE=1 to run
+   1 Set UTTER_ANE_TEST_MODEL to a complete local Qwen3 model directory
+   1 Set UTTER_RENDER_DIR to write visual QA screenshots.
