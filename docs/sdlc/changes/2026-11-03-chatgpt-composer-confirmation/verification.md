@@ -58,7 +58,7 @@ the installed Utter 0.0.62 to be stopped or replaced for the run (the owner's de
 | Cursor, T3, Dia, TextEdit unchanged | 1 each | not run |
 | Forced non-landing case still reports `uncertain` | 1 | not run |
 
-Independent verifier: not assigned. If the owner waives independence, the waiver and its date go here.
+Verifier: the implementing assistant. **Waiver:** the owner waived an independent verifier and allowed the installed Utter 0.0.62 to be replaced for the run, with the owner re-granting permissions afterwards (chat answer "批准", 2026-11-03 23:28 UTC+8, to the question that named both). The waiver covers this hardware run only; the verification stage itself still needs the owner's approval.
 
 ## Rollback
 
