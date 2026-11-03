@@ -1,12 +1,13 @@
 # Verification: Confirm a paste into an empty-looking web editor whose placeholder disappears
 
-**Status:** draft
+**Status:** pending approval
 **Approved-by:** —
 **Approved-date:** —
 **Upstream:** [plan.md](plan.md)
 
-This file is a draft on purpose: the automated half is done, the hardware half is not. Do not read it as release
-evidence until the hardware section below is filled in and the owner approves this stage.
+The automated half is done. **The hardware matrix was not run**: the owner chose not to test and delegated the
+judgement (see "Hardware verification"). This file proves the rule against the measured shapes, not a live ChatGPT
+dictation. That is a stated, owner-accepted residual risk.
 
 ## What was implemented (plan items A–E)
 
@@ -45,10 +46,10 @@ evidence until the hardware section below is filled in and the owner approves th
 - Multi-paragraph text in ChatGPT, ChatGPT in a browser tab, and the second cause of `uncertain` (T3 with text before
   the caret). The diagnostic is there to measure the latter; no fix is claimed.
 
-## Hardware verification (spec Batch 3) — NOT DONE
+## Hardware verification (spec Batch 3) — NOT RUN, owner waived
 
-Required before release, by a verifier who is not the implementer, on a release-style build of this branch, which needs
-the installed Utter 0.0.62 to be stopped or replaced for the run (the owner's decision):
+The spec asked for a verifier who is not the implementer, on a release-style build of this branch, with the installed
+Utter 0.0.62 replaced for the run.
 
 | Case | Runs | Result |
 |---|---|---|
@@ -58,7 +59,22 @@ the installed Utter 0.0.62 to be stopped or replaced for the run (the owner's de
 | Cursor, T3, Dia, TextEdit unchanged | 1 each | not run |
 | Forced non-landing case still reports `uncertain` | 1 | not run |
 
-Verifier: the implementing assistant. **Waiver:** the owner waived an independent verifier and allowed the installed Utter 0.0.62 to be replaced for the run, with the owner re-granting permissions afterwards (chat answer "批准", 2026-11-03 23:28 UTC+8, to the question that named both). The waiver covers this hardware run only; the verification stage itself still needs the owner's approval.
+Verifier: the implementing assistant. **Waivers:** the owner waived an independent verifier and allowed the installed
+Utter 0.0.62 to be replaced for the run, with the owner re-granting permissions afterwards (chat answer "批准",
+2026-11-03 23:28 UTC+8). Later the owner answered "你凭根据感觉来搞吧，不要我实测了" (2026-11-04 02:44 UTC+8): no
+owner testing, judgement delegated. The verification stage itself still needs the owner's approval.
+
+### Judgement in place of the run (assistant's, not evidence)
+
+- The accepted value for the empty composer is the exact shape recorded from the owner's ChatGPT in
+  `evidence/batch0-shapes.txt` (12 units before, the replacement alone after); the rule is pinned to those numbers by
+  tests and four mutation kills, and it never accepts the original value, so an unchanged field still ends `uncertain`.
+- Anything the rule does not recognise falls back to the old behaviour (`uncertain`), so a wrong guess costs a
+  notice, not a wrongly reported insertion.
+- Combined with the compatibility change (no merge conflicts), every test bundle except `OpenTypeTests` passes locally
+  and an ad-hoc `0.0.63` app builds; this branch's CI passed on its own head.
+- After release, the first ChatGPT dictation into an empty composer settles it: `inserted` instead of `uncertain`. If
+  `uncertain` still appears, the new `Delivery unconfirmed shape:` log line records the numbers to fix it with.
 
 ## Rollback
 
