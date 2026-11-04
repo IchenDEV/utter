@@ -1,8 +1,8 @@
 # Verification: A compatibility switch for input boxes Utter cannot inspect
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** Owner, chat answer "批准" (2026-11-04 11:17 UTC+8), accepting the residual risk of the waived H0 and hardware run; merge of #146 and the v0.0.63 tag authorized
+**Approved-date:** 2026-11-04
 **Upstream:** [plan.md](plan.md)
 
 The automated half is done. **H0 and the hardware matrix were not run**: the owner chose not to test and delegated the
