@@ -9,7 +9,7 @@ extension SettingsStore {
         case remoteKeyRemapEnabled, remoteButtonMappingEnabled, remoteButtonProfile
         case audioGateSensitivity, audioWeakSpeechSensitivity
         case enableStreamingRecognitionBeta
-        case allowClipboardPaste
+        case allowClipboardPaste, allowOpaqueTargetPaste
         case inputLanguage, translationTargetLanguage
         case useScreenContext, screenContextMode, enableInstantInsert, hasCompletedOnboarding, uiLanguage, historyRetention
         case enableMemory, memoryWindowMinutes, enableCorrectionLearning, industryLexicon
@@ -90,6 +90,7 @@ extension SettingsStore {
         }
         values.playSounds = ud.object(forKey: Key.playSounds.rawValue) as? Bool ?? true
         values.allowClipboardPaste = ud.object(forKey: Key.allowClipboardPaste.rawValue) as? Bool ?? true
+        values.allowOpaqueTargetPaste = ud.object(forKey: Key.allowOpaqueTargetPaste.rawValue) as? Bool ?? false
         values.enableStreamingRecognitionBeta = ud.object(forKey: Key.enableStreamingRecognitionBeta.rawValue) as? Bool ?? true
         values.inputLanguage = InputLanguage(rawValue: ud.string(forKey: Key.inputLanguage.rawValue) ?? "") ?? .chinese
         values.translationTargetLanguage = TranslationLanguage(

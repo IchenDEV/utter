@@ -656,6 +656,10 @@
 "mode.selection_edit" = "编辑选中文本";
 "settings.allow_clipboard_paste" = "允许剪贴板粘贴";
 "settings.allow_clipboard_paste_help" = "无法直接写入时使用剪贴板粘贴。剪贴板管理器可能记录口述内容。关闭后，Utter 提供显式复制。";
+"settings.allow_opaque_paste" = "兼容模式：向无法检查的输入框粘贴";
+"settings.allow_opaque_paste_help" = "用于微信等 Utter 读不到内容的输入框。Utter 只粘贴一次，无法确认是否成功，口述文本会留在剪贴板里。需要先开启“允许剪贴板粘贴”。";
+"delivery.opaque_target" = "此应用不允许 Utter 直接写入。可以复制文本，或在设置里开启兼容模式。";
+"delivery.compat_pasted" = "已按兼容模式粘贴，Utter 无法确认结果。";
 "delivery.target_changed" = "写入目标已变化。可以复制文本，或重新开始。";
 "delivery.unconfirmed" = "无法确认是否已写入。可以复制文本，Utter 不会自动再次写入。";
 "delivery.unavailable" = "此输入框不支持直接编辑。";

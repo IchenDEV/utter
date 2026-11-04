@@ -3,7 +3,8 @@ import UtterRuntime
 
 package enum DeliveryDisposition: Equatable { case notCommitted, accepted, uncertain }
 package enum DeliveryEffect: Hashable { case none, clipboard, paste, keyPress, accessibility, keyboardInsertion }
-package enum DeliveryConfirmation: String, Codable, Sendable { case none, clipboardValue, targetValue }
+/// `unobservable`: the target gives no way to read its content, so a paste was posted once and cannot be verified.
+package enum DeliveryConfirmation: String, Codable, Sendable { case none, clipboardValue, targetValue, unobservable }
 package enum DeliveryStatus: String, Codable, Sendable { case inserted, copied, uncertain, notDelivered }
 
 @MainActor
@@ -40,11 +41,15 @@ package struct DeliveryRequest {
     package let command: DeliveryCommand
     package let target: (any OutputTargetLease)?
     package let allowsClipboardPaste: Bool
-    package init(id: UUID, command: DeliveryCommand, target: (any OutputTargetLease)? = nil, allowsClipboardPaste: Bool = true) {
+    /// Compatibility mode: may paste once into an app that exposes no focused element.
+    package let allowsOpaquePaste: Bool
+    package init(id: UUID, command: DeliveryCommand, target: (any OutputTargetLease)? = nil, allowsClipboardPaste: Bool = true,
+                 allowsOpaquePaste: Bool = false) {
         self.id = id
         self.command = command
         self.target = target
         self.allowsClipboardPaste = allowsClipboardPaste
+        self.allowsOpaquePaste = allowsOpaquePaste && allowsClipboardPaste
     }
 }
 
@@ -73,6 +78,7 @@ package struct DeliveryReceipt {
     }
     package var status: DeliveryStatus {
         if isConfirmedInsertion { return .inserted }
+        if disposition == .accepted, confirmation == .unobservable { return .uncertain }
         if disposition == .accepted, confirmation == .clipboardValue { return .copied }
         return disposition == .notCommitted ? .notDelivered : .uncertain
     }
@@ -88,8 +94,9 @@ package struct DeliveryReceipt {
         let committed = (effects ?? (effect == .none ? [] : [effect])).subtracting([.none])
         let insertionConfirmed = confirmation == .targetValue && !committed.isDisjoint(with: [.accessibility, .paste, .keyPress, .keyboardInsertion])
         let copyConfirmed = confirmation == .clipboardValue && committed == [.clipboard]
+        let pasteUnobserved = confirmation == .unobservable && committed.contains(.paste)
         self.disposition = committed.isEmpty ? .notCommitted
-            : disposition == .accepted && (insertionConfirmed || copyConfirmed) ? .accepted : .uncertain
+            : disposition == .accepted && (insertionConfirmed || copyConfirmed || pasteUnobserved) ? .accepted : .uncertain
         self.effects = committed
         self.confirmation = self.disposition == .accepted ? confirmation : .none
         self.reason = reason

@@ -37,6 +37,7 @@ package struct SettingsValues: Equatable, Sendable {
     package var customStylePrompt: String = LanguageStyle.custom.defaultPrompt
     package var playSounds: Bool = true
     package var allowClipboardPaste: Bool = true
+    package var allowOpaqueTargetPaste: Bool = false
     package var enableStreamingRecognitionBeta: Bool = true
     package var inputLanguage: InputLanguage = .chinese
     package var translationTargetLanguage: TranslationLanguage = .english

@@ -656,6 +656,10 @@
 "mode.selection_edit" = "Edit selection";
 "settings.allow_clipboard_paste" = "Allow clipboard paste";
 "settings.allow_clipboard_paste_help" = "Use clipboard paste when direct text insertion is unavailable. Clipboard managers may record dictated text. When disabled, Utter offers an explicit copy instead.";
+"settings.allow_opaque_paste" = "Compatibility mode: paste into inputs Utter cannot inspect";
+"settings.allow_opaque_paste_help" = "For apps such as WeChat whose input box Utter cannot read. Utter pastes once and cannot confirm the result; the dictated text stays on the clipboard. Requires Allow clipboard paste.";
+"delivery.opaque_target" = "This app does not let Utter write into it directly. Copy the text, or turn on compatibility mode in Settings.";
+"delivery.compat_pasted" = "Pasted in compatibility mode. Utter cannot confirm the result.";
 "delivery.target_changed" = "The insertion target changed. Copy the text or start again.";
 "delivery.unconfirmed" = "Insertion could not be confirmed. The text is available to copy; it will not be inserted again automatically.";
 "delivery.unavailable" = "This field does not support direct editing.";

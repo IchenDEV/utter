@@ -6,7 +6,7 @@ import UtterContracts
 import UtterRuntime
 
 @MainActor
-final class NativeTargetLease: OutputTargetLease {
+final class NativeTargetLease: OpaqueTargetLease {
     let id: UUID
     let processIdentifier: Int32
     let context: InputContext
@@ -27,6 +27,8 @@ final class NativeTargetLease: OutputTargetLease {
     }
 
     var selectedText: String? { state?.selected ?? context.selectedText }
+
+    var capturedWithoutFocus: Bool { focusedElement == nil }
 
     var isValid: Bool { isOwnerCurrent() && NSRunningApplication(processIdentifier: processIdentifier)?.isTerminated == false }
 

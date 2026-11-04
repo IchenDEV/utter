@@ -26,13 +26,15 @@ final class NativeOutputBackend {
     private let isCurrent: () -> Bool
     private let pasteboard: NativeDeliveryPasteboard
     private let defaults: UserDefaults
+    private let opaque: OpaqueDeliveryEnvironment
 
     init(log: Log, isCurrent: @escaping () -> Bool, pasteboard: NSPasteboard = .general,
-         defaults: UserDefaults = .standard) {
+         defaults: UserDefaults = .standard, opaque: OpaqueDeliveryEnvironment? = nil) {
         self.log = log
         self.isCurrent = isCurrent
         self.pasteboard = NativeDeliveryPasteboard(pasteboard)
         self.defaults = defaults
+        self.opaque = opaque ?? .native
     }
 
     func deliver(_ request: DeliveryRequest, canCommit: @escaping () -> Bool,
@@ -55,6 +57,18 @@ final class NativeOutputBackend {
                 return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.unavailable"))
             }
             return ClipboardPasteTransaction.copy(text, pasteboard: pasteboard, canCommit: canCommit, mark: markCommitted)
+        }
+        if let target {
+            switch OpaquePasteDelivery.route(for: request, lease: target, environment: opaque) {
+            case .paste:
+                let result = await OpaquePasteDelivery.deliver(text, lease: target, pasteboard: pasteboard,
+                    environment: opaque, canCommit: canCommit, mark: markCommitted)
+                log.info(result.logSummary)
+                return result
+            case .refuse:
+                return DeliveryCompletion(disposition: .notCommitted, reason: L("delivery.opaque_target"), target: .opaque)
+            case .notOpaque: break
+            }
         }
         guard canCommit(), let target,
               let destination = NativeDeliveryTarget(

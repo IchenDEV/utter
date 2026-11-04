@@ -5,11 +5,13 @@ enum DeliveryPath: String {
     case paste
     case keyPress
     case clipboardOnly
+    case compatPaste
 }
 
 enum DeliveryTargetKind: String {
     case web
     case native
+    case opaque
 }
 
 enum DeliveryKillSwitch {

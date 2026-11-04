@@ -29,6 +29,16 @@ final class SessionPresentationTests: XCTestCase {
         XCTAssertFalse(presentation(SessionExecutionSnapshot(phase: .recording, isBusy: true)).autoDismisses)
     }
 
+    func testACompatibilityPasteIsQuietWhileAnUnconfirmedInsertionStaysANotice() {
+        let compat = SessionPresentation(SessionExecutionSnapshot(phase: .completed, text: "text", deliveryStatus: .uncertain))
+        XCTAssertEqual(compat.status, .inserted)
+        XCTAssertFalse(compat.autoDismisses)
+        XCTAssertEqual(compat.message, L("delivery.compat_pasted"))
+        XCTAssertNotEqual(compat.message, L("status.done"))
+        let unconfirmed = SessionPresentation(SessionExecutionSnapshot(phase: .failed, text: "text", deliveryStatus: .uncertain))
+        XCTAssertEqual(unconfirmed.status, .uncertain)
+    }
+
     func testPreparationAndReturnedAPITextDoNotClaimInsertion() {
         let preparing = SessionPresentation(SessionExecutionSnapshot(phase: .preparing, isBusy: true))
         XCTAssertEqual(preparing.status, .preparing)

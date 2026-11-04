@@ -18,6 +18,15 @@ struct GeneralSettingsOutputSection: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            Toggle(isOn: $settings.allowOpaqueTargetPaste) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L("settings.allow_opaque_paste"))
+                    Text(L("settings.allow_opaque_paste_help"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!settings.allowClipboardPaste)
             Toggle(isOn: $settings.enableInstantInsert) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L("settings.instant_insert"))

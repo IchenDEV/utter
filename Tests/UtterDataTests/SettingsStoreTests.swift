@@ -43,6 +43,15 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertFalse(reopened.values.allowClipboardPaste)
     }
 
+    func testCompatibilityPasteIsOffByDefaultAndPersists() {
+        let fixture = defaultsFixture()
+        defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }
+        let store = SettingsStore(defaults: fixture.defaults)
+        XCTAssertFalse(store.values.allowOpaqueTargetPaste)
+        store.update { $0.allowOpaqueTargetPaste = true }
+        XCTAssertTrue(SettingsStore(defaults: fixture.defaults).values.allowOpaqueTargetPaste)
+    }
+
     func testCompoundUpdateNotifiesOnceAfterPersistenceAndHotkeyNormalization() {
         let fixture = defaultsFixture()
         defer { fixture.defaults.removePersistentDomain(forName: fixture.name) }
