@@ -11,6 +11,8 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
     private let document: String?
     private let replacementRange: NSRange?
     private var prepared = false
+    /// Counts only, set when the last confirmation timed out.
+    private(set) var unconfirmedSummary: String?
     private let exposesChromiumNode: Bool
     private let clock: any DeliveryObservationClock
 
@@ -72,8 +74,12 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
 
     func confirm(_ text: String) async -> Bool {
         // An unchanged value cannot prove that a pending paste consumed the clipboard.
-        guard let expected = expectedDocument(text), expected != document else { return false }
-        return await DeliveryTextObservation.confirm(expected, read: { AXTargetState.value(of: self.identity) }, clock: clock)
+        guard let accepted = acceptedDocuments(text) else { return false }
+        let outcome = await DeliveryTextObservation.observe(accepting: accepted,
+            read: { AXTargetState.value(of: self.identity) }, clock: clock)
+        unconfirmedSummary = outcome.confirmed ? nil
+            : DeliveryShapeDiagnostic.summary(observed: outcome.lastRead, expected: accepted[0], original: document)
+        return outcome.confirmed
     }
 
     func restoreSelection() {
@@ -82,17 +88,20 @@ final class NativeDeliveryTarget: DeliveryTextTarget {
     }
 
     func insertionAnchor(_ text: String, isCurrent: @escaping () -> Bool) -> (any OutputAnchor)? {
-        guard !text.isEmpty, let range = replacementRange, let expected = expectedDocument(text),
-              AXTargetState.value(of: identity) == expected, let state = AXTargetState.capture(),
+        guard !text.isEmpty, let range = replacementRange, let accepted = acceptedDocuments(text),
+              let current = AXTargetState.value(of: identity), accepted.contains(current), let state = AXTargetState.capture(),
               state.processIdentifier == lease.processIdentifier, CFEqual(identity, state.element) else { return nil }
         let insertedRange = NSRange(location: range.location, length: (text as NSString).length)
         let insertion = RecentInsertionAnchor(processIdentifier: lease.processIdentifier, element: identity, range: insertedRange, text: text)
         return NativeOutputAnchor(target: lease, anchor: insertion, state: state, isCurrent: isCurrent)
     }
 
-    private func expectedDocument(_ text: String) -> String? {
-        guard let document, let range = replacementRange else { return nil }
-        return DeliveryExpectation.expectedDocument(document: document, range: range, replacement: text,
-                                                    isWebContentEditor: isWebContentEditor)
+    /// Nil when the change cannot be computed or when nothing the field could hold differs from what it holds now.
+    private func acceptedDocuments(_ text: String) -> [String]? {
+        guard let document, let range = replacementRange,
+              let accepted = DeliveryExpectation.acceptedDocuments(document: document, range: range, replacement: text,
+                                                                   isWebContentEditor: isWebContentEditor),
+              !accepted.isEmpty else { return nil }
+        return accepted
     }
 }
