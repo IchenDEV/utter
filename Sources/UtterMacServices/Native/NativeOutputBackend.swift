@@ -76,6 +76,9 @@ final class NativeOutputBackend {
             }
         }
         log.info(result.logSummary)
+        if result.disposition == .uncertain, let shape = destination.unconfirmedSummary {
+            log.info("Delivery unconfirmed shape: \(shape)")
+        }
         return result
     }
 }

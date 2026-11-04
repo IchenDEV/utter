@@ -15,11 +15,11 @@ final class DesktopOverlayDwellTests: XCTestCase {
 
     func testUnconfirmedNoticeLeavesAfterTheDwell() async throws {
         let rig = try Rig(self)
+        let shownAt = ContinuousClock.now
         rig.host.project(unconfirmed())
         XCTAssertTrue(rig.overlay.visible)
-        try await Task.sleep(for: .milliseconds(40))
-        XCTAssertTrue(rig.overlay.visible, "It must not leave before the dwell")
         try await rig.waitUntil { !$0.visible }
+        XCTAssertGreaterThanOrEqual(ContinuousClock.now - shownAt, rig.dwell, "It must not leave before the dwell")
         XCTAssertEqual(rig.overlay.hides, 1)
     }
 
@@ -95,8 +95,10 @@ private final class FakeOverlay: OverlayPresentationService {
 private final class Rig {
     let host: NativeDesktopHost
     let overlay = FakeOverlay()
+    let dwell: Duration
 
     init(_ test: XCTestCase, dwell: Duration = .milliseconds(120)) throws {
+        self.dwell = dwell
         let suite = "DesktopOverlayDwell-" + UUID().uuidString
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         let settings = SettingsStore(defaults: defaults)
