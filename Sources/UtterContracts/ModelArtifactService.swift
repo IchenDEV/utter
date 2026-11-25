@@ -11,6 +11,7 @@ package enum ModelArtifactError: Error, Equatable {
     case duplicateID(String)
     case invalidRequiredFile(String)
     case invalidMemoryRequirements(String)
+    case invalidRevision(String)
     case closed
 }
 

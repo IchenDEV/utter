@@ -14,7 +14,7 @@ extension ModelManagementView {
     ) -> some View {
         VStack(spacing: 0) {
             ForEach(Array(models.enumerated()), id: \.element.id) { index, model in
-                modelRow(model, isActive: model.id == activeID, type: type)
+                modelRow(model, isActive: model.id == activeID && model.runtime == .mlx, type: type)
                 if index < models.count - 1 { Divider().padding(.horizontal, 10) }
             }
         }
@@ -155,15 +155,21 @@ extension ModelManagementView {
             .controlSize(.mini)
         }
 
-        if !isActive && (model.status == .downloaded || model.status == .ready) {
+        if !isActive && (model.status == .downloaded || model.status == .ready), model.runtime != .edge0 {
             Button(L("model.use")) {
                 select(model, type: type)
             }
             .controlSize(.mini)
         }
 
-        if type == .llm && (model.status == .downloaded || model.status == .ready) {
+        if type == .llm && (model.status == .downloaded || model.status == .ready), model.runtime != .edge0 {
             benchmarkButton(model)
+        }
+
+        if model.runtime == .edge0, model.status == .downloaded {
+            Text(L("model.edge0_download_only"))
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
         }
 
         if model.status.canDelete && model.cacheSize > 0 {
@@ -212,7 +218,7 @@ extension ModelManagementView {
         case .whisper:
             return storage.localWhisperURL(model.id) == nil
         case .llm:
-            return storage.localLLMURL(model.id) == nil
+            return storage.localLLMURL(model.id) == nil || model.status.isError
         case .asr:
             return true
         }
@@ -224,6 +230,7 @@ extension ModelManagementView {
             onUnloadWhisper?()
             settings.whisperModel = model.id
         case .llm:
+            guard model.runtime == .mlx else { return }
             onUnloadLLM?()
             settings.useRemoteLLM = false
             settings.localLLMBackend = .mlx
@@ -232,8 +239,9 @@ extension ModelManagementView {
             onLoadLLM?()
         case .asr:
             onUnloadLocalASR?()
-            settings.qwenASRModel = model.id
-            settings.speechEngine = .qwen3
+            let engine = SpeechEngineType.engineOwningASRModel(model.id)
+            if engine == .qwen3 { settings.qwenASRModel = model.id }
+            settings.speechEngine = engine
         }
     }
 

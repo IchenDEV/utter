@@ -1,0 +1,142 @@
+Building for debugging...
+[Computing dependencies]
+[Using on-disk description]
+[1 / 1]
+[1 / 3] _NumericsShims
+[1 / 6] swift-transformers_Hub
+[1 / 9] mlx-swift_Cmlx
+[1 / 13] _AtomicsShims
+[1 / 28] UtterWhisper
+[1 / 43] UtterSession
+[1 / 64] UtterProcessingTests-product
+[1 / 77] UtterModels
+[1 / 93] UtterMLX
+[1 / 120] UtterContracts
+[1 / 159] NIOConcurrencyHelpers
+[1 / 180] MLXFast
+[1 / 204] HuggingFace
+[1 / 253] ArgmaxCore
+[1 / 265] UtterRuntimeTests-product
+[1 / 220] OpenType_UtterPresentation
+[1 / 189] UtterMacServicesTests-product
+[1 / 127] ContainersPreview
+[1 / 66] Cmlx
+[1 / 47] Hub
+[1 / 19] UtterBuiltins
+warning: missing creator for mutated node: ('/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+Build complete! (8.53秒)
+Test Suite 'Selected tests' started at 2026-11-26 04:37:01.912.
+Test Suite 'UtterUpdatesTests.xctest' started at 2026-11-26 04:37:01.914.
+Test Suite 'UtterUpdatesTests.xctest' passed at 2026-11-26 04:37:01.914.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:01.915.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.003) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.055.
+Test Suite 'UtterSessionTests.xctest' started at 2026-11-26 04:37:02.056.
+Test Suite 'UtterSessionTests.xctest' passed at 2026-11-26 04:37:02.056.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.056.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.127.
+Test Suite 'UtterRuntimeTests.xctest' started at 2026-11-26 04:37:02.128.
+Test Suite 'UtterRuntimeTests.xctest' passed at 2026-11-26 04:37:02.128.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.128.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.199.
+Test Suite 'UtterRemoteMicTests.xctest' started at 2026-11-26 04:37:02.199.
+Test Suite 'UtterRemoteMicTests.xctest' passed at 2026-11-26 04:37:02.199.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.199.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.303.
+Test Suite 'UtterRemoteInferenceTests.xctest' started at 2026-11-26 04:37:02.303.
+Test Suite 'UtterRemoteInferenceTests.xctest' passed at 2026-11-26 04:37:02.303.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.303.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.374.
+Test Suite 'UtterProcessingTests.xctest' started at 2026-11-26 04:37:02.374.
+Test Suite 'UtterProcessingTests.xctest' passed at 2026-11-26 04:37:02.375.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.375.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.473.
+Test Suite 'UtterModelsTests.xctest' started at 2026-11-26 04:37:02.474.
+Test Suite 'UtterModelsTests.xctest' passed at 2026-11-26 04:37:02.474.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.474.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.544.
+Test Suite 'UtterMacServicesTests.xctest' started at 2026-11-26 04:37:02.545.
+Test Suite 'UtterMacServicesTests.xctest' passed at 2026-11-26 04:37:02.545.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.545.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.718.
+Test Suite 'UtterMLXTests.xctest' started at 2026-11-26 04:37:02.719.
+Test Suite 'UtterMLXTests.xctest' passed at 2026-11-26 04:37:02.719.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.719.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.790.
+Test Suite 'UtterIngressTests.xctest' started at 2026-11-26 04:37:02.791.
+Test Suite 'UtterIngressTests.xctest' passed at 2026-11-26 04:37:02.791.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.791.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.864.
+Test Suite 'UtterEvaluationTests.xctest' started at 2026-11-26 04:37:02.864.
+Test Suite 'UtterEvaluationTests.xctest' passed at 2026-11-26 04:37:02.864.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.864.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.933.
+Test Suite 'UtterDataTests.xctest' started at 2026-11-26 04:37:02.933.
+Test Suite 'UtterDataTests.xctest' passed at 2026-11-26 04:37:02.933.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:02.933.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:02.999.
+Test Suite 'UtterContractsTests.xctest' started at 2026-11-26 04:37:03.000.
+Test Suite 'UtterContractsTests.xctest' passed at 2026-11-26 04:37:03.000.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:03.000.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:03.192.
+Test Suite 'UtterBuiltinsTests.xctest' started at 2026-11-26 04:37:03.193.
+Test Suite 'UtterBuiltinsTests.xctest' passed at 2026-11-26 04:37:03.193.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:03.193.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:03.262.
+Test Suite 'UtterAudioTests.xctest' started at 2026-11-26 04:37:03.262.
+Test Suite 'UtterAudioTests.xctest' passed at 2026-11-26 04:37:03.262.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:37:03.262.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 04:37:03.431.
+Test Suite 'OpenTypeTests.xctest' started at 2026-11-26 04:37:03.431.
+Test Suite 'Audio8ASRIntegrationTests' started at 2026-11-26 04:37:03.432.
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testApplicationCatalogDownloadsReloadsOfflineAndDeletesAudio8]' started.
+[AUDIO8-DOWNLOAD] bucket=1 fraction=0.08333333333333333 bytes=535 of 663928408 speed=92.49379265549574
+[AUDIO8-DOWNLOAD] bucket=3 fraction=0.16666666666666666 bytes=648031658 of 663928408 speed=12235637.903327405
+[AUDIO8-DOWNLOAD] bucket=5 fraction=0.25 bytes=648037921 of 663928408 speed=2363.6326129492772
+[AUDIO8-DOWNLOAD] bucket=6 fraction=0.3333333333333333 bytes=648057367 of 663928408 speed=5729.659444158142
+[AUDIO8-DOWNLOAD] bucket=8 fraction=0.4166666666666667 bytes=649729321 of 663928408 speed=299027.0798033052
+[AUDIO8-DOWNLOAD] bucket=10 fraction=0.5 bytes=652506255 of 663928408 speed=643118.7345363044
+[AUDIO8-DOWNLOAD] bucket=11 fraction=0.5833333333333334 bytes=652508589 of 663928408 speed=899.6150745057208
+[AUDIO8-DOWNLOAD] bucket=13 fraction=0.6666666666666666 bytes=652508928 of 663928408 speed=118.77021214338455
+[AUDIO8-DOWNLOAD] bucket=15 fraction=0.75 bytes=652509228 of 663928408 speed=115.9641698345529
+[AUDIO8-DOWNLOAD] bucket=16 fraction=0.8333333333333334 bytes=663928876 of 663928876 speed=4444265.8557998175
+[AUDIO8-DOWNLOAD] bucket=18 fraction=0.9166666666666666 bytes=663929410 of 663929410 speed=206.5351009235697
+[AUDIO8-DOWNLOAD] bucket=20 fraction=1.0 bytes=663929658 of 663929658 speed=95.76786810058124
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testApplicationCatalogDownloadsReloadsOfflineAndDeletesAudio8]' passed (92.308 seconds).
+Test Suite 'Audio8ASRIntegrationTests' passed at 2026-11-26 04:38:35.740.
+	 Executed 1 test, with 0 failures (0 unexpected) in 92.308 (92.309) seconds
+Test Suite 'OpenTypeTests.xctest' passed at 2026-11-26 04:38:35.741.
+	 Executed 1 test, with 0 failures (0 unexpected) in 92.308 (92.309) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 04:38:35.741.
+	 Executed 1 test, with 0 failures (0 unexpected) in 92.308 (92.310) seconds
+AUDIO8_DOWNLOADED_FILES=.cache,.cache/huggingface,.cache/huggingface/download,.cache/huggingface/download/LICENSE.metadata,.cache/huggingface/download/added_tokens.json.metadata,.cache/huggingface/download/config.json.metadata,.cache/huggingface/download/generation_config.json.metadata,.cache/huggingface/download/merges.txt.metadata,.cache/huggingface/download/model.safetensors.metadata,.cache/huggingface/download/preprocessor_config.json.metadata,.cache/huggingface/download/processor_config.json.metadata,.cache/huggingface/download/special_tokens_map.json.metadata,.cache/huggingface/download/tokenizer.json.metadata,.cache/huggingface/download/tokenizer_config.json.metadata,.cache/huggingface/download/vocab.json.metadata,.utter-model-revision,LICENSE,added_tokens.json,config.json,generation_config.json,merges.txt,model.safetensors,preprocessor_config.json,processor_config.json,special_tokens_map.json,tokenizer.json,tokenizer_config.json,vocab.json
+AUDIO8_OFFLINE_RELOAD_TEXT=Hey, so um, I wanted to. I wanted to follow up on the design doc we talked about.

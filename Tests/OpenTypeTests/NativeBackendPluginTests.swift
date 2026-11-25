@@ -57,7 +57,7 @@ final class NativeBackendPluginTests: XCTestCase {
         let registrations = [
             environment, ModelPlugins.artifacts(), ModelPlugins.resourceAccess(), ModelPlugins.textProviders(), ModelPlugins.imageProviders(), ModelPlugins.speechProviders(),
             MLXPlugins.text(), MLXPlugins.image(), ANEPlugins.text(), WhisperPlugins.speech(),
-            MLXPlugins.qwenSpeech(), MLXPlugins.fireredSpeech(), MLXPlugins.megaSpeech(), RemoteInferencePlugins.speech(),
+            MLXPlugins.qwenSpeech(), MLXPlugins.fireredSpeech(), MLXPlugins.megaSpeech(), MLXPlugins.audio8Speech(), RemoteInferencePlugins.speech(),
         ]
         let runtime = PluginRuntime(catalog: try PluginCatalog(registrations))
         try await runtime.start(registrations.map { PluginSelection($0.descriptor.id) })
@@ -96,7 +96,7 @@ final class NativeBackendPluginTests: XCTestCase {
         let image = try await imageProviders.create(id: "generation.mlx-image", request: .inference)
         await image.unload()
         let speech = try runtime.service(SpeechServices.providers)
-        XCTAssertEqual(speech.descriptors.map(\.id), ["speech.firered", "speech.mega", "speech.qwen", "speech.volc", "speech.whisper"])
+        XCTAssertEqual(speech.descriptors.map(\.id), ["speech.audio8", "speech.firered", "speech.mega", "speech.qwen", "speech.volc", "speech.whisper"])
         let qwen = try await speech.create(id: SpeechEngineType.qwen3.rawValue, request: SpeechProviderRequest(selection: SpeechSelection(providerID: "speech.qwen", type: .qwen3, modelPath: "/missing")))
         XCTAssertFalse(qwen.isReady)
         let whisperRequest = SpeechProviderRequest(selection: SpeechSelection(

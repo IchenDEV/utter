@@ -72,20 +72,71 @@ final class ConfigurationTests: XCTestCase {
 
     func testSpeechEngineCasesIncludeNativeLocalEngines() {
         XCTAssertEqual(SpeechEngineType.allCases.map(\.rawValue), [
-            "whisper", "apple", "volc", "qwen3", "firered", "megaASR",
+            "whisper", "apple", "volc", "qwen3", "firered", "megaASR", "audio8",
         ])
         XCTAssertEqual(SpeechEngineType.selectableCases.map(\.rawValue), [
-            "qwen3", "firered", "megaASR", "whisper", "apple", "volc",
+            "qwen3", "audio8", "firered", "megaASR", "whisper", "apple", "volc",
         ])
     }
 
     @MainActor
     func testFormattingModelTypesPutRecommendedQwenFirstAndCustomLast() {
         XCTAssertEqual(FormattingModelType.allCases.map(\.rawValue), [
-            "qwen", "gemma", "llama", "espresso", "remote", "custom",
+            "qwen", "gemma", "llama", "edge0", "espresso", "remote", "custom",
         ])
         XCTAssertTrue(FormattingModelType.qwen.isRecommended)
         XCTAssertTrue(FormattingModelType.allCases.dropFirst().allSatisfy { !$0.isRecommended })
+    }
+
+    @MainActor
+    func testEdge0ArtifactIsModelScopeBackedAndDownloadOnly() throws {
+        let artifact = try XCTUnwrap(Edge0ModelArtifacts.models.first)
+        XCTAssertEqual(artifact.id, "Edge0/Edge0-8B-A1B-preview")
+        XCTAssertEqual(artifact.family, .edge0)
+        XCTAssertEqual(artifact.runtime, .edge0)
+        XCTAssertEqual(artifact.repositoryHost, .modelScope)
+        XCTAssertEqual(artifact.revision, Edge0Model.revision)
+        XCTAssertEqual(artifact.requiredFiles, Edge0Model.requiredFiles)
+        XCTAssertTrue(artifact.downloadsOnlyRequiredFiles)
+        XCTAssertEqual(artifact.requiredFiles.first, "config.json")
+        XCTAssertTrue(artifact.requiredFiles.contains("model.safetensors"))
+        XCTAssertTrue(artifact.requiredFiles.contains("lora_edge0_8b.safetensors"))
+        XCTAssertTrue(artifact.requiredFiles.contains("prerouter_edge0_8b.safetensors"))
+        XCTAssertFalse(artifact.requiredFiles.contains { $0.hasSuffix(".mp4") || $0.hasSuffix(".jpg") })
+        XCTAssertEqual(FormattingModelType.edge0.family, .edge0)
+        XCTAssertEqual(
+            FormattingModelType.resolvedLocalSelection(
+                pending: nil,
+                activeFamily: .some(.edge0)
+            ),
+            .edge0
+        )
+    }
+
+    func testModelScopeFileListingDecodesAndPreservesSizes() throws {
+        let data = Data(#"""
+        {"Code":200,"Data":{"Files":[
+          {"Path":"config.json","Size":3069,"Type":"blob"},
+          {"Path":"model.safetensors","Size":4508697328,"Type":"blob"},
+          {"Path":"assets","Size":0,"Type":"tree"}
+        ]}}
+        """#.utf8)
+        let files = try ModelScopeDownloads.decodeFileList(data)
+        XCTAssertEqual(files.map(\.path), ["config.json", "model.safetensors", "assets"])
+        XCTAssertEqual(files[1].size, 4_508_697_328)
+        XCTAssertThrowsError(try ModelScopeDownloads.decodeFileList(Data(#"{"Code":404}"#.utf8))) { error in
+            XCTAssertEqual(error as? ModelScopeError, .invalidResponse)
+        }
+    }
+
+    func testRequiredFilesCompletenessIncludesAllEdge0Assets() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try writeTestFiles(Edge0Model.requiredFiles, under: dir)
+        XCTAssertTrue(ModelAssets.filesAreComplete(at: dir, requiredFiles: Edge0Model.requiredFiles))
+        try Data().write(to: dir.appendingPathComponent("prerouter_edge0_8b.safetensors"))
+        XCTAssertFalse(ModelAssets.filesAreComplete(at: dir, requiredFiles: Edge0Model.requiredFiles))
     }
 
     @MainActor
@@ -127,6 +178,35 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(QwenASRModel.defaultID, "mlx-community/Qwen3-ASR-1.7B-bf16")
     }
 
+    func testAudio8ArtifactIsPinnedAndSelective() {
+        let artifact = MLXModelArtifacts.speech.first { $0.id == Audio8ASRModel.defaultID }
+        XCTAssertEqual(artifact?.revision, Audio8ASRModel.revision)
+        XCTAssertEqual(artifact?.downloadsOnlyRequiredFiles, true)
+        XCTAssertEqual(artifact?.requiredFiles, Audio8ASRModel.requiredFiles)
+        XCTAssertTrue(Audio8ASRModel.requiredFiles.contains("model.safetensors"))
+        XCTAssertTrue(Audio8ASRModel.requiredFiles.contains("LICENSE"))
+        XCTAssertFalse(Audio8ASRModel.requiredFiles.contains("assets/audio8-teaser-aurora-redesign-final.mp4"))
+        XCTAssertFalse(Audio8ASRModel.requiredFiles.contains("modeling_arkasr.py"))
+    }
+
+    func testAudio8DownloadSelectionUsesPinnedRevisionAndExactRequiredFiles() {
+        let artifact = MLXModelArtifacts.speech.first { $0.id == Audio8ASRModel.defaultID }
+        XCTAssertEqual(ASRDownloadSelection.revision(for: artifact), Audio8ASRModel.revision)
+        XCTAssertEqual(ASRDownloadSelection.matchingGlobs(for: artifact), Audio8ASRModel.requiredFiles)
+        XCTAssertFalse(ASRDownloadSelection.matchingGlobs(for: artifact).contains { $0.contains("*") })
+        let qwen = MLXModelArtifacts.speech.first { $0.id == QwenASRModel.defaultID }
+        XCTAssertEqual(ASRDownloadSelection.revision(for: qwen), "main")
+        XCTAssertEqual(ASRDownloadSelection.matchingGlobs(for: qwen), [])
+    }
+
+    func testASRModelOwnershipMatchesEngineSelection() {
+        XCTAssertEqual(SpeechEngineType.engineOwningASRModel(Audio8ASRModel.defaultID), .audio8)
+        XCTAssertEqual(SpeechEngineType.engineOwningASRModel("mlx-community/FireRedASR2-AED-mlx"), .firered)
+        XCTAssertEqual(SpeechEngineType.engineOwningASRModel("mlx-community/Mega-ASR-6bit"), .megaASR)
+        XCTAssertEqual(SpeechEngineType.engineOwningASRModel(QwenASRModel.defaultID), .qwen3)
+        XCTAssertEqual(SpeechEngineType.engineOwningASRModel(QwenASRModel.confuciusR2T2ID), .qwen3)
+    }
+
     func testDisabledMiMoSelectionMigratesToAppleSpeechAndRemovesLegacyRuntimeSettings() {
         let (defaults, suiteName) = makeIsolatedDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -162,6 +242,90 @@ final class ConfigurationTests: XCTestCase {
 
         try writeTestFiles(ModelCatalog.asrRequiredFiles(for: QwenASRModel.defaultID), under: dir)
         XCTAssertTrue(ModelCatalog.asrRepoContainsRequiredFiles(QwenASRModel.defaultID, at: dir))
+    }
+
+    @MainActor
+    func testAudio8CompletenessRequiresPinnedRevisionMarker() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        try writeTestFiles(Audio8ASRModel.requiredFiles, under: dir)
+        XCTAssertFalse(ModelCatalog.asrRepoContainsRequiredFiles(Audio8ASRModel.defaultID, at: dir))
+        try Data("wrong-revision\n".utf8).write(to: dir.appendingPathComponent(ASRModelRevisionMarker.filename))
+        XCTAssertFalse(ModelCatalog.asrRepoContainsRequiredFiles(Audio8ASRModel.defaultID, at: dir))
+        try ASRModelRevisionMarker.write(revision: Audio8ASRModel.revision, to: dir)
+        XCTAssertTrue(ModelCatalog.asrRepoContainsRequiredFiles(Audio8ASRModel.defaultID, at: dir))
+
+        // Empty required file must fail completeness.
+        try Data().write(to: dir.appendingPathComponent("model.safetensors"))
+        XCTAssertFalse(ModelCatalog.asrRepoContainsRequiredFiles(Audio8ASRModel.defaultID, at: dir))
+        try Data("non-empty".utf8).write(to: dir.appendingPathComponent("model.safetensors"))
+        XCTAssertTrue(ModelCatalog.asrRepoContainsRequiredFiles(Audio8ASRModel.defaultID, at: dir))
+
+        // Missing required file must fail completeness.
+        try FileManager.default.removeItem(at: dir.appendingPathComponent("LICENSE"))
+        XCTAssertFalse(ModelCatalog.asrRepoContainsRequiredFiles(Audio8ASRModel.defaultID, at: dir))
+    }
+
+    @MainActor
+    func testAudio8CatalogDeleteAndCancelStatusTransitions() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let suite = "Audio8CatalogState-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defaults.set(root.path, forKey: "modelStoragePath")
+        defer {
+            defaults.removePersistentDomain(forName: suite)
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let settings = AppSettings(service: SettingsStore(defaults: defaults))
+        let catalog = ModelCatalog(
+            settings: settings,
+            log: UtterContracts.Log(service: TestDiagnostics.service),
+            access: LocalModelAccessGate(),
+            textDownloads: TextModelDownloadOperations(download: { _, _, _, _ in }, validate: { _ in }),
+            artifacts: MLXModelArtifacts.text + MLXModelArtifacts.speech,
+            speechDescriptors: { MLXModelArtifacts.speechDescriptors },
+            startupStorageRoot: root,
+            startupCleanup: { _ in Task { 0 } }
+        )
+
+        let id = Audio8ASRModel.defaultID
+        let repoDir = ModelStorage.hubModelRepoDir(id, downloadBase: root)
+        try FileManager.default.createDirectory(at: repoDir, withIntermediateDirectories: true)
+        try writeTestFiles(Audio8ASRModel.requiredFiles, under: repoDir)
+        try ASRModelRevisionMarker.write(revision: Audio8ASRModel.revision, to: repoDir)
+
+        catalog.refreshASRStatus(recheckingErrors: true)
+        let readyIndex = try XCTUnwrap(catalog.asrModels.firstIndex(where: { $0.id == id }))
+        XCTAssertEqual(catalog.asrModels[readyIndex].status, .downloaded)
+        XCTAssertGreaterThan(catalog.asrModels[readyIndex].cacheSize, 0)
+        XCTAssertEqual(catalog.asrModelPath(for: id), repoDir.path)
+
+        await catalog.deleteASR(id)
+        let deletedIndex = try XCTUnwrap(catalog.asrModels.firstIndex(where: { $0.id == id }))
+        XCTAssertEqual(catalog.asrModels[deletedIndex].status, .notDownloaded)
+        XCTAssertEqual(catalog.asrModels[deletedIndex].cacheSize, 0)
+        XCTAssertTrue(catalog.asrModelPath(for: id).isEmpty)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: repoDir.path))
+
+        let key = ModelDownloadKey(kind: .asr, modelID: id)
+        var started = false
+        let runningTask = Task { @MainActor in
+            await catalog.downloadTasks.run(key: key) { _ in
+                started = true
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+            }
+        }
+        for _ in 0..<200 where !started {
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
+        XCTAssertTrue(started)
+        catalog.cancelDownload(id, kind: .asr)
+        let pausedIndex = try XCTUnwrap(catalog.asrModels.firstIndex(where: { $0.id == id }))
+        XCTAssertEqual(catalog.asrModels[pausedIndex].status, .error(L("model.download_paused")))
+        await runningTask.value
     }
 
     @MainActor
@@ -259,6 +423,7 @@ final class ConfigurationTests: XCTestCase {
             QwenASRModel.confuciusR2T2ID,
             "mlx-community/FireRedASR2-AED-mlx",
             "mlx-community/Mega-ASR-6bit",
+            Audio8ASRModel.defaultID,
         ])
     }
 

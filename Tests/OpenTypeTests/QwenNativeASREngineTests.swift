@@ -29,6 +29,7 @@ final class QwenNativeASREngineTests: XCTestCase {
                 QwenASRModel.confuciusR2T2ID,
                 "mlx-community/FireRedASR2-AED-mlx",
                 "mlx-community/Mega-ASR-6bit",
+                Audio8ASRModel.defaultID,
             ]
         )
     }

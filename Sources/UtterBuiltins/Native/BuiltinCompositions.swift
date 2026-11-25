@@ -34,6 +34,7 @@ package enum BuiltinCompositions {
         switch settings.speechEngine {
         case .qwen3: speech = "speech.qwen"
         case .megaASR: speech = "speech.mega"
+        case .audio8: speech = "speech.audio8"
         default: speech = "speech." + settings.speechEngine.rawValue
         }
         let text = settings.useRemoteLLM ? "generation.remote"

@@ -208,7 +208,17 @@ extension ModelCatalog {
 
     package func llmRepoIsComplete(_ modelID: String) -> Bool {
         guard let dir = llmRepoDir(modelID) else { return false }
+        if let artifact = artifactsByID[modelID], artifact.runtime != .mlx {
+            return ModelAssets.filesAreComplete(at: dir, requiredFiles: artifact.requiredFiles)
+        }
         return ModelStorage.llmRepoIsComplete(at: dir)
+    }
+
+    package func llmDirectoryIsComplete(_ modelID: String, at directory: URL) -> Bool {
+        if let artifact = artifactsByID[modelID], artifact.runtime != .mlx {
+            return ModelAssets.filesAreComplete(at: directory, requiredFiles: artifact.requiredFiles)
+        }
+        return ModelAssets.llmRepoIsComplete(at: directory)
     }
 
     package func llmRepoSize(_ modelID: String) -> Int64 {

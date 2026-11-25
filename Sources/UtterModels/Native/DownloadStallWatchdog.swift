@@ -62,9 +62,10 @@ package final class DownloadProgressSignal {
     private var lastFraction: Double = -1
 
     package func advanced(completedBytes: Int64, fraction: Double) -> Bool {
-        let moved = completedBytes > lastBytes || fraction > lastFraction + 0.000_1
-        lastBytes = max(lastBytes, completedBytes)
-        lastFraction = max(lastFraction, fraction)
-        return moved
+        let bytesMoved = completedBytes > lastBytes
+        let fractionMoved = fraction > lastFraction + 0.000_000_001
+        if bytesMoved { lastBytes = completedBytes }
+        if fraction > lastFraction { lastFraction = fraction }
+        return bytesMoved || fractionMoved
     }
 }

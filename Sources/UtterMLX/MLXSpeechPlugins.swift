@@ -22,6 +22,12 @@ extension MLXPlugins {
         }
     }
 
+    package static func audio8Speech() -> PluginRegistration {
+        speech(id: "speech.audio8", alias: .audio8, title: L("engine.audio8_short"), key: SpeechServices.audio8, artifacts: MLXModelArtifacts.audio8) { selection, files, access, log in
+            Audio8NativeASREngine(modelPath: selection.modelPath, access: access, log: log)
+        }
+    }
+
     private static func speech(
         id: String, alias: SpeechEngineType, title: String, key: ServiceKey<ProviderDescriptor>, artifacts: [ModelArtifact],
         make: @escaping (SpeechSelection, any ModelFilesService, any ModelResourceAccess, Log) -> any SpeechEngine

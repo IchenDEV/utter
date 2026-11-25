@@ -86,7 +86,7 @@ struct ModelManagementView: View {
             volcSection
         case .qwen3:
             qwenASRSection
-        case .firered, .megaASR:
+        case .firered, .megaASR, .audio8:
             qwenASRSection
         case .apple:
             Text(L("model.apple_managed_by_system"))

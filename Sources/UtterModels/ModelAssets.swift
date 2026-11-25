@@ -7,6 +7,11 @@ package enum ModelAssets {
         return requiredFiles.allSatisfy { fileExists(directory.appendingPathComponent($0)) }
     }
 
+    package static func filesAreComplete(at directory: URL?, requiredFiles: [String]) -> Bool {
+        guard let directory, !requiredFiles.isEmpty else { return false }
+        return requiredFiles.allSatisfy { fileExists(directory.appendingPathComponent($0)) }
+    }
+
     package static func whisperModelIsComplete(at dir: URL) -> Bool {
         whisperWeightsAreComplete(at: dir) && (try? WhisperTokenizerAssets.read(at: dir)) != nil
     }

@@ -26,3 +26,9 @@ extension MLXSTTEngine {
         self.init(modelID: modelID, files: LiveModelFiles(), access: LocalModelAccessGate(), log: UtterContracts.Log(service: TestDiagnostics.service))
     }
 }
+
+extension Audio8NativeASREngine {
+    convenience init(modelPath: String) {
+        self.init(modelPath: modelPath, access: LocalModelAccessGate(), log: UtterContracts.Log(service: TestDiagnostics.service))
+    }
+}

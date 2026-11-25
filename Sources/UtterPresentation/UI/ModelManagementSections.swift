@@ -158,32 +158,36 @@ extension ModelManagementView {
 
     @ViewBuilder
     var localLLMModelsSection: some View {
-        if let family = selectedModelFamily {
-            let familyModels = catalog.llmModels.filter { $0.family == family }
-            groupedLLMModelList(familyModels, activeID: settings.llmModel)
-        } else {
-            let customModels = catalog.llmModels.filter { $0.family == nil }
-            if !customModels.isEmpty {
-                modelList(customModels, activeID: settings.llmModel, type: .llm)
-            }
+            if let family = selectedModelFamily {
+                let familyModels = catalog.llmModels.filter { $0.family == family }
+                groupedLLMModelList(familyModels, activeID: settings.llmModel)
+                if family == .edge0 {
+                    Link(L("model.edge0_license"), destination: URL(string: Edge0Model.licenseURL)!)
+                        .font(.system(size: 10))
+                }
+            } else {
+                let customModels = catalog.llmModels.filter { $0.family == nil }
+                if !customModels.isEmpty {
+                    modelList(customModels, activeID: settings.llmModel, type: .llm)
+                }
 
-            HStack(spacing: 8) {
-                TextField(L("model.custom_id_placeholder"), text: $customLLMInput)
-                    .textFieldStyle(.roundedBorder)
-                    .font(.system(size: 11))
-                Button(L("common.add")) {
-                    catalog.addCustomLLM(customLLMInput)
-                    customLLMInput = ""
+                HStack(spacing: 8) {
+                    TextField(L("model.custom_id_placeholder"), text: $customLLMInput)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 11))
+                    Button(L("common.add")) {
+                        catalog.addCustomLLM(customLLMInput)
+                        customLLMInput = ""
+                    }
+                    .controlSize(.small)
+                    .disabled(customLLMInput.isEmpty)
+                }
+                Button(L("model.import_local")) {
+                    importLocalLLM()
                 }
                 .controlSize(.small)
-                .disabled(customLLMInput.isEmpty)
             }
-            Button(L("model.import_local")) {
-                importLocalLLM()
-            }
-            .controlSize(.small)
         }
-    }
 
     var espressoLLMSection: some View {
         VStack(alignment: .leading, spacing: 10) {

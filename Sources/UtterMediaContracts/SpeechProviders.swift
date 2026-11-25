@@ -20,5 +20,6 @@ package enum SpeechServices {
     package static let qwen = ServiceKey<ProviderDescriptor>("speech.qwen")
     package static let firered = ServiceKey<ProviderDescriptor>("speech.firered")
     package static let mega = ServiceKey<ProviderDescriptor>("speech.mega")
+    package static let audio8 = ServiceKey<ProviderDescriptor>("speech.audio8")
     package static let volc = ServiceKey<ProviderDescriptor>("speech.volc")
 }

@@ -325,6 +325,7 @@
 "model.family.qwen" = "Alibaba Qwen - Multilingual";
 "model.family.gemma" = "Google Gemma - Lightweight";
 "model.family.llama" = "Meta Llama - General Purpose";
+"model.family.edge0" = "Edge0 - On-device MoE";
 "model.family.remote" = "Remote";
 "model.espresso.description" = "Run a local Qwen3 safetensors model with the experimental ANE-LM runtime.";
 "model.espresso.no_bundle" = "No Qwen3 model selected";
@@ -416,11 +417,13 @@
 "engine.qwen3_short" = "Qwen";
 "engine.firered_short" = "FireRed";
 "engine.mega_short" = "Mega";
+"engine.audio8_short" = "Audio8";
 "engine.apple_speech" = "Apple Speech";
 "engine.volc_asr" = "Doubao ASR";
 "engine.qwen3_asr" = "Qwen3-ASR (Local)";
 "engine.firered_asr" = "FireRedASR2-AED (Local)";
 "engine.mega_asr" = "Mega-ASR (Local)";
+"engine.audio8_asr" = "Audio8-ASR (Local)";
 "screen_context_mode.ocr" = "OCR";
 "screen_context_mode.multimodal" = "Multimodal";
 "style.prompt.concise" = "Minimalist. Keep only core information, remove repetition and filler, break long sentences short.";
@@ -626,6 +629,7 @@
 
 /* ── Local ASR ── */
 "qwen_asr.config_hint" = "Qwen-compatible speech models run locally with Swift and MLX. Download a model once for offline recognition.";
+"audio8_asr.config_hint" = "Audio8-ASR runs locally with MLX and accepts up to 30 seconds of audio. Its CC BY-NC 4.0 license covers non-commercial use only.";
 "model.qwen3_asr_quality" = "Local ASR through MLX, ~4.1 GB";
 "model.confucius_r2t2" = "Local MLX speech recognition, ~2.5 GB";
 "model.confucius_license" = "Model license (Chinese)";
@@ -633,7 +637,16 @@
 "model.confucius_notice" = "Conversion notice";
 "model.firered_asr" = "Robust Chinese ASR, ~4.6 GB";
 "model.mega_asr" = "Noise-robust ASR (Qwen3-ASR + LoRA), ~2.0 GB";
+"model.audio8_asr" = "Local MLX ASR, ~664 MB — CC BY-NC 4.0, non-commercial use only";
+"model.audio8_license" = "Audio8 license (CC BY-NC 4.0)";
+"model.edge0_8b" = "Edge0 8B-A1B, 4-bit sparse MoE — ~4.6 GB from ModelScope. Download only; the Edge0 inference engine is not bundled yet.";
+"model.edge0_license" = "Edge0 model license (community license)";
+"model.edge0_download_only" = "Download only";
 "model.asr_incomplete" = "Only part of the model was downloaded. Select Resume to finish.";
+"error.audio8.noAudioInput" = "No audio input was provided to Audio8.";
+"error.audio8.notConfigured" = "The Audio8 model is not downloaded or its files are incomplete. Open Settings → Models to download it again.";
+"error.audio8.audioTooLong" = "Audio8 supports audio up to 30 seconds. Split the input and try again.";
+"error.audio8.emptyRecognitionResult" = "Audio8 returned an empty recognition result.";
 "error.llm_not_loaded" = "The model is stored locally but is not loaded into memory. Run the action again and Utter will retry.";
 "error.llm_not_downloaded" = "The model files have not been downloaded. Open Settings → Models and confirm the data usage first.";
 "error.espresso_not_loaded" = "The ANE model is not loaded. Select a valid local Qwen3 model in Settings → Models.";
