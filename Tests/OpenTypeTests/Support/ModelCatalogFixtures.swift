@@ -30,7 +30,9 @@ extension ModelCatalog {
         MLXModelArtifacts.speech.first(where: { $0.id == id })?.requiredFiles ?? ["config.json"]
     }
     nonisolated static func asrRepoContainsRequiredFiles(_ id: String, at directory: URL?) -> Bool {
-        ModelAssets.speechModelIsComplete(at: directory, requiredFiles: asrRequiredFiles(for: id))
+        guard let artifact = MLXModelArtifacts.speech.first(where: { $0.id == id }) else { return false }
+        return ModelAssets.speechModelIsComplete(at: directory, requiredFiles: artifact.requiredFiles)
+            && ASRModelRevisionMarker.matches(revision: artifact.revision, at: directory)
     }
     static var whisperDownloadBase: URL { ModelStorage.huggingFaceBase }
     static var asrDownloadBase: URL { whisperDownloadBase }

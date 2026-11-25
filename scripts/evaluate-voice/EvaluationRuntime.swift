@@ -47,6 +47,7 @@ struct EvaluationRuntime {
             case .qwen3: plugins.append(MLXPlugins.qwenSpeech())
             case .firered: plugins.append(MLXPlugins.fireredSpeech())
             case .megaASR: plugins.append(MLXPlugins.megaSpeech())
+            case .audio8: plugins.append(MLXPlugins.audio8Speech())
             case .apple, .volc: throw VoiceEvaluationError.unavailableAudioProvider
             }
         }

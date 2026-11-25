@@ -57,6 +57,7 @@ extension ModelCatalog {
         QwenASRModel.confuciusR2T2ID: 2_479_312_565,
         "mlx-community/FireRedASR2-AED-mlx": 4_570_000_000,
         "mlx-community/Mega-ASR-6bit": 2_040_000_000,
+        Audio8ASRModel.defaultID: Audio8ASRModel.downloadBytes,
     ]
 
     private static let downloadEstimateRegex = try! NSRegularExpression(

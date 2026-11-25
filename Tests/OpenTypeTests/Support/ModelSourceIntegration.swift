@@ -34,11 +34,13 @@ final class ModelSourceIntegration {
         defaults.set(true, forKey: "hasCompletedOnboarding")
         let artifacts = PluginRegistration(descriptor: PluginDescriptor(id: "source-verification.artifacts",
             requires: [ModelServices.artifacts.required])) { context, _ in
-            try context.require(ModelServices.artifacts).register(MLXModelArtifacts.text + MLXModelArtifacts.speech, scope: context.scope)
+            try context.require(ModelServices.artifacts).register(MLXModelArtifacts.text, scope: context.scope)
         }
         let plugins = [DataPlugins.settings(defaults: defaults), DataPlugins.diagnostics(ModelSourceDiagnostics()),
                        ModelPlugins.resourceAccess(), ModelPlugins.artifacts(), ModelPlugins.files(), ModelPlugins.storage(),
-                       ModelPlugins.speechProviders(), artifacts, MLXPlugins.modelDownloads(), ModelPlugins.catalog()]
+                       ModelPlugins.speechProviders(), artifacts, MLXPlugins.modelDownloads(),
+                       MLXPlugins.qwenSpeech(), MLXPlugins.fireredSpeech(), MLXPlugins.megaSpeech(), MLXPlugins.audio8Speech(),
+                       ModelPlugins.catalog()]
         let runtime = PluginRuntime(catalog: try PluginCatalog(plugins))
         try await runtime.start(plugins.map { PluginSelection($0.descriptor.id) })
         return try ModelSourceIntegration(suite: suite, root: root, defaults: defaults, runtime: runtime)

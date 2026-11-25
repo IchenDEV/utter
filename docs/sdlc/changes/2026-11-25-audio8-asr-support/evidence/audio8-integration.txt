@@ -1,0 +1,129 @@
+Building for debugging...
+[Computing dependencies]
+[Provisioning 1 / 120]
+[Using on-disk description]
+[1 / 241]
+[1 / 162] WhisperKit
+[1 / 43] Tokenizers
+warning: missing creator for mutated node: ('/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+Build complete! (3.31秒)
+Test Suite 'Selected tests' started at 2026-11-26 01:43:41.887.
+Test Suite 'UtterUpdatesTests.xctest' started at 2026-11-26 01:43:41.891.
+Test Suite 'UtterUpdatesTests.xctest' passed at 2026-11-26 01:43:41.891.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:41.891.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.004) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:42.000.
+Test Suite 'UtterSessionTests.xctest' started at 2026-11-26 01:43:42.000.
+Test Suite 'UtterSessionTests.xctest' passed at 2026-11-26 01:43:42.000.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:42.000.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:42.072.
+Test Suite 'UtterRuntimeTests.xctest' started at 2026-11-26 01:43:42.072.
+Test Suite 'UtterRuntimeTests.xctest' passed at 2026-11-26 01:43:42.072.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:42.072.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:42.145.
+Test Suite 'UtterRemoteMicTests.xctest' started at 2026-11-26 01:43:42.145.
+Test Suite 'UtterRemoteMicTests.xctest' passed at 2026-11-26 01:43:42.145.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:42.145.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:42.251.
+Test Suite 'UtterRemoteInferenceTests.xctest' started at 2026-11-26 01:43:42.252.
+Test Suite 'UtterRemoteInferenceTests.xctest' passed at 2026-11-26 01:43:42.252.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:42.252.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:42.340.
+Test Suite 'UtterProcessingTests.xctest' started at 2026-11-26 01:43:42.341.
+Test Suite 'UtterProcessingTests.xctest' passed at 2026-11-26 01:43:42.341.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:42.341.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:42.451.
+Test Suite 'UtterModelsTests.xctest' started at 2026-11-26 01:43:42.452.
+Test Suite 'UtterModelsTests.xctest' passed at 2026-11-26 01:43:42.452.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:42.452.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:42.526.
+Test Suite 'UtterMacServicesTests.xctest' started at 2026-11-26 01:43:42.527.
+Test Suite 'UtterMacServicesTests.xctest' passed at 2026-11-26 01:43:42.527.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:42.527.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:42.726.
+Test Suite 'UtterMLXTests.xctest' started at 2026-11-26 01:43:42.727.
+Test Suite 'UtterMLXTests.xctest' passed at 2026-11-26 01:43:42.727.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:42.727.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:42.808.
+Test Suite 'UtterIngressTests.xctest' started at 2026-11-26 01:43:42.809.
+Test Suite 'UtterIngressTests.xctest' passed at 2026-11-26 01:43:42.809.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:42.809.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:42.916.
+Test Suite 'UtterEvaluationTests.xctest' started at 2026-11-26 01:43:42.917.
+Test Suite 'UtterEvaluationTests.xctest' passed at 2026-11-26 01:43:42.917.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:42.917.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:43.019.
+Test Suite 'UtterDataTests.xctest' started at 2026-11-26 01:43:43.020.
+Test Suite 'UtterDataTests.xctest' passed at 2026-11-26 01:43:43.020.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:43.020.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:43.091.
+Test Suite 'UtterContractsTests.xctest' started at 2026-11-26 01:43:43.092.
+Test Suite 'UtterContractsTests.xctest' passed at 2026-11-26 01:43:43.092.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:43.092.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:43.299.
+Test Suite 'UtterBuiltinsTests.xctest' started at 2026-11-26 01:43:43.300.
+Test Suite 'UtterBuiltinsTests.xctest' passed at 2026-11-26 01:43:43.300.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:43.300.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:43.391.
+Test Suite 'UtterAudioTests.xctest' started at 2026-11-26 01:43:43.392.
+Test Suite 'UtterAudioTests.xctest' passed at 2026-11-26 01:43:43.392.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:43.392.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-11-26 01:43:43.566.
+Test Suite 'OpenTypeTests.xctest' started at 2026-11-26 01:43:43.566.
+Test Suite 'Audio8ASRIntegrationTests' started at 2026-11-26 01:43:43.566.
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testApplicationCatalogDownloadsReloadsOfflineAndDeletesAudio8]' started.
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Tests/OpenTypeTests/Audio8ASRIntegrationTests.swift:219: -[OpenTypeTests.Audio8ASRIntegrationTests testApplicationCatalogDownloadsReloadsOfflineAndDeletesAudio8] : Test skipped - Set OPENTYPE_AUDIO8_LIVE_DOWNLOAD=1 for the live Audio8 catalog download
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testApplicationCatalogDownloadsReloadsOfflineAndDeletesAudio8]' skipped (0.002 seconds).
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testCancelledTranscriptionPropagatesCancellation]' started.
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testCancelledTranscriptionPropagatesCancellation]' passed (1.809 seconds).
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testDamagedAssetsFailExplicitlyWithoutFallback]' started.
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testDamagedAssetsFailExplicitlyWithoutFallback]' passed (0.060 seconds).
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testDownloadedModelTranscribesChineseEnglishAndAppliesHotwords]' started.
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testDownloadedModelTranscribesChineseEnglishAndAppliesHotwords]' passed (4.426 seconds).
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testInstalledCatalogReloadsOfflineAndDeletesAudio8]' started.
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testInstalledCatalogReloadsOfflineAndDeletesAudio8]' passed (1.269 seconds).
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testLongAudioFailsBeforeInference]' started.
+Test Case '-[OpenTypeTests.Audio8ASRIntegrationTests testLongAudioFailsBeforeInference]' passed (0.006 seconds).
+Test Suite 'Audio8ASRIntegrationTests' passed at 2026-11-26 01:43:51.139.
+	 Executed 6 tests, with 1 test skipped and 0 failures (0 unexpected) in 7.572 (7.573) seconds
+Test Suite 'OpenTypeTests.xctest' passed at 2026-11-26 01:43:51.139.
+	 Executed 6 tests, with 1 test skipped and 0 failures (0 unexpected) in 7.572 (7.573) seconds
+Test Suite 'Selected tests' passed at 2026-11-26 01:43:51.139.
+	 Executed 6 tests, with 1 test skipped and 0 failures (0 unexpected) in 7.572 (7.574) seconds
+AUDIO8_PREPARE_SECONDS=0.972
+AUDIO8_EN_SECONDS=0.291
+AUDIO8_PEAK_RSS_GB=0.83
+AUDIO8_EN_TEXT=Hey, so um, I wanted to. I wanted to follow up on the design doc we talked about.
+AUDIO8_ZH_SECONDS=0.210
+AUDIO8_ZH_TEXT=那个，我想问一下，这个接口，呃，是不是周五之前能 review一下？
+AUDIO8_HOTWORD_TEXT=Hey, so um, I wanted to. I wanted to follow up on the design doc we talked about.
+AUDIO8_INSTALLED_RELOAD_TEXT=那个，我想问一下，这个接口，呃，是不是周五之前能 review一下？

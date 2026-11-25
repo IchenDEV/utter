@@ -33,9 +33,10 @@ package enum SpeechEngineType: String, Codable, CaseIterable, Sendable {
     case qwen3 = "qwen3"
     case firered = "firered"
     case megaASR = "megaASR"
+    case audio8 = "audio8"
 
     package static var selectableCases: [SpeechEngineType] {
-        [.qwen3, .firered, .megaASR, .whisper, .apple, .volc]
+        [.qwen3, .audio8, .firered, .megaASR, .whisper, .apple, .volc]
     }
 
     package var label: String {
@@ -46,6 +47,7 @@ package enum SpeechEngineType: String, Codable, CaseIterable, Sendable {
         case .qwen3: return L("engine.qwen3_asr")
         case .firered: return L("engine.firered_asr")
         case .megaASR: return L("engine.mega_asr")
+        case .audio8: return L("engine.audio8_asr")
         }
     }
 
@@ -55,9 +57,20 @@ package enum SpeechEngineType: String, Codable, CaseIterable, Sendable {
         case .qwen3: return QwenASRModel.defaultID
         case .firered: return "mlx-community/FireRedASR2-AED-mlx"
         case .megaASR: return "mlx-community/Mega-ASR-6bit"
+        case .audio8: return Audio8ASRModel.defaultID
         default: return nil
         }
     }
+
+    package static func engineOwningASRModel(_ modelID: String) -> SpeechEngineType {
+        switch modelID {
+        case "mlx-community/FireRedASR2-AED-mlx": return .firered
+        case "mlx-community/Mega-ASR-6bit": return .megaASR
+        case Audio8ASRModel.defaultID: return .audio8
+        default: return .qwen3
+        }
+    }
+
 }
 
 package enum LocalLLMBackend: String, Codable, CaseIterable, Sendable {

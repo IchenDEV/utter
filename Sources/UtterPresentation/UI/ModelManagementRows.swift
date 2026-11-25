@@ -232,8 +232,9 @@ extension ModelManagementView {
             onLoadLLM?()
         case .asr:
             onUnloadLocalASR?()
-            settings.qwenASRModel = model.id
-            settings.speechEngine = .qwen3
+            let engine = SpeechEngineType.engineOwningASRModel(model.id)
+            if engine == .qwen3 { settings.qwenASRModel = model.id }
+            settings.speechEngine = engine
         }
     }
 

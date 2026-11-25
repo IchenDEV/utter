@@ -51,10 +51,16 @@ package enum MLXModelArtifacts {
         [ModelArtifact(id: "mlx-community/Mega-ASR-6bit", kind: .asr, displayName: "Mega-ASR 6bit",
                        hint: L("model.mega_asr"), requiredFiles: ["config.json", "tokenizer_config.json"], rank: 3)]
     }
+    package static var audio8: [ModelArtifact] {
+        [ModelArtifact(id: Audio8ASRModel.defaultID, kind: .asr, displayName: "Audio8-ASR 0.1B",
+                       hint: L("model.audio8_asr"), requiredFiles: Audio8ASRModel.requiredFiles, rank: 4,
+                       revision: Audio8ASRModel.revision, downloadsOnlyRequiredFiles: true)]
+    }
     package static var speechDescriptors: [ProviderDescriptor] {
         [ProviderDescriptor(id: "speech.qwen", legacyIDs: [SpeechEngineType.qwen3.rawValue], displayName: L("engine.qwen3_short"), artifacts: qwen),
          ProviderDescriptor(id: "speech.firered", legacyIDs: [SpeechEngineType.firered.rawValue], displayName: L("engine.firered_short"), artifacts: firered),
-         ProviderDescriptor(id: "speech.mega", legacyIDs: [SpeechEngineType.megaASR.rawValue], displayName: L("engine.mega_short"), artifacts: mega)]
+         ProviderDescriptor(id: "speech.mega", legacyIDs: [SpeechEngineType.megaASR.rawValue], displayName: L("engine.mega_short"), artifacts: mega),
+         ProviderDescriptor(id: "speech.audio8", legacyIDs: [SpeechEngineType.audio8.rawValue], displayName: L("engine.audio8_short"), artifacts: audio8)]
     }
-    package static var speech: [ModelArtifact] { qwen + firered + mega }
+    package static var speech: [ModelArtifact] { qwen + firered + mega + audio8 }
 }

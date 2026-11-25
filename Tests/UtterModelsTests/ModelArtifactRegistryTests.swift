@@ -47,4 +47,23 @@ final class ModelArtifactRegistryTests: XCTestCase {
         try await runtime.stop()
         XCTAssertTrue(artifacts.artifacts.isEmpty)
     }
+
+    @MainActor
+    func testEmptyRevisionOrEmptySelectiveRequiredFilesIsRejected() async throws {
+        for invalid in [
+            ModelArtifact(id: "vendor/empty-rev", kind: .asr, displayName: "BadRev", requiredFiles: ["config.json"], revision: ""),
+            ModelArtifact(id: "vendor/empty-files", kind: .asr, displayName: "BadFiles", requiredFiles: [], revision: "abc123", downloadsOnlyRequiredFiles: true),
+        ] {
+            let registry = ModelArtifactRegistry()
+            let plugin = PluginRegistration(descriptor: PluginDescriptor(id: "invalid.artifact")) { context, _ in
+                try registry.register(invalid, scope: context.scope)
+            }
+            let runtime = PluginRuntime(catalog: try PluginCatalog([plugin]))
+            do {
+                try await runtime.start([PluginSelection(plugin.descriptor.id)])
+                XCTFail("Invalid artifact metadata was accepted for \(invalid.id)")
+            } catch {}
+            XCTAssertTrue(registry.artifacts.isEmpty)
+        }
+    }
 }

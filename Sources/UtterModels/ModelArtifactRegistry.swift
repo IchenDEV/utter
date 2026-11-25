@@ -29,6 +29,12 @@ package final class ModelArtifactRegistry: ModelArtifactService, @unchecked Send
                 throw ModelArtifactError.invalidRequiredFile(file)
             }
         }
+        if let revision = artifact.revision {
+            guard !revision.isEmpty else { throw ModelArtifactError.invalidRevision(artifact.id) }
+        }
+        if artifact.downloadsOnlyRequiredFiles {
+            guard !artifact.requiredFiles.isEmpty else { throw ModelArtifactError.invalidRequiredFile("") }
+        }
         lock.lock()
         if closed { lock.unlock(); throw ModelArtifactError.closed }
         if rows[artifact.id] != nil { lock.unlock(); throw ModelArtifactError.duplicateID(artifact.id) }

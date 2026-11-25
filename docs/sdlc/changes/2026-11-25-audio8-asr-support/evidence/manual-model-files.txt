@@ -1,0 +1,12 @@
+config.json 6163
+model.safetensors 648031000
+tokenizer.json 11419524
+tokenizer_config.json 2234
+vocab.json 2776833
+merges.txt 1671853
+added_tokens.json 238
+special_tokens_map.json 434
+preprocessor_config.json 434
+processor_config.json 201
+generation_config.json 147
+LICENSE 19347

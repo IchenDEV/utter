@@ -10,11 +10,17 @@ extension ModelManagementView {
             ? settings.qwenASRModel
             : (engineType.asrModelID ?? settings.qwenASRModel)
         return VStack(alignment: .leading, spacing: 8) {
-            Text(L("qwen_asr.config_hint"))
+            Text(L(engineType == .audio8 ? "audio8_asr.config_hint" : "qwen_asr.config_hint"))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
 
             modelList(models, activeID: activeID, type: .asr)
+            if engineType == .audio8 {
+                Link(L("model.audio8_license"), destination: URL(
+                    string: "https://huggingface.co/Edge0/Audio8-ASR-0.1B/blob/\(Audio8ASRModel.revision)/LICENSE"
+                )!)
+                .font(.system(size: 10))
+            }
             if engineType == .qwen3 {
                 HStack(spacing: 12) {
                     Link(L("model.confucius_license"), destination: URL(

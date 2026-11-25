@@ -36,7 +36,7 @@ package enum BuiltinPlugins {
                       ModelPlugins.speechProviders(), ModelPlugins.textProviders(), ModelPlugins.imageProviders(),
                       MLXPlugins.modelDownloads(), ModelPlugins.catalog(), ModelPlugins.storage(), ModelPlugins.lifecycle()]
         let inference = [AppleSpeechPlugins.speech(), WhisperPlugins.speech(), RemoteInferencePlugins.speech(),
-                         MLXPlugins.qwenSpeech(), MLXPlugins.fireredSpeech(), MLXPlugins.megaSpeech(),
+                         MLXPlugins.qwenSpeech(), MLXPlugins.fireredSpeech(), MLXPlugins.megaSpeech(), MLXPlugins.audio8Speech(),
                          MLXPlugins.text(), MLXPlugins.image(), ANEPlugins.text(), RemoteInferencePlugins.text(), RemoteInferencePlugins.connection()]
         let processing = [ProcessingPlugins.preparation(), ProcessingPlugins.text(), ModePlugins.recipes(),
                           ModePlugins.direct(), ModePlugins.formatting(), ModePlugins.command(),

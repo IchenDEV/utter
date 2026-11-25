@@ -12,6 +12,7 @@ package struct SpeechEvaluationSelection {
         case "qwen": type = .qwen3
         case "firered": type = .firered
         case "mega": type = .megaASR
+        case "audio8": type = .audio8
         default: throw VoiceEvaluationError.invalidArguments("unsupported offline speech provider: \(provider)")
         }
         providerID = "speech." + provider

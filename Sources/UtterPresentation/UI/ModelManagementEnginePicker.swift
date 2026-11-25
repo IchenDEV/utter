@@ -25,6 +25,7 @@ private extension SpeechEngineType {
             return "\(L("engine.qwen3_short")) · \(L("common.recommended_short"))"
         case .firered: return L("engine.firered_short")
         case .megaASR: return L("engine.mega_short")
+        case .audio8: return L("engine.audio8_short")
         }
     }
 

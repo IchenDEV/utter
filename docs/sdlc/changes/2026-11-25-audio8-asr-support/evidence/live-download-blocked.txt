@@ -1,0 +1,9 @@
+2026-11-26 01:52 +08
+curl huggingface.co API:
+curl: (28) Connection timed out after 15002 milliseconds
+curl huggingface.co root:
+curl: (28) Connection timed out after 20001 milliseconds
+curl hf-mirror API: HTTP/2 308, location: https://huggingface.co/api/...
+live test: testApplicationCatalogDownloadsReloadsOfflineAndDeletesAudio8
+result: Audio8 download did not complete: error(下载未完成。请点击继续下载)
+staged files: models/Edge0/Audio8-ASR-0.1B (empty); no progress callback fired

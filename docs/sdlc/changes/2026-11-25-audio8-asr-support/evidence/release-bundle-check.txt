@@ -1,0 +1,5 @@
+2026-11-26 01:42 +08
+ 63M	../../../../../dist/Utter.app
+forbidden files: 0
+-rw-r--r--@ 1 chenli  staff   3.7M Nov 26 01:42 ../../../../../dist/Utter.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+com.opentype.voiceinput

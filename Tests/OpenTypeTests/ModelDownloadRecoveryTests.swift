@@ -344,6 +344,19 @@ final class DownloadStallWatchdogTests: XCTestCase {
         XCTAssertFalse(signal.advanced(completedBytes: 11, fraction: 0.2))
     }
 
+    func testProgressSignalAdvancesOnRepeatedSubThresholdFractionSteps() {
+        let signal = DownloadProgressSignal()
+        let step = 1.0 / 12_000
+        var moves = 0
+        for index in 1...20 {
+            if signal.advanced(completedBytes: 11, fraction: 0.9 + Double(index) * step) {
+                moves += 1
+            }
+        }
+        XCTAssertEqual(moves, 20)
+        XCTAssertFalse(signal.advanced(completedBytes: 11, fraction: 0.9 + 20 * step))
+    }
+
     func testProgressKeepsDownloadAlive() async {
         let watchdog = DownloadStallWatchdog(timeout: 0.15, pollInterval: 0.01)
         var fired = false

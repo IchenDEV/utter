@@ -21,12 +21,15 @@ import XCTest
 
 @MainActor
 final class ConfuciusASRTests: XCTestCase {
-    func testQwenCompatibleModelsShareOneSpeechEngine() {
+    func testSpeechEnginesOwnSeparateASRModelGroups() {
         let catalog = ModelCatalog(startupCleanup: { _ in Task { 0 } })
         XCTAssertEqual(catalog.asrModels(for: .qwen3).map(\.id), [
             QwenASRModel.defaultID,
             QwenASRModel.confuciusR2T2ID,
         ])
+        XCTAssertEqual(catalog.asrModels(for: .audio8).map(\.id), [Audio8ASRModel.defaultID])
+        XCTAssertEqual(catalog.asrModels(for: .firered).map(\.id), ["mlx-community/FireRedASR2-AED-mlx"])
+        XCTAssertEqual(catalog.asrModels(for: .megaASR).map(\.id), ["mlx-community/Mega-ASR-6bit"])
     }
 
     func testModelRequiresCompleteMLXFilesAndLicenseNotices() throws {

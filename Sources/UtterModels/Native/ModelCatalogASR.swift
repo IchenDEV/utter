@@ -96,7 +96,14 @@ extension ModelCatalog {
                 } else {
                     let api = HubApi(downloadBase: staging.downloadBase, cache: staging.hubCache,
                                      hfToken: source.hubTokenOverride, endpoint: source.endpoint)
-                    _ = try await api.snapshot(from: ModelStorage.hubModelRepo(repositoryID)) { [weak self, progressTasks] progress in
+                    let artifact = artifactsByID[id]
+                    let revision = ASRDownloadSelection.revision(for: artifact)
+                    let matching = ASRDownloadSelection.matchingGlobs(for: artifact)
+                    _ = try await api.snapshot(
+                        from: ModelStorage.hubModelRepo(repositoryID),
+                        revision: revision,
+                        matching: matching
+                    ) { [weak self, progressTasks] progress in
                         progressTasks.enqueue {
                             guard let self,
                                   self.downloadTasks.isCurrent(key, token: token),
@@ -119,6 +126,13 @@ extension ModelCatalog {
                             self.asrModels[i].downloadDetail = info.detailText
                             onProgress?(info)
                         }
+                    }
+                    try Task.checkCancellation()
+                    if let revision = artifact?.revision {
+                        try ASRModelRevisionMarker.write(
+                            revision: revision,
+                            to: ModelStorage.asrRepoDir(repositoryID, downloadBase: staging.downloadBase)
+                        )
                     }
                 }
             }
@@ -221,7 +235,7 @@ extension ModelCatalog {
             let directory = downloadBase.map { base in
                 ModelStorage.asrRepoDir(repositoryID, downloadBase: base)
             } ?? storage.asrRepoDir(repositoryID)
-            return asrRepoContainsRequiredFiles(repositoryID, at: directory)
+            return asrRepoContainsRequiredFiles(id, at: directory)
         }
     }
 
