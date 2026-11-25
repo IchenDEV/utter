@@ -24,7 +24,26 @@ extension ModelPlugins {
                     download: { id, source, staging, progress in
                         try await downloads.download(id, source: source, downloadBase: staging.downloadBase,
                                                      cacheDirectory: staging.hubCache.cacheDirectory, progress: progress)
-                    }, validate: { try await downloads.validate($0) }
+                    }, validate: { try await downloads.validate($0) },
+                    downloadModelScope: { id, files, revision, staging, progress in
+                        try await ModelScopeDownloads.download(
+                            modelID: id,
+                            revision: revision,
+                            files: files,
+                            to: ModelStorage.hubModelRepoDir(id, downloadBase: staging.downloadBase),
+                            progress: progress
+                        )
+                    },
+                    validateRequiredFiles: { directory, files in
+                        guard ModelAssets.filesAreComplete(at: directory, requiredFiles: files) else {
+                            let missing = files.filter {
+                                let url = directory.appendingPathComponent($0)
+                                let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+                                return size <= 0
+                            }
+                            throw ModelScopeError.missingFiles(missing)
+                        }
+                    }
                 ), speechDescriptors: { speech?.descriptors ?? [] }
             )
             try context.scope.onReady { catalog.loadArtifacts(artifacts.artifacts); catalog.start() }

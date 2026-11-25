@@ -82,10 +82,61 @@ final class ConfigurationTests: XCTestCase {
     @MainActor
     func testFormattingModelTypesPutRecommendedQwenFirstAndCustomLast() {
         XCTAssertEqual(FormattingModelType.allCases.map(\.rawValue), [
-            "qwen", "gemma", "llama", "espresso", "remote", "custom",
+            "qwen", "gemma", "llama", "edge0", "espresso", "remote", "custom",
         ])
         XCTAssertTrue(FormattingModelType.qwen.isRecommended)
         XCTAssertTrue(FormattingModelType.allCases.dropFirst().allSatisfy { !$0.isRecommended })
+    }
+
+    @MainActor
+    func testEdge0ArtifactIsModelScopeBackedAndDownloadOnly() throws {
+        let artifact = try XCTUnwrap(Edge0ModelArtifacts.models.first)
+        XCTAssertEqual(artifact.id, "Edge0/Edge0-8B-A1B-preview")
+        XCTAssertEqual(artifact.family, .edge0)
+        XCTAssertEqual(artifact.runtime, .edge0)
+        XCTAssertEqual(artifact.repositoryHost, .modelScope)
+        XCTAssertEqual(artifact.revision, Edge0Model.revision)
+        XCTAssertEqual(artifact.requiredFiles, Edge0Model.requiredFiles)
+        XCTAssertTrue(artifact.downloadsOnlyRequiredFiles)
+        XCTAssertEqual(artifact.requiredFiles.first, "config.json")
+        XCTAssertTrue(artifact.requiredFiles.contains("model.safetensors"))
+        XCTAssertTrue(artifact.requiredFiles.contains("lora_edge0_8b.safetensors"))
+        XCTAssertTrue(artifact.requiredFiles.contains("prerouter_edge0_8b.safetensors"))
+        XCTAssertFalse(artifact.requiredFiles.contains { $0.hasSuffix(".mp4") || $0.hasSuffix(".jpg") })
+        XCTAssertEqual(FormattingModelType.edge0.family, .edge0)
+        XCTAssertEqual(
+            FormattingModelType.resolvedLocalSelection(
+                pending: nil,
+                activeFamily: .some(.edge0)
+            ),
+            .edge0
+        )
+    }
+
+    func testModelScopeFileListingDecodesAndPreservesSizes() throws {
+        let data = Data(#"""
+        {"Code":200,"Data":{"Files":[
+          {"Path":"config.json","Size":3069,"Type":"blob"},
+          {"Path":"model.safetensors","Size":4508697328,"Type":"blob"},
+          {"Path":"assets","Size":0,"Type":"tree"}
+        ]}}
+        """#.utf8)
+        let files = try ModelScopeDownloads.decodeFileList(data)
+        XCTAssertEqual(files.map(\.path), ["config.json", "model.safetensors", "assets"])
+        XCTAssertEqual(files[1].size, 4_508_697_328)
+        XCTAssertThrowsError(try ModelScopeDownloads.decodeFileList(Data(#"{"Code":404}"#.utf8))) { error in
+            XCTAssertEqual(error as? ModelScopeError, .invalidResponse)
+        }
+    }
+
+    func testRequiredFilesCompletenessIncludesAllEdge0Assets() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try writeTestFiles(Edge0Model.requiredFiles, under: dir)
+        XCTAssertTrue(ModelAssets.filesAreComplete(at: dir, requiredFiles: Edge0Model.requiredFiles))
+        try Data().write(to: dir.appendingPathComponent("prerouter_edge0_8b.safetensors"))
+        XCTAssertFalse(ModelAssets.filesAreComplete(at: dir, requiredFiles: Edge0Model.requiredFiles))
     }
 
     @MainActor

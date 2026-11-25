@@ -1,0 +1,4 @@
+2026-11-26 03:20 +08
+swift build -c release --product OpenType: exit 0 (120.09s)
+build-app.sh: xcodebuild package resolution hung on Sparkle binary artifact fetch after cache cleanup
+previous release app build (Audio8 change) passed; current changes are Swift-only and release compile passed

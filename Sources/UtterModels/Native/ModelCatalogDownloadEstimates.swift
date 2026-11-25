@@ -58,6 +58,7 @@ extension ModelCatalog {
         "mlx-community/FireRedASR2-AED-mlx": 4_570_000_000,
         "mlx-community/Mega-ASR-6bit": 2_040_000_000,
         Audio8ASRModel.defaultID: Audio8ASRModel.downloadBytes,
+        Edge0Model.defaultID: Edge0Model.downloadBytes,
     ]
 
     private static let downloadEstimateRegex = try! NSRegularExpression(

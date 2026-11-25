@@ -25,12 +25,15 @@ package struct ModelArtifact: Equatable, Sendable {
     package let memoryRequirements: ModelMemoryRequirements?
     package let revision: String?
     package let downloadsOnlyRequiredFiles: Bool
+    package let runtime: ModelRuntime
+    package let repositoryHost: ModelRepositoryHost
 
     package init(id: String, kind: ModelDownloadKind, displayName: String, hint: String = "",
                  family: CatalogModelFamily? = nil, tier: CatalogModelTier = .standard,
                  requiredFiles: [String] = [], repositories: [String]? = nil, rank: Int = 0,
                  memoryRequirements: ModelMemoryRequirements? = nil, revision: String? = nil,
-                 downloadsOnlyRequiredFiles: Bool = false) {
+                 downloadsOnlyRequiredFiles: Bool = false, runtime: ModelRuntime = .mlx,
+                 repositoryHost: ModelRepositoryHost = .huggingFace) {
         self.rank = rank
         self.id = id
         self.kind = kind
@@ -43,5 +46,7 @@ package struct ModelArtifact: Equatable, Sendable {
         self.memoryRequirements = memoryRequirements
         self.revision = revision
         self.downloadsOnlyRequiredFiles = downloadsOnlyRequiredFiles
+        self.runtime = runtime
+        self.repositoryHost = repositoryHost
     }
 }

@@ -325,6 +325,7 @@
 "model.family.qwen" = "Alibaba Qwen - Multilingual";
 "model.family.gemma" = "Google Gemma - Lightweight";
 "model.family.llama" = "Meta Llama - General Purpose";
+"model.family.edge0" = "Edge0 - On-device MoE";
 "model.family.remote" = "Remote";
 "model.espresso.description" = "Run a local Qwen3 safetensors model with the experimental ANE-LM runtime.";
 "model.espresso.no_bundle" = "No Qwen3 model selected";
@@ -638,6 +639,9 @@
 "model.mega_asr" = "Noise-robust ASR (Qwen3-ASR + LoRA), ~2.0 GB";
 "model.audio8_asr" = "Local MLX ASR, ~664 MB — CC BY-NC 4.0, non-commercial use only";
 "model.audio8_license" = "Audio8 license (CC BY-NC 4.0)";
+"model.edge0_8b" = "Edge0 8B-A1B, 4-bit sparse MoE — ~4.6 GB from ModelScope. Download only; the Edge0 inference engine is not bundled yet.";
+"model.edge0_license" = "Edge0 model license (community license)";
+"model.edge0_download_only" = "Download only";
 "model.asr_incomplete" = "Only part of the model was downloaded. Select Resume to finish.";
 "error.audio8.noAudioInput" = "No audio input was provided to Audio8.";
 "error.audio8.notConfigured" = "The Audio8 model is not downloaded or its files are incomplete. Open Settings → Models to download it again.";

@@ -1,0 +1,362 @@
+Building for production...
+[Computing dependencies]
+[Constructing description]
+[Pre-planning 1 / 2163]
+[Planning 1449 / 2163]
+[Planning deferred tasks]
+[Starting]
+[401 / 1057] mlx-swift_Cmlx
+[401 / 1057] UtterUpdates
+[450 / 1057] mlx-swift_Cmlx
+In file included from /Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/steel_attention.metal:6:
+In file included from /Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:3:
+In file included from /Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/attn.h:6:
+In file included from /Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/../../steel/attn/mma.h:11:
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/../../steel/utils/integral_constant.h:108:6: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+  if constexpr (start < stop) {
+     ^
+In file included from /Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/steel_attention.metal:6:
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:356:16: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+            if constexpr (is_bool) {
+               ^
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:426:14: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+          if constexpr (BD == 128) {
+             ^
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/.build/checkouts/mlx-swift/Source/Cmlx/mlx-generated/metal/steel/attn/kernels/../../../steel/attn/kernels/steel_attention.h:436:14: warning: constexpr if is a C++17 extension [-Wc++17-extensions]
+          if constexpr (BD == 128) {
+             ^
+4 warnings generated.
+[451 / 1057]
+[464 / 1066] RealModule
+[465 / 1066] NIOConcurrencyHelpers
+[469 / 1072] ArgmaxCore
+[472 / 1085]
+[481 / 1102]
+[487 / 1156]
+[495 / 1201]
+[505 / 1201]
+[516 / 1201]
+[522 / 1201]
+[525 / 1201] InternalCollectionsUtilities
+[536 / 1201]
+[537 / 1201] Cmlx
+[540 / 1201]
+[543 / 1201]
+[549 / 1201]
+[555 / 1201] Cmlx
+[558 / 1201]
+[563 / 1201]
+[577 / 1201]
+[579 / 1201]
+[580 / 1201]
+[589 / 1201]
+[594 / 1201]
+[599 / 1201] UtterRuntime
+[603 / 1201] UtterRuntime
+[607 / 1201]
+[612 / 1201]
+[618 / 1201]
+[623 / 1201] Cmlx
+[633 / 1201] Cmlx
+[636 / 1201]
+[638 / 1201] Cmlx
+[639 / 1201] Crypto
+[641 / 1201] Crypto
+[647 / 1201] ArgmaxCore
+[648 / 1201] Cmlx
+[649 / 1201] Cmlx
+[652 / 1201] Cmlx
+[656 / 1201] Cmlx
+[658 / 1201] Cmlx
+[659 / 1201] Cmlx
+[661 / 1201] Cmlx
+[662 / 1201] Cmlx
+[665 / 1201] Cmlx
+[666 / 1201] Cmlx
+[669 / 1201] Cmlx
+[671 / 1201] Cmlx
+[673 / 1201] Cmlx
+[674 / 1201] Cmlx
+[675 / 1201] Cmlx
+[676 / 1201] Cmlx
+[677 / 1201] Cmlx
+[679 / 1201] Cmlx
+[680 / 1201] Cmlx
+[681 / 1201] Cmlx
+[682 / 1201] Cmlx
+[683 / 1201] Cmlx
+[684 / 1201] Cmlx
+[685 / 1201] Cmlx
+[686 / 1201] Cmlx
+[687 / 1201] Cmlx
+[688 / 1201] Cmlx
+[690 / 1201] Cmlx
+[691 / 1201] Cmlx
+[693 / 1201] Cmlx
+[694 / 1201] Cmlx
+[695 / 1201] Cmlx
+[698 / 1201] Cmlx
+[700 / 1201] ArgmaxCore
+[701 / 1201] Cmlx
+[707 / 1201] Cmlx
+[709 / 1201] Cmlx
+[710 / 1201] Cmlx
+[712 / 1201] Cmlx
+[714 / 1201] Cmlx
+[715 / 1201] Cmlx
+[716 / 1201] Cmlx
+[718 / 1201] Cmlx
+[719 / 1201] Cmlx
+[728 / 1201] Cmlx
+[729 / 1201] Cmlx
+[731 / 1201] Cmlx
+[733 / 1201] Cmlx
+[734 / 1201] Cmlx
+[736 / 1201] Cmlx
+[737 / 1201] Cmlx
+[739 / 1201] Cmlx
+[741 / 1201] Cmlx
+[742 / 1201] Cmlx
+[745 / 1201] Cmlx
+[747 / 1201] Cmlx
+[748 / 1201] Cmlx
+[749 / 1201] Cmlx
+[750 / 1201] Cmlx
+[751 / 1201] Cmlx
+[752 / 1201] Cmlx
+[756 / 1201] Cmlx
+[758 / 1201] Cmlx
+[760 / 1201] Cmlx
+[761 / 1201] Cmlx
+[763 / 1201] Cmlx
+[767 / 1201] Cmlx
+[769 / 1201] Cmlx
+[771 / 1201] Cmlx
+[774 / 1201] Cmlx
+[775 / 1201] Cmlx
+[776 / 1201] Cmlx
+[777 / 1201] Cmlx
+[780 / 1201] Cmlx
+[783 / 1201] Cmlx
+[784 / 1201] Cmlx
+[787 / 1201] CNIOWindows
+[794 / 1201] ANELMRuntime
+[795 / 1201] ANELMRuntime
+[796 / 1201] ANELMRuntime
+[797 / 1201] ANELMRuntime
+[798 / 1201] ANELMRuntime
+[799 / 1201] ANELMRuntime
+[800 / 1201]
+[806 / 1201]
+[812 / 1201]
+[825 / 1201] UtterRuntime
+[846 / 1201]
+[854 / 1226]
+[865 / 1226] Atomics
+[878 / 1226] CNIOAtomics
+[882 / 1226]
+[883 / 1226]
+[887 / 1226]
+[890 / 1226]
+[892 / 1226]
+[898 / 1226] mlx-swift_Cmlx
+[906 / 1231] ContainersPreview
+[912 / 1234] ANELMRuntime
+[914 / 1234] ContainersPreview
+[927 / 1236] DequeModule
+[931 / 1237] ContainersPreview
+[937 / 1255]
+[946 / 1255]
+[949 / 1255] NIOConcurrencyHelpers
+[955 / 1257] NIOConcurrencyHelpers
+[963 / 1258] Numerics
+[963 / 1258]
+[964 / 1258] MLX
+[969 / 1260]
+[970 / 1260]
+[971 / 1260] OrderedCollections
+[978 / 1261] DequeModule
+[985 / 1262] Jinja
+[987 / 1263] NIOCore
+[990 / 1265] yyjson
+[991 / 1265] Cmlx
+[991 / 1265] UtterContracts
+[1000 / 1268] UtterUpdates
+[1005 / 1271] UtterMediaContracts
+[1009 / 1282]
+[1010 / 1282]
+[1012 / 1282]
+[1015 / 1282]
+[1016 / 1282] WhisperKit
+[1022 / 1282] UtterUpdates
+[1029 / 1282] MLX
+[1036 / 1284] NIOCore
+[1052 / 1289] UtterSession
+[1058 / 1296] UtterMacServices
+[1059 / 1297] UtterAudio
+[1060 / 1299] UtterAppleSpeech
+[1064 / 1310] UtterRemoteMic
+[1073 / 1316] UtterPresentationContracts
+[1075 / 1318]
+[1076 / 1320]
+[1078 / 1320]
+[1080 / 1320]
+[1082 / 1320] UtterPresentationContracts
+[1085 / 1320] EventSource
+[1093 / 1320]
+[1095 / 1320] Jinja
+[1110 / 1320] UtterWhisper
+[1111 / 1320] UtterWhisper
+[1129 / 1322] UtterIngress
+[1132 / 1323] UtterIngress
+[1134 / 1324] UtterData
+[1147 / 1324] UtterPresentationContracts
+[1150 / 1325] UtterWhisper
+[1156 / 1325] HuggingFace
+[1164 / 1336] UtterRemoteInference
+[1170 / 1336] UtterRemoteInference
+[1172 / 1336]
+[1179 / 1337]
+[1180 / 1337] MLXOptimizers
+[1182 / 1338] UtterRemoteMic
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterIngress/Native/IntegrationXPCServer.swift:97:61: [1;33mwarning: [1;39mvariable 'handler' was written to, but never read[0;0m
+ [0;36m95 |[0;0m         connection.exportedInterface = NSXPCInterface(with: OpenTypeXPCProtocol.self)
+ [0;36m96 |[0;0m         connection.exportedObject = handler
+ [0;36m97 |[0;0m         connection.invalidationHandler = { [weak self, weak handler] in
+    [0;36m|[0;0m                                                             `- [1;33mwarning: [1;39mvariable 'handler' was written to, but never read[0;0m
+ [0;36m98 |[0;0m             Task { @MainActor in
+ [0;36m99 |[0;0m                 self?.retire(id)
+
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterIngress/Native/IntegrationXPCServer.swift:102:61: [1;33mwarning: [1;39mvariable 'handler' was written to, but never read[0;0m
+[0;36m100 |[0;0m             }
+[0;36m101 |[0;0m         }
+[0;36m102 |[0;0m         connection.interruptionHandler = { [weak self, weak handler] in
+    [0;36m|[0;0m                                                             `- [1;33mwarning: [1;39mvariable 'handler' was written to, but never read[0;0m
+[0;36m103 |[0;0m             Task { @MainActor in
+[0;36m104 |[0;0m                 self?.retire(id)
+[1194 / 1338] MLXOptimizers
+[1200 / 1339] UtterMacServices
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterMacServices/CorrectionCaptureRegion.swift:75:5: [1;33mwarning: [1;39m'package' modifier conflicts with extension's default access of 'private'[0;0m
+[0;36m73 |[0;0m }
+[0;36m74 |[0;0m private extension CorrectionCaptureRegionLocator {
+[0;36m75 |[0;0m     package func nearbyRange(
+   [0;36m|[0;0m     `- [1;33mwarning: [1;39m'package' modifier conflicts with extension's default access of 'private'[0;0m
+[0;36m76 |[0;0m         of needle: String,
+[0;36m77 |[0;0m         in text: NSString,
+[1206 / 1339] MLXLMCommon
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterProcessing/Native/TextProcessor+Benchmark.swift:29:53: [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m27 |[0;0m             }
+[0;36m28 |[0;0m         return try await withLocalModelAccess {
+[0;36m29 |[0;0m             let provider = try await self.providers.create(id: "generation.mlx", request: .benchmark)
+   [0;36m|[0;0m                                                     `- [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m30 |[0;0m             return try await ModelBenchmarkSuite.run(workloads: workloads, provider: provider)
+[0;36m31 |[0;0m         }
+
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterProcessing/Native/TextProcessor+FactSupport.swift:29:34: [1;33mwarning: [1;39mreference to captured var 'checkOptions' in concurrently-executing code; this is an error in the Swift 6 language mode[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures\SendableClosureCaptures]8;;\]
+[0;36m27 |[0;0m                 try await withOperationDeadline(for: ProcessingDeadlines.factSupport) {
+[0;36m28 |[0;0m                     try await self.generateText(prompt: prompt, systemPrompt: PromptCatalog.factSupportSystemPrompt,
+[0;36m29 |[0;0m                         options: checkOptions, maxTokens: 768, temperature: 0)
+   [0;36m|[0;0m                                  `- [1;33mwarning: [1;39mreference to captured var 'checkOptions' in concurrently-executing code; this is an error in the Swift 6 language mode[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures\SendableClosureCaptures]8;;\]
+[0;36m30 |[0;0m                 }
+[0;36m31 |[0;0m             }
+
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterProcessing/Native/TextProcessor+Generation.swift:61:43: [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+ [0;36m59 |[0;0m             maxTokens: maxTokens, temperature: temperature
+ [0;36m60 |[0;0m         )
+ [0;36m61 |[0;0m         let primary = try await providers.create(id: providerID, request: .inference)
+    [0;36m|[0;0m                                           `- [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+ [0;36m62 |[0;0m         try Task.checkCancellation()
+ [0;36m63 |[0;0m         guard usesANE else {
+
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterProcessing/Native/TextProcessor+Generation.swift:82:65: [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+ [0;36m80 |[0;0m                     prepareForMLXFallback: { await primary.unload() },
+ [0;36m81 |[0;0m                     mlx: {
+ [0;36m82 |[0;0m                         let fallback = try await self.providers.create(id: options.fallbackProviderID, request: .inference)
+    [0;36m|[0;0m                                                                 `- [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+ [0;36m83 |[0;0m                         try Task.checkCancellation()
+ [0;36m84 |[0;0m                         return try await ProcessingObservations.$generationStage.withValue(.fallback) {
+
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterProcessing/Native/TextProcessor+Generation.swift:129:49: [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m127 |[0;0m         )
+[0;36m128 |[0;0m         guard let imageProviders else { throw GenerationServiceError.unsupportedOperation }
+[0;36m129 |[0;0m         let provider = try await imageProviders.create(id: providerID, request: .inference)
+    [0;36m|[0;0m                                                 `- [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m130 |[0;0m         try Task.checkCancellation()
+[0;36m131 |[0;0m         let result = try await ProcessingObservations.$generationStage.withValue(.image) {
+
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterProcessing/Native/TextProcessor+ModelPreparation.swift:11:52: [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+ [0;36m9 |[0;0m             maxTokens: 1, temperature: 0, usesANE: usesANE)
+[0;36m10 |[0;0m         return try await withLocalModelAccess {
+[0;36m11 |[0;0m             let primary = try await self.providers.create(id: id, request: .inference)
+   [0;36m|[0;0m                                                    `- [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m12 |[0;0m             guard usesANE else { try await primary.prepare(request); return nil }
+[0;36m13 |[0;0m             let result = try await GenerationFallback.run(fallbackEnabled: options.fallbackToMLXOnEspressoFailure,
+
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterProcessing/Native/TextProcessor+ModelPreparation.swift:16:61: [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m14 |[0;0m                 espresso: { try await primary.prepare(request) }, prepareForMLXFallback: { await primary.unload() },
+[0;36m15 |[0;0m                 mlx: {
+[0;36m16 |[0;0m                     let fallback = try await self.providers.create(id: options.fallbackProviderID, request: .inference)
+   [0;36m|[0;0m                                                             `- [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m17 |[0;0m                     let request = self.generationRequest(prompt: "", systemPrompt: nil, options: options, maxTokens: 1, temperature: 0)
+[0;36m18 |[0;0m                     try await fallback.prepare(request)
+
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterProcessing/Native/TextProcessor+Models.swift:37:42: [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m35 |[0;0m         try await withLocalModelAccess {
+[0;36m36 |[0;0m             for descriptor in await self.providers.descriptors {
+[0;36m37 |[0;0m                 try await self.providers.reset(id: descriptor.id)
+   [0;36m|[0;0m                                          `- [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m38 |[0;0m             }
+[0;36m39 |[0;0m             if let images = self.imageProviders {
+
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterProcessing/Native/TextProcessor+Models.swift:40:79: [1;33mwarning: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m38 |[0;0m             }
+[0;36m39 |[0;0m             if let images = self.imageProviders {
+[0;36m40 |[0;0m                 for descriptor in await images.descriptors { try await images.reset(id: descriptor.id) }
+   [0;36m|[0;0m                                                                               `- [1;33mwarnin[1210 / 1342] UtterProcessing
+g: [1;39mconformance of 'τ_1_0' to protocol 'ProviderCatalog' may be isolated and cannot be passed to main actor-isolated context[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances\IsolatedConformances]8;;\]
+[0;36m41 |[0;0m             }
+[0;36m42 |[0;0m         }
+
+[#IsolatedConformances]: <https://docs.swift.org/compiler/documentation/diagnostics/isolated-conformances>
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+[1216 / 1342] UtterPresentation
+[1222 / 1342] HuggingFace
+[1230 / 1344] Cmlx
+[1237 / 1348] MLX
+[1241 / 1348] MLXLMCommon
+[1249 / 1350] MLXAudioCore
+[1256 / 1351] MLXAudioCore
+[1256 / 1351] MLXVLM
+[1260 / 1353] MLXAudioVAD
+[1262 / 1354] Hub
+[1270 / 1356] Tokenizers
+[1274 / 1358] MLXAudioVAD
+[1280 / 1358] Tokenizers
+[1288 / 1360] UtterANE
+[1293 / 1363] Generation
+/Users/chenli/.t3/worktrees/utter/t3-19156e53-f494179de42c33eb/Sources/UtterModels/Native/DownloadStallWatchdog.swift:24:59: [1;33mwarning: [1;39mreference to property 'pollInterval' in closure requires explicit use of 'self' to make capture semantics explicit; this is an error in the Swift 6 language mode[0;0m
+[0;36m22 |[0;0m         pollTask = Task { @MainActor [weak self] in
+[0;36m23 |[0;0m             while !Task.isCancelled {
+[0;36m24 |[0;0m                 try? await Task.sleep(nanoseconds: UInt64(pollInterval * 1_000_000_000))
+   [0;36m|[0;0m                                                           `- [1;33mwarning: [1;39mreference to property 'pollInterval' in closure requires explicit use of 'self' to make capture semantics explicit; this is an error in the Swift 6 language mode[0;0m
+[0;36m25 |[0;0m                 guard let self, !Task.isCancelled else { return }
+[0;36m26 |[0;0m                 guard Date().timeIntervalSince(self.lastActivity) >= self.timeout else { continue }
+[1300 / 1364] UtterModels
+[1306 / 1364] Models
+[1308 / 1365] UtterANE
+[1314 / 1365] Models
+[1321 / 1366] MLXAudioCodecs
+[1324 / 1368] MLXVLM
+[1330 / 1368] MLXLLM
+[1336 / 1368] MLXAudioCodecs
+[1343 / 1369] MLXAudioSTT
+[1345 / 1370] MLXAudioSTT
+[1352 / 1371] UtterMLX
+[1354 / 1372] UtterMLX
+[1361 / 1373] UtterBuiltins
+[1363 / 1374] UtterBuiltins
+[1370 / 1375] OpenType-product
+[1372 / 1376] OpenType-product
+[1374 / 1376] OpenType-product
+[1375 / 1376] OpenType-product
+Build complete! (120.09秒)

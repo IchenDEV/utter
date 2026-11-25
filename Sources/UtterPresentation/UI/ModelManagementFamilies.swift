@@ -6,6 +6,7 @@ enum FormattingModelType: String, CaseIterable {
     case qwen
     case gemma
     case llama
+    case edge0
     case espresso
     case remote
     case custom
@@ -15,6 +16,7 @@ enum FormattingModelType: String, CaseIterable {
         case .qwen: .qwen
         case .gemma: .gemma
         case .llama: .llama
+        case .edge0: .edge0
         case .espresso, .remote, .custom: nil
         }
     }
@@ -27,6 +29,7 @@ enum FormattingModelType: String, CaseIterable {
             "\(ModelCatalogProjection.ModelFamily.qwen.rawValue) · \(L("common.recommended_short"))"
         case .gemma: ModelCatalogProjection.ModelFamily.gemma.rawValue
         case .llama: ModelCatalogProjection.ModelFamily.llama.rawValue
+        case .edge0: ModelCatalogProjection.ModelFamily.edge0.rawValue
         case .espresso: "ANE"
         case .remote: L("model.family.remote")
         case .custom: L("common.custom")
@@ -43,6 +46,7 @@ enum FormattingModelType: String, CaseIterable {
         case .qwen: return .qwen
         case .gemma: return .gemma
         case .llama: return .llama
+        case .edge0: return .edge0
         case nil: return .custom
         }
     }
@@ -69,6 +73,7 @@ extension ModelManagementView {
                 case .qwen: return .qwen
                 case .gemma: return .gemma
                 case .llama: return .llama
+                case .edge0: return .edge0
                 case nil: return .custom
                 }
             },
@@ -80,6 +85,8 @@ extension ModelManagementView {
                     selectLocalFamily(.gemma)
                 case .llama:
                     selectLocalFamily(.llama)
+                case .edge0:
+                    selectLocalFamily(.edge0)
                 case .espresso:
                     selectEspressoLLM()
                 case .remote:
@@ -93,11 +100,17 @@ extension ModelManagementView {
 
     func selectLocalFamily(_ family: ModelCatalogProjection.ModelFamily) {
         selectedModelFamily = family
+        if family == .edge0 {
+            // Edge0 is download-only in this build; selecting the family must
+            // not switch the active text model or unload the current one.
+            return
+        }
         if settings.localLLMBackend != .mlx {
             switch family {
             case .qwen: pendingFormattingTypeAfterBackendChange = .qwen
             case .gemma: pendingFormattingTypeAfterBackendChange = .gemma
             case .llama: pendingFormattingTypeAfterBackendChange = .llama
+            case .edge0: pendingFormattingTypeAfterBackendChange = .edge0
             }
         }
         let changedBackend = settings.useRemoteLLM || settings.localLLMBackend != .mlx

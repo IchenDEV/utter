@@ -325,6 +325,7 @@
 "model.family.qwen" = "阿里通义千问 - 多语言";
 "model.family.gemma" = "Google Gemma - 轻量";
 "model.family.llama" = "Meta Llama - 通用";
+"model.family.edge0" = "Edge0 - 端侧 MoE";
 "model.family.remote" = "远程";
 "model.espresso.description" = "使用实验性的 ANE-LM 运行本地 Qwen3 safetensors 模型。";
 "model.espresso.no_bundle" = "尚未选择 Qwen3 模型";
@@ -638,6 +639,9 @@
 "model.mega_asr" = "抗噪 ASR（Qwen3-ASR + LoRA），约 2.0 GB";
 "model.audio8_asr" = "本地 MLX 语音识别，约 664 MB — CC BY-NC 4.0，仅限非商业用途";
 "model.audio8_license" = "Audio8 许可证（CC BY-NC 4.0）";
+"model.edge0_8b" = "Edge0 8B-A1B，4-bit 稀疏 MoE，约 4.6 GB（ModelScope 下载）。当前仅支持下载；Edge0 推理引擎尚未内置。";
+"model.edge0_license" = "Edge0 模型许可证（社区许可）";
+"model.edge0_download_only" = "仅下载";
 "model.asr_incomplete" = "模型只下载了一部分。点击“继续下载”即可接着完成";
 "error.audio8.noAudioInput" = "没有音频输入提供给 Audio8。";
 "error.audio8.notConfigured" = "Audio8 模型尚未下载或文件不完整。请前往设置 → 模型重新下载。";

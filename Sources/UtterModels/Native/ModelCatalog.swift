@@ -164,11 +164,15 @@ package final class ModelCatalog: ObservableObject, ModelCatalogService {
                         : (size > 0 ? .error(L("model.download_incomplete")) : .notDownloaded)
                 }
             }
-            llmModels[i].compatibility = DeviceCapability.check(
-                modelID: id,
-                downloadSizeBytes: Self.defaultDownloadEstimateBytes(for: id),
-                memoryRequirements: artifactsByID[id]?.memoryRequirements
-            )
+            if let artifact = artifactsByID[id], artifact.runtime != .mlx {
+                llmModels[i].compatibility = .compatible
+            } else {
+                llmModels[i].compatibility = DeviceCapability.check(
+                    modelID: id,
+                    downloadSizeBytes: Self.defaultDownloadEstimateBytes(for: id),
+                    memoryRequirements: artifactsByID[id]?.memoryRequirements
+                )
+            }
         }
         refreshASRStatus(recheckingErrors: recheckingErrors)
     }

@@ -41,6 +41,7 @@ extension ModelCatalog {
         let source = settings.modelDownloadSource
         let staging = storage.generationStaging(for: token)
         defer { ModelStorage.removeGenerationStaging(staging) }
+        let artifact = artifactsByID[id]
 
         do {
             try ModelStorage.prepareGeneration(staging)
@@ -52,7 +53,7 @@ extension ModelCatalog {
             let tracker = DownloadProgressTracker(
                 initialBytes: ModelStorage.directorySize(at: repoDir)
             )
-            try await textDownloads.download(id, source, staging) { [weak self, progressTasks] progress in
+            let progressHandler: @Sendable (Progress) -> Void = { [weak self, progressTasks] progress in
                 progressTasks.enqueue {
                     guard let self,
                           self.downloadTasks.isCurrent(key, token: token),
@@ -73,10 +74,24 @@ extension ModelCatalog {
                     self.llmModels[i].downloadDetail = info.detailText
                 }
             }
+            if let artifact, artifact.repositoryHost == .modelScope {
+                guard let downloadModelScope = textDownloads.downloadModelScope else {
+                    throw ModelScopeError.downloadFailed("ModelScope downloads are not configured")
+                }
+                try await downloadModelScope(
+                    id,
+                    artifact.requiredFiles,
+                    artifact.revision ?? "master",
+                    staging,
+                    progressHandler
+                )
+            } else {
+                try await textDownloads.download(id, source, staging, progressHandler)
+            }
             watchdog.stop()
             try Task.checkCancellation()
             guard downloadTasks.isCurrent(key, token: token) else { return }
-            guard ModelStorage.llmRepoIsComplete(at: repoDir) else {
+            guard llmDirectoryIsComplete(id, at: repoDir) else {
                 if let i = llmModels.firstIndex(where: { $0.id == id }) {
                     llmModels[i].status = .error(L("model.download_incomplete"))
                     llmModels[i].cacheSize = llmRepoSize(id)
@@ -101,7 +116,12 @@ extension ModelCatalog {
             // Resolve/download happened in staging. Load again from the
             // published directory so this path proves that removing the Hub
             // cache and generation root cannot strand a lazy model reader.
-            try await textDownloads.validate(ModelStorage.hubModelRepoDir(id, downloadBase: staging.storageRoot))
+            let publishedDirectory = ModelStorage.hubModelRepoDir(id, downloadBase: staging.storageRoot)
+            if let artifact, artifact.runtime != .mlx {
+                try textDownloads.validateRequiredFiles?(publishedDirectory, artifact.requiredFiles)
+            } else {
+                try await textDownloads.validate(publishedDirectory)
+            }
             guard downloadTasks.isCurrent(key, token: token) else { return }
             if let i = llmModels.firstIndex(where: { $0.id == id }) {
                 let complete = llmRepoIsComplete(id)
