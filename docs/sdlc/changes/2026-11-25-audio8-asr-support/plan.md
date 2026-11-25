@@ -24,7 +24,7 @@
 - [x] 15. 接入 provider factory/cache，确保切换模型或引擎时释放旧 runtime，且不加入启动 preload。
 - [x] 16. 添加 runtime unit tests：config validation、weight key/layout、token count formula、prompt token sequence、adaptive pooling参考值、embedding replacement、hotword trie/top-k/boost 状态。
 - [x] 17. 添加 env-gated integration tests：本地 checkpoint + `en-sample.m4a`/`zh-sample.m4a` 语义断言、rare-term hotword 对照、长音频错误、损坏资产错误、取消行为和热加载耗时/内存记录。
-- [ ] 18. 用真实 Hugging Face 下载验证 catalog 全流程：下载、重启后离线识别、删除、状态恢复；记录实际下载文件清单，确认无视频/Python 文件。阻塞：本机当前无法访问 `huggingface.co` API；已手工完整下载 12 个 required 文件并完成推理，catalog 下载链路待网络恢复后重跑。
+- [x] 18. 用真实 Hugging Face 下载验证 catalog 全流程：下载、重启后离线识别、删除、状态恢复；记录实际下载文件清单，确认无视频/Python 文件。通过：92.3 s，12 个 required 文件 + metadata + marker，无媒体/源码。
 - [x] 19. 做真实窗口 UI QA：模型管理中英文、light/dark、常规和窄宽度下许可证文字/链接、下载/错误/删除状态；保存截图证据。生产视图 fixture 渲染完成（760/560 pt、light/dark、中英文）；打包 app 内的真实点击交互未执行，见 verification 残余风险。
 - [x] 20. 更新 `verification.md`，逐项映射 intent acceptance criteria、命令输出、集成日志、性能内存数据、UI 证据和残余风险。
 
@@ -37,7 +37,7 @@
 - [x] env-gated Audio8 integration：中文和英文 fixture 均产生语义正确、非空转写；日志证明使用 Audio8 路径
 - [x] 热加载 5 秒音频转写不超过 3 秒、峰值内存不超过 1.5 GB；记录机器型号和测量方法
 - [x] 长音频、损坏资产、取消、删除和重启离线路径逐项验证，不发生静默 fallback
-- [ ] 真实下载文件清单不包含 `assets/`、`examples/`、`hotword/` 或上游 `.py` 文件。手工下载确认清单正确；catalog live 下载被 HF API 不可达阻塞。
+- [x] 真实下载文件清单不包含 `assets/`、`examples/`、`hotword/` 或上游 `.py` 文件。live 下载清单已验证。
 - [x] release-style `bash scripts/build-app.sh` 通过，确认未新增 ONNX Runtime、Python runtime 或模型权重进 app bundle
 - [x] 模型管理真实窗口 light/dark 与窄宽度截图通过人工检查
 
