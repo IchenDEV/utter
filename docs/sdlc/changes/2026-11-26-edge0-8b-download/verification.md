@@ -1,8 +1,8 @@
 # Verification: Edge0 8B 下载与模型目录接入
 
-**Status:** pending approval
-**Approved-by:** —
-**Approved-date:** —
+**Status:** approved
+**Approved-by:** 用户（本会话回复“同意”，批准 Edge0 8B 下载/目录接入的 verification）
+**Approved-date:** 2026-11-26
 **Upstream:** [Plan](plan.md)
 
 ## Evidence
@@ -49,4 +49,4 @@
 
 ## Decision
 
-Pending approval：下载、目录、完整性、删除、UI 和 release build 证据完成后，由所有者批准 verification；推理引擎接入另立变更。
+Approved：下载、目录、完整性、删除、UI 和 release build 证据完成后，所有者批准 verification。推理引擎接入另立变更。残余风险中的 release app 装配由 PR CI 的 release-style build 复核。
