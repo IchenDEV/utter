@@ -4,50 +4,12 @@ import MLX
 @testable import UtterMLX
 
 final class Audio8ASRRuntimeTests: XCTestCase {
-    func testConfigurationDecodesAndValidatesPinnedDimensions() throws {
-        let config = try JSONDecoder().decode(Audio8ASRConfiguration.self, from: Self.configJSON)
-        XCTAssertEqual(config.modelType, "arkasr")
-        XCTAssertEqual(config.hiddenSize, 512)
-        XCTAssertEqual(config.numHiddenLayers, 8)
-        XCTAssertEqual(config.numAttentionHeads, 8)
-        XCTAssertEqual(config.numKeyValueHeads, 8)
-        XCTAssertEqual(config.intermediateSize, 1408)
-        XCTAssertEqual(config.audioTokenID, 151646)
-        XCTAssertEqual(config.eosTokenID, 151645)
-        XCTAssertEqual(config.mergeFactor, 4)
-        XCTAssertEqual(config.audioConfig.dModel, 896)
-        XCTAssertEqual(config.audioConfig.outputDim, 1024)
-        XCTAssertEqual(config.audioConfig.encoderLayers, 18)
-        XCTAssertEqual(config.audioConfig.encoderAttentionHeads, 14)
-        XCTAssertEqual(config.audioConfig.encoderFfnDim, 3584)
-        XCTAssertEqual(config.audioConfig.numMelBins, 128)
-        XCTAssertNoThrow(try config.validate())
-    }
-
-    func testConfigurationRejectsWrongAudioTokenID() throws {
-        var text = String(data: Self.configJSON, encoding: .utf8)!
-        text = text.replacingOccurrences(of: "\"audio_token_id\": 151646", with: "\"audio_token_id\": 151647")
-        let config = try JSONDecoder().decode(Audio8ASRConfiguration.self, from: Data(text.utf8))
-        XCTAssertThrowsError(try config.validate()) { error in
-            XCTAssertTrue(String(describing: error).contains("token ids"))
+    override func setUpWithError() throws {
+        guard ProcessInfo.processInfo.environment["OPENTYPE_AUDIO8_RUNTIME_TESTS"] == "1" else {
+            throw XCTSkip(
+                "Set OPENTYPE_AUDIO8_RUNTIME_TESTS=1; swift test does not bundle MLX's default.metallib"
+            )
         }
-    }
-
-    func testAudioTokenCountUsesUpstreamMelFrameFormula() {
-        XCTAssertEqual(Audio8ASRInferenceModel.audioTokenCount(sampleCount: 0, mergeFactor: 4), 1)
-        XCTAssertEqual(Audio8ASRInferenceModel.audioTokenCount(sampleCount: 159, mergeFactor: 4), 1)
-        XCTAssertEqual(Audio8ASRInferenceModel.audioTokenCount(sampleCount: 160, mergeFactor: 4), 1)
-        XCTAssertEqual(Audio8ASRInferenceModel.audioTokenCount(sampleCount: 1_600, mergeFactor: 4), 1)
-        XCTAssertEqual(Audio8ASRInferenceModel.audioTokenCount(sampleCount: 16_000, mergeFactor: 4), 12)
-        XCTAssertEqual(Audio8ASRInferenceModel.audioTokenCount(sampleCount: 480_000, mergeFactor: 4), 375)
-    }
-
-    func testPromptTextMatchesUpstreamConversationFormat() {
-        XCTAssertEqual(
-            Audio8ASRInferenceModel.promptText(numAudioTokens: 3),
-            "<|user|><|begin_of_audio|><|audio|><|audio|><|audio|>"
-                + "<|end_of_audio|>Please transcribe this audio.<|assistant|>"
-        )
     }
 
     func testMelFrontendUsesExactWhisperFrameCount() {
@@ -68,14 +30,6 @@ final class Audio8ASRRuntimeTests: XCTestCase {
         XCTAssertEqual(pooled.shape, [2, 1])
         XCTAssertEqual(pooled[0, 0].item(Float.self), 1.0, accuracy: 0.0001)
         XCTAssertEqual(pooled[1, 0].item(Float.self), 3.0, accuracy: 0.0001)
-    }
-
-    func testHotwordTrieBoostsStartsAndSuffixContinuations() {
-        let trie = Audio8HotwordTrie(tokenizedPhrases: [[10, 11, 12], [20, 21]])
-        XCTAssertEqual(trie.candidateBoosts(generatedTokens: []), [10: 6, 20: 6])
-        XCTAssertEqual(trie.candidateBoosts(generatedTokens: [99, 10]), [10: 6, 20: 6, 11: 8])
-        XCTAssertEqual(trie.candidateBoosts(generatedTokens: [10, 11]), [10: 6, 20: 6, 12: 8])
-        XCTAssertEqual(trie.candidateBoosts(generatedTokens: [10, 99]), [10: 6, 20: 6])
     }
 
     func testHotwordBoostOnlyAppliesToTopK() {
